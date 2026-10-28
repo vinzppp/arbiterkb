@@ -73,7 +73,7 @@ M1 = [
            "coverage (share answered with p_max ≥ 0.8): a 50/50 haircut scores 0 silent failures by never being sure. "
            "AURC summarises the whole risk–coverage curve. JumpDetector equals Bound here (jumps < j_max) and "
            "collapses under position noise."),
-    ("code", "import pandas as pd, glob\npd.read_csv('../results/latest/m1_table/summary.csv')"
+    ("code", "import pandas as pd, glob\npd.read_csv('../results/latest/m1_1_table/summary.csv')"
              "[['condition', 'system', 'acc', 'silent', 'coverage', 'aurc', 'brier', 'silent_on_corrupted']]"),
     ("code", "from IPython.display import Image, display\nfor f in sorted(glob.glob('../figures/*_test_p0.5.png')):\n"
              "    print(f); display(Image(f))"),
