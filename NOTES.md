@@ -902,3 +902,24 @@ Reading:
   3. The decisions are offline and single-step; the answers are action choices, not waypoints. There is no closed loop and no frontier-model reference yet.
   4. The same model throughout (qwen3.6-35b-a3b), 30 episodes per task.
 - **Next:** v3 view (ordinals, merged transit holds, no empty sections or coordinates; changes batched), confirmed on unseen episodes, with a frontier-model reference arm. The rule is to be written here before the run.
+
+## Spec v1.8 — four roles and a periodic reviewer (2026-10-28, user discussion)
+The user asked how the KB is kept correct, and whether one small VLM can, at once, list objects, describe them, give relations, say what happened and check the KB.
+- **Decision: split the VLM work into narrow questions** (spec §2.3 "Four roles"):
+  - **rules** decide what geometry and robot state decide;
+  - the **annotator** adds descriptions and relations from one marked frame, only when the rules cannot decide (at most one call per keyframe, questions batched);
+  - the **reviewer** checks the KB against video;
+  - the **controller** acts.
+
+  Each answer is then checkable against truth, and a mistake in one does not spoil the others.
+- **The reviewer runs on a fixed period (~3 s, overlapping windows) plus once before each action on a target, rather than only on triggers.** Triggers only catch the risks we foresaw; the user proposed the fixed period, and it also catches unforeseen ones.
+  - It reads the window's frames (ids drawn) and the KB's events for the window.
+  - It returns: confirm / contradict / cannot tell per event; events the KB missed; an identity answer for objects that passed close; a one-line summary anchored to the KB's events. This is the running text summary the user asked for at the start.
+  - The answers are written as evidence, never overwriting the rules; a contradiction retracts through the support chain.
+  - Estimated cost: about 20–30 calls per episode, about half a cent, run asynchronously.
+- The v1.3 arbiter's swap verdict becomes the reviewer's identity check.
+- **Spec updates:**
+  - §2.1 diagram and status (adds the semantic actions and the counting-test v2 results);
+  - §2.2 steps 6 and 6b; §2.3; §2.5 keyframe work; §2.6 cost row; §2.7 code map;
+  - §3.7 reviewer protocol and JSON schema;
+  - M4 item 10: the reviewer, measured (a) on the downloaded RoboMME videos against the subgoal labels and (b) on G's close passes against per-pass truth (claim 3's real test; needs the pass frames exported from the pod).

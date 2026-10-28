@@ -1,6 +1,6 @@
 # ArbiterKB: handoff (2026-10-28, 04:20 PT)
 
-Read first: `DEVELOPMENT.md` (spec v1.6 (M2 conditional on G, arms K0 / S); §2 the target loop and its reasoning, §3.7 VLM annotator, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
+Read first: `DEVELOPMENT.md` (spec v1.8: four roles incl. the periodic VLM reviewer (§2.2 6b, §3.7); v1.6 M2 conditional on G, arms K0 / S; §2 the target loop and its reasoning, §3.7 VLM annotator, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
 
 ## Direction (changed 2026-10-28, NOTES "Direction v2")
 - The KB is the memory module of an LLM controller that outputs waypoints itself, in the 2610.17350 harness.
@@ -20,6 +20,13 @@ Read first: `DEVELOPMENT.md` (spec v1.6 (M2 conditional on G, arms K0 / S); §2 
 - Tell the pod not to delete `/workspace/g/replays`: sizes and the open-vocabulary re-run (POD_RUN §6b) need them.
 - G's perception used the simulator's object list (privileged). Claims need `perceive.py --vocab open`.
 - `/review-phase G` must review `stress/` and the sg_pilot worker. DINOv2 is computed per frame and never used.
+
+## Latest results (2026-10-28; NOTES for details)
+- Permanence (synthetic, text): K = raw log (0.96 with thinking); the KB saves 28–51% of tokens.
+- Claim 3: ArbiterKB ≈ SoftHaircut on measured swap shapes (AURC 0.182 vs 0.180).
+- **Counting tasks on RoboMME robot state, with semantic actions: K 0.85 vs raw log 0.60 without thinking, 0.91 vs 0.79 with thinking.** This is the first win for the KB; confirm it on unseen episodes.
+- VideoRepick is a shell game with identical cubes: it needs visual tracking plus the reviewer.
+- Next: the v3 view on unseen episodes plus a frontier-model reference; the reviewer (M4 item 10).
 
 ## Where things are
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
