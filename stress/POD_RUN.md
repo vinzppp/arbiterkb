@@ -4,6 +4,36 @@ Needs the user's go (GPU spend). Uses the existing RunPod volume from scene-grap
 
 **Rough cost:** RTX 4090 at about $0.4–0.7/h. Rendering 7 settings × 20 episodes takes about 0.5–1 h, perception about 1 min per episode (about 2–2.5 h), plus copying. Total about 3–4 h, i.e. **about $2–3**. Run the smoke test (step 3) first and re-estimate from its timings before the full run.
 
+## 0F. Fresh volume (no sg-main / sg-percep yet)
+Use this instead of steps 0-2 when the pod has a new, empty network volume. G needs only two venvs, not the SmolVLA training stack (no lerobot, no H5 data).
+
+On the Mac, two uploads (both small; `*.tar.gz` is git-ignored in arbiter-kb):
+```bash
+cd ~/Code/active/arbiter-kb && git archive -o pod_upload_arbiter-kb.tar.gz HEAD
+git -C ../scene-graph-robot archive -o "$PWD/pod_upload_sg.tar.gz" HEAD -- '*.py' configs requirements.txt setup_gpu.sh \
+    notebooks/pilot/sg_pilot.py notebooks/pilot/perception_worker.py notebooks/pilot/BUILD_NOTES.md notebooks/pilot/POD_RUNBOOK.md
+```
+Upload both to `/workspace` in Jupyter Lab, open a Terminal, then:
+```bash
+mkdir -p /workspace/sg /workspace/arbiter-kb
+tar -xzf /workspace/pod_upload_sg.tar.gz -C /workspace/sg --no-same-owner
+tar -xzf /workspace/pod_upload_arbiter-kb.tar.gz -C /workspace/arbiter-kb --no-same-owner
+curl -fsSL https://claude.ai/install.sh | bash && export PATH="$HOME/.local/bin:$PATH"
+cd /workspace/arbiter-kb && claude
+```
+Hand-off prompt for the pod Claude session:
+```
+Set up this fresh RunPod volume for phase G of arbiter-kb (DEVELOPMENT.md §6 G, stress/POD_RUN.md), then run the G smoke test.
+Recipe: /workspace/sg/notebooks/pilot/BUILD_NOTES.md, section "Pod run, Steps 1-7", subsection "Environment", and POD_RUNBOOK.md step 2 (Vulkan check and the EGL ICD fix, written to /workspace/env/pod_env.sh). Build only what G needs:
+1. Vulkan: install libvulkan1 vulkan-tools; vulkaninfo must show the NVIDIA device (apply the EGL ICD fix if needed).
+2. /workspace/envs/sg-main: Python 3.12, torch 2.9.1 (cu128), robomme @ 53673b3 (pulls its mani_skill 3.0.0b21 fork), numpy 1.26.4, gymnasium 0.29.1, scipy, opencv-python-headless 4.11.0.86, pyyaml. No lerobot.
+3. /workspace/envs/sg-percep: as BUILD_NOTES says (transformers 4.44.2 / tokenizers 0.19.1 / huggingface_hub 0.25.2 / timm 0.9.16, opencv < 5, numpy 2.2); GroundingDINO @ 856dde2 with setup_gpu.sh's three kernel patches, built with TORCH_CUDA_ARCH_LIST set to THIS GPU's compute capability (check nvidia-smi; it was 8.9 on the 4090); Cutie @ ec5cdd4 --no-deps; segment-anything @ dca509f; clones in /workspace/src.
+4. Weights in /workspace/models: sam_vit_h_4b8939.pth and groundingdino_swint_ogc.pth (v0.1.0-alpha release); Cutie, DINOv2 and bert-base-uncased download into the clone / caches (HF_HOME, TORCH_HOME under /workspace/.cache).
+5. Check: in sg-main with PYTHONPATH=/workspace/sg/notebooks/pilot, `python -c "import robomme, mani_skill, sg_pilot"`, and that sg_pilot.get_perception_worker() starts and loads the models.
+Never modify /workspace/sg except what BUILD_NOTES itself describes. Write what you installed (versions, any deviation) to /workspace/G_SETUP.md. Then follow stress/POD_RUN.md step 3 (smoke test). The code in stress/ has never run against the simulator: fix only files in stress/, say what you changed and why, and stop after the smoke test to show me its output.
+```
+Expect about 1-1.5 h of setup before the smoke test.
+
 ## 0. On the Mac
 ```bash
 cd ~/Code/active/arbiter-kb && git push && git archive -o ~/Downloads/arbiter-kb.tar.gz HEAD
