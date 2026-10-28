@@ -923,3 +923,20 @@ The user asked how the KB is kept correct, and whether one small VLM can, at onc
   - §2.2 steps 6 and 6b; §2.3; §2.5 keyframe work; §2.6 cost row; §2.7 code map;
   - §3.7 reviewer protocol and JSON schema;
   - M4 item 10: the reviewer, measured (a) on the downloaded RoboMME videos against the subgoal labels and (b) on G's close passes against per-pass truth (claim 3's real test; needs the pass frames exported from the pod).
+
+## Counting test v3: the view fixes, on unseen episodes, with a frontier reference (fixed before running, 2026-10-28)
+- **The v3 view** (`arbiter_kb/action_view.py`, all changes batched):
+  - ordinals per action ("pick-up #2", "right hold #1");
+  - a hold followed by a release at the same spot (within `merge_xy` = 5 cm) is one line, "held it up on the robot's right side, then placed it down at table level", and the hold still counts;
+  - neutral release wording ("placed it down at table level" / "set it down from a small height" / "released it from above (as into a container)");
+  - with no objects in the KB, no coordinates and no empty Objects / Relations sections;
+  - the progress line counts only actions that happened;
+  - no repeated goal line. Params re-frozen.
+- **Episodes:** **61–100 of each task** (40 each). The action thresholds were read from episodes 1–60, so these are unseen.
+- **Small model:** arms N, P, K (v3 view), KO × effort off / default; qwen/qwen3.6-35b-a3b on DeepInfra; cap $3.
+- **Frontier reference:** arms P and K with **anthropic/claude-sonnet-5.5** at its default settings (OpenRouter routing); cap $8. GPT-6-Astra, the paper's model, would cost about $40.
+- **Rule** (as in v1 / v2): right-decision rate with Wilson CIs; paired against K at the same model and effort; better / worse = the CI excludes 0, same = the CI within ±10 pp.
+- **Questions:**
+  1. Does v2's gain over the raw log hold on unseen episodes?
+  2. Does the v3 view close part of the gap to KO?
+  3. Does the small model + KB without thinking reach the frontier model reading the raw log?

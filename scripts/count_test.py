@@ -86,14 +86,15 @@ def prompt(arm: str, ep: dict, t: int, params) -> list:
     hand = ep["tcp"][t - 1]
     now = (f"Current state: frame {t}, hand at ({hand[0]:.3f}, {hand[1]:.3f}, {hand[2]:.3f}), gripper "
            f"{'closed' if ep['width'][t - 1] < 0.07 else 'open'}.")
-    user = "\n\n".join(x for x in (f"Task: {ep['meta']['task']}", mem, now) if x)
+    task = "" if mem.startswith("Goal:") else f"Task: {ep['meta']['task']}"  # the KB view already states the goal
+    user = "\n\n".join(x for x in (task, mem, now) if x)
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
 
 def jobs(a, params) -> list[dict]:
     out = []
     for task in a.tasks.split(","):
-        for path in L.episode_files(task, a.n):
+        for path in L.episode_files(task, a.first + a.n)[a.first:]:
             ep = L.load(path)
             for k, (t, truth) in enumerate(decisions(ep)):
                 for arm in a.arms.split(","):
@@ -124,7 +125,8 @@ def run(a) -> None:
         return
     out = ROOT / "results" / "runs" / f"count_{time.strftime('%Y%m%d_%H%M%S')}"
     out.mkdir(parents=True, exist_ok=True)
-    llm = LLM(model=a.model, max_usd=a.max_usd)
+    prov = None if a.provider == "auto" else {"order": [a.provider], "allow_fallbacks": False, "require_parameters": True}
+    llm = LLM(model=a.model, max_usd=a.max_usd, provider=prov)
     ask = lambda j: llm.call(j["msgs"], max_tokens=a.max_tokens, reasoning=EFFORT[j["effort"]])  # noqa: E731
     with open(out / "rows.csv", "w", newline="") as f, ThreadPoolExecutor(a.workers) as pool:
         w = None
@@ -147,6 +149,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tasks", default="PickXtimes,SwingXtimes,BinFill")
     ap.add_argument("--n", type=int, default=30, help="episodes per task")
+    ap.add_argument("--first", type=int, default=0, help="skip the first episodes (v3: 60 -> unseen 61-100)")
+    ap.add_argument("--provider", default="DeepInfra", help="pinned provider, or 'auto' for OpenRouter routing")
     ap.add_argument("--arms", default="N,P,K,KO")
     ap.add_argument("--effort", default="off,default")
     ap.add_argument("--model", default="qwen/qwen3.6-35b-a3b")

@@ -42,6 +42,7 @@ class DetectParams:
     z_hold: float = 0.07  # m: a pause while holding above this = holding something up (dataset: 0.10)
     press_rise: float = 0.03  # m: a press is complete when the hand rises this far above its lowest point
     y_side: float = 0.10  # m: |y| beyond this = the robot's left (+y) / right (-y) side (dataset: 0.21)
+    merge_xy: float = 0.05  # m: a hold followed by a release within this xy distance is shown as one step (v3 view)
 
 
 @dataclass(frozen=True)
