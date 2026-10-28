@@ -72,6 +72,7 @@ def systems(params: Params) -> list:
 
 
 def evaluate(args, params: Params) -> tuple[Path, list[dict], dict]:
+    commit, dirty = git_state()  # before any read: the run itself appends to the ledger
     base = SyntheticSource() if args.source == "synthetic" else OracleReplaySource()
     kw = {"n": args.n}
     eps = base.episodes(args.split, **kw)
@@ -91,7 +92,6 @@ def evaluate(args, params: Params) -> tuple[Path, list[dict], dict]:
         step_s += st
         traces.update({(f"{cond}_{s}", ep): v for (s, ep), v in tr.items()})
         logs[cond] = log
-    commit, dirty = git_state()
     meta = {"commit": commit, "dirty": dirty, "args": vars(args), "params_hash": params.hash(),
             "contract_version": CONTRACT_VERSION,
             "params_file_mtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(PARAMS_FILE.stat().st_mtime))
