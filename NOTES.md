@@ -987,3 +987,23 @@ The user asked why the parts keep growing. Answer: the VLM work is two calls, no
   - The image is always shown; relations and descriptions cite the keyframe (`o<t>:image`).
   - At the first frame no object has an id, so only the clue list comes back; a new object is described at the next keyframe.
   - Tests: `tests/test_keyframe.py` (the clue tests moved there from test_task_items). The merged prompt has not been called on the real model; the 4-frame benchmark was of the lister prompt alone.
+
+## Keyframe call check: the merged prompt lists worse (2026-10-28)
+`scripts/keyframe_check.py` (`results/latest/keyframe_check/summary.json`; qwen3.5-9b via `vlm_client`, thinking off; 8 calls, **$0.0014**, about 4 s per call). The same 4 real frames and scoring as the lister benchmark. Goal text: "pick up the container that hides the green cube". Two memories: none (as at the first frame), and a synthetic KB with 7 objects whose ids do not match the picture. Exploratory: no rule was fixed before the run, and the frames are the ones the lister prompt was written on.
+
+| memory | f21 (3 cubes) | f56 (3 containers) | f105 (3 containers) | f325 (3 containers + green cube) | right |
+|---|---|---|---|---|---|
+| lister prompt alone (earlier, NOTES "VLM choice") | right | right | right | right | **4 / 4** |
+| merged, no memory | + a container | 1 container + 3 cubes (4) | 1 container + 2 cubes (3) | right | 2 / 4 |
+| merged, 7-object memory | + a container | + a green cube | 4 containers + a green cube | 4 containers | **0 / 4** |
+
+- **The merged call reads the text, not only the image.**
+  - With no memory, f21 gains a container: likely primed by the goal's "container".
+  - With the memory, a green cube appears in every frame (the goal and the memory name one), and the container count follows the memory, not the picture.
+- **It also annotates what it cannot see:**
+  - with no memory it described objects under made-up ids "1"–"4" (all dropped by the checks);
+  - with the memory it wrote 10–12 relations and descriptions per frame about ids that are not in the picture. All passed the checks, which test ids, cites and format, not truth.
+- **Reading:** on these 4 frames, putting listing into the annotator's prompt costs accuracy. Listing needs the image alone; annotating needs the memory. The memory-mismatch condition is harsher than a real keyframe (where ids are drawn on the picture), but it shows the model trusts the memory text over the image.
+- **Options (user decision):**
+  1. keep one keyframe moment, but two calls: a listing call that sees only the image (the 4 / 4 prompt), then the annotation call with the memory. The keyframe module stays one file.
+  2. one call, with the prompt changed so the list comes from the image only. That is prompt tuning on the same 4 frames, and it needs a larger set with truth to judge.
