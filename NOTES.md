@@ -377,3 +377,66 @@ The user, in discussion: "I definitely want the LLM to output the path. Our goal
 - After G, decide whether M3 / M4 go before M2 (they do not depend on it).
 - Decide on the model for claim 2's larger-model arm (budget).
 - The closed-loop runs need a pod with the simulator. Rough cost: 9.5 calls × 18 s per call in the paper's harness, so about 3 min of model time per episode plus the simulator. A per-arm estimate comes in M4 (c).
+- **Addendum (user, same day):** "We can accept a frontier model as the planner in the end. The structured memory module has its own meaning." GOALS now says that claims 1 and 2 are alternatives, and that claim 2 with a frontier model is a full result. The user chose to start M3 and M4 directly, without the small feasibility probe.
+
+## M3 — a complete KB, first part (2026-10-28)
+Built (commit 7b17641; params re-frozen to **b0a2dd3cb30b**, no test read):
+- **Gripper evidence** (`detectors.py`): `grip_close` / `grip_open` with hysteresis (`g_close` 0.07, `g_open` 0.075 m of total finger width), carrying the end-effector xyz. `move_start` / `move_stop` now carry the object's xyz.
+- **R3 grasp / place** (`rules.py`):
+  - On `grip_close`, the nearest non-hidden object within `r_grasp` (5 cm) of the end effector is grasped (event `grasp`).
+  - On `grip_open`, every held object is placed (event `place`) onto the object right below it (xy within `r_on`), else onto the table.
+  - Held objects are derived from the event log (`held()`), because `observe()` marks a visible object `visible` every frame.
+  - A held object out of sight follows the end effector (R2).
+  - R1 ignores a held cube that vanishes (fingers, not a cover).
+- **L2 geometric relations** (`views.geometric`, computed on demand, never stored): `Near` (< 8 cm), `LeftOf` (robot's left, +y, by > 2 cm), `On` (xy < 4 cm, 0.5–8 cm above), with p = the poses' confidence. Visible or held objects only. `Held` is in `facts()`.
+- **L4:** the goal is stored at reset. Progress counts grasps, places, covers and container exchanges.
+- **Event log and controller view** (`views.event_log`, `views.controller_view`): goal, progress, objects with 3D centres, relations with probabilities and support ids, then the log in time order with ids. A move reads "moved (x, y) → (x', y') (t=68–112)".
+  - A hidden cube's position is **not** printed as a coordinate. Its pose is a probability-weighted mean, which after a swap can lie between two containers. The line says "see Inside" instead.
+  - R6's `swap` event is shown as "exchanged places (identity may be confused: see Inside)", because the event only records that two containers exchanged places, not an identity swap.
+  - A synthetic episode's view is about 360 tokens; the budget is 1,500.
+- **Tests:** `tests/test_m3_kb.py` (pick-place on hand-made frames: grasp, place onto bin, follow when hidden in the hand, not a cover, On / LeftOf, log order and ids, view budget, hidden pose not printed).
+
+**Truth check** (`scripts/measure_kb.py`, train seeds 0–99, synthetic VideoUnmaskSwap; `results/latest/m3_kb_truth/summary.json`; the run's tree was dirty only in NOTES.md):
+
+| | cover precision / recall | near-pass precision / recall | move from→to xy error (median / max) | moves logged |
+|---|---|---|---|---|
+| clean | 1.00 / 1.00 | 0.94 / 0.86 | 0.0 / 0.0001 m | 380 |
+| pos_noise 15 mm | 1.00 / 1.00 | 0.33 / 0.09 | 0.016 / 0.037 m | 38 |
+
+- On clean input the observations are the truth, so these numbers check plumbing only.
+- A "true pass" here is any pair moving at the same time, while the detector flags only passes closer than `d_px`. Recall below 1 is partly by definition; precision 0.94 means 6% of flagged passes do not line up in time with a true one. Not investigated further.
+- **Finding:** under 15 mm iid noise the motion detector breaks. Every frame exceeds `v_move` (1 mm/frame), so objects never "stop": 38 moves logged instead of 380, and passes are missed (recall 0.09). The event log is therefore only as good as the motion detector. The fix is M2 item 1 (hysteresis / smoothing on speed). It should be tuned on G's real tracker noise, not on our iid noise. Not fixed here.
+
+**Not built yet (M3 list):**
+- `press` and `reveal` (R4): no data has them yet. Synthetic never manipulates, and the oracle replays are not on the Mac.
+- extent, yaw and `occluded_by_arm`: they need masks / replays;
+- stationary intervals as such (the event log's from→to covers the same information);
+- task-template parsing for L4 progress against a goal;
+- R8 consistency checks.
+
+Grasp / place have no truth check beyond the unit tests, because no source manipulates objects.
+
+## M4 — controller, Mac side (2026-10-28)
+- **The 2610.17350 harness was read** (`harness/astra_waypoint_eval_v3.py` at github.com/jackbjed/embodied-astra-robomme, MIT; read via the GitHub API, nothing run).
+  - It uses the official RoboMME loop (`BenchmarkEnvBuilder(..., action_space="waypoint", max_steps=1300)`) and the OpenAI Responses API, with all turns chained through `previous_response_id`.
+  - Per step: front frames every 3 control steps plus the last, the current wrist frame, TCP pose, finger positions, elapsed steps, camera K / extrinsics. The answer is `{"description", "waypoint", "gripper"}`; the model's own "description" is part of its memory.
+  - Endings: `waypoint: null` (declared complete), 3 no-op actions, an unparseable answer, 150 calls.
+  - **Differences to record:**
+    - they use RoboMME commit 856bc3a, our pod has 53673b3;
+    - they use no depth, while our KB's 3D centres come from depth (perception), so arm K has information arm H lacks. To be reported; an "H + depth" arm may be needed for fairness.
+- **`arbiter_kb/llm.py`:** OpenRouter via urllib, the key from `.env` or the environment (never printed or cached), DeepInfra pinned with no fallbacks, a disk cache keyed by the full request, the `ARBITER_MAX_USD` cap (a call that would start above it raises), usage counting (calls, hits, tokens, images, $, s). Tested with a fake transport: no network call was made.
+- **`arbiter_kb/controller.py`:**
+  - Arms H / K / K-L3 / R.
+  - The system prompt reuses the paper's robot and interface text, adds a memory section per arm and asks for `target` and `cites`.
+  - The paper's `parse_answer` and `to_action`.
+  - `check()`: workspace box, a **coarse** reach test (a sphere of 0.855 m around the Panda shoulder; the real IK / mplib check is still to come), and that target and cites are real KB ids.
+  - `target_distance()` is logged only.
+  - Arm R's raw tracker log.
+- **`scripts/dry_run.py`:** fills the KB up to t* on train episodes and asks each arm for one action. Scored: parse kind, check problems, xy error to the TRUE target container (evaluation only), whether `target` is the right container, tokens / images / $. `--print` shows the prompt for free; `--call` spends, up to `--max-usd`.
+- **Not run:**
+  - No API call was made. There is no `.env` on this Mac, and the user has not approved spending.
+  - Arm H needs RGB replays (`data/replays/` is empty). The pod's G tarball has perception outputs only.
+- **Not built:**
+  - the closed-loop harness on the pod: robomme env, the KB updated online after each motion (from oracle state for the upper bound, from the perception worker for the claims), the paper's endings;
+  - the reach IK;
+  - freezing the prompt hash into params.json.

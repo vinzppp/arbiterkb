@@ -7,11 +7,20 @@ Read first: `DEVELOPMENT.md` (spec v1.4, §3.8 controller, §6 phases), `docs/GO
 - Claims: (1) a smaller model, or (2) far fewer tokens and images, at matched success; (3) the KB's beliefs are calibrated (G and M2).
 - After G: M3 (complete KB) and M4 (controller harness, dry run on the Mac) may go before M2.
 
+## M3 / M4 status (NOTES "M3", "M4")
+- M3, first part: gripper events, R3 grasp/place, Near/LeftOf/On, the event log and the controller view.
+- M4, Mac side: `llm.py`, `controller.py`, `scripts/dry_run.py`. Not run: no `.env` on this Mac, no RGB replays.
+- Next:
+  - copy ~10 train RGB replays from the pod (for arm H);
+  - the user approves a small dry-run budget;
+  - the closed-loop harness on the pod (`stress/`);
+  - motion-detector smoothing (M2 item 1; it breaks under noise).
+
 ## Where things are
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
 - Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD: G Mac-side code plus the POD_RUN fresh-volume path.
 - Gate per phase: `make check` (pytest + quality.py + selftest, which uses train seeds only), then the user runs `/review-phase Mx` in Claude Code (a code-reviewer and a goal-reviewer agent; reviews land in `reviews/`). Fix, record in NOTES, then tag.
-- Current frozen params: hash f59aaea5e5b2 (R1 `eps_far` added in M2 infra).
+- Current frozen params: hash b0a2dd3cb30b (M3 parameters added).
 - E5c: test-split reads need a frozen `params.json` with a FREEZE line in `results/test_reads.log`. Any parameter change means `python scripts/run.py --freeze --force` before the next test read.
 - Cowork session mechanics (if continuing from Claude.ai):
   - edit in the container copy, stage the changed files under `/mnt/user-data/outputs/<fresh dir>/`, then `device_commit_files` to the Mac (reuse of a staged path can serve a stale copy);
