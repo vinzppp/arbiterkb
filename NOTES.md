@@ -772,3 +772,19 @@ Reviews: `reviews/G_M4_code.md` (PASS-WITH-NOTES) and `reviews/G_M4_goal.md` (ON
 5. **G Done-when (b).** `figures/g_features.png` (per-feature histograms, swapped vs clean, with AUC) and `figures/g_roc.png` (one-feature ROCs), written by measure_swaps.
 
 `make check`: 159 passed; quality 0 problems; selftest 16 PASS, 1 SKIPPED (no replays).
+
+## Beyond permanence: the RoboMME dataset, robot-state memory (2026-10-28)
+Decision with the user: test tasks where memory is about order, counts and "where it went", not one Inside line. Data: RoboMME's LeRobot dataset (`huggingface.co/datasets/lerobot/robomme`, revision 92796ab).
+- **Downloaded:** only the tables and metadata, **84.8 MB**, into git-ignored `data/robomme_lerobot/`. The videos (9.5 GB) were not downloaded.
+- **What the tables hold:** 1,600 episodes, 10 fps. Per frame: state (7 joint angles + finger), actions, `is_demo`, simple and grounded subgoals (the latter with pixel coordinates). **No depth, segmentation, object poses or camera parameters.**
+- `tools/convert_robomme_lerobot.py` turns the tables into one npz per episode. It runs with the system Python's pyarrow: pyarrow is not on the dependency whitelist, so the tool lives in `tools/`, outside `quality.py`, and the project reads only the npz files.
+- **`arbiter_kb/fk.py`, Panda forward kinematics** (modified DH, flange 0.107 m + TCP 0.1034 m, base at (−0.615, 0, 0)), checked on the data:
+  - at the 1,025 grip open / close moments, the TCP height is median 0.019 m (p10 0.012, p90 0.022), the height of a cube's centre;
+  - one homography maps the TCP xy at those moments to the subgoal pixel coordinates with a median residual of 2.3 px (p90 4.7) on 256-px frames.
+  - Tests: `tests/test_fk.py`.
+- **Can robot-state memory alone answer the event-order tasks? Mostly not.** The answer was rebuilt from the hand's positions when the gripper opened, then compared with the official execution-phase target (the grounded subgoal):
+  - VideoPlaceOrder: 58 / 100 within 10 px;
+  - VideoRepick: 57 / 100.
+  - The reason, checked on VideoRepick episodes: in the demo the robot puts the cube back where it picked it up, but **at execution the "same cube" is somewhere else**. The scene is rearranged, so the task asks which cube (colour / appearance), not where the hand went.
+  - These tasks need vision to identify the object: for example, the annotator naming the cube in the gripper at each grasp event. Front-video files: VideoRepick 0.67 GB, VideoPlaceOrder 0.92 GB (files 018–023, partly shared, about 1.4 GB together).
+  - **Counting tasks** (PickXtimes, SwingXtimes, BinFill) depend on the robot's own actions, so they can be tested from robot state alone.
