@@ -2,8 +2,9 @@
 
   python scripts/measure_swaps.py --dir data/g_perceived      # npz files from stress/perceive.py
 
-Writes results/g_passes.csv (one row per pass, swapped or not, with its features) and
-results/g_summary.json, and prints the per-setting table and the gate decision (DEVELOPMENT §6 G).
+Writes results/g_passes.csv (one row per pass, swapped or not, with its features),
+results/g_summary.json and results/g_signature.json (id_swap_measured's parameters), and prints
+the per-setting table and the gate decision (DEVELOPMENT §6 G).
 """
 from __future__ import annotations
 
@@ -19,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 
 from arbiter_kb.evaluate import write_csv  # noqa: E402
 from arbiter_kb.sg_compat import wilson  # noqa: E402
-from arbiter_kb.swapstats import episode_passes, separability  # noqa: E402
+from arbiter_kb.swapstats import episode_passes, separability, signature  # noqa: E402
 
 GATE_RATE, GATE_AUC = 0.02, 0.98
 
@@ -76,6 +77,8 @@ def main() -> None:
     write_csv(Path(args.out) / "g_passes.csv", rows)
     summary = {"settings": table, "separability": sep, "episodes": summaries, "gate": gate(table, sep)}
     (Path(args.out) / "g_summary.json").write_text(json.dumps(summary, indent=2, default=float))
+    if any(r["swapped"] for r in rows) and not all(r["swapped"] for r in rows):
+        (Path(args.out) / "g_signature.json").write_text(json.dumps(signature(rows), indent=1))
     cols = list(table[0])
     print(" | ".join(f"{c:>17}" for c in cols))
     for t in table:

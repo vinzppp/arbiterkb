@@ -88,3 +88,17 @@ def test_measure_swaps_end_to_end(tmp_path, monkeypatch):
     assert "GATE: SWAPS EXIST" in out
     summary = json.loads((tmp_path / "g_summary.json").read_text())
     assert summary["settings"][0]["swaps"] == 3 and (tmp_path / "g_passes.csv").exists()
+
+
+def test_signature_records_swap_timing_and_a_fit():
+    from arbiter_kb.swapstats import logistic_fit, signature
+
+    rows = []
+    for ep in range(8):
+        rows += episode_passes(fake_episode(ep, 0 if ep % 2 else None, lane=0.02))[0]
+    sig = signature(rows)
+    assert sig["n_swaps"] == 4 and sig["swap_dt"] == [0, 0, 0, 0]  # injected at closest approach
+    assert sig["dropout_swapped"] == [0, 0, 0, 0] and len(sig["w"]) == 2
+    X = np.linspace(0, 1, 100)[:, None]
+    w, b = logistic_fit(X, (X[:, 0] > 0.5).astype(float))
+    assert w[0] > 0 and 1 / (1 + np.exp(-(0.9 * w[0] + b))) > 0.9

@@ -601,3 +601,40 @@ Reading (n = 20, synthetic, oracle observations, text only, a single step: **plu
   - **Untested against the simulator:** extra empty slots may cost GroundingDINO calls every frame. Generic `cube.` slots carry no colour, so a cube not named by the task needs its colour from the annotator or the image. Slot ↔ truth matching (`swapstats.assign_slots`) with more slots than objects is unchecked.
 - **Claims:** results with `--vocab scene` are marked privileged. Claims 1–3 are made on `--vocab open` perception.
 - Tests: `tests/test_task_items.py`.
+
+## G — gate result and `id_swap_measured` (2026-10-28)
+- **Full pod run:** 9 settings × 20 episodes = 180 perceived episodes (`--vocab scene`, i.e. privileged word list), 353 passes. Outputs: `results/g_passes.csv`, `results/g_summary.json` (reproduced on the Mac from `data/g_perceived/`; differences vs the pod's copy are float noise at 1e-9).
+
+| setting | identity acc. | passes | swaps | swap rate [Wilson 95%] |
+|---|---|---|---|---|
+| stock (50, 0.07) | 0.9998 | 44 | 0 | 0.00 [0.00, 0.08] |
+| cam_left / cam_right | 0.9998 | 35 / 37 | 0 / 0 | 0.00 |
+| fast (20, 0.07) | 0.980 | 33 | 6 | 0.18 [0.09, 0.34] |
+| fast_lane045 | 0.946 | 30 | 12 | 0.40 [0.25, 0.58] |
+| close (50, 0.02) | 0.871 | 57 | 21 | 0.37 [0.26, 0.50] |
+| fast_lane03 | 0.879 | 33 | 22 | 0.67 [0.50, 0.80] |
+| fast_close (20, 0.02) | 0.839 | 33 | 27 | 0.82 [0.66, 0.91] |
+| fast_close_3swaps | 0.744 | 51 | 42 | 0.82 [0.70, 0.90] |
+
+- **Gate: swaps exist** (≥ 2% in 6 of 9 settings), and **no threshold suffices**: best single feature AUC 0.874 (`max_iou`), best ≤ 2-feature rule 0.926 (`max_iou + area_ratio`, cross-validated) < 0.98. So M2's "swaps are frequent and hard to predict" branch applies.
+- **Stock RoboMME never swaps** (0 / 44 passes, 0 / 116 with the camera shifts). Claim 3 on real errors needs the stress settings.
+- **What a real swap looks like** (130 swapped vs 223 clean passes):
+  - **Distance:** container centres never come closer than 5.1 cm (they are solid; lane 0.02 gives min_3d ≈ 6 cm, not the 4 cm of our synthetic path). Swaps happen at min_3d 5–9 cm (median 6.0 cm); rate 0.70 below 7 cm, 0.29 at 7–10 cm, 0.02 above 10 cm.
+  - **Speed matters as well as distance:** at min_3d ≈ 11.6 cm, stock (50 steps) 0 / 44 vs fast (20 steps) 6 / 33.
+  - **A mask dropout comes first:** 88% of swaps have a track absent for ≥ 1 frame around the pass (median 6 frames), vs 39% of clean passes (median 0). `area_ratio` is 0 for most swaps: one mask vanishes, then the track re-acquires on the other container.
+  - **Timing:** the exchange shows median 3 frames after closest approach (10–90%: −2 to +9).
+  - **Label jump at the exchange:** median 7.1 cm (10–90%: 3.1–10 cm). This is far from `id_swap_overlap`'s ≤ 3 cm and close to M0's "teleport" `id_swap` (12 cm). M1's premise that real swaps only happen where tracks overlap (≤ 3 cm) is wrong for this tracker.
+  - After a swapped pass a track is lost in 18% of cases (clean: 7%).
+- **`id_swap_measured` (built):** `MeasuredSwapSource` in `arbiter_kb/sources/realistic.py`, condition `id_swap_measured` in `scripts/run.py`. Parameters are read from `results/g_signature.json`, which `scripts/measure_swaps.py` now writes (new per-pass columns: `speed`, `swap_dt`, `dropout`):
+  - p(swap) = logistic(−78.5·min_3d + 180·speed + 4.26), min_3d clamped to G's range [5.1, 23] cm;
+  - a swapped pass exchanges the ids at t_min + a `swap_dt` drawn from G's, after one of the two containers is hidden for a dropout length drawn from G's swapped passes; a clean pass hides one for a length drawn from G's clean passes;
+  - all draws are seeded per pass.
+  - **Calibration on G's own passes** (fit vs real rate): stock 0.04 vs 0.00, cam 0.03–0.04 vs 0.00, fast 0.09 vs 0.18, fast_lane045 0.34 vs 0.40, close 0.52 vs 0.37, fast_lane03 0.64 vs 0.67, fast_close 0.73 vs 0.82. A two-feature linear fit: it overpredicts slow close passes and underpredicts fast far ones.
+  - **Known gap:** synthetic lanes 0 / 0.01 / 0.02 bring centres to 0–4 cm, which real containers cannot. They are clamped to 5.1 cm, so they get G's highest swap rate (about 0.75 at 50 steps), above the real `close` setting's 0.37.
+  - On synthetic `mix`, the swap rate is 0.52 of passes, with a median label jump of 5.3 cm.
+- **First table (train seeds only, no test read):** `--lane mix --steps mix --systems m2`, calibration 150–449, eval 450–749 (`results/runs/synthetic_train_94f0be4a/compare.csv`):
+  - Bound: accuracy 0.573, silent 0.427, AURC 0.427.
+  - ArbiterKB: accuracy 0.577, silent 0.25, coverage 0.753, AURC 0.169; ΔAURC vs Bound −0.258 [−0.284, −0.228].
+  - **SoftHaircut ties ArbiterKB exactly** again (ΔAURC 0.0 [0.0, 0.0001], 300 / 300 same answers).
+  - Accuracy is low for every system: about 0.42 of rows are wrong, and graded confidence only ranks them. R6 still uses d0 = 2 cm, tuned to the 3 cm overlap swaps, while real swaps happen at 5–9 cm.
+- **Next (M2 branch "frequent and hard to predict"):** the identity check (`identity.py`, Hungarian margin) and R6 v2, tuned on train seeds against `id_swap_measured`, with SoftHaircut given the same feature. Then a freeze and one test read. The `--vocab open` re-run (POD_RUN §6b) is still needed before claims.

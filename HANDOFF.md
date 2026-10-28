@@ -52,25 +52,16 @@ Read first: `DEVELOPMENT.md` (spec v1.6 (M2 conditional on G, arms K0 / S); §2 
   - `arbiter_kb/swapstats.py` + `scripts/measure_swaps.py`: every pass, six features, per-feature and ≤ 2-feature ROC, gate.
   - `stress/POD_RUN.md`.
 
-## Running right now (pod, user-operated)
-- A new RunPod pod with a **fresh** network volume (the old volume's datacenter had no GPUs), GPU RTX 4000 Ada (or similar).
-- The pod Claude session is following `stress/POD_RUN.md` §0F:
-  - building `sg-main` (robomme) and `sg-percep` (GroundingDINO / SAM / Cutie);
-  - downloading weights;
-  - then the G smoke test (step 3), after which it stops.
-- The pod code in `stress/` has never run against the simulator. Expect fixes there, and only there.
-- **Next when the smoke output comes back:**
-  1. review it: T, schedule, `pose_log_aligned`, seeds, per-episode time;
-  2. re-estimate the cost;
-  3. the user decides on the full run (POD_RUN steps 4–5);
-  4. copy `g_perceived` to `data/g_perceived/`, then run `python scripts/measure_swaps.py`;
-  5. write the gate decision in NOTES. It is one of three outcomes:
-     - swaps under 2% of passes → fallback;
-     - swaps exist → define `id_swap_measured`;
-     - a ≤ 2-feature rule with AUC ≥ 0.98 → "a threshold suffices" (say so before M2).
-  6. pull the pod's `stress/` fixes back into the repo;
-  7. then `/review-phase G`.
-- Remind the user to STOP THE POD.
+## G status (NOTES "G — gate result and `id_swap_measured`")
+- The full pod run is done: 180 perceived episodes in `data/g_perceived/` (git-ignored; the pod's own logs and results are in `data/g_pod/`). `results/g_passes.csv`, `g_summary.json` and `g_signature.json` are committed.
+- Gate: **swaps exist** (stock never swaps; the stress settings swap at 18–82% of passes). No threshold suffices (best AUC 0.926), so M2's "frequent and hard to predict" branch applies.
+- `id_swap_measured` is built (`MeasuredSwapSource`). First train-seed table: ArbiterKB = SoftHaircut exactly; both beat Bound on AURC (0.169 vs 0.427).
+- **Still open:**
+  1. pull the pod's `stress/` fixes back into the repo (ask the user whether the pod session changed `stress/`);
+  2. `/review-phase G`;
+  3. the stock oracle replays (`scripts/copy_replays.sh`) and the optional `--vocab open` re-run (POD_RUN §6b) need a pod again;
+  4. remind the user to STOP THE POD if it is still up.
+- **Next for M2:** `identity.py` (Hungarian margin) + R6 v2 (d0 re-tuned: real swaps happen at 5–9 cm, not ≤ 3 cm), tuned on train seeds against `id_swap_measured`; give SoftHaircut the same feature; freeze; one test read.
 
 ## Parallel work that does not depend on G (candidates for the new window)
 1. **M2 infrastructure: done** (NOTES "M2 infra", commit 73fab80 and the NOTES commit after it).

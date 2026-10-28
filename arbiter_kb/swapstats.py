@@ -116,6 +116,28 @@ def _nanmin(v) -> float:
     return float(np.nanmin(v)) if len(v) and np.isfinite(v).any() else np.nan
 
 
+def _signature_features(ep: dict, ids: np.ndarray, p: dict, sa: int, sb: int, t1: int, swapped: int) -> dict:
+    """What id_swap_measured copies: the container speed (m/frame, oracle, median over the pass), the
+    frame the exchange shows relative to closest approach (nan if clean), and the longest run of frames
+    either slot is absent around the pass (the tracker drops a mask before it re-acquires)."""
+    per, xyz = ep["perceived"], ep["oracle"][:, p["a"], F_X:F_Z + 1]
+    step = np.linalg.norm(np.diff(xyz[p["t_open"]:p["t_close"] + 1, :2], axis=0), axis=-1)
+    hit = [t for t in range(p["t_open"], t1) if ids[t, sa] == p["b"] or ids[t, sb] == p["a"]] if swapped else []
+    absent = lambda s: [per[t, s, F_HIDDEN] != 0 or not np.all(np.isfinite(per[t, s, F_U:F_V + 1]))  # noqa: E731
+                        for t in range(p["t_open"], t1)]
+    return {"speed": float(np.nanmedian(step)) if np.isfinite(step).any() else np.nan,
+            "swap_dt": hit[0] - p["t_min"] if hit else np.nan,
+            "dropout": max(_longest_run(absent(sa)), _longest_run(absent(sb)))}
+
+
+def _longest_run(flags: list[bool]) -> int:
+    best = cur = 0
+    for f in flags:
+        cur = cur + 1 if f else 0
+        best = max(best, cur)
+    return best
+
+
 def pass_features(p: dict, ep: dict, ids: np.ndarray, settle: int = 5) -> dict | None:
     """One feature row for a pass, and whether the two tracker slots exchanged their containers."""
     per = ep["perceived"]
@@ -128,7 +150,8 @@ def pass_features(p: dict, ep: dict, ids: np.ndarray, settle: int = 5) -> dict |
     row = {"node_a": p["a"], "node_b": p["b"], "slot_a": sa, "slot_b": sb, "t_open": p["t_open"],
            "t_min": p["t_min"], "duration": p["t_close"] - p["t_open"], "swapped": swapped, "lost": lost,
            "min_3d": p["min_3d"]}
-    return {**row, **_image_features(ep, p, sa, sb, win), **_motion_features(per, sa, sb, win)}
+    return {**row, **_image_features(ep, p, sa, sb, win), **_motion_features(per, sa, sb, win),
+            **_signature_features(ep, ids, p, sa, sb, t1, swapped)}
 
 
 def episode_passes(ep: dict, v_move: float = 0.001) -> tuple[list[dict], dict]:
@@ -157,9 +180,22 @@ def auc(score: np.ndarray, label: np.ndarray) -> float:
     return float(gt / (len(pos) * len(neg)))
 
 
+def logistic_fit(X: np.ndarray, y: np.ndarray, l2: float = 1e-2) -> tuple[np.ndarray, np.ndarray]:
+    """L2 logistic regression (Newton steps) on standardised features: (raw-scale weights w, bias b)
+    with p(y=1 | x) = 1 / (1 + exp(-(x @ w + b)))."""
+    mu, sd = X.mean(0), X.std(0) + 1e-9
+    A = np.hstack([np.ones((len(X), 1)), (X - mu) / sd])
+    w = np.zeros(A.shape[1])
+    for _ in range(25):
+        p = 1 / (1 + np.exp(-A @ w))
+        H = A.T @ (A * (p * (1 - p))[:, None]) + l2 * np.eye(len(w))
+        w -= np.linalg.solve(H, A.T @ (p - y) + l2 * w)
+    return w[1:] / sd, np.array(w[0] - (w[1:] * mu / sd).sum())
+
+
 def logistic_cv_auc(X: np.ndarray, y: np.ndarray, folds: int = 5, l2: float = 1e-2, seed: int = 0) -> float:
-    """Cross-validated AUC of an L2 logistic regression (Newton steps) on standardised features.
-    Rows with a missing feature are dropped. nan if a class has fewer than `folds` rows."""
+    """Cross-validated AUC of logistic_fit. Rows with a missing feature are dropped. nan if a class has
+    fewer than `folds` rows."""
     ok = np.all(np.isfinite(X), axis=1)
     X, y = X[ok], y[ok].astype(float)
     if min(y.sum(), len(y) - y.sum()) < folds:
@@ -168,16 +204,27 @@ def logistic_cv_auc(X: np.ndarray, y: np.ndarray, folds: int = 5, l2: float = 1e
     score = np.zeros(len(y))
     for k in range(folds):
         test = order[k::folds]
-        train = np.setdiff1d(order, test)
-        mu, sd = X[train].mean(0), X[train].std(0) + 1e-9
-        A = np.hstack([np.ones((len(train), 1)), (X[train] - mu) / sd])
-        w = np.zeros(A.shape[1])
-        for _ in range(25):
-            p = 1 / (1 + np.exp(-A @ w))
-            H = A.T @ (A * (p * (1 - p))[:, None]) + l2 * np.eye(len(w))
-            w -= np.linalg.solve(H, A.T @ (p - y[train]) + l2 * w)
-        score[test] = np.hstack([np.ones((len(test), 1)), (X[test] - mu) / sd]) @ w
+        w, b = logistic_fit(X[np.setdiff1d(order, test)], y[np.setdiff1d(order, test)], l2)
+        score[test] = X[test] @ w + b
     return auc(score, y)
+
+
+def signature(rows: list[dict]) -> dict:
+    """id_swap_measured's parameters (DEVELOPMENT §3.11), from G's passes: p(swap | min_3d, speed) as a
+    logistic fit, the range of min_3d seen (real containers never come closer, so callers clamp to it),
+    and the empirical swap-frame offsets and dropout lengths to resample from."""
+    X = np.array([[r["min_3d"], r["speed"]] for r in rows], float)
+    y = np.array([r["swapped"] for r in rows], float)
+    ok = np.all(np.isfinite(X), axis=1)
+    w, b = logistic_fit(X[ok], y[ok])
+    pick = lambda key, s: sorted(int(r[key]) for r in rows if r["swapped"] == s and np.isfinite(r[key]))  # noqa: E731
+    return {"features": ["min_3d", "speed"], "w": [float(v) for v in w], "b": float(b),
+            "min_3d_range": [float(X[ok, 0].min()), float(X[ok, 0].max())],
+            "speed_range": [float(X[ok, 1].min()), float(X[ok, 1].max())],
+            "swap_dt": pick("swap_dt", 1), "dropout_swapped": pick("dropout", 1), "dropout_clean": pick("dropout", 0),
+            "n_passes": int(ok.sum()), "n_swaps": int(y[ok].sum()),
+            "lost_rate": {"swapped": float(np.mean([r["lost"] for r in rows if r["swapped"]] or [np.nan])),
+                          "clean": float(np.mean([r["lost"] for r in rows if not r["swapped"]] or [np.nan]))}}
 
 
 def separability(rows: list[dict]) -> dict:

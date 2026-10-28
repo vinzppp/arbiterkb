@@ -24,7 +24,7 @@ from arbiter_kb import CONTRACT_VERSION, ledger  # noqa: E402
 from arbiter_kb.evaluate import run, save_run  # noqa: E402
 from arbiter_kb.params import Params  # noqa: E402
 from arbiter_kb.sources.corrupt import CorruptedSource  # noqa: E402
-from arbiter_kb.sources.realistic import NoisySource, OverlapSwapSource  # noqa: E402
+from arbiter_kb.sources.realistic import MeasuredSwapSource, NoisySource, OverlapSwapSource  # noqa: E402
 from arbiter_kb.sources.replay import OracleReplaySource  # noqa: E402
 from arbiter_kb.sources.synthetic import SyntheticSource  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
@@ -42,7 +42,7 @@ SYSTEMS = {  # ArbiterKB last: evaluate.run times the last system (E7)
 }
 PRESETS = {"all": [k for k in SYSTEMS if k != "soft_haircut"],  # the M1 table, unchanged
            "m2": ["bound", "soft_haircut", "arbiterkb"]}  # claim 3's table since v1.6 (DEVELOPMENT §6 M2)
-CONDITIONS = ("none", "id_swap", "id_swap_overlap", "pos_noise")
+CONDITIONS = ("none", "id_swap", "id_swap_overlap", "id_swap_measured", "pos_noise")
 PARAMS_FILE = ROOT / "params.json"
 FREEZE_NOTE = ("M1.1 defaults plus R1 eps_far 0.5 (M2 infra) and M3's r_grasp / r_on / r_near / left_margin / on_dz / g_close / g_open, untuned; R7 (lam) removed in v1.6. "
                "Nothing has been tuned on test seeds.")
@@ -95,6 +95,8 @@ def make_source(cond: str, base, args, params: Params):
         return CorruptedSource(base, cond, args.p, v_move=params.detect.v_move)
     if cond == "id_swap_overlap":
         return OverlapSwapSource(base, args.p, args.d_ov, v_move=params.detect.v_move)
+    if cond == "id_swap_measured":
+        return MeasuredSwapSource(base, v_move=params.detect.v_move)
     if cond == "pos_noise":
         return NoisySource(base, args.noise)
     raise SystemExit(f"unknown condition {cond!r}; one of {CONDITIONS}")
