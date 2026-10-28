@@ -1,9 +1,8 @@
 """All tunable parameters in one place (DEVELOPMENT.md §1: one source of parameters).
 
-`frozen` marks a parameter set that may be evaluated on the test split (E5c). A Params built in
-code is NOT frozen; only the repo's params.json (written by `scripts/run.py --freeze` from defaults,
-or by M1's tune.py from train seeds) can be, and scripts/run.py records its mtime and the first
-test-read time in meta.json.
+E5c: the test split may only be evaluated with a Params that (1) was loaded from a params.json whose
+stored hash matches its content, (2) has frozen = true, and (3) has a FREEZE entry in the test-read
+ledger (ledger.py) written before the read. A Params built in code has no origin and is refused.
 """
 from __future__ import annotations
 
@@ -49,9 +48,12 @@ class Params:
     arbiter: ArbiterParams = field(default_factory=ArbiterParams)
     frozen: bool = False  # only a params.json loaded from disk may be frozen (E5c)
     note: str = ""
+    origin: str = field(default="", compare=False)  # file it was loaded from; not part of the hash
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        d = asdict(self)
+        d.pop("origin")
+        return d
 
     def hash(self) -> str:
         blob = json.dumps(self.to_dict(), sort_keys=True).encode()
@@ -64,11 +66,15 @@ class Params:
     @staticmethod
     def load(path: Path) -> "Params":
         d = json.loads(Path(path).read_text())
-        return Params(
+        p = Params(
             rule=RuleParams(**d["rule"]),
             detect=DetectParams(**d["detect"]),
             monitor=MonitorParams(**d["monitor"]),
             arbiter=ArbiterParams(**d["arbiter"]),
             frozen=d["frozen"],
             note=d.get("note", ""),
+            origin=str(path),
         )
+        if d.get("hash") != p.hash():
+            raise ValueError(f"{path}: stored hash {d.get('hash')} != content hash {p.hash()} (edited by hand?)")
+        return p

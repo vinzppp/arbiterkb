@@ -37,17 +37,38 @@ def test_causality_and_no_ground_truth_access():
         assert not any(hasattr(s, a) for a in ("gt", "ground_truth")), "systems must never hold GroundTruth"
 
 
-def test_test_split_needs_frozen_params():
+def test_test_split_refuses_in_code_params():
     src = SyntheticSource()
-    with pytest.raises(RuntimeError):
-        run(systems(), src, src.episodes("test", 1), Params(frozen=False), "none")
+    for p in (Params(), Params(frozen=True)):  # built in code: no origin, so never allowed on test
+        with pytest.raises(RuntimeError):
+            run(systems(), src, src.episodes("test", 1), p, "none")
+
+
+def test_test_split_needs_freeze_before_read(tmp_path):
+    from arbiter_kb import ledger
+    src = SyntheticSource()
+    Params(frozen=True, note="t").save(tmp_path / "params.json")
+    p = Params.load(tmp_path / "params.json")
+    with pytest.raises(RuntimeError):  # loaded and frozen, but never logged as FREEZE
+        run(systems(), src, src.episodes("test", 1), p, "none")
+    ledger.record("FREEZE", p.hash(), "test")
+    rows, _, _ = run(systems(), src, src.episodes("test", 1), p, "none")
+    assert rows and f"READ\t{p.hash()}" in ledger.path().read_text()
+
+
+def test_hand_edited_params_rejected(tmp_path):
+    Params(frozen=True).save(tmp_path / "params.json")
+    text = (tmp_path / "params.json").read_text().replace('"w_mix": 0.5', '"w_mix": 0.9')
+    (tmp_path / "params.json").write_text(text)
+    with pytest.raises(ValueError):
+        Params.load(tmp_path / "params.json")
 
 
 def test_reproducible_summary(tmp_path):
     src = SyntheticSource()
     hashes = []
     for i in range(2):
-        rows, tr, _ = run(systems(), src, src.episodes("test", 4), Params(frozen=True), "none")
+        rows, tr, _ = run(systems(), src, src.episodes("train", 4), Params(), "none")
         save_run(tmp_path / str(i), rows, Params(), {}, tr)
         hashes.append(hashlib.sha256((tmp_path / str(i) / "summary.csv").read_bytes()).hexdigest())
     assert hashes[0] == hashes[1]

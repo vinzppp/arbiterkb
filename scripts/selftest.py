@@ -29,7 +29,7 @@ def row(summary, cond, system):
 
 
 def args(**kw):
-    a = dict(source="synthetic", corrupt="none,id_swap", p=1.0, split="test", n=30, selftest=False)
+    a = dict(source="synthetic", corrupt="none,id_swap", p=1.0, split="test", n=30, selftest=False, keep=False)
     a.update(kw)
     return argparse.Namespace(**a)
 

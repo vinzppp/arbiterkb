@@ -37,3 +37,16 @@ def test_near_pass_emitted_with_min_distance_when_pass_ends():
     np_ev = [e for e in run(frames) if e.kind == "near_pass"]
     assert len(np_ev) == 1
     assert np_ev[0].data["min_d"] < 0.03 and 0 <= np_ev[0].data["closeness"] < 1
+
+
+def test_no_near_pass_when_image_distance_stays_above_threshold():
+    """Both containers move, but their image distance never drops below d_px (the path synthetic data takes)."""
+    det, out = Detectors(DetectParams(d_px=30.0)), []
+    for t in range(12):
+        objs = {"bin_a": ObjObs("bin_a", "container", True, np.array([0.01 * t, 0, 0.03]), np.array([100.0, 100.0 + t]), 1.0),
+                "bin_b": ObjObs("bin_b", "container", True, np.array([0.2 - 0.01 * t, 0.1, 0.03]), np.array([140.0, 100.0 + t]), 1.0)}
+        if t >= 10:  # both stop: an open pass would close and be emitted here
+            objs = last
+        out += det.step(FrameObs(t, objs, np.zeros(3), 0.08, True))
+        last = objs
+    assert not [e for e in out if e.kind == "near_pass"]

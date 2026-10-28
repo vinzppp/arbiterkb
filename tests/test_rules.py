@@ -97,3 +97,13 @@ def test_r2_follows_probability_weighted_pose():
               SetDist("Inside", "cube_g", Distribution({"bin_a": 0.75, "bin_b": 0.25}, 40, kb.inside("cube_g").support))])
     ops = r2_follow(kb, [], frame(40, {}), RuleParams())
     assert np.allclose(ops[0].xyz, [0.15, 0, 0.03]) and ops[0].source == "inferred"
+
+
+def test_r7_no_decay_in_the_frame_the_distribution_changed():
+    kb = kb_hidden_in("bin_a")  # set at t = 32
+    assert r7_decay(kb, [], frame(32, {}), RuleParams(lam=0.9)) == []
+
+
+def test_swap_weight_must_be_a_probability():
+    with pytest.raises(AssertionError):
+        Distribution({"a": 0.7, "b": 0.3}, 0).swap_mix("a", "b", 1.5, 1, "e1")

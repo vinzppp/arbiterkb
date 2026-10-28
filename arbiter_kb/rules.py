@@ -48,7 +48,8 @@ def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
             continue
         a, b = ev.args
         w = p.w_mix * max(0.0, 1.0 - ev.data["closeness"])
-        ops.append(AddEvent(frame.t, "swap", (a, b), 1.0, [ev.id]))  # the motion itself is certain
+        if w > 0:  # the motion is certain; the event marks a pass that may have exchanged identities
+            ops.append(AddEvent(frame.t, "swap", (a, b), 1.0, [ev.id]))
         for (pred, cube), d in kb.relations.items():
             hidden = kb.objects[cube].visibility.value == "hidden"
             if pred == "Inside" and hidden and (d.probs.get(a, 0) > 0 or d.probs.get(b, 0) > 0) and w > 0:
@@ -62,8 +63,8 @@ def r7_decay(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     if p.lam >= 1.0:
         return []
     bins = containers(kb)
-    return [FlattenDist("Inside", cube, p.lam ** max(1, frame.t - d.t), bins, frame.t)
-            for (pred, cube), d in kb.relations.items() if pred == "Inside" and bins]
+    return [FlattenDist("Inside", cube, p.lam ** (frame.t - d.t), bins, frame.t)
+            for (pred, cube), d in kb.relations.items() if pred == "Inside" and bins and frame.t > d.t]
 
 
 def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:

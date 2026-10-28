@@ -104,7 +104,11 @@ def main() -> None:
     ap.add_argument("--cube", required=True)
     ap.add_argument("--t", type=int)
     a = ap.parse_args()
-    rows = read_trace(Path(a.run) / "traces" / f"{a.condition}_{a.system}_{a.ep}.jsonl")
+    path = Path(a.run) / "traces" / f"{a.condition}_{a.system}_{a.ep}.jsonl"
+    if not path.exists():
+        found = sorted(p.stem for p in (Path(a.run) / "traces").glob("*.jsonl"))[:10]
+        raise SystemExit(f"no trace {path.name}; available (first 10): {found}")
+    rows = read_trace(path)
     if a.cmd == "explain":
         print(explain(rows, a.cube, a.t))
     else:

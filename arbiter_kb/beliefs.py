@@ -65,6 +65,7 @@ class Distribution:
         Each hypothesis keeps its own evidence (a key that had none inherits the other's), so a
         later retract removes the CURRENT mass on the hypotheses that evidence backs. This is an
         approximation after mixing; exact per-origin mass tracking is deferred to M5 (R4 reveal)."""
+        assert 0.0 <= w <= 1.0, f"swap weight {w} outside [0, 1]"
         pa, pb = self.probs.get(a, 0.0), self.probs.get(b, 0.0)
         probs = dict(self.probs)
         probs[a], probs[b] = (1 - w) * pa + w * pb, (1 - w) * pb + w * pa

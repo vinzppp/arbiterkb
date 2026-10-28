@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from arbiter_kb import CONTRACT_VERSION  # noqa: E402
+from arbiter_kb import CONTRACT_VERSION, ledger  # noqa: E402
 from arbiter_kb.evaluate import run, save_run  # noqa: E402
 from arbiter_kb.params import Params  # noqa: E402
 from arbiter_kb.plots import belief_timeline  # noqa: E402
@@ -31,12 +31,16 @@ COLS = ["condition", "system", "n", "acc", "silent", "silent_lo", "silent_hi", "
         "conf_wrong", "acc_moved", "acc_back", "n_corrupted", "silent_on_corrupted", "grasp_err_m"]
 
 
-def git_commit() -> str:
+def git_state() -> tuple[str, bool | None]:
+    """(commit, dirty): dirty = the working tree differs from that commit (E4 provenance)."""
     try:
-        return subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
-                              text=True, check=True).stdout.strip()
+        commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
+                                text=True, check=True).stdout.strip()
+        status = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True,
+                                text=True, check=True).stdout
+        return commit, bool(status.strip())
     except Exception:
-        return "no-git"
+        return "no-git", None
 
 
 PARAMS_FILE = ROOT / "params.json"
@@ -49,11 +53,18 @@ def load_params() -> Params:
     return Params.load(PARAMS_FILE)
 
 
+FREEZE_NOTE = ("M0 defaults, untuned. Test seeds were already evaluated at commit 23b53ba before this file "
+               "existed; nothing has been tuned on them.")
+
+
 def freeze(force: bool = False) -> None:
+    """Write params.json from the defaults (M0 only; M1+ freezes from tune.py) and log FREEZE (E5c)."""
     if PARAMS_FILE.exists() and not force:
         sys.exit(f"{PARAMS_FILE.name} exists; refusing to overwrite without --force")
-    Params(frozen=True, note="M0 defaults, untuned, frozen before any test read").save(PARAMS_FILE)
-    print("wrote", PARAMS_FILE)
+    p = Params(frozen=True, note=FREEZE_NOTE)
+    p.save(PARAMS_FILE)
+    ledger.record("FREEZE", p.hash(), f"{PARAMS_FILE.name} via run.py --freeze")
+    print("wrote", PARAMS_FILE, "hash", p.hash())
 
 
 def systems(params: Params) -> list:
@@ -80,21 +91,23 @@ def evaluate(args, params: Params) -> tuple[Path, list[dict], dict]:
         step_s += st
         traces.update({(f"{cond}_{s}", ep): v for (s, ep), v in tr.items()})
         logs[cond] = log
-    meta = {"commit": git_commit(), "args": vars(args), "params_hash": params.hash(),
+    commit, dirty = git_state()
+    meta = {"commit": commit, "dirty": dirty, "args": vars(args), "params_hash": params.hash(),
             "contract_version": CONTRACT_VERSION,
             "params_file_mtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(PARAMS_FILE.stat().st_mtime))
             if PARAMS_FILE.exists() else None, "first_data_read": first_read, "created": time.strftime("%Y-%m-%d %H:%M:%S"),
             "corruption_log": logs, "median_step_ms": 1000 * sorted(step_s)[len(step_s) // 2] if step_s else None,
             "llm_cache": {"hits": 0, "misses": 0}}
     summary = save_run(run_dir, rows, params, meta, traces)
-    keep = ROOT / "results" / "latest" / f"{args.source}_{args.split}_n{args.n}_p{args.p}"  # committed (E10)
-    keep.mkdir(parents=True, exist_ok=True)
-    for f in ("summary.csv", "meta.json"):
-        (keep / f).write_bytes((run_dir / f).read_bytes())
+    if getattr(args, "keep", False):  # results/latest is committed: only on request, from a clean tree
+        keep = ROOT / "results" / "latest" / f"{args.source}_{args.split}_n{args.n}_p{args.p}"
+        keep.mkdir(parents=True, exist_ok=True)
+        for f in ("summary.csv", "meta.json"):
+            (keep / f).write_bytes((run_dir / f).read_bytes())
     print_table(summary)
     print(f"run dir: {run_dir.relative_to(ROOT)}")
     return run_dir, summary, {"traces": traces, "logs": logs, "rows": rows, "step_s": step_s,
-                              "source": args.source, "p": args.p}
+                              "source": args.source, "p": args.p, "keep": getattr(args, "keep", False)}
 
 
 def print_table(summary: list[dict]) -> None:
@@ -119,7 +132,7 @@ def figure(run_dir: Path, info: dict, base) -> Path | None:
     title = (f"episode {ep}: the true container is labelled {a} until t={log[ep]['t']}, then {b} "
              f"(the tracker swapped the two ids)")
     marks = {"cover": COVER_T, "corruption": log[ep]["t"], "t*": gt.t_star[cube]}
-    out = ROOT / "figures" / f"m0_belief_timeline_{info['source']}_p{info['p']}.png"
+    out = ROOT / ("figures" if info.get("keep") else "results/runs") / f"m0_belief_timeline_{info['source']}_p{info['p']}.png"
     return belief_timeline(tr[("id_swap_arbiterkb", ep)], {"bound": tr[("id_swap_bound", ep)],
                            "frozen": tr[("id_swap_frozen", ep)]}, cube, a, bins, marks, out, title)
 
@@ -134,6 +147,7 @@ def main() -> None:
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--freeze", action="store_true", help="write params.json from defaults (M0 only)")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--keep", action="store_true", help="copy summary + meta to results/latest (committed)")
     args = ap.parse_args()
     if args.freeze:
         return freeze(args.force)

@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.1 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted.
+Version 1.2 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -29,7 +29,7 @@ Each eval is a concrete check that `make check` runs. A phase is not done until 
 | E2 | **Debuggable** | Any number in any table can be traced back to the observations that produced it | Every episode writes a trace (§3.9). `python -m arbiter_kb.debug explain --run R --ep E --cube C --t T` prints the support chain down to observation ids. A test asserts that the chain exists for every row of the results |
 | E3 | **Correct by construction** | Invariants hold at every frame, not just at the end | `KB.check()` asserts the invariants (§3.2) after every `apply()` when `ARBITER_DEBUG=1` (the default in tests). Each rule has a unit test on hand-made frames |
 | E4 | **Reproducible** | Same inputs → same bytes | Run twice → identical `summary.csv` hash (test). Every results file records the commit, args, `params.json` hash, contract version and LLM cache hit/miss counts |
-| E5 | **Honest evaluation** | No future information, no test leakage, the same treatment for every system | (a) Causality test: a `PoisonedSource` raises if any frame after t is requested before step(t) returns. (b) Systems never see `GroundTruth`. (c) `evaluate(split="test")` refuses to run unless `params.json` has `"frozen": true` and was written before the first test read (timestamps logged). (d) Baselines run through the same `MemorySystem` interface and the same evaluation code |
+| E5 | **Honest evaluation** | No future information, no test leakage, the same treatment for every system | (a) Causality test: a `PoisonedSource` raises if any frame after t is requested before step(t) returns. (b) Systems never see `GroundTruth`. (c) `evaluate.run` refuses test episodes unless the Params was loaded from a `params.json` whose stored hash matches, has `frozen: true`, and has a FREEZE entry in the append-only ledger `results/test_reads.log` (`arbiter_kb/ledger.py`); every test read appends a READ entry. (d) Baselines run through the same `MemorySystem` interface and the same evaluation code |
 | E6 | **Explainable outputs** | Every decision says why | Every `PlanStep` carries `support` (evidence ids) and every arbiter patch cites evidence ids. Test: no inferred / arbiter item has empty support |
 | E7 | **Fast feedback** | Iterate in seconds, not minutes | `pytest` < 60 s; the M0 synthetic evaluation < 60 s; median KB update < 1 ms per frame (printed by `--selftest`) |
 | E8 | **Cost-bounded** | LLM spend cannot surprise you | Every call is cached on disk; the hard cap is `ARBITER_MAX_USD` (default 2.00) per run, after which the backend raises. Calls, tokens, seconds and dollars are counted per episode |
@@ -230,6 +230,7 @@ arbiter-kb/
     beliefs.py           Belief, Distribution (§3.3)
     kb.py                ObjectFrame, Evidence, Event, Op types, KB (apply/check/ask/retract/count/views/snapshot)
     sg_compat.py         functions copied from sg_pilot.py (§0.4)
+    ledger.py            append-only test-read ledger results/test_reads.log (E5c)
     params.py            RuleParams, DetectParams, MonitorParams, ArbiterParams, load/save/hash/freeze
     trace.py  debug.py
     sources/  __init__.py synthetic.py replay.py corrupt.py perceived.py(M6)
@@ -322,7 +323,7 @@ numpy, scipy, matplotlib, pytest, nbformat, nbconvert, ipykernel. Nothing else w
 
 Time estimates are for a coding agent with review. Each phase lists: **Goal · Build (how) · Params · Done when · Not in scope**.
 
-**Order (v1.1):** M0 → M1 → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code can be written while M1 runs.
+**Order (v1.2):** M0 → M1 (plumbing) → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code is written right after M1, or alongside it. Tuning starts only after G (M2), against `id_swap_measured`.
 
 ### M0 — Walking skeleton (1–2 days, Mac CPU)
 
@@ -361,31 +362,28 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 
 **Not in scope.** R3–R5, R8, Hungarian matching, thresholds, LLM, yaw, IK, real perception.
 
-### M1 — Realistic corruption, trivial baselines, permanence rules (2–3 days, CPU)
+### M1 — Plumbing for realistic corruption and the trivial baselines (1–1.5 days, CPU)
 
-**Goal.** Answer the first honest question: on corruption that looks like a real tracker error, does the belief layer beat the two cheapest heuristics? Rules are completed for permanence; tuning uses train seeds only and never the teleport corruption.
+**Goal.** Build what G and M2 need, without claiming anything. The M0.1 goal review showed that on any synthetic corruption we design, the best possible system is the one that copies our own choices (the overlap threshold and the swap rate). M1 therefore tunes nothing and makes no claim. It delivers the generator, the corruption, the baselines and R5, plus one table at default parameters.
 
 **Build.**
-1. **Synthetic generator:** `lane_offset` down to 0.0 (overlapping tracks), `swap_steps` 20–50, `pos_noise`. Record per pass the true minimum 3D centre distance (in GroundTruth extras for evaluation only).
-2. **`corrupt.py`:** `id_swap_overlap` (§3.11). Keep `id_swap` labelled "teleport (sanity)".
-3. **Mandatory baselines** (`systems/baselines.py`, same interface):
-   - `BoundHaircut(c)`: Bound, but after any near-pass involving the container that holds the cube, its answer becomes {pred: c, partner: 1 − c}. c is tuned on train.
-   - `JumpDetector(j_max)`: Bound, but when any container label moves more than j_max (default 0.03 m) in one frame, the hypotheses involving that container get confidence 0.5.
-   Under the teleport corruption JumpDetector catches everything: that is why the teleport corruption cannot be used.
-4. **Rules:** R3 held, R5 `joint_exclusive`, R7 for real, the visibility state machine (§3.4), ε_none = 0.01.
-5. **R6 v1.5:** w = w_max·exp(−d/d0), where d is the 3D centre distance at closest approach (image distance as fallback).
-6. **Metrics and plots:** ECE, reliability diagram, and a **trade-off curve**: clean ECE vs silent failure under `id_swap_overlap`, over the parameter grid.
-7. **`scripts/tune.py`:** train seeds only. Grid over w_max, d0, r_cover, σ_cover, λ (and c for BoundHaircut, j_max for JumpDetector). Objective: minimise silent failure under `id_swap_overlap` p = 0.5, subject to clean accuracy ≥ Bound − 1 point and clean ECE ≤ 0.05. Writes `params.json` (`frozen: true`) and the whole grid to `results/` for the curve.
+1. **Synthetic generator:** `lane_offset` down to 0.0 (overlapping tracks), `swap_steps` 20–50, `pos_noise`. Record per pass the true minimum 3D centre distance (evaluation-only extras).
+2. **`corrupt.py`:** `id_swap_overlap` (§3.11), with its label-jump histogram written to results. Keep `id_swap` labelled "teleport (sanity)".
+3. **Baselines** (`systems/baselines.py`, same interface):
+   - `BoundHaircut(c)`: after any near-pass involving the container that holds the cube, the answer becomes {pred: c, partner: 1 − c}.
+   - `OverlapHaircut(c)`: the same, but only after a pass whose minimum 3D centre distance < `d_ov`. This is the Bayes-optimal rule for `id_swap_overlap`.
+   - `JumpDetector(j_max)`: a container label that moves > j_max (0.03 m) in one frame sets its hypotheses to 0.5. By construction it should be useless on `id_swap_overlap`.
+4. **R5** `joint_exclusive`, ε_none = 0.01. R5 is the one rule that can beat any haircut (3 cubes in 3 containers: pinning one cube informs the others).
+5. **R6 v1.5:** w = w_max·exp(−d/d0) from the 3D closest-approach distance (image distance as fallback). Defaults, not tuned.
+6. **Metrics:** ECE and a reliability diagram.
 
 **Done when.**
 - (a) `make check`.
-- (b) One table on test seeds, after the freeze, with Frozen, Bound, BoundHaircut, JumpDetector and ArbiterKB under {clean, `id_swap_overlap` p = 0.5, `pos_noise` 15 mm}, with Wilson intervals.
-- (c) The trade-off curve figure.
-- (d) NOTES states plainly whether ArbiterKB beats BoundHaircut **and** JumpDetector with non-overlapping intervals. If not, that is a finding, and the goal review decides what follows.
-- (e) The corruption's label-jump distribution is reported (median ≤ `d_ov`).
-- (f) The R5 test: two hidden cubes, one pinned → the other's mass moves.
+- (b) One table on test seeds at the frozen default parameters: Frozen, Bound, BoundHaircut, OverlapHaircut, JumpDetector and ArbiterKB under {clean, `id_swap_overlap` p = 0.5, `pos_noise` 15 mm}, with Wilson intervals. The column that matters is **ArbiterKB minus OverlapHaircut**. NOTES must say that, at about 0, M1 shows plumbing only.
+- (c) The label-jump histogram of `id_swap_overlap`: median ≤ `d_ov`, and JumpDetector ≈ Bound.
+- (d) The R5 test: two hidden cubes, one pinned → the other's mass moves; plus one synthetic scenario where R5 beats OverlapHaircut.
 
-**Not in scope.** Hungarian margin (M2), LLM (M4), real data (G / M6).
+**Deferred until G's measurements exist:** `scripts/tune.py`, the trade-off curve, R3 held and the full visibility state machine (no VideoUnmaskSwap metric reads them).
 
 ### G — Gate: how often and how does the real tracker swap ids? (Mac code ~1 day + one GPU pod session, about 3–5 h; needs the user's go)
 
@@ -420,7 +418,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 2. `identity.py`: each frame (oracle) or every `N_id` frames (perceived), solve `linear_sum_assignment` on the cost = 3D distance between each container's predicted pose (constant velocity) and the observed tracks. Margin = (second-best total − best total) / best total. Emit `id_margin` evidence when the margin < `m_thr`.
 3. R6 v2: `w = w_max·exp(−margin/m0)`.
 4. `corrupt.py`: `id_swap_measured` from G's signature (no hand-chosen sigmoid), plus `pos_noise`.
-5. Retune (M1 script) and refreeze `params.json` (v2).
+5. `scripts/tune.py` (first tuning in the project): train seeds only, against `id_swap_measured`. Writes `params.json` and a FREEZE ledger entry. The trade-off curve (clean ECE vs silent failure) is drawn here.
 
 **Done when.**
 - (a) `make check`.

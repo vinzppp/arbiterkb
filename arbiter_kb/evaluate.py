@@ -13,6 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
+from . import ledger
 from .metrics import brier, summarize
 from .params import Params
 
@@ -48,8 +49,12 @@ def score(system, cube: str, gt, bins: list[str], ep: int, t: int, condition: st
 def run(systems: list, source, episodes: list[int], params: Params, condition: str,
         corrupted_of=lambda ep: False) -> tuple[list[dict], dict, list[float]]:
     """-> (rows, traces {(system, ep): rows}, per-frame step seconds of the last system)."""
-    if any(ep >= 1000 for ep in episodes) and not params.frozen:
-        raise RuntimeError("E5c: the test split needs a frozen params.json")
+    test = [ep for ep in episodes if source.meta(ep).split == "test"]
+    if test:
+        if not (params.frozen and params.origin and ledger.was_frozen(params.hash())):
+            raise RuntimeError("E5c: the test split needs a frozen params.json with a FREEZE entry in the "
+                               f"test-read ledger ({ledger.path()}); got origin={params.origin!r}")
+        ledger.record("READ", params.hash(), f"{getattr(source, 'name', '?')} {condition} n={len(test)}")
     rows, traces, step_s = [], {}, []
     for ep in episodes:
         meta, gt = source.meta(ep), source.ground_truth(ep)

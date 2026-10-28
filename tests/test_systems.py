@@ -1,3 +1,5 @@
+import copy
+
 from arbiter_kb.params import Params
 from arbiter_kb.sources.synthetic import SyntheticSource
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
@@ -43,7 +45,9 @@ def test_rules_do_not_mutate_kb():
     s.kb.apply([AddEvidence(40, "disappear", ("cube_red",), {"last_xyz": [0.0, 0.0, 0.017], "obs": []}),
                 AddEvidence(40, "near_pass", ("bin_0", "bin_1"), {"closeness": 0.1, "obs": []})])
     ev = s.kb.evidence[-2:]
-    before = s.kb.snapshot()
+    state = lambda kb: copy.deepcopy((kb.objects, kb.relations, kb.events, kb.evidence))  # noqa: E731
+    before = state(s.kb)
     produced = [op for _, rule in RULES for op in rule(s.kb, ev, frames[40], Params().rule)]
     assert produced, "the rules should have produced ops for this evidence"
-    assert s.kb.snapshot() == before
+    after = state(s.kb)
+    assert repr(after) == repr(before)  # every field, including support lists and hyp_support

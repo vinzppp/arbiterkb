@@ -43,7 +43,7 @@ Median ArbiterKB step: see `median_step_ms` in each `results/latest/*/meta.json`
 
 ### What these numbers do and do not show (for the goal reviewer)
 - M0 proves that the pipeline runs end to end and that the measurement is honest. **It is not evidence for claim 1.** The corruption is injected at the closest approach of a swap, the same place R6 mixes. That is circular by construction (docs/GOALS.md, "Known traps").
-- With the untuned defaults the belief layer barely helps (0.90 vs 1.00 silent). Passes stay 21–36 px apart, so with `d_px` = 30, w = 0.5·(1 − d/30) ≤ 0.15, and confidence in the wrong label stays around 0.9 > τ_hi.
+- With the untuned defaults the belief layer barely helps (0.90 vs 1.00 silent). Passes stay 22–36 px apart (21.6 px minimum), so with `d_px` = 30, w = 0.5·(1 − d/30) ≤ 0.15, and confidence in the wrong label stays around 0.9 > τ_hi.
 - Clean-input cost: ArbiterKB's confidence when right drops to 0.94, because R6 mixes on every detected pass.
 - M1 tuning on train seeds decides whether a setting exists that lowers silent failure without hurting clean calibration. If none does, that is an early warning for claim 1.
 - The simple baseline the goal reviewer will ask for (Bound with confidence lowered after any near-pass) is not yet implemented. It is cheap and belongs in M1.
@@ -91,3 +91,25 @@ Reviews: `reviews/M0_code.md` (BLOCK), `reviews/M0_goal.md` (ON-TRACK-WITH-CHANG
 - `v_move` was measured on train seeds (0–19, later 0–39), not test seeds.
 - The notebook wording is corrected: ArbiterKB was still silently wrong (confidence 0.91 > τ_hi).
 - **New plan** (DEVELOPMENT.md §6, v1.1): M1 replaces the corruption with overlap-only swaps (no jump), makes the two trivial baselines mandatory (Bound + haircut, label-jump detector) and does no tuning on the teleport corruption. The November gate is pulled forward as phase G: measure how often and how real trackers swap ids on RoboMME stress variants.
+
+## M0.2 — fixes after the second review (2026-10-28)
+Reviews: `reviews/M0.1_code.md` (PASS-WITH-NOTES, one MAJOR), `reviews/M0.1_goal.md` (ON-TRACK-WITH-CHANGES).
+
+- **MAJOR (E5c) fixed.** `evaluate.run` refuses test episodes (detected via `EpisodeMeta.split`, no longer `ep >= 1000`) unless the Params:
+  - came from a `params.json` whose stored hash matches its content (hand edits raise);
+  - is frozen;
+  - has a FREEZE entry in the append-only ledger `results/test_reads.log`.
+
+  A Params built in code has no origin, so it is always refused. Every test read appends a READ line. Tests write to a temporary ledger.
+- **params.json note corrected.** It now says the test seeds were already evaluated at 23b53ba before the file existed, and that nothing was tuned. Re-frozen with a new hash; the ledger's first line is that FREEZE.
+- **Provenance:** meta.json records `dirty` (git status). `results/latest` and `figures/` are written only with `--keep`, and kept results are regenerated from a clean tree after the commit.
+- **Minor fixes:**
+  - R7 does not decay in the frame a distribution changed (Δt = 0).
+  - `swap_mix` asserts 0 ≤ w ≤ 1.
+  - R6 records a swap event only when w > 0.
+  - The debug CLI lists the available traces instead of a raw FileNotFoundError.
+- **New tests:** a uv-path detector test (both containers moving, never within d_px), the R7 Δt = 0 test, the w-range test, and a deep-copy no-mutation test covering support lists.
+- **Known, recorded:**
+  - Retracting a near-pass moves half the mass to None; it does not undo the mix. M4's "unlikely" verdict must restore the pre-mix distribution from the trace, not rely on Retract.
+  - There is still no test that walks the support chain for every results row (5 episodes are covered).
+- **Goal review accepted:** M1 is now plumbing only. OverlapHaircut, the Bayes-optimal rule for `id_swap_overlap`, is added. Tuning, the trade-off curve, R3 and the visibility state machine wait until after G (DEVELOPMENT v1.2).
