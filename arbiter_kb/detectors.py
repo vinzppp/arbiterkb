@@ -51,9 +51,9 @@ class Detectors:
                 continue
             mv = float(np.linalg.norm(o.xyz[:2] - prev.xyz[:2])) > self.p.v_move
             if mv != self.moving.get(oid, False):
-                kind, at = ("move_start", prev.xyz) if mv else ("move_stop", o.xyz)
-                ops.append(AddEvidence(frame.t, kind, (oid,), {"xyz": [round(float(v), 4) for v in at],
-                                                               "obs": [obs_id(frame.t, oid)]}))
+                kind, at, t_at = ("move_start", prev.xyz, frame.t - 1) if mv else ("move_stop", o.xyz, frame.t)
+                ops.append(AddEvidence(frame.t, kind, (oid,), {"xyz": [round(float(v), 4) for v in at], "t_at": t_at,
+                                                               "obs": [obs_id(t_at, oid)]}))
             self.moving[oid] = mv
         return ops
 
@@ -85,7 +85,7 @@ class Detectors:
         if not flip:
             return []
         self.closed = not self.closed
-        data = {"ee": [round(float(v), 4) for v in frame.ee_xyz], "width": round(w, 4), "obs": []}
+        data = {"ee": [round(float(v), 4) for v in frame.ee_xyz], "width": round(w, 4), "obs": [obs_id(frame.t, "ee")]}
         return [AddEvidence(frame.t, "grip_close" if self.closed else "grip_open", (), data)]
 
     def _distance(self, oa, ob) -> tuple[float, float]:

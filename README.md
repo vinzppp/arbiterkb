@@ -2,7 +2,13 @@
 
 A robot knowledge base whose facts carry beliefs (confidence, time, evidence), used as the memory module of an LLM controller that outputs waypoints for a motion planner (spec v1.4). The goal is to match a frontier VLM that reads the whole image history (arXiv 2610.17350), with a smaller model or far fewer tokens. Build spec: `DEVELOPMENT.md`. Goals: `docs/GOALS.md`. Log: `NOTES.md`.
 
-**Status: M0 (walking skeleton) built.** It runs on synthetic RoboMME-like data on CPU: three systems (Frozen, Bound, ArbiterKB-RuleOnly), id-swap corruption, metrics, traces and debug. Stubs: monitor (M3), arbiter LLM (M4), grasp yaw / reach check (M5), real perception (M6). Real replays are supported but need `scripts/copy_replays.sh`.
+**Status (2026-10-28):**
+- M0–M2 infrastructure: KB, beliefs, baselines, metrics with CIs.
+- G: running on a pod.
+- M3, first part: events, relations, event log, controller view.
+- M4, Mac side: OpenRouter client, controller, dry run. Not run yet.
+
+It runs on synthetic RoboMME-like data on CPU. Real replays need `scripts/copy_replays.sh`. See `HANDOFF.md` and `NOTES.md` for details.
 
 ```
 python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt

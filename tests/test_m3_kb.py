@@ -1,7 +1,11 @@
 """M3: R3 grasp / place, geometric relations, the event log and the controller view, on hand-made frames."""
 import numpy as np
 
-from arbiter_kb.params import Params
+from dataclasses import replace
+
+from arbiter_kb.debug import explain_item
+from arbiter_kb.detectors import Detectors
+from arbiter_kb.params import DetectParams, Params, RuleParams
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
 from arbiter_kb.types import EpisodeMeta, FrameObs, ObjObs
 from arbiter_kb.views import ask, controller_view, event_log, facts, geometric
@@ -62,7 +66,7 @@ def test_held_object_out_of_sight_follows_the_end_effector_and_is_not_covered():
 
 def test_geometric_relations():
     kb = run(pick_place())
-    rel = {f for f, _ in geometric(kb)}
+    rel = {f for f, _, _ in geometric(kb)}
     assert ("On", "cube_r", "bin_a") in rel  # the cube rests on top of bin_a after the place
     assert ("LeftOf", "bin_a", "cube_b") in rel  # +y is the robot's left
     assert not any(f[0] == "On" and f[1] == "cube_b" for f in rel)
@@ -96,4 +100,93 @@ def test_hidden_cube_pose_is_not_printed_as_a_coordinate():
     for f in src.frames(ep):
         s.step(f)
     v = controller_view(s.kb)
-    assert all("see Inside" in line for line in v.splitlines() if "cube, hidden" in line)
+    hidden = [line for line in v.splitlines() if "cube, hidden" in line]
+    assert hidden and all("see Inside" in line for line in hidden)
+
+
+def put_back_container():
+    """bin_a covers the red cube (t=3), is grasped (t=6), lifted, lowered back and released (t=9)."""
+    red = np.array([0.1, 0.1, 0.017])
+    fs = [frame(t, [0, -0.2, 0.3], 0.08, red) for t in range(3)]
+    fs.append(frame(3, [0, -0.2, 0.3], 0.08, red, red_vis=False))  # bin_a (at BIN) now over the cube's spot
+    fs[-1].objects["cube_r"] = fs[-1].objects["cube_r"].__class__("cube_r", "cube", False, None, None, 1.0)
+    for t, ee, w in [(4, BIN + [0, 0, 0.1], 0.08), (5, BIN, 0.08), (6, BIN, 0.04), (7, BIN + [0, 0, 0.05], 0.04),
+                     (8, BIN, 0.04), (9, BIN + [0, 0, 0.02], 0.08)]:
+        f = frame(t, ee, w, red, red_vis=False)
+        fs.append(f)
+    return fs
+
+
+def test_container_put_back_is_not_placed_on_its_hidden_cube():
+    kb = run(put_back_container())
+    ev = [(e.type, e.args) for e in kb.events]
+    assert ("cover", ("bin_a", "cube_r")) in ev and ("grasp", ("bin_a",)) in ev
+    assert ("place", ("bin_a", "table")) in ev and ("place", ("bin_a", "cube_r")) not in ev
+
+
+def test_no_grasp_when_nothing_is_within_r_grasp():
+    fs = [frame(t, [0.3, 0.3, 0.3], 0.08 if t < 3 else 0.04, [0, 0.1, 0.017]) for t in range(6)]
+    kb = run(fs)
+    assert [e.kind for e in kb.evidence if e.kind.startswith("grip")] == ["grip_close"]
+    assert not [e for e in kb.events if e.type == "grasp"]
+
+
+def test_held_cube_lost_from_view_is_held_not_visible():
+    fs = pick_place()[:9] + [frame(t, [0.03 + 0.01 * t, 0.1, 0.05], 0.04, None, red_vis=False) for t in range(9, 12)]
+    kb = run(fs)
+    assert kb.objects["cube_r"].visibility.value == "held"
+    f = facts(kb)
+    assert (("Held", "cube_r"), 1.0) in f and not any(x[0] == ("Visible", "cube_r") for x in f)
+
+
+def test_gripper_hysteresis():
+    d, flips = Detectors(DetectParams()), []
+    for t, w in enumerate([0.08, 0.069, 0.074, 0.071, 0.076, 0.074, 0.069]):
+        ev = d._gripper(frame(t, [0, 0, 0.2], w, [0, 0, 0.017]))
+        flips += [(t, e.kind) for e in ev]
+    assert flips == [(1, "grip_close"), (4, "grip_open"), (6, "grip_close")]
+
+
+def test_move_evidence_carries_where_and_when_it_started():
+    from arbiter_kb.sources.synthetic import SWAP_T0, SyntheticSource
+
+    src = SyntheticSource(lane_offset=0.0, swap_steps=20, n_swaps=1)
+    ep = src.episodes("train", 1)[0]
+    s = ArbiterKBSystem(Params())
+    s.reset(src.meta(ep))
+    for f in src.frames(ep):
+        s.step(f)
+    starts = [e for e in s.kb.evidence if e.kind == "move_start"]  # containers only
+    assert starts and all("xyz" in e.data and e.data["t_at"] == e.t - 1 for e in starts)
+    assert min(e.data["t_at"] for e in starts) >= SWAP_T0 - 1
+    assert any(f"(t={starts[0].data['t_at']}-" in x for x in event_log(s.kb))
+
+
+def test_grasp_explains_down_to_the_end_effector_observation():
+    s = ArbiterKBSystem(Params())
+    s.reset(META)
+    for f in pick_place():
+        s.step(f)
+    grasp = next(e for e in s.kb.events if e.type == "grasp")
+    text = explain_item(s.trace_rows(), grasp.id)
+    assert "o6:ee: observation ee at t=6" in text and "NOT FOUND" not in text
+
+
+def test_view_uses_the_given_parameters():
+    kb = run(pick_place())
+    near = lambda p: "Near(" in controller_view(kb, p)  # noqa: E731
+    assert near(replace(RuleParams(), r_near=0.5)) and not near(replace(RuleParams(), r_near=0.001))
+
+
+def test_event_log_keeps_covers_when_it_drops_old_lines():
+    from arbiter_kb.sources.synthetic import SyntheticSource
+
+    src = SyntheticSource(lane_offset=0.0, swap_steps=20, n_swaps=3)
+    ep = src.episodes("train", 1)[0]
+    s = ArbiterKBSystem(Params())
+    s.reset(src.meta(ep))
+    for f in src.frames(ep):
+        s.step(f)
+    log = event_log(s.kb, last=4)
+    assert log[0].endswith("earlier lines omitted)")
+    assert sum("event cover" in x for x in log) == 3

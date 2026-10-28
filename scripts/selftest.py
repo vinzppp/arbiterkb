@@ -137,10 +137,41 @@ def m2_infra_checks() -> None:
     check("M2 E2: explain reaches an observation for every SoftHaircut row", not bad, f"{len(soft)} rows, {bad[:3]}")
 
 
+def m3_checks() -> None:
+    """M3 (b) covers against truth and (c) every event-log line resolves to observations, on train seeds."""
+    import re
+
+    from measure_kb import measure
+    from arbiter_kb.debug import explain_item
+    from arbiter_kb.sources.synthetic import SyntheticSource
+    from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
+    from arbiter_kb.views import event_log
+
+    params = load_params()
+    m = measure("none", 20, 0.015, params)
+    check("M3 (b) cover events match the true container (clean, 20 train seeds)",
+          m["cover_precision"] == 1.0 and m["cover_recall"] == 1.0, (m["cover_precision"], m["cover_recall"]))
+    info("M3 (b) near-pass precision / recall, view tokens median / max", (m["pass_precision"], m["pass_recall"],
+         m["view_tokens_median"], m["view_tokens_max"]))
+    src, bad, n = SyntheticSource(lane_offset="mix", swap_steps="mix"), [], 0
+    for ep in src.episodes("train", 10):
+        s = ArbiterKBSystem(params)
+        s.reset(src.meta(ep))
+        for f in src.frames(ep):
+            s.step(f)
+        for line in event_log(s.kb):
+            ids = re.findall(r"^\[([ev]\d+)\]", line)
+            n += len(ids)
+            bad += [(ep, i) for i in ids if "NOT FOUND" in (t := explain_item(s.trace_rows(), i)) or "observation" not in t]
+    check("M3 (c) every event-log line resolves to an observation via explain_item", n > 0 and not bad,
+          f"{n} lines, {len(bad)} failing {bad[:3]}")
+
+
 def selftest() -> int:
     m0_checks()
     inf = m1_checks()
     m2_infra_checks()
+    m3_checks()
     replay_check()
     step_ms = 1000 * float(np.median(inf["step_s"]))
     check("E7 median ArbiterKB step < 1 ms", step_ms < 1.0, f"{step_ms:.3f} ms")

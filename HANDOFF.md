@@ -20,7 +20,7 @@ Read first: `DEVELOPMENT.md` (spec v1.4, §3.8 controller, §6 phases), `docs/GO
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
 - Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD: G Mac-side code plus the POD_RUN fresh-volume path.
 - Gate per phase: `make check` (pytest + quality.py + selftest, which uses train seeds only), then the user runs `/review-phase Mx` in Claude Code (a code-reviewer and a goal-reviewer agent; reviews land in `reviews/`). Fix, record in NOTES, then tag.
-- Current frozen params: hash b0a2dd3cb30b (M3 parameters added).
+- Current frozen params: hash 65d1345cf1be (M3a review fixes).
 - E5c: test-split reads need a frozen `params.json` with a FREEZE line in `results/test_reads.log`. Any parameter change means `python scripts/run.py --freeze --force` before the next test read.
 - Cowork session mechanics (if continuing from Claude.ai):
   - edit in the container copy, stage the changed files under `/mnt/user-data/outputs/<fresh dir>/`, then `device_commit_files` to the Mac (reuse of a staged path can serve a stale copy);
@@ -40,7 +40,7 @@ Read first: `DEVELOPMENT.md` (spec v1.4, §3.8 controller, §6 phases), `docs/GO
 - **Honest status (two goal reviews):**
   - On every test row ArbiterKB's answer equals Bound's. Its only effect is graded confidence (R6's distance formula).
   - A KB-free `SoftHaircut` with the same formula would very likely tie. Nothing shows yet that the KB helps.
-  - The KB's own contributions are propagation (R5 on ambiguous covers, retraction, containment as a defeasible default, §7 q5) and evidence for the LLM (M4 arm C vs D). They are untested on real data.
+  - The KB's own contributions are propagation (R5 on ambiguous covers, retraction, containment as a defeasible default, §7 q5) and evidence for the LLM controller (memory arms K vs R / H, spec v1.4 §3.8). They are untested on real data.
 - **G (Mac side, done; pod side in progress):**
   - `stress/stress_env.py`: `VideoUnmaskSwapStress`.
   - `stress/render.py`, `stress/perceive.py`.

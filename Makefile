@@ -1,4 +1,4 @@
-PY ?= python3
+PY ?= $(shell test -x .venv/bin/python && echo .venv/bin/python || echo python3)
 export ARBITER_DEBUG ?= 1
 
 .PHONY: test quality selftest check eval notebook

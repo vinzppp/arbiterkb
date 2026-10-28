@@ -1,10 +1,12 @@
 """Debugging from traces (E2).
 
   python -m arbiter_kb.debug explain  --run RUN_DIR --condition id_swap --system arbiterkb --ep 1001 --cube cube_green [--t 100]
+  python -m arbiter_kb.debug explain  --run RUN_DIR --condition none --system arbiterkb --ep 3 --item v4   # any id
   python -m arbiter_kb.debug timeline --run RUN_DIR --condition id_swap --system arbiterkb --ep 1001 --cube cube_green
 (trace files are RUN_DIR/traces/<condition>_<system>_<ep>.jsonl)
 
-explain walks the support ids of the cube's Inside distribution back to the raw observations.
+explain walks the support ids of the cube's Inside distribution back to the raw observations;
+explain_item does the same from any evidence / event / observation id (the ids the controller view prints).
 """
 from __future__ import annotations
 
@@ -53,6 +55,12 @@ def explain(rows: list[dict], cube: str, t: int | None = None) -> str:
     for ident in last[1]["after"]["support"]:
         lines += _walk(ident, ev, evt, obs, depth=1, seen=set())
     return "\n".join(lines)
+
+
+def explain_item(rows: list[dict], ident: str, t: int | None = None) -> str:
+    """The support chain of one evidence (e..), event (v..) or observation (o<t>:<id>, incl. o<t>:ee) id."""
+    ev, evt, obs = index([r for r in rows if t is None or r["t"] <= t])
+    return "\n".join(_walk(ident, ev, evt, obs, depth=0, seen=set()))
 
 
 def _explain_tracker(rows: list[dict], cube: str, t: int | None) -> str:
@@ -111,7 +119,8 @@ def main() -> None:
     ap.add_argument("--condition", default="none")
     ap.add_argument("--system", default="arbiterkb")
     ap.add_argument("--ep", type=int, required=True)
-    ap.add_argument("--cube", required=True)
+    ap.add_argument("--cube")
+    ap.add_argument("--item", help="any evidence / event / observation id instead of --cube")
     ap.add_argument("--t", type=int)
     a = ap.parse_args()
     path = Path(a.run) / "traces" / f"{a.condition}_{a.system}_{a.ep}.jsonl"
@@ -120,7 +129,7 @@ def main() -> None:
         raise SystemExit(f"no trace {path.name}; available (first 10): {found}")
     rows = read_trace(path)
     if a.cmd == "explain":
-        print(explain(rows, a.cube, a.t))
+        print(explain_item(rows, a.item, a.t) if a.item else explain(rows, a.cube, a.t))
     else:
         prev = None
         for t, p in timeline(rows, a.cube):

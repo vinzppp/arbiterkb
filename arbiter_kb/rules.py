@@ -48,9 +48,12 @@ def r1_cover(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
 def r3_grasp(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """grip_close: the object nearest the end effector, within r_grasp, is held (event `grasp`).
     grip_open: each held object is released (event `place`, onto the object below it within r_on, else
-    the table); it is `visible` again if seen, else `unknown` until the next sighting."""
+    the table); it is `visible` again if seen, else `unknown` until the next sighting.
+    disappear of a held object: it is `held` (hidden by the fingers), not visible (M3a review)."""
     ops = []
     for ev in new_ev:
+        if ev.kind == "disappear" and ev.args[0] in held(kb):
+            ops.append(SetVis(ev.args[0], "held", 1.0, frame.t, [ev.id]))
         ee = np.asarray(ev.data.get("ee", frame.ee_xyz), float)
         if ev.kind == "grip_close":
             near = [(float(np.linalg.norm(o.pose.value - ee)), o.id) for o in kb.objects.values()
@@ -77,9 +80,11 @@ def held(kb: KB) -> list[str]:
 
 
 def below(kb: KB, obj: str, xyz: np.ndarray, p: RuleParams) -> str | None:
-    """The object right under xyz (xy within r_on, lower centre), the nearest one in xy."""
+    """The object right under xyz (xy within r_on, lower centre), the nearest one in xy. Seen objects only:
+    a hidden cube's pose is its container's (R2), so a container put back would land "on" its own cube."""
     cands = [(float(np.linalg.norm(o.pose.value[:2] - xyz[:2])), o.id) for o in kb.objects.values()
-             if o.id != obj and o.pose.value is not None and o.pose.value[2] < xyz[2]]
+             if o.id != obj and o.pose.value is not None and o.pose.value[2] < xyz[2]
+             and o.visibility.value in ("visible", "held")]
     cands = [c for c in cands if c[0] < p.r_on]
     return min(cands)[1] if cands else None
 

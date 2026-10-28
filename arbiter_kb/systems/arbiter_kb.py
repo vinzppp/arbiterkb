@@ -49,8 +49,9 @@ class ArbiterKBSystem:
             arb = {"reason": reason, "backend": self.backend.name, "patch": patch}
         self.rows.append({
             "t": frame.t,
-            "obs": {k: [o.visible, None if o.xyz is None else [round(float(v), 4) for v in o.xyz], o.track_q]
-                    for k, o in frame.objects.items()},
+            "obs": {**{k: [o.visible, None if o.xyz is None else [round(float(v), 4) for v in o.xyz], o.track_q]
+                       for k, o in frame.objects.items()},
+                    "ee": [True, [round(float(v), 4) for v in frame.ee_xyz], round(float(frame.gripper_width), 4)]},
             "ops": kb.pop_log(),
             "arbiter": arb,
         })

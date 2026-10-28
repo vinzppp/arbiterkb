@@ -64,7 +64,7 @@ def messages(arm, s, frames, src, ep, t_star) -> list:
     f = frames[-1]
     state = {"tcp_xyz": [round(float(v), 4) for v in f.ee_xyz], "finger_positions_m": [round(f.gripper_width / 2, 4)] * 2,
              "elapsed_control_steps": f.t}
-    view = controller_view(s.kb)
+    view = controller_view(s.kb, s.params.rule)
     mem = {"K": view, "K-L3": view.split("Event log")[0].rstrip(), "R": C.raw_tracker_log(frames), "H": ""}[arm]
     content = C.user_content(arm, s.kb.task["goal"], mem, images(src, ep, t_star, arm), state)
     return [{"role": "system", "content": C.system_prompt(arm)}, {"role": "user", "content": content}]

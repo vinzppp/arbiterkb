@@ -23,6 +23,9 @@ class RuleParams:
     r_grasp: float = 0.05  # m: R3, an object within this 3D distance of the end effector when the gripper closes is held
     r_on: float = 0.04  # m: On(x, y) / place target: xy distance at most this, and x above y
     r_near: float = 0.08  # m: Near(x, y): centre distance below this
+    left_margin: float = 0.02  # m: LeftOf(x, y): x is this much further to the robot's left (+y)
+    on_dz_min: float = 0.005  # m: On(x, y): x's centre at least this much above y's ...
+    on_dz_max: float = 0.08  # m: ... and at most this much (extent is not estimated yet)
     eps_far: float = 0.5  # R1, no container within r_cover: nearest vs "elsewhere" at even odds (the cover was not seen)
 
 

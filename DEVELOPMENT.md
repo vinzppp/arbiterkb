@@ -428,7 +428,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 
 ### G — Gate: how often and how does the real tracker swap ids? (Mac code ~1 day + one GPU pod session, about 3–5 h; needs the user's go)
 
-**Goal.** Measure, on RoboMME VideoUnmaskSwap stock and stress variants, how often the real perception pipeline (Grounding DINO → SAM → Cutie) swaps container ids, and what a swap looks like. This decides whether claim 1 can be tested with real errors, and it defines `id_swap_measured`. It is the plan report's November gate, pulled forward.
+**Goal.** Measure, on RoboMME VideoUnmaskSwap stock and stress variants, how often the real perception pipeline (Grounding DINO → SAM → Cutie) swaps container ids, and what a swap looks like. This decides whether claim 3 (formerly claim 1) can be tested with real errors, and it defines `id_swap_measured`. It is the plan report's November gate, pulled forward.
 
 **Build (Mac, no GPU).**
 1. `stress/stress_env.py` (pod-side code, outside the `arbiter_kb` package): subclass `VideoUnmaskSwap` as `VideoUnmaskSwapStress`, with knobs `swap_steps`, `lane_offset`, `n_swaps ≤ 3`, `n_bins` and a static camera shift. Override `_refresh_swap_schedule`, `configs`, `_default_sensor_configs`, and pass `lane_offset` to the swap call (l.603–614; `evidence-gaps` §7). Settings:
@@ -447,9 +447,9 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 - (a) A table of identity error and swap rate per setting.
 - (b) Histograms of each feature for swapped vs clean passes, and the ROC / AUC for "this pass swapped" of each single feature and of the best 2-feature logistic rule (cross-validated).
 - (c) **The gate decision, written in NOTES:**
-  - if swaps occur in < 2% of passes in every setting, claim 1 cannot be tested with real errors on RoboMME, so switch to the plan's fallback (failure-attribution paper) or choose a harder task;
+  - if swaps occur in < 2% of passes in every setting, claim 3 cannot be tested with real errors on RoboMME, so switch to the plan's fallback (failure-attribution paper) or choose a harder task;
   - otherwise, define `id_swap_measured` from the measured signature, and M2 uses it;
-  - **and** if the best rule with at most 2 features separates swapped from clean passes almost perfectly (AUC ≥ 0.98), write in NOTES that a threshold rule on it solves claim 1's detection part, before M2 builds R6 v2; the belief layer must then show value through propagation (R5, retraction, arbiter), not detection.
+  - **and** if the best rule with at most 2 features separates swapped from clean passes almost perfectly (AUC ≥ 0.98), write in NOTES that a threshold rule on it solves claim 3's detection part, before M2 builds R6 v2; the belief layer must then show value through propagation (R5, retraction, arbiter), not detection.
 
 ### M2 — Evidence layer: change detectors + Hungarian identity check (2 days, CPU)
 
@@ -471,7 +471,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 **Done when.**
 - (a) `make check`.
 - (b) On synthetic, the minimum margin falls inside a swap window in ≥ 95% of episodes.
-- (c) Under `id_swap_measured`, ArbiterKB beats **SoftHaircut(margin)** on AURC (bootstrap CI of the difference excludes 0) and on silent rate at matched clean coverage (the haircut thresholds swept on train to ArbiterKB's clean coverage); MarginHaircut and Bound are reported alongside. If ArbiterKB cannot beat SoftHaircut, NOTES says that the rule layer reduces to "a calibrated feature score suffices", before M3/M4 build on it. That does not decide claim 1: the belief layer's remaining value is propagation and the arbiter, tested in M4 against an LLM without the KB.
+- (c) Under `id_swap_measured`, ArbiterKB beats **SoftHaircut(margin)** on AURC (bootstrap CI of the difference excludes 0) and on silent rate at matched clean coverage (the haircut thresholds swept on train to ArbiterKB's clean coverage); MarginHaircut and Bound are reported alongside. If ArbiterKB cannot beat SoftHaircut, NOTES says that the rule layer reduces to "a calibrated feature score suffices", before M3/M4 build on it. That does not decide claim 3: the belief layer's remaining value is propagation and the arbiter. Claims 1–2 are tested separately by the memory arms (§3.8, M5).
 - (d) Clean accuracy holds (M1 criterion).
 
 ### M3 — A complete KB: events, relations, task progress (2–3 days, CPU)

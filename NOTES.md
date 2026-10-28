@@ -440,3 +440,53 @@ Grasp / place have no truth check beyond the unit tests, because no source manip
   - the closed-loop harness on the pod: robomme env, the KB updated online after each motion (from oracle state for the upper bound, from the perception worker for the claims), the paper's endings;
   - the reach IK;
   - freezing the prompt hash into params.json.
+
+## M3a — fixes after the M3a reviews (2026-10-28)
+Reviews:
+- `reviews/M3a_code.md`: PASS-WITH-NOTES, 3 MAJOR. The agent could not write files; the builder session saved its report verbatim.
+- `reviews/M3a_goal.md`: ON-TRACK-WITH-CHANGES.
+- No BLOCK and no OFF-TRACK.
+
+The user asked to fix the code review's findings. The goal review's plan-level proposals are listed at the end and left for the user.
+
+**Code MAJORs:**
+- **Place target.** `below()` now considers only visible or held objects. Before, a container put back over its hidden cube was logged as `place(bin_a, cube_r)`, because a hidden cube's display pose is its container's. Test: `test_container_put_back_is_not_placed_on_its_hidden_cube` now gives `place(bin_a, table)`.
+- **E2 for the new items.**
+  - Every trace row now stores `obs["ee"] = [True, ee_xyz, gripper_width]`. Grip evidence cites `o<t>:ee`, and move evidence cites the observation of the frame it starts or ends at.
+  - `debug.explain_item(rows, id)` and `debug explain --item <id>` walk any evidence, event or observation id.
+  - The selftest checks that **every event-log line resolves to an observation**: 136 lines over 10 train episodes, 0 failing.
+  - Test: a grasp event explains down to `o6:ee`.
+- **One source of parameters.**
+  - `left_margin`, `on_dz_min` and `on_dz_max` moved into RuleParams.
+  - `geometric`, `facts` and `controller_view` take the frozen `params.rule`, and dry_run passes it. Test: the view changes with `r_near`.
+  - Re-frozen: params.json hash **65d1345cf1be**.
+
+**Code MINORs:**
+- Geometric lines in the view now cite the two pose observations and read "from positions". Objects cite their last pose observation.
+- A held object that disappears is set to `held`, so it is no longer listed as both Visible and Held (test).
+- `move_start` records `t_at = t − 1`, the frame its from-position is taken from. The log's "t=a–b" is now right, and measure_kb uses it.
+- `event_log(last=30)` keeps cover / grasp / place events and says "(N earlier lines omitted)" (test).
+- New tests:
+  - gripper hysteresis on the reviewer's width sequence;
+  - no grasp when nothing is within `r_grasp`;
+  - move evidence carries xyz and its start time;
+  - the hidden-pose test can no longer pass vacuously.
+- The Makefile uses `.venv/bin/python` when it exists, so plain `make check` works.
+- Stale docs:
+  - README status;
+  - DEVELOPMENT G / M2 now say claim 3, not claim 1;
+  - HANDOFF's "arm C vs D".
+- The NOTES M3 figure "about 360 tokens" was one episode and uncited. measure_kb now reports the view size. Over train seeds 0–99: median ≈ 440, max ≈ 530 (chars / 4) (`results/latest/m3_kb_truth/summary.json`).
+
+**Goal-review points fixed here, because they are wording or measurement, not plan:**
+- **Truth for passes.** It no longer reuses the detector's `v_move`. A true pass is a local minimum, below 15 cm, of the true distance between two containers that are both moving. With that truth, clean near-pass precision is 1.00 and recall 0.89, instead of 0.94 / 0.86 with the old definition (`results/latest/m3_kb_truth/summary.json`). Under 15 mm noise the detector is still broken.
+- **The log no longer states certainty it does not have.** R6's `swap` event reads "passed close (identity may be confused: see Inside)" and Progress says "close passes". A near_pass line says "(detected)". Geometric relations print no probability: theirs was the product of pose confidences, not a relation probability.
+
+**Test-read ledger:** the code reviewer ran one evaluation without `--split train`, which appended 6 READ lines (hash b0a2dd3cb30b, seeds 1000–1019) to `results/test_reads.log`. Nothing was tuned, and those seeds had been read many times before. The lines are kept, since the ledger is append-only.
+
+**Open, for the user (goal review, plan-level):**
+- **Arm K0:** the current frame plus a current object table with 3D centres, and no relations, events or history. It separates "memory" from "being given coordinates", since arm K has depth-derived coordinates that H lacks.
+- **A one-sentence arm:** the current frame plus "the target cube is under <argmax Inside>".
+- **A feasibility probe before the closed-loop harness:** about 20 train episodes, four arms, scored on whether `target` is the true container.
+- **Fix the success margin and n before running.** 50 test episodes give about ±6 pp.
+- **M3 is not done:** relation precision / recall and L2 calibration are still unmeasured (no manipulation data), and so is an oracle-replay check.
