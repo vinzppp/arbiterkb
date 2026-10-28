@@ -579,3 +579,10 @@ Reading (n = 20, synthetic, oracle observations, text only, a single step: **plu
 - Tests: `tests/test_annotate.py`. The annotator has not been called on the real model yet.
 
 **Security:** the key was pasted in the chat. The user should revoke it and put a new one only in `.env`.
+- **Why K missed ep 9 and K-L3 did not** (read from the cached reasoning):
+  - The event log showed "cube_red disappeared at (0.01, −0.01)", and after three swaps bin_1 happened to sit at that spot again. The model reasoned "the disappearance location is the strongest cue" and overrode `Inside(cube_red): bin_2 0.62 | bin_1 0.37`.
+  - This is the same error as R's 5 misses: assuming the cube stays where it was seen, not that it moves with its container.
+  - Candidate fixes, **not applied** (the user wants changes batched and tested together, not piecemeal):
+    - merge disappear + cover into one line ("covered by bin_2 at …; moves with bin_2");
+    - state the containment rule in the prompt;
+    - rerun with n ≥ 50.
