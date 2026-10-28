@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.6 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.6:** M2 becomes conditional on G (only what G's result needs; claim 3 compares Bound, SoftHaircut and ArbiterKB); R7 deleted, R5 frozen; arms K0 and S added (§3.8). **v1.5:** §2 rewritten as the target loop with the reasoning behind it: observation table, observe / detectors / rules, VLM annotator (arbiter merged), annotated frame, controller; task-agnostic recording; open relation table; real-time notes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
+Version 1.7 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.7:** §2.5 perception design (VLM clue objects, one multi-object Cutie, keyframes with matching and `id_margin`, async); §2.6 time budget; the M4 batch of view fixes. **v1.6:** M2 becomes conditional on G (only what G's result needs; claim 3 compares Bound, SoftHaircut and ArbiterKB); R7 deleted, R5 frozen; arms K0 and S added (§3.8). **v1.5:** §2 rewritten as the target loop with the reasoning behind it: observation table, observe / detectors / rules, VLM annotator (arbiter merged), annotated frame, controller; task-agnostic recording; open relation table; real-time notes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -93,13 +93,13 @@ Status (2026-10-28):
 
 | Part | Built | Not yet |
 |---|---|---|
-| Perception | GroundingDINO → SAM → Cutie → centroid, offline on the pod (G, word list from the simulator scene: **privileged**); `--vocab open`: generic words + the task's phrases, no scene counts (written, not yet run) | class-agnostic segmentation; size / confidence in the table; DINOv2 is computed per frame but unused (drop it unless an experiment needs appearance) |
+| Perception | GroundingDINO → SAM → Cutie → centroid, offline on the pod (G, word list from the simulator scene: **privileged**); `--vocab open`: generic words + the task's phrases (written, not yet run); VLM object-listing benchmark (4 frames) | §2.5: VLM clue objects as the word list; one multi-object Cutie; no DINOv2; keyframes with matching; size / confidence in the table |
 | Observation table (`FrameObs`) | id, class, visible, centroid, pixel, track_q, hand, gripper | size / box, visible fraction, detector confidence, last-clear-frame id, timestamp (contract change, `CONTRACT_VERSION` 2) |
 | observe / detectors / rules | R1 R2 R3 R5 R6; appear, disappear, move from→to, near-pass, grip | motion smoothing under real noise (M2 item 1); press, reveal (R4); time-based thresholds |
 | KB L0–L4 | centroid; objects; Inside (stored) + Near / On / LeftOf / Held (computed); evidence log + events; goal + counts | open relation table (§2.3); size; L4 progress against a parsed goal |
-| VLM annotator | — | all of it (§3.7) |
-| Views | KB text + event log (`views.controller_view`) | annotated frame |
-| LLM controller | prompt, parsing, checks, dry run (Mac, not run) | closed loop on the pod (M5) |
+| VLM annotator | `annotate.py` (checks, beliefs in the fact table; tested with a fake model, never called on the real one) | real calls with images; truth check |
+| Views | KB text + event log (`views.controller_view`); annotated frame (`som.py`; labels can overlap) | the batch of view fixes (§6 M4) |
+| LLM controller | prompt, parsing, checks; arms H / K / K-L3 / R / K0 / S; text dry run on 20 train episodes (K 19/20, R 18/20, K0 5/20 = chance; $0.17) | thinking effort vs accuracy; image arms (H, S); closed loop on the pod (M5) |
 
 ### 2.2 One step, in order
 
@@ -181,7 +181,76 @@ Status (2026-10-28):
   - calibration measured against ground truth;
   - the controlled comparison of memory content at a fixed controller and executor.
 
-### 2.4 Code map
+### 2.5 Perception design (v1.7)
+
+The memory can only know what perception reports (§2.2 step 2). The target design follows the user's choice in the 2026-10-28 discussion:
+- a small VLM names the scene's "clue objects";
+- the existing GroundingDINO → SAM → Cutie pipeline tracks them;
+- keyframes, not every frame, pay for the expensive steps.
+
+1. **Clue objects from a VLM, not from the simulator.**
+   - At the first frame and at keyframes, a small VLM with **thinking off** reads the current front frame and the instruction. It lists every movable object on the table (not the table, not the robot), up to 10, as `{name, color, count, task_item}`.
+   - The list becomes the detector's phrases: one tracker slot per object, and identical objects get one slot per count.
+   - Objects the instruction names are marked `task_item` (`task_items.py`). They are tagged, never used as a filter.
+   - The prompt asks for all movable objects, not only the task's, so the memory stays task-agnostic (§2.3).
+   - G's run took the object list from the simulator scene (`--vocab scene`, **privileged**). `--vocab open` (generic words + task phrases) is the fallback when no VLM is available.
+2. **Model choice** (`results/latest/vlm_list_bench/`, NOTES; 4 real frames only, so re-test on G's replays before freezing):
+   - qwen/qwen3-vl-8b-instruct and qwen/qwen3.5-9b (thinking off) listed all 4 frames right, in about 1 s and for under $0.0003 per frame;
+   - models under 8B invented or misnamed objects;
+   - every model called the white containers "white cubes". The name only has to work as a detector phrase.
+3. **Tracking.**
+   - **Today:** one Cutie processor per slot (sg_pilot). Each slot encodes the image every frame, which is about 0.4 s per frame with 7 slots on an A40.
+   - **Target:**
+     - one Cutie processor tracking all objects (one image encoding per frame);
+     - no DINOv2 (computed per frame today and never read);
+     - SAM encodes a keyframe once and then segments each box;
+     - slots that have not found their object retry GroundingDINO every few frames, not every frame.
+4. **Keyframes.**
+   - **Triggers:**
+     - the first frame, and the first frame after the scene settles;
+     - an object appears or disappears;
+     - a grasp or place;
+     - a close pass **after the two objects separate**;
+     - a drop in track quality (mask area jump);
+     - a periodic check every 2–3 s;
+     - just before the controller acts on a target.
+   - **Work:**
+     1. VLM: are there new objects? (new slots);
+     2. GroundingDINO + SAM on the phrases;
+     3. match the new masks to the existing tracks (Hungarian on mask IoU + 3D distance): matched → re-seed Cutie; new → new slot + `appear` evidence; unmatched old → not visible;
+     4. the annotator (§3.7) at event moments;
+     5. record the last clear frame per object.
+   - **Never re-match during a close pass.** When the matching is ambiguous (the best and second-best costs are close), write `id_margin` evidence instead of silently picking one. That margin is the signal R6 and Inside need, so the Hungarian step returns here, as part of perception.
+   - **Keyframes run asynchronously.** Tracking and the controller do not wait for them, except for the check before an action on a target.
+5. **Background** (needed only if class-agnostic SAM segmentation is ever used): drop the table and floor plane (depth RANSAC), the robot (its known joint state; in simulation, its segmentation id), and tiny, huge or unstable masks. Cap the tracks at 12–16, with task items first. The cap is chosen by measured recall on G's replays.
+
+### 2.6 Time budget (v1.7)
+
+All numbers are per closed-loop episode. A footnote gives the source of each estimate.
+
+| Part | Before (G's perception, dry-run controller) | v1.7, unoptimised | v1.7, optimised | arXiv 2610.17350 |
+|---|---|---|---|---|
+| Object list | simulator (privileged) | VLM, thinking off | same | the model reads images |
+| Start-up (load models, once per process) | about 35 s ¹ | about 35 s | about 35 s | — |
+| Episode start | first detections | + VLM list, about 1 s ² | same | — |
+| Tracking per frame | 0.4 s ¹ (7 slots, 7 image encodings + DINOv2) | 0.5–0.6 s ³ (6–10 slots) | well under 0.4 s ³ (one Cutie, no DINOv2) | — |
+| Frames tracked | every frame | every frame | every 3rd control step (the paper's 0.15 s) | every 3rd step |
+| Keyframes | none (detection only at first sight) | VLM about 1 s ² + re-detection 2–5 s ³ | same, asynchronous | — |
+| Controller call | about 40 s ⁴ (default thinking, about 2,100 tokens) | about 40 s | about 1–3 s ³, if lower thinking keeps accuracy (to be measured) | 18.3 s ⁵ |
+| Controller calls per episode | — | about 10 ⁵ | about 10 | 9.5 ⁵ |
+| Images per controller call | 0 (text dry run) | 2 + KB text (about 1,500 tokens) | same | median 148 in the final request ⁵ |
+| Model time per episode | — | about 400 s | about 10–30 s | about 174 s ⁵ (9.5 × 18.3, our derivation) |
+| LLM cost per episode | — | a few cents | less | about $0.39 ⁵ |
+
+¹ G smoke test, measured. ² VLM benchmark, measured. ³ Estimate, to be measured on the pod or the Mac. ⁴ Text dry run: about 2,100 reasoning tokens per call at about 50 tokens/s. ⁵ The paper.
+
+**What decides the total:**
+- the controller's thinking: measure off / low / default against accuracy, in the dry run;
+- the number of frames tracked: track every 3rd step, with **per-second** detector thresholds and timestamps (§2.3).
+
+Start-up and keyframes do not matter as long as keyframes stay asynchronous (user, 2026-10-28).
+
+### 2.7 Code map
 
 | Concept | Code |
 |---|---|
@@ -191,8 +260,8 @@ Status (2026-10-28):
 | Detectors (Hungarian identity check in M2) | `detectors.py`, `identity.py` (M2) |
 | Rules R1–R8 | `rules.py` |
 | KB L0–L4, beliefs, support, retract | `kb.py`, `beliefs.py`, `ops.py` |
-| Views: facts / ask, KB text, event log, controller view, annotated frame | `views.py` (annotated frame: planned) |
-| VLM annotator (arbiter merged) | `annotate.py` (planned), `llm.py` |
+| Views: facts / ask, KB text, event log, controller view, annotated frame | `views.py`, `som.py` |
+| VLM annotator (arbiter merged) | `annotate.py`, `llm.py`; clue-object lister (planned, §2.5) |
 | LLM controller | `controller.py`, `llm.py`; the closed-loop harness `stress/` or `harness.py` (M5) |
 | Rule planner + skills (baseline) | `planner.py`, `skills.py`, `reach.py` |
 | Baselines | `systems/baselines.py`, `systems/soft_haircut.py` |
@@ -628,6 +697,14 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 4. A **replay-driven dry run** on the Mac: the controller answers on recorded frames without moving the arm, so prompt, parsing and validation can be debugged without a GPU. Prompt iteration happens only on train episodes. The prompt text is frozen, with its hash in `params.json`, before any test read.
 5. **Who should fill L2–L4** (cheap, before M5): the VLM annotator (§3.7) on G's train episodes at keyframes. Compare its labels with the rules' and with simulator truth, per type, as accuracy and confidence calibration. The result decides which layers the VLM may write.
 6. **Annotated current frame** (Set-of-Mark, `views.py`): ids and top hypotheses drawn on the current RGB at each object's pixel position. The annotator and the controller use it.
+7. **(v1.7) Controller thinking effort:** in the dry run, compare off / low / default on the same train episodes: right container, waypoint error, tokens and seconds per call. It decides most of the episode time (§2.6).
+8. **(v1.7) Clue-object lister** (§2.5): the VLM prompt and its checks (names, counts, task items) on the Mac; re-benchmark the small VLMs on G's replays against simulator truth (misses and inventions separately) before choosing one.
+9. **(v1.7) The batch of KB / view fixes**, applied and tested together, not one by one (user, 2026-10-28):
+   - one log line per cover ("cube_red covered by bin_2 at …; moves with bin_2") instead of separate disappear and cover lines. In ep 9 the disappearance spot overrode Inside;
+   - state the containment rule in the controller prompt: a covered object moves with its container, and logged positions are history;
+   - give each relation line its own id;
+   - Set-of-Mark labels must not overlap;
+   - then re-run all arms, with n ≥ 50 train episodes and a fixed margin for "matches".
 
 **Done when.**
 - (a) `make check`: validator tests, including a waypoint outside the workspace, an unreachable one, an invented cite, a missing field and a cache replay that reproduces the run exactly.
@@ -643,6 +720,13 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 2. The KB is filled from **perception** (G's pipeline). The oracle KB is an upper-bound row.
 3. Report success per task and suite (Wilson), calls, input tokens, images and $ per episode, and wall time. Failure categories use the paper's list: premature completion, unintended contact, late press, out of reach, motion planning, unusable answer.
 4. A larger model in arms H and K, if the budget allows: this tests claim 2 for a model that already succeeds with the full history.
+5. **(v1.7) Perception for the closed loop** (§2.5, pod):
+   - VLM clue objects as the word list;
+   - one multi-object Cutie, no DINOv2, SAM encoding once per keyframe;
+   - tracking every 3rd control step, with per-second thresholds and timestamps;
+   - asynchronous keyframes with Hungarian matching and `id_margin`.
+
+   Measure seconds per frame, per keyframe and per episode against §2.6.
 
 **Done when.**
 - (a) `make check`.

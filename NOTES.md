@@ -666,3 +666,15 @@ Reading:
 - About 8–9B is the floor here: qwen3-vl-8b and qwen3.5-9b get all four, in about 1 s and for a fraction of a cent. Below that, models invent objects or misname the coloured cubes.
 - **This is a tiny test:** 4 frames from 1 episode, frames resampled from a figure, counting only, and no case with many or unusual objects. Before choosing, re-run on G's replays: dozens of frames with simulator truth, frames before and after covers, and while held. Also count misses and inventions separately.
 - In this test, thinking off costs about 1 s per call, against 5–40 s with thinking. That settles the keyframe VLM latency.
+
+## Spec v1.7 (2026-10-28)
+`DEVELOPMENT.md` now holds the perception and timing discussion:
+- **§2.5 perception design:**
+  - a small VLM (thinking off) lists the clue objects as the detector's phrases, task items tagged;
+  - one multi-object Cutie; no DINOv2; SAM encodes once per keyframe;
+  - keyframe triggers and work, including Hungarian matching that never re-matches during a close pass and writes `id_margin` when unsure;
+  - keyframes asynchronous.
+- **§2.6 time budget:** before, v1.7 unoptimised and v1.7 optimised, against the paper, with the source of each number. The controller's thinking (about 40 s per call by default) decides most of the episode time.
+- **§2.1:** the status table is updated.
+- **M4 items 7–9:** the thinking-effort test, the clue-object lister and its re-benchmark on G's replays, and the batch of KB / view fixes, to be tested together.
+- **M5 item 5:** closed-loop perception.
