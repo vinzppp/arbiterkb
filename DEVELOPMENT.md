@@ -98,7 +98,7 @@ Status (2026-10-28):
 | Observation table (`FrameObs`) | id, class, visible, centroid, pixel, track_q, hand, gripper | size / box, visible fraction, detector confidence, last-clear-frame id, timestamp (contract change, `CONTRACT_VERSION` 2) |
 | observe / detectors / rules | R1 R2 R3 R5 R6; appear, disappear, move from→to, near-pass, grip; hand pause; **semantic actions from robot state** (`actions.py`: pick up, release placed / set down / dropped, press, hold left / right; recall 0.97–1.0 against the dataset's subgoal labels, `results/latest/actions_vs_labels`) | motion smoothing under real noise (M2 item 1); press, reveal (R4); time-based thresholds |
 | KB L0–L4 | centroid; objects; Inside (stored) + Near / On / LeftOf / Held (computed); evidence log + events; goal + counts | open relation table (§2.3); size; L4 progress against a parsed goal |
-| VLM keyframe call (lister + annotator, v1.9) | `annotate.py` (checks, beliefs in the fact table; tested with a fake model, never called on the real one); clue-object lister (`clue_objects.py`, qwen3.5-9b: 4/4 real frames), still two modules | merge the two into one call and one module; real calls with images; truth check |
+| VLM keyframe call (lister + annotator, v1.9) | `keyframe.py`: one call, one prompt; clue objects → detector phrases, relations and descriptions → beliefs in the fact table; checks per item; tested with a fake model (the lister prompt alone: qwen3.5-9b 4/4 real frames) | real calls with images; truth check |
 | VLM review call | — | all of it (§3.7, M4 item 10) |
 | Views | KB text + event log (`views.controller_view`); annotated frame (`som.py`; labels can overlap) | the batch of view fixes (§6 M4) |
 | LLM controller | prompt, parsing, checks; arms H / K / K-L3 / R / K0 / S; Batch A (permanence, synthetic: K = R = 0.96 with thinking); **counting tasks on RoboMME robot state: K with semantic actions 0.85 vs raw log 0.60 without thinking, 0.91 vs 0.79 with** (`results/latest/count_robot_state_v2`; to confirm on unseen episodes) | thinking effort vs accuracy; image arms (H, S); closed loop on the pod (M5) |
@@ -237,7 +237,7 @@ The memory can only know what perception reports (§2.2 step 2). The target desi
      1. the keyframe call (one VLM call): new objects (new slots), plus descriptions and the relations the rules cannot decide;
      2. GroundingDINO + SAM on the phrases;
      3. match the new masks to the existing tracks (Hungarian on mask IoU + 3D distance): matched → re-seed Cutie; new → new slot + `appear` evidence; unmatched old → not visible;
-     4. write the keyframe call's descriptions and relations to the KB, now that the new masks have ids (§3.7); the review call's next window checks the rest;
+     4. the keyframe call's descriptions and relations (written in step 1) cover objects that already had ids; new objects are described at the next keyframe; the review call's next window checks the rest;
      5. record the last clear frame per object.
    - **Never re-match during a close pass.** When the matching is ambiguous (the best and second-best costs are close), write `id_margin` evidence instead of silently picking one. That margin is the signal R6 and Inside need, so the Hungarian step returns here, as part of perception.
    - **Keyframes run asynchronously.** Tracking and the controller do not wait for them, except for the check before an action on a target.
@@ -281,7 +281,7 @@ Start-up and keyframes do not matter as long as keyframes stay asynchronous (use
 | Rules R1–R8 | `rules.py` |
 | KB L0–L4, beliefs, support, retract | `kb.py`, `beliefs.py`, `ops.py` |
 | Views: facts / ask, KB text, event log, controller view, annotated frame | `views.py`, `som.py` |
-| VLM keyframe call | `annotate.py` + `clue_objects.py` today, to merge into one module (v1.9); `llm.py`, VLM client `llm.vlm_client` |
+| VLM keyframe call | `keyframe.py` (`keyframe_call`), `llm.py`, VLM client `llm.vlm_client` |
 | VLM review call | `review.py` (planned) |
 | Semantic actions from robot state | `actions.py`; RoboMME dataset source `sources/lerobot.py`; forward kinematics `fk.py` |
 | LLM controller | `controller.py`, `llm.py`; the closed-loop harness `stress/` or `harness.py` (M5) |
@@ -367,7 +367,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 
 ### 3.7 VLM keyframe call, VLM review call, and the arbiter protocol
 
-**v1.5:** the arbiter is merged into the **VLM annotator**. **v1.9:** the annotator and the clue-object lister are one **keyframe call** (§2.2 step 6).
+**v1.5:** the arbiter is merged into the **VLM annotator**. **v1.9:** the annotator and the clue-object lister are one **keyframe call** (§2.2 step 6, `keyframe.py`).
 - **When:** at every keyframe (§2.5 item 4); one call per keyframe, all questions in it; relations only where the rules cannot decide.
 - **Input:**
   - one keyframe with ids drawn on it (Set-of-Mark);
@@ -382,7 +382,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
    "objects": [{"id": "id", "description": "<= 80 chars"}], "events": [...]}
   ```
   `events` takes the arbiter schema below.
-- **Checks:** every id exists, every cite exists, and there is no coordinate anywhere; clue objects as in `clue_objects.py` (names, counts, cap of 10).
+- **Checks:** every id exists, every cite exists, and there is no coordinate anywhere; clue objects checked per entry (names, counts, cap of 10; `keyframe.check_clues`).
 - **Written as beliefs:** `source: vlm`, support = the keyframe plus the cites, p from the fixed strength table.
 - **Measured** against simulator truth wherever a relation is checkable (M4 item 5).
 
@@ -740,7 +740,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 5. **Who should fill L2–L4** (cheap, before M5): the VLM keyframe call (§3.7) on G's train episodes at keyframes. Compare its labels with the rules' and with simulator truth, per type, as accuracy and confidence calibration. The result decides which layers the VLM may write.
 6. **Annotated current frame** (Set-of-Mark, `views.py`): ids and top hypotheses drawn on the current RGB at each object's pixel position. The keyframe call, the review call and the controller use it.
 7. **(v1.7) Controller thinking effort:** in the dry run, compare off / low / default on the same train episodes: right container, waypoint error, tokens and seconds per call. It decides most of the episode time (§2.6).
-8. **(v1.7, v1.9) Keyframe call** (§2.2 step 6, §2.5): merge `clue_objects.py` and `annotate.py` into one call with one prompt and the checks of both; re-benchmark the small VLMs on G's replays against simulator truth (misses and inventions separately) before choosing one.
+8. **(v1.7, v1.9) Keyframe call** (§2.2 step 6, §2.5): `keyframe.py` (merged, done); re-benchmark the merged prompt and the small VLMs on G's replays against simulator truth (misses and inventions separately) before choosing one.
 9. **(v1.7) The batch of KB / view fixes**, applied and tested together, not one by one (user, 2026-10-28):
    - one log line per cover ("cube_red covered by bin_2 at …; moves with bin_2") instead of separate disappear and cover lines. In ep 9 the disappearance spot overrode Inside;
    - state the containment rule in the controller prompt: a covered object moves with its container, and logged positions are history;

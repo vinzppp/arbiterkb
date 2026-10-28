@@ -145,7 +145,7 @@ class LLM:
 
 
 def vlm_client(ap, max_usd: float | None = None, **kw) -> "LLM":
-    """The small VLM for the clue-object lister and the annotator, from ArbiterParams: model, an ordered list of
+    """The small VLM for the keyframe and review calls, from ArbiterParams: model, an ordered list of
     allowed providers (no others), thinking as configured. The provider used is in each cached response."""
     return LLM(model=ap.vlm_model, max_usd=max_usd, reasoning=None if ap.vlm_thinking else {"enabled": False},
                provider={"order": ap.vlm_provider.split(","), "allow_fallbacks": False, "require_parameters": True},

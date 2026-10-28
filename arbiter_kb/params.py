@@ -55,10 +55,10 @@ class MonitorParams:
 class ArbiterParams:
     every_k: int = 50  # frames between periodic triggers while something is hidden
     max_calls: int = 6  # per episode
-    p_clear: float = 0.9  # annotator verdict -> belief probability (fixed table, measured against truth in M4)
+    p_clear: float = 0.9  # keyframe call verdict -> belief probability (fixed table, measured against truth in M4)
     p_ambiguous: float = 0.5
     p_unlikely: float = 0.1
-    vlm_model: str = "qwen/qwen3.5-9b"  # clue-object lister and annotator (NOTES "VLM choice": 4/4 frames, 6 providers)
+    vlm_model: str = "qwen/qwen3.5-9b"  # keyframe and review calls (NOTES "VLM choice": 4/4 frames, 6 providers)
     vlm_provider: str = "Parasail,DeepInfra"  # only these, in order; both bf16 (DeepInfra was rate-limited, 34-65 s)
     vlm_thinking: bool = False  # the 9B is a thinking model; off for these labelling calls
 

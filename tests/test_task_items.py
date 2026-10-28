@@ -43,39 +43,3 @@ def test_controller_view_marks_task_items():
     others = [c for c in ("cube_red", "cube_green", "cube_blue") if c != target]
     assert not any("(task item)" in line for line in v.splitlines() for c in others if line.strip().startswith(f"[{c}]"))
 
-
-def test_clue_objects_check_phrases_and_cap():
-    import json
-
-    import numpy as np
-
-    from arbiter_kb.clue_objects import MAX_OBJECTS, check, list_objects, phrases
-
-    good, errs = check({"objects": [
-        {"name": "Cube", "color": "red", "count": 1, "task_item": True},
-        {"name": "container", "color": "white", "count": 3, "task_item": False},
-        {"name": "the big robot arm", "color": "gray", "count": 1},
-        {"name": "cube", "color": "blue", "count": "two"},
-        {"name": "cube", "color": "green", "count": MAX_OBJECTS}]})
-    assert [o["name"] for o in good] == ["cube", "container"] and len(errs) == 3  # bad name, bad count, over the cap
-    assert phrases(good) == ["red cube.", "white container.", "white container.", "white container."]
-    assert check("no json")[1] == ["unparseable answer"]
-
-    class Fake:
-        def chat(self, messages, max_tokens=0):
-            assert "pick up the red cube" in messages[0]["content"][0]["text"]
-            return json.dumps({"objects": [{"name": "cube", "color": "red", "count": 1, "task_item": True}]})
-
-    out = list_objects(Fake(), np.zeros((8, 8, 3), np.uint8), "pick up the red cube")
-    assert out["phrases"] == ["red cube."] and out["problems"] == []
-
-
-def test_clue_objects_colour_not_repeated_and_task_items_from_the_instruction():
-    from arbiter_kb.clue_objects import mark_task_items, phrases
-
-    objs = [{"name": "blue cube", "color": "blue", "count": 1, "task_item": False},
-            {"name": "cube", "color": "green", "count": 1, "task_item": False},
-            {"name": "container", "color": "gray", "count": 3, "task_item": False}]
-    assert phrases(objs)[:2] == ["blue cube.", "green cube."]
-    marked = mark_task_items(objs, "pick up the container that hides the green cube")
-    assert [o["task_item"] for o in marked] == [False, True, True]

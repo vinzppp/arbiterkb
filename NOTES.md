@@ -982,4 +982,8 @@ The user asked why the parts keep growing. Answer: the VLM work is two calls, no
 - **Review call:** unchanged (every ~3 s over a window of frames, plus once before acting on a target).
 - The two differ in what the VLM reads (one frame when something happened vs a window on a timer), so they stay apart.
 - Spec updated: header, §2.1 diagram and status, §2.2 step 6, §2.3 roles, §2.5 keyframe work, §2.6, §2.7, §3.7 (the output JSON gains `clue_objects`), M4 items 5, 6, 8, 10, M5 item 1.
-- **Code not changed yet:** `clue_objects.py` and `annotate.py` are still two modules; merging them is M4 item 8.
+- **Code merged (same day):** `arbiter_kb/keyframe.py` replaces `clue_objects.py` and `annotate.py`.
+  - One prompt, one call (`keyframe_call`); the answer has `clue_objects`, `relations` and `objects`, each item checked alone.
+  - The image is always shown; relations and descriptions cite the keyframe (`o<t>:image`).
+  - At the first frame no object has an id, so only the clue list comes back; a new object is described at the next keyframe.
+  - Tests: `tests/test_keyframe.py` (the clue tests moved there from test_task_items). The merged prompt has not been called on the real model; the 4-frame benchmark was of the lister prompt alone.
