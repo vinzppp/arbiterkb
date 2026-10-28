@@ -476,10 +476,10 @@ The user asked to fix the code review's findings. The goal review's plan-level p
   - README status;
   - DEVELOPMENT G / M2 now say claim 3, not claim 1;
   - HANDOFF's "arm C vs D".
-- The NOTES M3 figure "about 360 tokens" was one episode and uncited. measure_kb now reports the view size. Over train seeds 0–99: median ≈ 440, max ≈ 530 (chars / 4) (`results/latest/m3_kb_truth/summary.json`).
+- The NOTES M3 figure "about 360 tokens" was one episode and uncited. measure_kb now reports the view size. Over train seeds 0–99: median 430, max 534 (chars / 4) (`results/latest/m3_kb_truth/summary.json`).
 
 **Goal-review points fixed here, because they are wording or measurement, not plan:**
-- **Truth for passes.** It no longer reuses the detector's `v_move`. A true pass is a local minimum, below 15 cm, of the true distance between two containers that are both moving. With that truth, clean near-pass precision is 1.00 and recall 0.89, instead of 0.94 / 0.86 with the old definition (`results/latest/m3_kb_truth/summary.json`). Under 15 mm noise the detector is still broken.
+- **Truth for passes.** It no longer reuses the detector's `v_move`. A true pass is a local minimum, below 15 cm, of the true distance between two containers that are both moving. With that truth, see the table at the end of this section; with the old definition it was 0.94 / 0.86 (`results/latest/m3_kb_truth/summary.json`). Under 15 mm noise the detector is still broken.
 - **The log no longer states certainty it does not have.** R6's `swap` event reads "passed close (identity may be confused: see Inside)" and Progress says "close passes". A near_pass line says "(detected)". Geometric relations print no probability: theirs was the product of pose confidences, not a relation probability.
 
 **Test-read ledger:** the code reviewer ran one evaluation without `--split train`, which appended 6 READ lines (hash b0a2dd3cb30b, seeds 1000–1019) to `results/test_reads.log`. Nothing was tuned, and those seeds had been read many times before. The lines are kept, since the ledger is append-only.
@@ -490,3 +490,13 @@ The user asked to fix the code review's findings. The goal review's plan-level p
 - **A feasibility probe before the closed-loop harness:** about 20 train episodes, four arms, scored on whether `target` is the true container.
 - **Fix the success margin and n before running.** 50 test episodes give about ±6 pp.
 - **M3 is not done:** relation precision / recall and L2 calibration are still unmeasured (no manipulation data), and so is an oracle-replay check.
+
+M3a truth check after the fixes (train seeds 0–99, clean tree b20eff4, params 65d1345cf1be; `results/latest/m3_kb_truth/summary.json`):
+
+| | cover precision / recall | near-pass precision / recall (true passes) | moves logged | view tokens median / max |
+|---|---|---|---|---|
+| clean | 1.00 / 1.00 | 1.00 / 0.83 (272) | 380 | 430 / 534 |
+| pos_noise 15 mm | 1.00 / 1.00 | 0.33 / 0.08 | 38 | 292 / 452 |
+
+- The clean misses are true closest approaches between about 6 and 15 cm, which the detector's 30 px threshold does not flag.
+- Under noise the view is smaller because fewer events are logged: the detector breaks (M2 item 1).
