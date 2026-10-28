@@ -3,6 +3,7 @@
   python scripts/run.py --corrupt none,id_swap --p 0.5 --n 30                       # M0 table
   python scripts/run.py --systems all --corrupt none,id_swap_overlap,pos_noise \
          --lane mix --steps mix --n 60 --keep-as m1_table                            # M1 table
+  python scripts/run.py --systems m2 --split test --first 60 --n 300 ...            # M2: fresh seeds >= 1060
   python scripts/run.py --source oracle --split train
   python scripts/run.py --selftest
 """
@@ -28,15 +29,19 @@ from arbiter_kb.sources.replay import OracleReplaySource  # noqa: E402
 from arbiter_kb.sources.synthetic import SyntheticSource  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
 from arbiter_kb.systems.baselines import GuardedBound, TrackerSystem  # noqa: E402
+from arbiter_kb.systems.soft_haircut import SoftHaircut  # noqa: E402
 
-COLS = ["condition", "system", "n", "acc", "silent", "silent_lo", "silent_hi", "coverage", "aurc", "brier", "ece",
+COLS = ["condition", "system", "n", "acc", "silent", "silent_lo", "silent_hi", "coverage", "cov_lo", "cov_hi", "aurc", "brier", "ece",
         "detect_among_wrong", "conf_right", "conf_wrong", "n_corrupted", "silent_on_corrupted", "grasp_err_m"]
 SYSTEMS = {  # ArbiterKB last: evaluate.run times the last system (E7)
     "frozen": lambda p: TrackerSystem("frozen", p), "bound": lambda p: TrackerSystem("bound", p),
     "bound_haircut": lambda p: GuardedBound("haircut", p),
     "overlap_haircut": lambda p: GuardedBound("overlap_haircut", p),
-    "jump_detector": lambda p: GuardedBound("jump", p), "arbiterkb": lambda p: ArbiterKBSystem(p),
+    "jump_detector": lambda p: GuardedBound("jump", p), "soft_haircut": lambda p: SoftHaircut(p),
+    "arbiterkb": lambda p: ArbiterKBSystem(p),
 }
+PRESETS = {"all": [k for k in SYSTEMS if k != "soft_haircut"],  # the M1 table, unchanged
+           "m2": ["bound", "overlap_haircut", "soft_haircut", "arbiterkb"]}  # M2 drops the uninformative three
 CONDITIONS = ("none", "id_swap", "id_swap_overlap", "pos_noise")
 PARAMS_FILE = ROOT / "params.json"
 FREEZE_NOTE = ("M1.1 defaults, untuned (R6 v1.5 with 3D distance only, w_mix removed; eps_none; baseline parameters). Nothing has "
@@ -98,11 +103,13 @@ def make_source(cond: str, base, args, params: Params):
 def evaluate(args, params: Params) -> tuple[Path | None, list[dict], dict]:
     commit, dirty = git_state()  # before any read: the run itself appends to the ledger
     base = base_source(args)
-    eps = base.episodes(args.split, n=args.n)
+    if args.source == "synthetic" and args.first + args.n > 1000:  # train seeds 0-999, test 1000-1999
+        sys.exit(f"--first {args.first} + --n {args.n} > 1000 would leave the {args.split} seed range")
+    eps = base.episodes(args.split, n=args.n + args.first)[args.first:]
     if not eps:
         print(f"SKIPPED {args.source} source: no episodes. To copy replays from the pod: scripts/copy_replays.sh")
         return None, [], {}
-    names = list(SYSTEMS) if args.systems == "all" else args.systems.split(",")
+    names = PRESETS.get(args.systems) or args.systems.split(",")
     names = sorted(names, key=list(SYSTEMS).index)
     tag = hashlib.sha256(json.dumps(vars(args), sort_keys=True).encode()).hexdigest()[:8]
     run_dir = ROOT / "results" / "runs" / f"{args.source}_{args.split}_{tag}"
@@ -134,7 +141,8 @@ def keep_dir(args) -> Path | None:
     if getattr(args, "keep_as", ""):
         return ROOT / "results" / "latest" / args.keep_as
     if getattr(args, "keep", False):
-        return ROOT / "results" / "latest" / f"{args.source}_{args.split}_n{args.n}_p{args.p}"
+        first = f"_f{args.first}" if args.first else ""
+        return ROOT / "results" / "latest" / f"{args.source}_{args.split}{first}_n{args.n}_p{args.p}"
     return None
 
 
@@ -147,7 +155,7 @@ def print_table(summary: list[dict]) -> None:
 def parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", default="synthetic", choices=["synthetic", "oracle"])
-    ap.add_argument("--systems", default="frozen,bound,arbiterkb", help=f"comma list or 'all' of {list(SYSTEMS)}")
+    ap.add_argument("--systems", default="frozen,bound,arbiterkb", help=f"comma list of {list(SYSTEMS)}, or a preset {list(PRESETS)}")
     ap.add_argument("--corrupt", default="none,id_swap", help=f"comma list of {CONDITIONS}")
     ap.add_argument("--p", type=float, default=0.5, help="id_swap: share of episodes; id_swap_overlap: p_swap")
     ap.add_argument("--d-ov", dest="d_ov", type=float, default=0.03, help="id_swap_overlap distance (m)")
@@ -156,6 +164,7 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--steps", default="50", help="synthetic swap_steps or 'mix'")
     ap.add_argument("--split", default="test", choices=["train", "test"])
     ap.add_argument("--n", type=int, default=30)
+    ap.add_argument("--first", type=int, default=0, help="skip the split's first seeds (M2: --first 60 -> test seeds >= 1060)")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--freeze", action="store_true", help="write params.json from the code defaults")
     ap.add_argument("--force", action="store_true")

@@ -71,12 +71,13 @@ def summarize(rows: list[dict], tau_hi: float) -> list[dict]:
         right = [r for r in g if r["correct"]]
         acc = _rate(g, lambda r: r["correct"])
         silent = _rate(g, lambda r: (not r["correct"]) and r["p_max"] >= tau_hi)
+        cov = _rate(g, lambda r: r["p_max"] >= tau_hi)
         corr = [r for r in g if r["corrupted"]]
         row = dict(zip(KEYS, key))
         row.update({
             "n": len(g), "acc": acc[0], "acc_lo": acc[1], "acc_hi": acc[2],
             "silent": silent[0], "silent_lo": silent[1], "silent_hi": silent[2],
-            "coverage": _rate(g, lambda r: r["p_max"] >= tau_hi)[0], "aurc": aurc(g),
+            "coverage": cov[0], "cov_lo": cov[1], "cov_hi": cov[2], "aurc": aurc(g),
             "detect_among_wrong": _rate(wrong, lambda r: r["p_max"] < tau_hi)[0],
             "brier": sum(r["brier"] for r in g) / len(g), "ece": ece(g),
             "conf_right": _mean([r["p_max"] for r in right]), "conf_wrong": _mean([r["p_max"] for r in wrong]),

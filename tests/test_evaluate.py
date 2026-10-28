@@ -7,6 +7,7 @@ from arbiter_kb.params import Params
 from arbiter_kb.sources.synthetic import SyntheticSource
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
 from arbiter_kb.systems.baselines import GuardedBound, TrackerSystem
+from arbiter_kb.systems.soft_haircut import SoftHaircut
 
 
 class PoisonedSource:
@@ -26,7 +27,7 @@ class PoisonedSource:
 
 def systems():
     return [TrackerSystem("frozen"), TrackerSystem("bound"), GuardedBound("haircut"), GuardedBound("overlap_haircut"),
-            GuardedBound("jump"), ArbiterKBSystem()]
+            GuardedBound("jump"), SoftHaircut(), ArbiterKBSystem()]
 
 
 def test_causality_and_no_ground_truth_access():

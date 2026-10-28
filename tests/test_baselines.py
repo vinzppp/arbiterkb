@@ -1,8 +1,13 @@
-"""GuardedBound baselines on hand-made frames: which passes / jumps trigger the haircut, and the tie rule."""
+"""GuardedBound and SoftHaircut baselines on hand-made frames: which passes / jumps trigger the haircut,
+the tie rule, and SoftHaircut = R6's formula with no KB."""
+import math
+
 import numpy as np
 import pytest
 
+from arbiter_kb.params import Params
 from arbiter_kb.systems.baselines import GuardedBound
+from arbiter_kb.systems.soft_haircut import SoftHaircut
 from arbiter_kb.types import EpisodeMeta, FrameObs, ObjObs
 
 OBJS = [("bin_a", "container", {}), ("bin_b", "container", {}), ("cube_g", "cube", {"color": "g"})]
@@ -85,3 +90,39 @@ def test_explain_reports_not_found_when_the_predicted_container_is_unseen():
     rows = g.trace_rows()
     rows[-1]["pred"]["cube_g"] = "bin_a"
     assert "o10:bin_a: NOT FOUND" in explain(rows, "cube_g")
+
+
+# ---- SoftHaircut --------------------------------------------------------------------------
+
+
+def run_soft(frames):
+    s = SoftHaircut()
+    s.reset(META)
+    for f in frames:
+        s.step(f)
+    return s
+
+
+@pytest.mark.parametrize("h", [0.025, 0.01, 0.0])  # closest 3D distance 0.05 / 0.02 / 0 m
+def test_one_pass_gives_r6_confidence(h):
+    rp = Params().rule
+    d = run_soft(cover() + swap(h)).believe_inside("cube_g")
+    w = rp.w_max * math.exp(-2 * h / rp.d0)
+    assert d.argmax()[0] == "bin_a"  # Bound's answer
+    assert d.probs["bin_a"] == pytest.approx(1 - w, abs=1e-6)
+    assert d.probs["bin_b"] == pytest.approx(w, abs=1e-6)
+
+
+def test_two_passes_mix_like_r6_and_a_sighting_clears():
+    s = run_soft(cover() + swap(0.01) + swap(0.01, t0=24))
+    w = 0.5 * math.exp(-1.0)
+    assert s.believe_inside("cube_g").probs["bin_a"] == pytest.approx((1 - w) ** 2 + w * w, abs=1e-6)  # swap_mix twice
+    assert s.rows[-1]["doubt"]["cube_g"][:2] == ["bin_a", "bin_b"]
+    s.step(frame(40, (0.1, 0), (0, 0), (0.1, 0)))  # the cube is seen again, under bin_a
+    assert s.believe_inside("cube_g").probs == {"bin_a": 1.0}
+
+
+def test_a_pass_while_the_cube_is_visible_is_ignored():
+    frames = [frame(t, (0, 0), (0.1, 0), (0.3, 0.3)) for t in range(5)]
+    frames += [frame(f.t, f.objects["bin_a"].xyz[:2], f.objects["bin_b"].xyz[:2], (0.3, 0.3)) for f in swap(0.0)]
+    assert run_soft(frames).passes["cube_g"] == []
