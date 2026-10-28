@@ -975,3 +975,11 @@ Reading (offline single-step decisions; RoboMME robot state; one small and one f
    - three counting tasks only;
    - KO's wording carries ordinals;
    - one run each.
+
+## Spec v1.9 — two VLM calls (2026-10-28, user decision)
+The user asked why the parts keep growing. Answer: the VLM work is two calls, not three roles.
+- **Keyframe call:** the clue-object lister and the annotator ask about the same marked frame, so they are one call. At the first frame it lists all movable objects; at later keyframes, new objects, descriptions, and the relations the rules cannot decide.
+- **Review call:** unchanged (every ~3 s over a window of frames, plus once before acting on a target).
+- The two differ in what the VLM reads (one frame when something happened vs a window on a timer), so they stay apart.
+- Spec updated: header, §2.1 diagram and status, §2.2 step 6, §2.3 roles, §2.5 keyframe work, §2.6, §2.7, §3.7 (the output JSON gains `clue_objects`), M4 items 5, 6, 8, 10, M5 item 1.
+- **Code not changed yet:** `clue_objects.py` and `annotate.py` are still two modules; merging them is M4 item 8.
