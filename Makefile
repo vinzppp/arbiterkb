@@ -19,4 +19,4 @@ eval:
 
 notebook:
 	$(PY) scripts/make_notebook.py
-	$(PY) -m jupyter nbconvert --to notebook --execute notebooks/m0_walkthrough.ipynb --output-dir executed
+	$(PY) -m nbconvert --to notebook --execute notebooks/m0_walkthrough.ipynb --output-dir executed
