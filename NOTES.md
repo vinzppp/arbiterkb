@@ -703,3 +703,41 @@ Reading:
 - **Questions:**
   - Does lower thinking keep K's accuracy (time budget, spec §2.6)?
   - Do K-L3 / R / K0 differ from K once the log and prompt fixes are in?
+
+**Batch A results** (`results/latest/m4_batchA/report.json` + `dry.csv`; run `results/runs/dry_synthetic_20261028_100910`, commit 89aa725, clean tree; 600 calls, **$0.92**; train seeds 100–149, clean synthetic, text only, one decision at t*):
+
+| arm | effort | right container [Wilson 95%] | within 3 cm | input tok | reasoning tok | s / call |
+|---|---|---|---|---|---|---|
+| K | default | **0.96** [0.87, 0.99] | 0.96 | 1,561 | 1,217 | 20.9 |
+| K | low | 0.92 [0.81, 0.97] | 0.92 | 1,561 | 1,191 | 20.4 |
+| K | off | 0.68 [0.54, 0.79] | 0.66 | 1,563 | 0 | 3.5 |
+| K-L3 | default | 0.92 [0.81, 0.97] | 0.92 | 1,068 | 1,191 | 20.3 |
+| K-L3 | low | 0.92 | 0.94 | 1,068 | 1,182 | 20.1 |
+| K-L3 | off | 0.70 | 0.68 | 1,070 | 0 | 2.9 |
+| R | default | **0.96** [0.87, 0.99] | 0.94 | 2,171 | 1,358 | 23.5 |
+| R | low | 0.96 | 0.94 | 2,171 | 1,327 | 23.3 |
+| R | off | 0.58 [0.44, 0.71] | 0.48 | 2,173 | 0 | 3.1 |
+| K0 | default / low / off | 0.38 / 0.34 / 0.30 | | 692 | | |
+
+Against K at default effort (paired episode bootstrap; rule fixed before the run):
+- K-low: −0.04 [−0.10, 0.00], **same**.
+- K-off: −0.28 [−0.40, −0.16], **worse**.
+- K-L3 default / low: −0.04 [−0.10, 0.00], **same**.
+- R default / low: 0.00 [−0.08, 0.08], **same**.
+- K0: −0.58 to −0.66, **worse**.
+- Without thinking, against K-off: R-off −0.10 [−0.28, 0.08], K-L3-off +0.02 [−0.12, 0.16]. Both **undecided**.
+
+Reading (plumbing on clean synthetic data; no claim moves):
+- **Thinking matters, and "low" saves nothing.** With thinking off, K drops from 0.96 to 0.68. "low" kept about the same number of reasoning tokens (1,191 vs 1,217) and the same latency, so this model and provider effectively ignore it. A controller call costs about 20 s with thinking, or 3.5 s and much less accuracy without. Spec §2.6's "40 s" estimate is replaced by the measured 20 s per call (8 calls in parallel, latency per call). **The time budget therefore needs either thinking (about 20 s per call, about 200 s per episode) or a better non-thinking model**; to be tested.
+- **With the fixes, the raw tracker log is as good as the KB** (R = K = 0.96). R's earlier misses (aiming at the cube's first-seen spot) disappeared once every prompt states the containment rule. On this task, with clean observations and a thinking model, the KB's structure adds **no accuracy**. It saves input tokens: K 1,561 and K-L3 1,068 against R's 2,171 (−28% / −51%). Synthetic episodes are short; the raw log grows with episode length (RoboMME up to 1,300 steps), and the KB view does not.
+- **The event log still adds nothing** here (K-L3 = K), as before.
+- **Memory is still necessary** (K0 at 0.30–0.38, near chance).
+- **Without thinking, the KB looks slightly ahead** (K 0.68, K-L3 0.70, R 0.58), but n = 50 cannot decide it.
+- **Implication for claims 1–2:** on clean synthetic VideoUnmaskSwap with text only, "the KB beats the raw log" is **not supported**, as the M3a goal review predicted for permanence tasks. A difference can only come from:
+  - perceived observations with real id swaps and noise (G's data), where the raw log copies the tracker's errors silently;
+  - long episodes, where the raw log grows;
+  - images (arm H: about 58 images against 2);
+  - a non-thinking or smaller controller;
+  - tasks beyond permanence, where the answer is not one Inside line.
+
+  These are the next tests, not this one.
