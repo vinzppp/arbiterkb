@@ -45,12 +45,12 @@ def test_r1_no_candidate_within_r_cover_is_at_most_even_odds():
     assert d.hyp_support[None] == [ev.id] and ev.id in d.support
 
 
-def test_r1_far_candidates_keep_the_distance_kernel():
+def test_r1_far_containers_only_the_nearest_against_elsewhere():
     kb = KB(OBJS)
     ev = disappear(kb, 32, (0.0, 0.0))
-    ops = r1_cover(kb, [ev], frame(32, {"bin_a": (0.07, 0), "bin_b": (0.12, 0)}), RuleParams())
+    ops = r1_cover(kb, [ev], frame(32, {"bin_a": (0.12, 0), "bin_b": (0.07, 0)}), RuleParams())
     d = next(o.dist for o in ops if isinstance(o, SetDist))
-    assert d.probs[None] == pytest.approx(0.5) and d.probs["bin_a"] > d.probs["bin_b"]
+    assert d.probs == {"bin_b": 0.5, None: 0.5} and d.argmax() == ("bin_b", 0.5)  # 'elsewhere' never wins the tie
 
 
 def test_r1_no_visible_container_is_unknown_with_support():

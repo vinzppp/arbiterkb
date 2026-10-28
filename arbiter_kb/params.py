@@ -20,7 +20,7 @@ class RuleParams:
     d0: float = 0.02  # m
     lam: float = 1.0  # per-frame decay toward uniform for unconfirmed beliefs (R7); 1 = off
     eps_none: float = 0.01  # floor for the "elsewhere" hypothesis in R1
-    eps_far: float = 0.5  # R1, no container within r_cover: "elsewhere" mass (the cover was not seen; even odds)
+    eps_far: float = 0.5  # R1, no container within r_cover: nearest vs "elsewhere" at even odds (the cover was not seen)
 
 
 @dataclass(frozen=True)
