@@ -6,6 +6,7 @@ Read first: `DEVELOPMENT.md` (spec v1.3, §6 phases), `docs/GOALS.md` (claims, f
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
 - Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD: G Mac-side code plus the POD_RUN fresh-volume path.
 - Gate per phase: `make check` (pytest + quality.py + selftest, which uses train seeds only), then the user runs `/review-phase Mx` in Claude Code (a code-reviewer and a goal-reviewer agent; reviews land in `reviews/`). Fix, record in NOTES, then tag.
+- Current frozen params: hash f59aaea5e5b2 (R1 `eps_far` added in M2 infra).
 - E5c: test-split reads need a frozen `params.json` with a FREEZE line in `results/test_reads.log`. Any parameter change means `python scripts/run.py --freeze --force` before the next test read.
 - Cowork session mechanics (if continuing from Claude.ai):
   - edit in the container copy, stage the changed files under `/mnt/user-data/outputs/<fresh dir>/`, then `device_commit_files` to the Mac (reuse of a staged path can serve a stale copy);
@@ -55,7 +56,9 @@ Read first: `DEVELOPMENT.md` (spec v1.3, §6 phases), `docs/GOALS.md` (claims, f
 ## Parallel work that does not depend on G (candidates for the new window)
 1. **M2 infrastructure: done** (NOTES "M2 infra", commit 73fab80 and the NOTES commit after it).
    - Built: `SoftHaircut`, Wilson CI on coverage, bootstrap / paired-bootstrap AURC, matched coverage (`scripts/compare.py`), `--first` for fresh seeds, and `--systems m2`.
-   - Findings on train seeds: ArbiterKB = SoftHaircut exactly under id_swap_overlap. Under pos_noise ArbiterKB is worse, because R1 returns a confident {None: 1}. That fix is open, for M2.
+   - Findings on train seeds: ArbiterKB = SoftHaircut exactly under id_swap_overlap.
+   - Under pos_noise ArbiterKB was worse, because R1 returned a confident {None: 1}. Fixed (`eps_far`, re-frozen as f59aaea5e5b2): ArbiterKB now beats SoftHaircut under pos_noise, on held-out train seeds 450–749 as well.
+   - That gain is a cover-distance feature, not the KB. In M2, give SoftHaircut the same check.
 2. **M4 skeleton:**
    - `llm.py` (OpenRouter `qwen/qwen3.6-35b-a3b`, DeepInfra pinned; key in the git-ignored `.env`, never printed), with a cache and a budget cap;
    - the prompt builder for arm D (KB text view + cited evidence);

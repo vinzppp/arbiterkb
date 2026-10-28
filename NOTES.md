@@ -319,3 +319,28 @@ Reading:
 - **Under pos_noise ArbiterKB is worse than SoftHaircut** (ΔAURC +0.031, CI excludes 0). The cause is six rows where ArbiterKB answers `None` ("elsewhere") with p = 1.0, a confident wrong answer. The noisy last sighting of the cube leaves no container within r_cover, so R1 returns {None: 1} (seeds 201, 218, 253, 259, 297, 371 in `results/runs/synthetic_train_9ec184d5/rows.csv`). In two of those rows SoftHaircut is right. **Here the KB adds a failure mode a tracker does not have.** It is not fixed here: it is a rule change, so it belongs in M2 with a re-freeze. A candidate fix is to give the nearest container mass when no container is within r_cover, or to cap {None} below τ_hi.
 - OverlapHaircut cannot reach coverage 0.80 (it is binary: 0.727 on calib). The matched comparison against it is therefore only approximate: 0.683 vs 0.800 on eval.
 - In the M1.1 test table (seeds 1000–1059) ArbiterKB's answers equalled Bound's in every row. On train seeds 150–449 they differ in 4 of 300 id_swap_overlap rows and 6 of 300 pos_noise rows (`same_answers`). So "equal in every row" was a property of those 60 seeds.
+
+### M2 infra, R1 fix (2026-10-28, with the user's go)
+The pos_noise finding above is fixed. The table above is **before the fix** (params 4e44acb946f6). Its calibration run dir `results/runs/synthetic_train_bdb06d98` has since been overwritten by the post-fix run with the same arguments (the run tag hashes only the arguments); to reproduce it, check out e770821.
+- **R1 change** (`rules.py`, spec §3.5):
+  - If no container is within r_cover, the belief is {nearest visible container: 0.5, None: eps_far = 0.5}. The cover was not seen, so the answer gets even odds, never a confident one. The container is listed first, so it stays the answer.
+  - Only when no container is visible at all is the belief still {None: 1}, with the cube `unknown`.
+  - A first attempt, all visible containers against `eps_far`, let `None` win the argmax when there were several far containers (commit f371e94). It was replaced in 1b0e7cf.
+  - New parameter `RuleParams.eps_far = 0.5`. It is set by reasoning (even odds), not tuned. Re-frozen: params.json hash **f59aaea5e5b2** (FREEZE lines in `results/test_reads.log`; no READ since).
+- **Tests:**
+  - no container within r_cover → {nearest: 0.5, None: 0.5}, `hidden`;
+  - two far containers → only the nearest;
+  - no visible container → {None: 1}, `unknown`.
+- **After the fix**, same commands, seeds 150–449 (`results/latest/m2_infra_train_r1fix/`), pos_noise 15 mm:
+  - ArbiterKB: acc 0.993, silent 0.000, coverage 0.947 [0.915, 0.967], AURC 0.0001, Brier 0.018;
+  - SoftHaircut: acc 0.987, silent 0.013, coverage 0.967, AURC 0.012, Brier 0.032;
+  - ΔAURC ArbiterKB − SoftHaircut = −0.012 [−0.028, −0.0001].
+  - id_swap_overlap and clean are unchanged: an exact tie, 300 of 300 answers the same.
+  - Two rows (seeds 201, 297) still answer `None` at p 0.5. A later R6 pass splits the nearest container's 0.5, so 'elsewhere' leads. They are not silent.
+- **Out-of-sample check:** the fix was designed on seeds 150–449, so it was re-run on **train seeds 450–749**, which I had not looked at (`results/latest/m2_infra_train_holdout/`, θ from seeds 0–149).
+  - pos_noise: ArbiterKB AURC 0.0001 vs SoftHaircut 0.0126, ΔAURC −0.0125 [−0.026, −0.0002]. Silent 0.000 vs 0.013 [0.005, 0.034], at coverage 0.937 vs 0.957 (θ cannot match it exactly).
+  - id_swap_overlap and clean: an exact tie again.
+- **What this does and does not show:**
+  - The pos_noise gain is real on unseen train seeds. But it is a **cover-distance check** ("no container near where the cube vanished → even odds"), i.e. one more feature. A tracker baseline could copy it in two lines; SoftHaircut lacks it only because it copies R6, not R1.
+  - It is not propagation and not evidence for the belief layer. It also lives on our own pos_noise (σ = 15 mm, chosen by us).
+  - **No claim moves.** For M2 (c), SoftHaircut should get the same cover-distance check, so that the comparison isolates the KB again.
