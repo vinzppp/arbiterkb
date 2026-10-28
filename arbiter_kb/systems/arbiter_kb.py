@@ -13,6 +13,7 @@ from ..observe import observe
 from ..params import Params
 from ..planner import plan_pick
 from ..rules import RULES
+from ..task_items import parse_task_items
 from ..types import EpisodeMeta, FrameObs, PlanStep
 from ..views import text_view
 
@@ -29,6 +30,7 @@ class ArbiterKBSystem:
     def reset(self, meta: EpisodeMeta) -> None:
         self.kb = KB(meta.objects)
         self.kb.task["goal"] = meta.task_goal  # L4
+        self.kb.task["items"] = parse_task_items(meta.task_goal)  # phrases the task names (task_items.py)
         self.det = Detectors(self.params.detect)
         self.trigger = Trigger(self.params.arbiter)
         self.rows: list[dict] = []

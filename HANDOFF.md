@@ -17,7 +17,8 @@ Read first: `DEVELOPMENT.md` (spec v1.6 (M2 conditional on G, arms K0 / S); §2 
   - motion-detector smoothing (M2 item 1; it breaks under noise).
 
 ## Reminders from the v1.5 discussion
-- Tell the pod not to delete `/workspace/g/replays`: sizes need them.
+- Tell the pod not to delete `/workspace/g/replays`: sizes and the open-vocabulary re-run (POD_RUN §6b) need them.
+- G's perception used the simulator's object list (privileged). Claims need `perceive.py --vocab open`.
 - `/review-phase G` must review `stress/` and the sg_pilot worker. DINOv2 is computed per frame and never used.
 
 ## Where things are

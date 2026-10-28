@@ -14,6 +14,7 @@ import numpy as np
 from .kb import KB
 from .params import RuleParams
 from .rules import held
+from .task_items import is_task_item
 
 
 def is_var(x) -> bool:
@@ -157,6 +158,8 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
     names = {"grasp": "grasps", "place": "places", "cover": "covers", "swap": "close passes"}
     done = [f"{names[t]} {n}" for t in names if (n := sum(e.type == t for e in kb.events))]
     lines.append("Progress: " + (", ".join(done) or "nothing yet"))
+    items = kb.task.get("items", [])
+    lines.append("Task items (named by the goal): " + (", ".join(i["phrase"] for i in items) or "none"))
     lines.append("Objects (world frame, m):")
     for o in kb.objects.values():
         vis = "held" if o.id in held(kb) else o.visibility.value
@@ -168,7 +171,8 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
         sup = f" [{o.pose.support[-1]}]" if o.pose.support and vis != "hidden" else ""
         seen = kb.facts.get(("description", o.id))
         look = f'; looks like "{seen.value}" (vlm, t={seen.t})' if seen else ""
-        lines.append(f"  [{o.id}] {o.description}, {vis}{pos}, last seen t={o.t_last_seen}{sup}{look}")
+        tag = " (task item)" if is_task_item(o.attributes, o.cls, items) else ""
+        lines.append(f"  [{o.id}] {o.description}{tag}, {vis}{pos}, last seen t={o.t_last_seen}{sup}{look}")
     lines.append("Relations:")
     for (pred, subj), d in kb.relations.items():
         hyps = " | ".join(f"{k or 'elsewhere'} {p:.2f}" for k, p in sorted(d.probs.items(), key=lambda kv: -kv[1]))

@@ -87,5 +87,15 @@ On the Mac: `mkdir -p data/g_perceived && tar -xzf ~/Downloads/g_perceived.tar.g
 ## 6. Same session: stock oracle replays for M6 (no GPU work)
 On the Mac, with the pod's SSH host/port: `HOST=... PORT=... bash scripts/copy_replays.sh` (prints the size first).
 
+## 6b. Optional, user's go: open-vocabulary perception on the same replays (spec v1.5)
+G's run (step 4) used `--vocab scene`: the detector was told how many containers there are and which cube colours, from the simulator. That is privileged information. Re-run only the perception step, with the word list from generic words plus the phrases the task names:
+```
+python stress/perceive.py --vocab open --replays /workspace/g/replays --out /workspace/g/perceived_open 2>&1 | tee /workspace/g/perceive_open.log
+```
+- Expect it to be slower than step 4: 5 container slots and 4 cube slots stay open, and empty slots may keep calling GroundingDINO. Time one episode first (`--limit 1`).
+- Untested against the simulator: check that the first episode's `classes` in meta read `container.` ×5, then the task's colour phrase, then `cube.` ×4.
+- Bring `perceived_open` to the Mac the same way as `g_perceived`.
+- **Keep `/workspace/g/replays`**: sizes and any later perception change need them.
+
 ## 7. STOP THE POD
 In the RunPod console. The volume keeps `/workspace` (the replays stay there for later).

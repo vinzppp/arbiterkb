@@ -93,7 +93,7 @@ Status (2026-10-28):
 
 | Part | Built | Not yet |
 |---|---|---|
-| Perception | GroundingDINO → SAM → Cutie → centroid, offline on the pod (G) | class-agnostic segmentation; size / confidence in the table; DINOv2 is computed per frame but unused (drop it unless an experiment needs appearance) |
+| Perception | GroundingDINO → SAM → Cutie → centroid, offline on the pod (G, word list from the simulator scene: **privileged**); `--vocab open`: generic words + the task's phrases, no scene counts (written, not yet run) | class-agnostic segmentation; size / confidence in the table; DINOv2 is computed per frame but unused (drop it unless an experiment needs appearance) |
 | Observation table (`FrameObs`) | id, class, visible, centroid, pixel, track_q, hand, gripper | size / box, visible fraction, detector confidence, last-clear-frame id, timestamp (contract change, `CONTRACT_VERSION` 2) |
 | observe / detectors / rules | R1 R2 R3 R5 R6; appear, disappear, move from→to, near-pass, grip | motion smoothing under real noise (M2 item 1); press, reveal (R4); time-based thresholds |
 | KB L0–L4 | centroid; objects; Inside (stored) + Near / On / LeftOf / Held (computed); evidence log + events; goal + counts | open relation table (§2.3); size; L4 progress against a parsed goal |
@@ -146,7 +146,7 @@ Status (2026-10-28):
 
 ### 2.3 Design decisions and why
 
-- **Record task-agnostically, retrieve task-specifically.** Every detectable object and every change is recorded, whatever the current goal. The next task may ask about something the current one ignored, and memory not recorded cannot be recovered. The goal is used only when building views (what to show first).
+- **Record task-agnostically, retrieve task-specifically; mark what the task names.** Task items are parsed from the instruction text (`task_items.py`) and tagged in the KB and the view, never used to filter what is recorded. Perception's word list must not come from the simulator scene: G's run did that (privileged), and `perceive.py --vocab open` does not. Every detectable object and every change is recorded, whatever the current goal. The next task may ask about something the current one ignored, and memory not recorded cannot be recovered. The goal is used only when building views (what to show first).
   - Cheap things are kept for all objects every frame: id, position, visibility, events.
   - Expensive things are computed on demand: descriptions and semantic relations, by the annotator from the "last clear frame".
   - The opposite choice, keeping only what the current tasks need, is Clio's (arXiv 2404.13696). It can serve as a contrast arm.

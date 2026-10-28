@@ -586,3 +586,18 @@ Reading (n = 20, synthetic, oracle observations, text only, a single step: **plu
     - merge disappear + cover into one line ("covered by bin_2 at …; moves with bin_2");
     - state the containment rule in the prompt;
     - rerun with n ≥ 50.
+
+## Perception without privileged scene information; task items (2026-10-28, user decision)
+- **Finding:** G's perception (`stress/perceive.py` → sg_pilot) builds the GroundingDINO word list from the simulator scene: `"container." × n_bins` plus one `"<colour> cube."` per cube in the episode. The detector is therefore told how many objects exist and which colours, which a real robot does not know. It also sees nothing outside that list (table, arm, buttons).
+  - That is fine for G's question (does the tracker swap ids, given the right objects?).
+  - It is privileged for the claims: arm K's results on such perception are optimistic.
+- **Change (user: "change it per v1.5 now; mark task_item where the task gives key information"):**
+  - `arbiter_kb/task_items.py`:
+    - `parse_task_items(goal)` reads the object phrases from the **instruction text only**: "pick up the container that hides the red cube" → container, red cube. It is a deterministic parser for RoboMME-style instructions; an LLM extractor (as scene-graph-robot's `llm_entities.py`) is the general version.
+    - `open_vocabulary(items)` = `container.` ×5, then the task's colour phrases, then `cube.` ×4. The fixed slot counts are upper bounds (unused slots stay empty) and are the same for every episode.
+    - `is_task_item()`.
+  - The KB stores `task["items"]`. The controller view lists "Task items (named by the goal)" and tags matching objects "(task item)". Everything else is still recorded: marking, not filtering.
+  - `stress/perceive.py --vocab open` (pod side) uses that word list. The scene is read only to store the evaluation truth in meta. `--vocab scene` stays the default, so G's run is unchanged and comparable. POD_RUN §6b has the optional re-run on G's replays.
+  - **Untested against the simulator:** extra empty slots may cost GroundingDINO calls every frame. Generic `cube.` slots carry no colour, so a cube not named by the task needs its colour from the annotator or the image. Slot ↔ truth matching (`swapstats.assign_slots`) with more slots than objects is unchecked.
+- **Claims:** results with `--vocab scene` are marked privileged. Claims 1–3 are made on `--vocab open` perception.
+- Tests: `tests/test_task_items.py`.
