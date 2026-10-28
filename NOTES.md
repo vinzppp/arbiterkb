@@ -940,3 +940,38 @@ The user asked how the KB is kept correct, and whether one small VLM can, at onc
   1. Does v2's gain over the raw log hold on unseen episodes?
   2. Does the v3 view close part of the gap to KO?
   3. Does the small model + KB without thinking reach the frontier model reading the raw log?
+
+**v3 results on unseen episodes 61–100** (`results/latest/count_robot_state_v3/`: report.json, rows and meta per run; 310 decision points per arm).
+- **Incident:** the two runs, started 2 s apart, created the same run directory in the same second and overwrote each other's rows.csv (2,468 of 3,100 rows survived, without a model column).
+- **Fixed:** `count_test` now names the directory after the model and the process id, refuses an existing directory, and writes a `model` column.
+- Both runs were then replayed **entirely from the cache** (3,100 hits, $0 new). The original spend was **$1.26** (qwen) + **$1.90** (Sonnet).
+
+| model | arm | effort | right [Wilson 95%] | tokens in + out / call | median s | $ / 1000 calls |
+|---|---|---|---|---|---|---|
+| qwen3.6-35b-a3b | N | off / default | 0.47 / 0.61 | 204 / 1,133 | 0.4 / 6.1 | 0.03 / 0.92 |
+| qwen3.6-35b-a3b | P (raw log) | off | 0.61 [0.55, 0.66] | 1,370 | 0.6 | 0.15 |
+| qwen3.6-35b-a3b | P (raw log) | default | 0.82 [0.77, 0.86] | 2,736 | 10.4 | 1.45 |
+| qwen3.6-35b-a3b | **K (v3)** | off | **0.83** [0.78, 0.86] | 382 | 0.5 | **0.05** |
+| qwen3.6-35b-a3b | **K (v3)** | default | **0.94** [0.90, 0.96] | 1,208 | 6.4 | **0.84** |
+| qwen3.6-35b-a3b | KO | off / default | 0.96 / 0.99 | 257 / 873 | 0.4 / 4.3 | 0.04 / 0.62 |
+| claude-sonnet-5.5 | P (raw log) | default | **0.94** [0.91, 0.96] | 1,417 | 2.9 | **4.37** |
+| claude-sonnet-5.5 | K (v3) | default | 0.98 [0.96, 0.99] | 506 | 1.3 | 1.76 |
+
+- Per task, qwen K off / default against qwen P: PickXtimes 0.78 / 0.91 vs 0.72 / 0.99; SwingXtimes 0.71 / 0.88 vs 0.42 / 0.43; BinFill 0.96 / 1.00 vs 0.67 / 0.99. Sonnet P: 1.00 / 0.84 / 0.96.
+- Paired (rule fixed before the run):
+  - qwen P − K: off −0.22 [−0.28, −0.15], **worse**; default −0.12 [−0.17, −0.07], **worse**;
+  - qwen KO − K: off +0.14, default +0.06, **better**;
+  - Sonnet P − Sonnet K: −0.04 [−0.07, −0.02], **worse**;
+  - **Sonnet P − qwen K (default): +0.003 [−0.03, +0.04], same**;
+  - Sonnet P − qwen K (off): +0.11 [+0.07, +0.16], better.
+
+Reading (offline single-step decisions; RoboMME robot state; one small and one frontier model; no closed loop):
+1. **v2's gain holds on unseen episodes.** With the KB the small model beats the raw log by 22 pp without thinking and 12 pp with thinking, at a third (off) or less than half (default) of the tokens.
+2. **The small model with the KB matches the frontier model with the raw log** (0.94 vs 0.94, paired difference +0.003, CI ±3 pp), at about **one fifth of the cost per call** ($0.84 vs $4.37 per 1,000 calls). It is slower with thinking (6.4 s vs 2.9 s). Without thinking it is about **90× cheaper** and faster (0.5 s, $0.05 / 1,000), but 11 pp below. **This is claim 1 in miniature, on unseen RoboMME data.**
+3. **The KB also helps the frontier model** (0.94 → 0.98, with a third of the tokens): structured memory is not only a crutch for small models (claim 2).
+4. **The v3 view did not close the gap to the oracle step list** (KO − K: off +0.14, default +0.06; v2 on episodes 1–30: +0.13 / +0.08). The ordinals and merges did not change much. What remains is mostly SwingXtimes, where qwen K reaches 0.71 / 0.88 against KO's 0.92 / 0.97.
+5. **Limits:**
+   - the decisions are action choices, not waypoints; no closed loop;
+   - three counting tasks only;
+   - KO's wording carries ordinals;
+   - one run each.

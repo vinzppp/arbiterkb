@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -100,14 +101,14 @@ def jobs(a, params) -> list[dict]:
                 for arm in a.arms.split(","):
                     msgs = prompt(arm, ep, t, params)
                     out += [{"task": task, "episode": ep["meta"]["episode"], "k": k, "t": t, "truth": ACTIONS[truth],
-                             "arm": arm, "effort": eff, "msgs": msgs} for eff in a.effort.split(",")]
+                             "arm": arm, "effort": eff, "msgs": msgs, "model": a.model} for eff in a.effort.split(",")]
     return out
 
 
 def score(job: dict, text: str, u: dict) -> dict:
     ans = parse_answer(text)
     got = ans.get("next") if isinstance(ans, dict) else None
-    row = {k: job[k] for k in ("task", "episode", "k", "t", "arm", "effort", "truth")}
+    row = {k: job[k] for k in ("task", "episode", "k", "t", "arm", "effort", "truth", "model")}
     row.update(answer=got, correct=got == job["truth"], valid=got in ACTIONS)
     row.update({k: round(float(u.get(k, 0)), 6) for k in ("prompt_tokens", "completion_tokens", "reasoning_tokens",
                                                            "seconds", "usd", "cached_usd")})
@@ -123,8 +124,9 @@ def run(a) -> None:
             print(f"--- {m['role']}\n{m['content']}")
         print(f"\n{len(todo)} requests")
         return
-    out = ROOT / "results" / "runs" / f"count_{time.strftime('%Y%m%d_%H%M%S')}"
-    out.mkdir(parents=True, exist_ok=True)
+    slug = a.model.split("/")[-1].replace(".", "")  # one directory per run: two runs in one second collided (v3)
+    out = ROOT / "results" / "runs" / f"count_{time.strftime('%Y%m%d_%H%M%S')}_{slug}_{os.getpid()}"
+    out.mkdir(parents=True, exist_ok=False)
     prov = None if a.provider == "auto" else {"order": [a.provider], "allow_fallbacks": False, "require_parameters": True}
     llm = LLM(model=a.model, max_usd=a.max_usd, provider=prov)
     ask = lambda j: llm.call(j["msgs"], max_tokens=a.max_tokens, reasoning=EFFORT[j["effort"]])  # noqa: E731
