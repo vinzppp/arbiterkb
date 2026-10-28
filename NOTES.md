@@ -523,3 +523,23 @@ After a long design discussion with the user, `DEVELOPMENT.md` §2 was rewritten
   - Drop DINOv2 in future pod runs, if Cutie does not need it (unchecked).
 - **Keep `/workspace/g/replays` on the pod volume.** Object size needs masks + depth. G saves no masks, so sizes can only be recomputed from those replays, without re-running the simulator.
 - **Two task-bound parts:** the evaluation scores only the target cube, and perception sees only words in its prompt. Both are now M3 items.
+
+## v1.6 — trim to the main line (2026-10-28, user decision)
+The user asked whether the complex rules, the Hungarian check and the many baselines still matter under v1.5. Agreed answer: focus on claims 1–2 (M3–M5) and keep claim 3 small, sized by G.
+- **M2 is now conditional on G's branch** (spec §6 M2):
+  - **always:** motion smoothing with per-second thresholds, tuned on G's real noise; one claim 3 table (Bound vs SoftHaircut vs ArbiterKB) with the M2-infra CIs and matched coverage;
+  - **swaps under 2%:** stop;
+  - **AUC ≥ 0.98:** use the feature as it is, with no Hungarian step;
+  - **frequent and hard to predict:** only then build `identity.py` (Hungarian margin), R6 v2, MarginHaircut and tuning.
+- **Rules:**
+  - R7 (decay, never switched on) is deleted: code, `RuleParams.lam`, two tests. `flatten` stays for R8.
+  - R5 is frozen: kept, not extended.
+  - Re-frozen: params.json hash **40d899eba31d**.
+- **Baselines:** `--systems m2` = bound, soft_haircut, arbiterkb, and `compare.py` defaults to soft_haircut, bound. OverlapHaircut, BoundHaircut, JumpDetector and Frozen stay only in the M1 table (`--systems all`), for history.
+- **Bound's role now:**
+  - claim 3's deterministic baseline;
+  - the content of the new arm **S**: one sentence per hidden cube with the KB's most likely container, which on VideoUnmaskSwap is Bound's answer. If S ties K, the KB's structure adds nothing on that task, which is the strongest falsifier for claims 1–2.
+- **New memory arms** (`controller.py`, `dry_run.py`, spec §3.8):
+  - **K0:** the current frame's visible objects with 3D centres; no relations, events or history. It separates "memory" from "being given coordinates" (M3a goal review).
+  - **S:** see above. S gets no coordinates, so like H it must read positions from images; it is meaningful only with RGB replays.
+  - Spec §3.8 now says to run K vs S and K vs K0 first, and to fix the success margin and n before any run.

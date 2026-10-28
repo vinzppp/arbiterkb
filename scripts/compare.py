@@ -1,7 +1,7 @@
 """ArbiterKB vs each baseline (DEVELOPMENT §6 M2 (c)), from two finished runs of scripts/run.py:
 
   python scripts/compare.py --calib results/runs/<train run> --eval results/runs/<eval run> \
-         [--ref arbiterkb] [--base soft_haircut,overlap_haircut,bound] [--keep-as NAME]
+         [--ref arbiterkb] [--base soft_haircut,bound] [--keep-as NAME]
 
 --calib only sets each baseline's matched-coverage threshold θ (clean rows); it must be a train run.
 --eval gives everything else: AURC with episode-bootstrap CIs, the paired AURC difference, and
@@ -92,7 +92,7 @@ def main() -> None:
     ap.add_argument("--calib", required=True, type=Path)
     ap.add_argument("--eval", required=True, type=Path)
     ap.add_argument("--ref", default="arbiterkb")
-    ap.add_argument("--base", default="soft_haircut,overlap_haircut,bound")
+    ap.add_argument("--base", default="soft_haircut,bound")
     ap.add_argument("--keep-as", dest="keep_as", default="")
     a = ap.parse_args()
     calib, ev = a.calib.resolve(), a.eval.resolve()

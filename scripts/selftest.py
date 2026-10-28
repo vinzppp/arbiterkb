@@ -125,8 +125,8 @@ def m2_infra_checks() -> None:
     args = parse(["--split", "train", "--systems", "m2", "--corrupt", "none,id_swap_overlap", "--lane", "mix",
                   "--steps", "mix", "--n", "20", "--first", "20"])
     _, summary, inf = evaluate(args, load_params())
-    check("M2 preset: bound, overlap_haircut, soft_haircut, arbiterkb", sorted({r["system"] for r in summary}) ==
-          ["arbiterkb", "bound", "overlap_haircut", "soft_haircut"], sorted({r["system"] for r in summary}))
+    check("M2 preset: bound, soft_haircut, arbiterkb", sorted({r["system"] for r in summary}) ==
+          ["arbiterkb", "bound", "soft_haircut"], sorted({r["system"] for r in summary}))
     key = lambda r: (r["condition"], r["episode"], r["cube"])  # noqa: E731
     bound = {key(r): r["pred"] for r in inf["rows"] if r["system"] == "bound"}
     soft = [r for r in inf["rows"] if r["system"] == "soft_haircut"]

@@ -7,6 +7,10 @@ interface text is theirs, verbatim where possible. Ours: the memory section per 
 - H: the image history (their memory); the caller chains all turns, as they do.
 - K: the KB view (views.controller_view) + the current front / wrist frames; a fresh request each step.
 - K-L3: K without the event log.  R: the raw tracker log as text + the current frames.
+- K0 (v1.6, M3a goal review): the current frame's object table only (3D centres now; no relations, events
+  or history). It separates "memory" from "being given coordinates".
+- S (v1.6): the current frames + one sentence per hidden cube naming its most likely container (Bound-like).
+  If S ties K, the KB's structure adds nothing on that task.
 """
 from __future__ import annotations
 
@@ -16,7 +20,7 @@ import json
 
 import numpy as np
 
-ARMS = ("H", "K", "K-L3", "R")
+ARMS = ("H", "K", "K-L3", "R", "K0", "S")
 BASE = np.array([-0.615, 0.0, 0.0])
 SHOULDER = BASE + [0, 0, 0.333]  # Panda joint 2 height above the base
 REACH = 0.855  # m: Panda reach from the shoulder (datasheet)
@@ -54,6 +58,12 @@ tracked object's 3D centre (world frame, m; from depth) or "hidden". Nothing els
 current front and wrist images, the TCP pose, the finger positions and the elapsed control steps.""",
 }
 MEMORY["K-L3"] = MEMORY["K"].replace(", and an event log with times and where-from / where-to", "")
+MEMORY["K0"] = """Memory: none. You get a table of the objects visible in the current frame with their 3D centres (world
+frame, m; from depth), then the current front and wrist images, the TCP pose, the finger positions (0.04 m each
+= fully open, 0 = closed) and the elapsed control steps. Nothing about earlier frames is given."""
+MEMORY["S"] = """Memory: one sentence per hidden object saying where the robot's memory thinks it is. Then the current front
+and wrist images, the TCP pose, the finger positions (0.04 m each = fully open, 0 = closed) and the elapsed
+control steps. You get no depth and no object positions."""
 
 ENDING = """Notes: time passes only while the robot executes a motion; everything else in the scene keeps moving during a
 motion. The gripper opens or closes only when you command it (-1 or 1). The episode ends automatically when the
@@ -86,6 +96,17 @@ def raw_tracker_log(frames: list, stride: int = 10) -> str:
         objs = [f"{k} " + (", ".join(f"{v:.3f}" for v in o.xyz) if o.visible else "hidden") for k, o in f.objects.items()]
         lines.append(f"t={f.t}: " + "; ".join(objs))
     return "\n".join(lines)
+
+
+def object_table(frame) -> str:
+    """Arm K0: the objects visible now, with their 3D centres; nothing from earlier frames."""
+    rows = [f"{k} ({o.cls}) at " + ", ".join(f"{v:.3f}" for v in o.xyz) for k, o in frame.objects.items() if o.visible]
+    return "Visible objects now:\n" + "\n".join(rows)
+
+
+def one_sentence(inside: dict) -> str:
+    """Arm S: {cube: most likely container} -> 'cube_red is under bin_0.' per hidden cube."""
+    return " ".join(f"{c} is under {b}." for c, b in inside.items() if b) or "No object is hidden."
 
 
 def user_content(arm: str, goal: str, memory_text: str, current: list, state: dict) -> list:

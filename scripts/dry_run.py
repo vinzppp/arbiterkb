@@ -65,7 +65,10 @@ def messages(arm, s, frames, src, ep, t_star) -> list:
     state = {"tcp_xyz": [round(float(v), 4) for v in f.ee_xyz], "finger_positions_m": [round(f.gripper_width / 2, 4)] * 2,
              "elapsed_control_steps": f.t}
     view = controller_view(s.kb, s.params.rule)
-    mem = {"K": view, "K-L3": view.split("Event log")[0].rstrip(), "R": C.raw_tracker_log(frames), "H": ""}[arm]
+    inside = {c: d.argmax()[0] for (p, c), d in s.kb.relations.items() if p == "Inside"
+              and s.kb.objects[c].visibility.value == "hidden"}
+    mem = {"K": view, "K-L3": view.split("Event log")[0].rstrip(), "R": C.raw_tracker_log(frames), "H": "",
+           "K0": C.object_table(frames[-1]), "S": C.one_sentence(inside)}[arm]
     content = C.user_content(arm, s.kb.task["goal"], mem, images(src, ep, t_star, arm), state)
     return [{"role": "system", "content": C.system_prompt(arm)}, {"role": "user", "content": content}]
 
@@ -122,7 +125,7 @@ def show(msgs: list) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", choices=["synthetic", "oracle"], default="synthetic")
-    ap.add_argument("--arms", default="K,K-L3,R")
+    ap.add_argument("--arms", default="K,K0,S,R")
     ap.add_argument("--n", type=int, default=5)
     ap.add_argument("--model", default="qwen/qwen3.6-35b-a3b")
     ap.add_argument("--max-usd", dest="max_usd", type=float, default=0.25)

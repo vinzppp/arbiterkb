@@ -41,10 +41,10 @@ SYSTEMS = {  # ArbiterKB last: evaluate.run times the last system (E7)
     "arbiterkb": lambda p: ArbiterKBSystem(p),
 }
 PRESETS = {"all": [k for k in SYSTEMS if k != "soft_haircut"],  # the M1 table, unchanged
-           "m2": ["bound", "overlap_haircut", "soft_haircut", "arbiterkb"]}  # M2 drops the uninformative three
+           "m2": ["bound", "soft_haircut", "arbiterkb"]}  # claim 3's table since v1.6 (DEVELOPMENT §6 M2)
 CONDITIONS = ("none", "id_swap", "id_swap_overlap", "pos_noise")
 PARAMS_FILE = ROOT / "params.json"
-FREEZE_NOTE = ("M1.1 defaults plus R1 eps_far 0.5 (M2 infra) and M3's r_grasp / r_on / r_near / left_margin / on_dz / g_close / g_open, untuned. "
+FREEZE_NOTE = ("M1.1 defaults plus R1 eps_far 0.5 (M2 infra) and M3's r_grasp / r_on / r_near / left_margin / on_dz / g_close / g_open, untuned; R7 (lam) removed in v1.6. "
                "Nothing has been tuned on test seeds.")
 
 

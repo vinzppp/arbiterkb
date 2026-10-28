@@ -1,6 +1,6 @@
 # ArbiterKB: handoff (2026-10-28, 04:20 PT)
 
-Read first: `DEVELOPMENT.md` (spec v1.5: §2 the target loop and its reasoning, §3.7 VLM annotator, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
+Read first: `DEVELOPMENT.md` (spec v1.6 (M2 conditional on G, arms K0 / S); §2 the target loop and its reasoning, §3.7 VLM annotator, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
 
 ## Direction (changed 2026-10-28, NOTES "Direction v2")
 - The KB is the memory module of an LLM controller that outputs waypoints itself, in the 2610.17350 harness.
@@ -24,7 +24,7 @@ Read first: `DEVELOPMENT.md` (spec v1.5: §2 the target loop and its reasoning, 
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
 - Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD: G Mac-side code plus the POD_RUN fresh-volume path.
 - Gate per phase: `make check` (pytest + quality.py + selftest, which uses train seeds only), then the user runs `/review-phase Mx` in Claude Code (a code-reviewer and a goal-reviewer agent; reviews land in `reviews/`). Fix, record in NOTES, then tag.
-- Current frozen params: hash 65d1345cf1be (M3a review fixes).
+- Current frozen params: hash 40d899eba31d (v1.6: R7 removed).
 - E5c: test-split reads need a frozen `params.json` with a FREEZE line in `results/test_reads.log`. Any parameter change means `python scripts/run.py --freeze --force` before the next test read.
 - Cowork session mechanics (if continuing from Claude.ai):
   - edit in the container copy, stage the changed files under `/mnt/user-data/outputs/<fresh dir>/`, then `device_commit_files` to the Mac (reuse of a staged path can serve a stale copy);

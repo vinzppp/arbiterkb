@@ -1,6 +1,6 @@
 """ArbiterKB system: the fast loop of DEVELOPMENT.md §3.1 around the KB.
 
-Per frame, in fixed order: observe -> detect (evidence) -> rules R1, R6, R7, R2 -> [monitor: M3]
+Per frame, in fixed order: observe -> detect (evidence) -> rules R3, R1, R6, R5, R2 -> [monitor: M3]
 -> trigger -> arbiter backend (M0: RuleOnly, never changes anything). Every change is logged.
 """
 from __future__ import annotations

@@ -79,7 +79,7 @@ class Distribution:
         return Distribution(probs, t, sorted(set(self.support) | {ev_id}), hs)
 
     def flatten(self, f: float, plausible: list[str | None], t: int) -> "Distribution":
-        """p <- f·p + (1-f)·uniform(plausible). f = λ^Δt for decay (R7) or 1 - w_risk for R8."""
+        """p <- f·p + (1-f)·uniform(plausible). f = 1 - w_risk for R8 (R7 decay was removed in v1.6)."""
         if not plausible:
             return self
         u = 1.0 / len(plausible)

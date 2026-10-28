@@ -1,5 +1,6 @@
 """Forward rules. Each rule is a pure function (kb, new_evidence, frame, params) -> list[Op]; only
-KB.apply mutates (DEVELOPMENT.md §1, §3.5). M0: R1, R2, R6, R7 (wired). M1: R5, R6 with 3D distance.
+KB.apply mutates (DEVELOPMENT.md §1, §3.5). M0: R1, R2, R6. M1: R5 (frozen since v1.6: it never fires on
+stock layouts), R6 with 3D distance. R7 (decay) was removed in v1.6: it was never switched on.
 M3: R3 grasp / place (gripper evidence), and R2 also moves a held object with the end effector.
 """
 from __future__ import annotations
@@ -7,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 
 from .beliefs import Distribution, joint_exclusive
-from .kb import KB, AddEvent, AddEvidence, FlattenDist, MixDist, SetDist, SetPose, SetVis
+from .kb import KB, AddEvent, AddEvidence, MixDist, SetDist, SetPose, SetVis
 from .observe import obs_id
 from .params import RuleParams
 from .types import FrameObs
@@ -108,16 +109,6 @@ def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     return ops
 
 
-def r7_decay(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
-    """Unconfirmed beliefs drift toward uniform over containers: p <- λ^Δt·p + (1-λ^Δt)·u.
-    Rules run every frame, so Δt = frames since this distribution last changed."""
-    if p.lam >= 1.0:
-        return []
-    bins = containers(kb)
-    return [FlattenDist("Inside", cube, p.lam ** (frame.t - d.t), bins, frame.t)
-            for (pred, cube), d in kb.relations.items() if pred == "Inside" and bins and frame.t > d.t]
-
-
 def r5_exclusive(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """At most one cube per container, among the cubes covered IN THIS FRAME: their R1 beliefs are
     independent evidence, so the joint over them is exact. Cubes covered earlier are left out: their
@@ -155,4 +146,4 @@ def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     return ops
 
 
-RULES = [("R3", r3_grasp), ("R1", r1_cover), ("R6", r6_swap), ("R7", r7_decay), ("R5", r5_exclusive), ("R2", r2_follow)]
+RULES = [("R3", r3_grasp), ("R1", r1_cover), ("R6", r6_swap), ("R5", r5_exclusive), ("R2", r2_follow)]

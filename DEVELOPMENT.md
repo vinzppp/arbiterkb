@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.5 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.5:** §2 rewritten as the target loop with the reasoning behind it: observation table, observe / detectors / rules, VLM annotator (arbiter merged), annotated frame, controller; task-agnostic recording; open relation table; real-time notes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
+Version 1.6 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.6:** M2 becomes conditional on G (only what G's result needs; claim 3 compares Bound, SoftHaircut and ArbiterKB); R7 deleted, R5 frozen; arms K0 and S added (§3.8). **v1.5:** §2 rewritten as the target loop with the reasoning behind it: observation table, observe / detectors / rules, VLM annotator (arbiter merged), annotated frame, controller; task-agnostic recording; open relation table; real-time notes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -245,7 +245,7 @@ Views: `ask(pattern)` (course `unify` / `satisfy`; returns `[(bindings, prob)]`)
 `Distribution` over containers ∪ {None}. Operations (all renormalise):
 - `from_distances(d: dict[id, float], sigma)`: p ∝ exp(−(d² − min d²)/2σ²). The shift prevents underflow; with no candidate → `{None: 1}`, citing the evidence that triggered it.
 - `swap_mix(a, b, w)`: p'(a) = (1−w)·p(a) + w·p(b), p'(b) = (1−w)·p(b) + w·p(a). This means "with probability w the tracks a and b exchanged identity". It asserts 0 ≤ w ≤ 1.
-- `flatten(f, plausible)`: p ← f·p + (1−f)·uniform(plausible). With f = λ^Δt this is R7, which replaces "conf × λ^Δt" for distributions. Δt = 0 (the distribution changed this frame) means no decay; an empty `plausible` is a no-op.
+- `flatten(f, plausible)`: p ← f·p + (1−f)·uniform(plausible); used by R8 with f = 1 − w_risk (R7's decay use was removed in v1.6). An empty `plausible` is a no-op.
 - `joint_exclusive(dists)`: R5. Over injective assignments π of hidden cubes → containers (N ≤ 3, enumerate ≤ 24), P(π) ∝ Π_h p_h(π(h)); return the marginals.
 - `max_prob`, `argmax`, `entropy`.
 
@@ -265,9 +265,9 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 | R2 follow | each frame for hidden cubes | update display pose | M0 |
 | R3 held | gripper closed near x | `Held(x)`; pose follows the EE | after G (no current metric needs it) |
 | R4 reveal | container z > 0.15 and cube x observed at the container's former xy | `SetDist(Inside(x), {c: 1})`, `source="verified"`, plus `Retract` of contradicted hypotheses | M3 (needs a reveal: a container lifted) |
-| R5 exclusive | two or more cubes covered in the same frame | `SetDist` = marginals of `joint_exclusive` over the cubes covered **in this frame** only (their R1 beliefs are independent, so the joint is exact). Earlier cubes are left out: their beliefs may already be R5/R6 outputs, and recombining them counts the constraint twice (M1.1 review). Covers on different frames are not linked; an exact joint table over all hidden cubes is the upgrade if a source needs it. No consistent assignment → `AddEvidence(exclusive_conflict)` for M3's R8 | M1 |
+| R5 exclusive | two or more cubes covered in the same frame | `SetDist` = marginals of `joint_exclusive` over the cubes covered **in this frame** only (their R1 beliefs are independent, so the joint is exact). Earlier cubes are left out: their beliefs may already be R5/R6 outputs, and recombining them counts the constraint twice (M1.1 review). Covers on different frames are not linked; an exact joint table over all hidden cubes is the upgrade if a source needs it. No consistent assignment → `AddEvidence(exclusive_conflict)` for M3's R8 | M1; **frozen in v1.6** (never fired on stock layouts: kept, not extended) |
 | R6 swap | a `near_pass(a, b)` evidence closes (M0), or `id_margin < m_thr` (M2) | `MixDist(Inside(h), a, b, w)` for every **hidden** h with mass on a or b; `AddEvent(swap)` only when w > 0. M0: w = w_mix·(1 − closeness). M1: w = w_max·exp(−d/d0), with d the 3D closest-approach distance (the M0 image form was removed in M1.1: the detector always records d). M2: w from the identity margin and G's measured signature | M0 / M1 / M2 |
-| R7 decay | each frame for unconfirmed items (Δt > 0) | `flatten`, pose conf decay | wired since M0 (λ = 1, off); λ is tuned in M2 |
+| ~~R7 decay~~ | — | — | removed in v1.6 (never switched on); `flatten` stays for R8 |
 | R8 consistency | two objects within `d_same`; a "hidden" cube observed; an expected container missing | `AddEvidence(risk)` + `MixDist` toward uniform with `w_risk` | M3 |
 
 ### 3.6 Monitor and decision
@@ -324,9 +324,11 @@ The arbiter protocol below is the annotator's swap-verdict part.
 | K | the KB text view (L0–L4) + the event log + current frame(s) | **the KB** (claims 1–2) |
 | K−L3 | K without the event log | does the event history matter |
 | K+A | K with the arbiter correcting beliefs at triggers (§3.7) | does belief arbitration help the controller |
+| K0 | the current frame's object table (3D centres now) + current frame(s); no relations, events or history | is K's gain memory, or just being given coordinates? (M3a goal review) |
+| S | the current frame(s) + one sentence per hidden object: "cube_red is under bin_0" (the KB's argmax, Bound-like) | if S ties K, the KB's structure adds nothing on that task |
 | ref | 2610.17350's GPT-6-Astra row (92.1%, $0.39 per episode), copied from the paper | reference from a different run, labelled |
 
-  Claim 1: K with the small model vs ref, and vs H with the small model. Claim 2: K vs H with the same model, on success and on tokens / images / $ per episode. K with an **oracle** KB (filled from simulator state) is reported as an upper bound only. The claims use a KB filled from perception.
+  Order of the falsification tests: K vs **S** and K vs **K0** first (cheapest, and the strongest falsifiers: does the structure matter, and is it more than coordinates?), then K vs R and K vs H. Fix the success margin that counts as "matches" and the number of episodes before any run (50 test episodes give about ±6 pp). Claim 1: K with the small model vs ref, and vs H with the small model. Claim 2: K vs H with the same model, on success and on tokens / images / $ per episode. K with an **oracle** KB (filled from simulator state) is reported as an upper bound only. The claims use a KB filled from perception.
 - **KB text view for the controller** (`views.py`):
   - one line per object: id, class, colour, 3D centroid, extent, visibility, last seen;
   - L2 relations with probabilities, e.g. `Inside(cube_red): bin_0 0.55 | bin_2 0.45`;
@@ -481,7 +483,7 @@ numpy, scipy, matplotlib, pytest, nbformat, nbconvert, ipykernel. Nothing else w
 
 Time estimates are for a coding agent with review. Each phase lists: **Goal · Build (how) · Params · Done when · Not in scope**.
 
-**Order (v1.2):** M0 → M1 (plumbing) → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code is written right after M1, or alongside it. Tuning starts only after G (M2), against `id_swap_measured`. **v1.4:** M2 serves claim 3; M3–M5 serve claims 1–2 and do not depend on M2. So after G, M3 / M4 may go before M2 (the user's call).
+**Order (v1.2):** M0 → M1 (plumbing) → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code is written right after M1, or alongside it. Tuning starts only after G (M2), against `id_swap_measured`. **v1.4:** M2 serves claim 3; M3–M5 serve claims 1–2 and do not depend on M2. So after G, M3 / M4 may go before M2 (the user's call). **v1.6:** M2 is conditional on G's branch and small. The main line is M3 → M4 → M5.
 
 ### M0 — Walking skeleton (1–2 days, Mac CPU)
 
@@ -571,28 +573,28 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
   - otherwise, define `id_swap_measured` from the measured signature, and M2 uses it;
   - **and** if the best rule with at most 2 features separates swapped from clean passes almost perfectly (AUC ≥ 0.98), write in NOTES that a threshold rule on it solves claim 3's detection part, before M2 builds R6 v2; the belief layer must then show value through propagation (R5, retraction, arbiter), not detection.
 
-### M2 — Evidence layer: change detectors + Hungarian identity check (2 days, CPU)
+### M2 — Claim 3 on real tracker errors, sized by G (v1.6: conditional; 0.5–2 days, CPU)
 
-**Goal.** Ambiguity is measured, not assumed. R6 uses the identity margin instead of a fixed near-pass rule; corruption becomes probabilistic and leaves the traces a real tracker leaves.
+**Goal.** One honest table for claim 3, on the errors G measured, with the least machinery G's result allows. Claims 1–2 are the main line (M3–M5) and do not depend on M2. So M2 builds only what G shows is needed (user decision, 2026-10-28; NOTES "v1.6").
 
-**Build.**
-1. `detectors.py`: hysteresis on speed; overlap via image distance and (replays) mask IoU; `track_drop` when `track_q` falls below `q_thr`; cap of 5 evidence items per frame.
-2. `identity.py`: each frame (oracle) or every `N_id` frames (perceived), solve `linear_sum_assignment` on the cost = 3D distance between each container's predicted pose (constant velocity) and the observed tracks. Margin = (second-best total − best total) / best total. Emit `id_margin` evidence when the margin < `m_thr`.
-3. R6 v2: `w = w_max·exp(−margin/m0)`.
-4. `corrupt.py`: `id_swap_measured` from G's signature (no hand-chosen sigmoid), plus `pos_noise`.
-5. `scripts/tune.py` (first tuning in the project): train seeds only, against `id_swap_measured`. Writes `params.json` and a FREEZE ledger entry. The trade-off curve (clean coverage vs silent failure) is drawn here.
-6. Baselines on the same feature R6 v2 uses (M1 and M1.1 goal reviews):
-   - `MarginHaircut`: the GuardedBound threshold rule on the margin (threshold tuned on train);
-   - `SoftHaircut(feature)`: Bound's answer, confidence 1 − w_max·exp(−feature/scale), i.e. R6's own formula with no KB. Run it on 3D distance and on the margin.
+**Always.**
+1. `detectors.py`: smooth speed with hysteresis, with **per-second** thresholds and timestamps (§2.3). Tune it on G's measured tracker noise, so that the motion detector and the event log survive real noise (M3a truth check: it breaks under 15 mm iid noise).
+2. The claim 3 table on G's perceived episodes (`PerceivedSource`) and on `id_swap_measured` (synthetic, from G's signature): **Bound** (deterministic memory) vs **SoftHaircut(feature)** (the same score without a KB) vs **ArbiterKB**. Report coverage with Wilson CIs, AURC with bootstrap CIs, the paired ΔAURC, and silent failure at matched clean coverage (`scripts/compare.py`). Use n ≥ 300 fresh test seeds (≥ 1060), after a freeze.
 
-   Without them a win only shows a better feature (vs OverlapHaircut) or a graded score beating a binary one (vs any haircut), not that a belief layer helps. In M1.1, ArbiterKB's answer equalled Bound's in every row, and its AURC edge over OverlapHaircut came only from grading confidence by distance.
-7. Evaluate on n ≥ 300 fresh test seeds (synthetic ≥ 1060): seeds 1000–1059 have been read many times during M0/M1 (harmless while nothing was tuned). AURC gets bootstrap CIs (Wilson does not apply). Tables drop Frozen, BoundHaircut and JumpDetector (uninformative since M1).
+**Only if G says so.**
+- **Swaps under 2% of passes in every setting:** stop here. Claim 3 cannot be tested with real errors on RoboMME; NOTES says so, and the effort goes to M3–M5.
+- **The best ≤ 2-feature rule has AUC ≥ 0.98:** use that feature in R6 and in SoftHaircut. There is no Hungarian step and no new tuning beyond the threshold. NOTES says that a threshold suffices for detection, and the belief layer's value must come from elsewhere (uncertainty handed to the controller, the event log, propagation).
+- **Swaps are frequent and hard to predict:** then build the identity check. `identity.py` runs `linear_sum_assignment` on predicted-vs-observed container positions; the margin is (second-best − best) / best; it emits `id_margin` evidence; R6 v2 uses w = w_max·exp(−margin/m0); add MarginHaircut and `scripts/tune.py` (train only). This is the v1.3 plan, kept for this case only.
+
+**Dropped in v1.6:**
+- Frozen, BoundHaircut, JumpDetector and OverlapHaircut leave all new tables (uninformative since M1; they stay in the M1 table for history).
+- R7 (decay) is deleted: it was never switched on.
+- R5 is frozen: kept, not extended, since it never fired on stock layouts.
 
 **Done when.**
 - (a) `make check`.
-- (b) On synthetic, the minimum margin falls inside a swap window in ≥ 95% of episodes.
-- (c) Under `id_swap_measured`, ArbiterKB beats **SoftHaircut(margin)** on AURC (bootstrap CI of the difference excludes 0) and on silent rate at matched clean coverage (the haircut thresholds swept on train to ArbiterKB's clean coverage); MarginHaircut and Bound are reported alongside. If ArbiterKB cannot beat SoftHaircut, NOTES says that the rule layer reduces to "a calibrated feature score suffices", before M3/M4 build on it. That does not decide claim 3: the belief layer's remaining value is propagation and the arbiter. Claims 1–2 are tested separately by the memory arms (§3.8, M5).
-- (d) Clean accuracy holds (M1 criterion).
+- (b) NOTES states which G branch applies, with the numbers from `results/g_summary.json`.
+- (c) The claim 3 table, if the branch calls for one. If ArbiterKB does not beat SoftHaircut, NOTES says that "a calibrated feature score suffices" for detection.
 
 ### M3 — A complete KB: events, relations, task progress (2–3 days, CPU)
 
@@ -636,7 +638,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 **Goal.** Claims 1 and 2, first on the permanence suite (where the KB is most complete), then on counting and imitation when M3's layers cover them.
 
 **Build.**
-1. On a GPU + Vulkan pod: `make_env(..., action_space="waypoint")` and the M4 harness. Arms H, R, K, K−L3 with the small model on the same train-tuned prompt; K+A if M2 shows that beliefs move.
+1. On a GPU + Vulkan pod: `make_env(..., action_space="waypoint")` and the M4 harness. Arms H, R, K0, S, K, K−L3 with the small model on the same train-tuned prompt; K+A (with the VLM annotator) as an ablation.
 2. The KB is filled from **perception** (G's pipeline). The oracle KB is an upper-bound row.
 3. Report success per task and suite (Wilson), calls, input tokens, images and $ per episode, and wall time. Failure categories use the paper's list: premature completion, unintended contact, late press, out of reach, motion planning, unusable answer.
 4. A larger model in arms H and K, if the budget allows: this tests claim 2 for a model that already succeeds with the full history.

@@ -60,6 +60,7 @@ def test_system_prompts_share_the_robot_text(arm):
     s = C.system_prompt(arm)
     assert s.startswith("You control a simulated Franka Panda") and '"cites"' in s
     assert ("event log" in s) == (arm == "K")
+    assert ("no depth" in s) == (arm in ("H", "S"))
 
 
 def test_user_content_has_images_and_state():
@@ -102,3 +103,14 @@ def test_raw_tracker_log_samples_and_keeps_the_last_frame():
     log = C.raw_tracker_log(frames, stride=10).splitlines()
     assert log[0].startswith("t=0:") and log[-1].startswith(f"t={frames[-1].t}:") and "hidden" in log[-1]
     assert "Inside" not in "\n".join(log) and json.dumps(log)
+
+
+def test_k0_table_and_s_sentence_carry_no_history():
+    from arbiter_kb.sources.synthetic import SyntheticSource
+
+    src = SyntheticSource()
+    last = list(src.frames(src.episodes("train", 1)[0]))[-1]
+    table = C.object_table(last)
+    assert "bin_0 (container) at" in table and "cube" not in table  # cubes are hidden now: K0 cannot know them
+    assert C.one_sentence({"cube_red": "bin_0", "cube_blue": None}) == "cube_red is under bin_0."
+    assert C.one_sentence({}) == "No object is hidden."

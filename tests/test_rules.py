@@ -5,7 +5,7 @@ import pytest
 from arbiter_kb.beliefs import Distribution
 from arbiter_kb.kb import KB, AddEvidence, MixDist, SetDist, SetPose, SetVis
 from arbiter_kb.params import RuleParams
-from arbiter_kb.rules import r1_cover, r2_follow, r6_swap, r7_decay
+from arbiter_kb.rules import r1_cover, r2_follow, r6_swap
 from arbiter_kb.types import FrameObs, ObjObs
 
 OBJS = [("bin_a", "container", {}), ("bin_b", "container", {}), ("cube_g", "cube", {"color": "g"})]
@@ -107,13 +107,6 @@ def test_r6_ignores_visible_cubes():
     assert not [o for o in r6_swap(kb, [ev], frame(90, {}), RuleParams()) if isinstance(o, MixDist)]
 
 
-def test_r7_off_at_lambda_one_and_decays_below():
-    kb = kb_hidden_in("bin_a")
-    assert r7_decay(kb, [], frame(40, {}), RuleParams()) == []
-    ops = r7_decay(kb, [], frame(42, {}), RuleParams(lam=0.9))
-    assert ops[0].f == pytest.approx(0.9 ** 10) and ops[0].plausible == ["bin_a", "bin_b"]
-
-
 def test_r2_follows_probability_weighted_pose():
     kb = kb_hidden_in("bin_a")
     kb.apply([SetPose("bin_a", [0.1, 0, 0.03], 1.0, 40, "observed", ["o40:bin_a"]),
@@ -121,11 +114,6 @@ def test_r2_follows_probability_weighted_pose():
               SetDist("Inside", "cube_g", Distribution({"bin_a": 0.75, "bin_b": 0.25}, 40, kb.inside("cube_g").support))])
     ops = r2_follow(kb, [], frame(40, {}), RuleParams())
     assert np.allclose(ops[0].xyz, [0.15, 0, 0.03]) and ops[0].source == "inferred"
-
-
-def test_r7_no_decay_in_the_frame_the_distribution_changed():
-    kb = kb_hidden_in("bin_a")  # set at t = 32
-    assert r7_decay(kb, [], frame(32, {}), RuleParams(lam=0.9)) == []
 
 
 def test_swap_weight_must_be_a_probability():

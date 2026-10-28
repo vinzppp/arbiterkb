@@ -18,7 +18,6 @@ class RuleParams:
     sigma_cover: float = 0.02  # m: width of the distance kernel over cover candidates (R1)
     w_max: float = 0.5  # R6 (M1): w = w_max·exp(-d/d0), d = closest 3D centre distance of the pass
     d0: float = 0.02  # m
-    lam: float = 1.0  # per-frame decay toward uniform for unconfirmed beliefs (R7); 1 = off
     eps_none: float = 0.01  # floor for the "elsewhere" hypothesis in R1
     r_grasp: float = 0.05  # m: R3, an object within this 3D distance of the end effector when the gripper closes is held
     r_on: float = 0.04  # m: On(x, y) / place target: xy distance at most this, and x above y
