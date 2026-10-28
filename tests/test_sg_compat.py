@@ -49,3 +49,13 @@ def test_projection_roundtrip():
     xyz = np.array([[0.05, -0.02, 0.03]])
     uv = sg.project_points(xyz, K_FRONT, E_FRONT)
     assert np.isfinite(uv).all() and (0 < uv).all() and (uv < 256).all()
+
+
+def test_assign_slots_seeded_matches_original():
+    orig = original()
+    g = synthetic_graph()
+    g[:, :, sg.F_U:sg.F_V + 1] = np.random.default_rng(1).uniform(0, 256, (40, 3, 2))
+    g[:5, 1, sg.F_HIDDEN] = 1
+    per = g.copy()
+    per[:, :, sg.F_U:sg.F_V + 1] += 3.0
+    assert sg.assign_slots_seeded(per, g) == orig.assign_slots_seeded(per, g)

@@ -316,3 +316,48 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den
     return (centre - half, centre + half)
 
+
+# copied from sg_pilot.py:1332 @ e2e06f9 (G: match perceived slots to oracle nodes)
+def assign_slots(perceived: np.ndarray, oracle: np.ndarray, t: int, radius_px: float = 25.0):
+    """Hungarian assignment slot -> oracle node at frame t on (u, v) distance, same label only."""
+    from scipy.optimize import linear_sum_assignment
+
+    S, N = perceived.shape[1], oracle.shape[1]
+    cost = np.full((S, N), 1e6)
+    for s in range(S):
+        for n in range(N):
+            if (
+                perceived[t, s, F_LABEL] == oracle[t, n, F_LABEL]
+                and np.all(np.isfinite(perceived[t, s, F_U : F_V + 1]))
+                and np.all(np.isfinite(oracle[t, n, F_U : F_V + 1]))
+            ):
+                cost[s, n] = np.linalg.norm(
+                    perceived[t, s, F_U : F_V + 1] - oracle[t, n, F_U : F_V + 1]
+                )
+    rows, cols = linear_sum_assignment(cost)
+    return {int(r): int(c) for r, c in zip(rows, cols) if cost[r, c] < radius_px}
+
+
+def assign_slots_seeded(perceived: np.ndarray, oracle: np.ndarray, radius_px: float = 25.0):
+    """Slot -> oracle node, each slot matched at the first frame it has a mask (its seed frame).
+
+    Slots seed at different frames (cubes at frame 0, containers only once they enter the view), so a
+    single-frame assignment would leave some slots unmatched. Slots sharing a seed frame are matched
+    jointly (assign_slots, same label, Hungarian on (u, v)); a node is used at most once.
+    Returns (assignment, {slot: seed frame}).
+    """
+    S = perceived.shape[1]
+    seed = {}
+    for s in range(S):
+        vis = np.nonzero(perceived[:, s, F_HIDDEN] == 0)[0]
+        if len(vis):
+            seed[s] = int(vis[0])
+    out: dict[int, int] = {}
+    for t in sorted(set(seed.values())):
+        group = [s for s in seed if seed[s] == t]
+        sub = perceived[:, group].copy()
+        orc = oracle.copy()
+        orc[:, list(out.values()), F_U : F_V + 1] = np.nan  # already taken
+        for i, n in assign_slots(sub, orc, t, radius_px).items():
+            out[group[i]] = n
+    return out, seed

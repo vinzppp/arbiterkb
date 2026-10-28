@@ -250,3 +250,22 @@ Reviews: `reviews/M1.1_code.md` (PASS-WITH-NOTES, 1 MAJOR), `reviews/M1.1_goal.m
   - train clean accuracy is 0.983: ep 48 has two exact-contact passes, i.e. two coin flips, which is correct math (`results/runs/synthetic_train_*`);
   - the pos_noise row of OverlapHaircut was missing from the M1.1 NOTES table (AURC 0.017, Brier 0.050, better than ArbiterKB's 0.019 / 0.042 on AURC only);
   - the M1 haircut accuracy numbers "0.68 / 0.88" come from `results/latest/m1_table/summary.csv`.
+
+## G — Mac-side code (2026-10-28)
+Written, not yet run on a pod (the user's go is needed for GPU time).
+- `stress/stress_env.py`: `VideoUnmaskSwapStress` (registered env id) subclasses RoboMME's VideoUnmaskSwap @ 53673b3, read from the source:
+  - knobs `swap_steps`, `lane_offset`, `n_swaps` (≤ 3), `cam_shift`;
+  - `step()` is a copy of the stock one with those parameters;
+  - it logs actor poses each step (`pose_log`), so ground truth exists for every video frame.
+- `stress/render.py`: plays the conditioning video through RoboMME's DemonstrationWrapper, with the same flags as sg_pilot's `make_env`, and saves sg_pilot Replay npz files.
+  - Wrist arrays are 1×1 placeholders to halve the size.
+  - Seven settings: stock, fast, close, fast_close, fast_close_3swaps, cam_left, cam_right.
+- `stress/perceive.py`: sg_pilot's PerceptionWorker over each replay (a copy of `perceived_graph` that also keeps bbox extents), plus `oracle_graph`. It writes small npz files.
+- `arbiter_kb/swapstats.py` + `scripts/measure_swaps.py` (CPU):
+  - matches slots to oracle nodes (`assign_slots_seeded`, copied verbatim into sg_compat);
+  - records **every pass**, swapped or not, with features: min 3D distance, min image distance, max bbox IoU, worst bbox-area ratio, max one-frame jump, min keep-vs-exchange margin;
+  - writes `results/g_passes.csv` and `g_summary.json` and prints the gate decision.
+  - Per-feature ROC AUC, and the best ≤ 2-feature cross-validated logistic rule.
+  - Tests on fake perceived episodes built from synthetic data, with one injected exchange, plus an end-to-end CLI test.
+- `stress/POD_RUN.md`: the steps, a smoke test first, about 3–4 h and about $2–3 (rough), and "stop the pod" last.
+- **Risk:** the pod-side code has never run against the simulator. The hand-off prompt says to fix only `stress/` and to stop after the smoke test.
