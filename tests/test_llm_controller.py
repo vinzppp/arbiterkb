@@ -82,7 +82,8 @@ def test_parse_and_to_action(text, kind):
 
 def test_check_workspace_reach_and_ids():
     ok = np.array([0.0, 0.1, 0.1, -3.14, 0, 0, 1])
-    assert C.check(ok, {"target": "bin_0", "cites": ["e3"]}, {"bin_0", "e3"}) == []
+    assert C.check(ok, {"target": "bin_0", "cites": ["e3", "o173:bin_0", "o9:ee"]}, {"bin_0", "e3"}) == []
+    assert any("o5:bin_9" in e for e in C.check(ok, {"cites": ["o5:bin_9"]}, {"bin_0"}))
     far = np.array([0.55, 0.55, 0.05, 0, 0, 0, 0])
     errs = C.check(far, {"target": "bin_9", "cites": ["e99"]}, {"bin_0"})
     assert any("reach" in e for e in errs) and any("unknown target" in e for e in errs) and any("e99" in e for e in errs)

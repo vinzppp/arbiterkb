@@ -543,3 +543,39 @@ The user asked whether the complex rules, the Hungarian check and the many basel
   - **K0:** the current frame's visible objects with 3D centres; no relations, events or history. It separates "memory" from "being given coordinates" (M3a goal review).
   - **S:** see above. S gets no coordinates, so like H it must read positions from images; it is meaningful only with RGB replays.
   - Spec §3.8 now says to run K vs S and K vs K0 first, and to fix the success margin and n before any run.
+
+## M4 — first real calls: text-only dry run (2026-10-28)
+The user put an OpenRouter key in the git-ignored `.env`, with a $40 limit on the key; `ARBITER_MAX_USD` is 2.00 per run.
+- **Smoke test:** `qwen/qwen3.6-35b-a3b` through DeepInfra works, at about 5 s and $0.0003 per short call.
+  - It is a **reasoning model**: with `max_tokens` 50, all tokens went to reasoning and the content came back None.
+  - `llm.py` now accepts a `reasoning` setting, returns "" for an empty answer (counted as `empty`) and counts reasoning tokens.
+  - `dry_run` now uses `max_tokens` 4000.
+- **Dry run** (`results/latest/m4_dry_text/`: dry.csv + meta.json; train seeds 0–19, clean synthetic, text only, one decision per episode at t*, total **$0.17**). Each arm gives one waypoint for "pick up the container that hides the <colour> cube".
+
+| arm | reads | target = true container | waypoint within 3 cm of it | input / output tokens per call |
+|---|---|---|---|---|
+| K | KB view + event log | 19 / 20 | 19 / 20 | 1,488 / 2,099 |
+| K-L3 | KB view, no event log | 20 / 20 | 20 / 20 | 1,010 / 2,081 |
+| R | raw tracker log (every 10th frame) | 18 / 20 | 13 / 20 | 2,273 / 2,190 |
+| K0 | current visible objects only, no memory | 5 / 20 | 5 / 20 | 660 / 2,239 |
+
+Reading (n = 20, synthetic, oracle observations, text only, a single step: **plumbing, no claim**):
+- **Memory matters.** K0 is at chance (5 / 20, with 3–4 containers), because the cube is hidden and the current frame cannot tell where it is. So K's 19 / 20 is not just "being given coordinates", at least on this task. This answers the goal review's K0 question in this setting.
+- **The structure barely beats the raw log here.** R gets the right container in 18 / 20, but its waypoint is within 3 cm in only 13 / 20: it reads positions from a log sampled every 10 frames, so they can be stale.
+- **The event log adds nothing on this task.** K-L3 does at least as well as K, because Inside already holds the answer. That fits VideoUnmaskSwap, where the KB's answer equals Bound's. Arm S (Bound's answer in one sentence) still needs images to be tested.
+- **K's one miss (ep 9)** is where the KB itself was unsure (bin_2 0.62, bin_1 0.37, after a 1 cm close pass): the model picked the less likely container.
+- **Most output tokens are reasoning:** about 2,100 per call, against an input of 660–2,300.
+- **A bug the run exposed:** almost every "problem" was the model citing an observation id (`o173:bin_1`), which the view prints but `controller.check` rejected. Fixed: `_citable` accepts `o<t>:<object | ee | image>`. Still rejected: cites of a relation's text ("Inside(cube_red): …") or a bare "o32". Relation lines need their own ids.
+- **Next:** RGB replays for arms H and S and for the annotator. Clean synthetic text is too easy to separate the arms; the informative tests are perceived input, images and tasks beyond permanence.
+
+**Also built (commit a1fbfd4):**
+- **`annotate.py`, the VLM annotator** (spec §3.7):
+  - checks each item on its own: ids exist, cites exist, strength is one of three words, the predicate is one short word, no numbers anywhere;
+  - writes beliefs into the KB's open fact table (`kb.facts`, `SetFact`, source `vlm`, p from `ArbiterParams.p_clear / p_ambiguous / p_unlikely`);
+  - writes descriptions only when an image was shown;
+  - its output shows in the controller view.
+- **`som.py`, the annotated frame:** ids, plus "red? 0.92" on containers. Labels can overlap when two containers are close; not fixed yet.
+- Re-frozen: params hash **2941773a1dd4**.
+- Tests: `tests/test_annotate.py`. The annotator has not been called on the real model yet.
+
+**Security:** the key was pasted in the chat. The user should revoke it and put a new one only in `.env`.

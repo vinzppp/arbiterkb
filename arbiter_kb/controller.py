@@ -153,8 +153,18 @@ def check(action: np.ndarray, answer: dict, known: set[str]) -> list[str]:
     tgt, cites = answer.get("target"), answer.get("cites") or []
     if tgt is not None and tgt not in known:
         errs.append(f"unknown target {tgt!r}")
-    errs += [f"unknown cite {c!r}" for c in cites if c not in known]
+    errs += [f"unknown cite {c!r}" for c in cites if not _citable(c, known)]
     return errs
+
+
+def _citable(c, known: set[str]) -> bool:
+    """An evidence / event / object id the KB holds, or an observation id o<t>:<object | ee | image>."""
+    if not isinstance(c, str):
+        return False
+    if c in known:
+        return True
+    head, _, obj = c.partition(":")
+    return head[:1] == "o" and head[1:].isdigit() and (obj in known or obj in ("ee", "image"))
 
 
 def target_distance(action: np.ndarray, answer: dict, pose_of) -> float | None:
