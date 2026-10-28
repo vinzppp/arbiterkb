@@ -99,6 +99,10 @@ def text_view(kb: KB) -> str:
     return "\n".join(lines)
 
 
+def _xyz(v) -> str:
+    return f"({v[0]:.2f}, {v[1]:.2f}, {v[2]:.2f})"
+
+
 def _xy(v) -> str:
     return f"({v[0]:.2f}, {v[1]:.2f})"
 
@@ -112,6 +116,8 @@ def _ev_line(e) -> str | None:
         return f"t={e.t} {a} moved {_xy(d['from'])} -> {_xy(d['xyz'])} (t={d['t_from']}-{e.t})"
     if e.kind == "near_pass":
         return f"t={e.t} {a} passed close to each other, closest {100 * d['min_3d']:.1f} cm (detected)"
+    if e.kind == "hand_pause":
+        return f"t={e.t} hand stopped at {_xyz(d['ee'])}, gripper {'closed' if d['closed'] else 'open'}"
     if e.kind in ("grip_close", "grip_open"):
         return f"t={e.t} gripper {'closed' if e.kind == 'grip_close' else 'opened'} at {_xy(d['ee'])}"
     return None
@@ -167,6 +173,8 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
     lines = [f"Goal: {kb.task.get('goal', '?')}"]
     names = {"grasp": "grasps", "place": "places", "cover": "covers", "swap": "close passes"}
     done = [f"{names[t]} {n}" for t in names if (n := sum(e.type == t for e in kb.events))]
+    grips = {k: sum(e.kind == k for e in kb.evidence) for k in ("grip_close", "grip_open", "hand_pause")}
+    done += [f"{n} {k.replace('_', ' ')}s" for k, n in grips.items() if n]
     lines.append("Progress: " + (", ".join(done) or "nothing yet"))
     items = kb.task.get("items", [])
     lines.append("Task items (named by the goal): " + (", ".join(i["phrase"] for i in items) or "none"))

@@ -1,0 +1,162 @@
+"""Counting tasks from robot state only (NOTES "Beyond permanence"): at each moment an action has just finished,
+does the controller know whether to repeat it or to wrap up? RoboMME dataset, PickXtimes / SwingXtimes / BinFill.
+
+  python scripts/count_test.py --tasks PickXtimes,SwingXtimes,BinFill --n 30 --arms N,P,K,KO --effort off,default \
+         --workers 8 --call --max-usd 4 [--print]
+
+Arms (same prompt skeleton, same action list; only the memory differs):
+  N   no memory: the goal and the current hand state;
+  P   raw robot log: hand xyz and gripper every 10 frames since the start;
+  K   the KB run on the robot state (grip and hand-pause evidence, progress counts, event log; views.controller_view);
+  KO  oracle: the subgoals completed so far, from the dataset authors' labels (upper bound).
+The answer is one action from a fixed list (no object positions exist without vision, so no waypoint is scored).
+Truth = the action class of the next subgoal. Decision points = the first frame after each "place / put into
+the bin / reach the left-side target" subgoal in the execution phase.
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from run import git_state, load_params  # noqa: E402
+from arbiter_kb import CONTRACT_VERSION  # noqa: E402
+from arbiter_kb.controller import parse_answer  # noqa: E402
+from arbiter_kb.llm import LLM, BudgetExceeded  # noqa: E402
+from arbiter_kb.sources import lerobot as L  # noqa: E402
+from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
+from arbiter_kb.views import controller_view  # noqa: E402
+
+ACTIONS = ["pick up a cube", "place the cube on the target", "put the cube into the bin",
+           "move to the top of the right-side target", "move to the top of the left-side target",
+           "put the cube on the table", "press the button"]
+KEYS = [("press the button", 6), ("into the bin", 2), ("on the table", 5), ("right-side target", 3),
+        ("left-side target", 4), ("onto the target", 1), ("pick up", 0)]
+EFFORT = {"default": None, "off": {"enabled": False}}
+SYSTEM = ("You decide a robot's next step. You get the task, a memory of what the robot has done so far, and the "
+          "robot's current state. Answer with JSON only: {\"next\": \"<one action, copied exactly from this list>\"}. "
+          "Actions: " + json.dumps(ACTIONS))
+
+
+def action_of(text: str) -> int | None:
+    return next((i for k, i in KEYS if k in text), None)
+
+
+def decisions(ep: dict) -> list[tuple[int, int]]:
+    """[(t, truth action index)] at the start of each subgoal that follows a completed place / bin / left move."""
+    segs = [s for s in L.segments(ep["simple"]) if not ep["demo"][s[0]]]
+    out = []
+    for prev, nxt in zip(segs, segs[1:]):
+        if action_of(prev[2]) in (1, 2, 4) and action_of(nxt[2]) is not None:
+            out.append((nxt[0], action_of(nxt[2])))
+    return out
+
+
+def raw_log(ep: dict, t: int, stride: int = 10) -> str:
+    rows = [f"t={k}: hand ({ep['tcp'][k][0]:.3f}, {ep['tcp'][k][1]:.3f}, {ep['tcp'][k][2]:.3f}), gripper "
+            f"{'closed' if ep['width'][k] < 0.07 else 'open'}" for k in list(range(0, t, stride)) + [t - 1]]
+    return "Robot log (every 10th frame, 10 frames per second):\n" + "\n".join(rows)
+
+
+def kb_view(ep: dict, t: int, params) -> str:
+    s = ArbiterKBSystem(params)
+    s.reset(L.meta(ep))
+    for f in L.frames(ep, t):
+        s.step(f)
+    return controller_view(s.kb, params.rule)
+
+
+def oracle(ep: dict, t: int) -> str:
+    done = [x for x in L.segments(ep["simple"]) if x[1] <= t and not ep["demo"][x[0]]]
+    return "Completed so far:\n" + ("\n".join(f"{i + 1}. {x[2]}" for i, x in enumerate(done)) or "nothing")
+
+
+def prompt(arm: str, ep: dict, t: int, params) -> list:
+    mem = {"N": "", "P": raw_log(ep, t), "K": kb_view(ep, t, params), "KO": oracle(ep, t)}[arm]
+    hand = ep["tcp"][t - 1]
+    now = (f"Current state: frame {t}, hand at ({hand[0]:.3f}, {hand[1]:.3f}, {hand[2]:.3f}), gripper "
+           f"{'closed' if ep['width'][t - 1] < 0.07 else 'open'}.")
+    user = "\n\n".join(x for x in (f"Task: {ep['meta']['task']}", mem, now) if x)
+    return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
+
+
+def jobs(a, params) -> list[dict]:
+    out = []
+    for task in a.tasks.split(","):
+        for path in L.episode_files(task, a.n):
+            ep = L.load(path)
+            for k, (t, truth) in enumerate(decisions(ep)):
+                for arm in a.arms.split(","):
+                    msgs = prompt(arm, ep, t, params)
+                    out += [{"task": task, "episode": ep["meta"]["episode"], "k": k, "t": t, "truth": ACTIONS[truth],
+                             "arm": arm, "effort": eff, "msgs": msgs} for eff in a.effort.split(",")]
+    return out
+
+
+def score(job: dict, text: str, u: dict) -> dict:
+    ans = parse_answer(text)
+    got = ans.get("next") if isinstance(ans, dict) else None
+    row = {k: job[k] for k in ("task", "episode", "k", "t", "arm", "effort", "truth")}
+    row.update(answer=got, correct=got == job["truth"], valid=got in ACTIONS)
+    row.update({k: round(float(u.get(k, 0)), 6) for k in ("prompt_tokens", "completion_tokens", "reasoning_tokens",
+                                                           "seconds", "usd", "cached_usd")})
+    return row
+
+
+def run(a) -> None:
+    commit, dirty = git_state()
+    params = load_params()
+    todo = jobs(a, params)
+    if a.print:
+        for m in todo[0]["msgs"]:
+            print(f"--- {m['role']}\n{m['content']}")
+        print(f"\n{len(todo)} requests")
+        return
+    out = ROOT / "results" / "runs" / f"count_{time.strftime('%Y%m%d_%H%M%S')}"
+    out.mkdir(parents=True, exist_ok=True)
+    llm = LLM(model=a.model, max_usd=a.max_usd)
+    ask = lambda j: llm.call(j["msgs"], max_tokens=a.max_tokens, reasoning=EFFORT[j["effort"]])  # noqa: E731
+    with open(out / "rows.csv", "w", newline="") as f, ThreadPoolExecutor(a.workers) as pool:
+        w = None
+        for job, fut in [(j, pool.submit(ask, j)) for j in todo]:
+            try:
+                row = score(job, *fut.result())
+            except BudgetExceeded as e:
+                print("stopped:", e)
+                break
+            w = w or csv.DictWriter(f, fieldnames=list(row))
+            w.writerow(row) if f.tell() else (w.writeheader(), w.writerow(row))
+            f.flush()
+    meta = {"commit": commit, "dirty": dirty, "args": {k: v for k, v in vars(a).items()}, "params_hash": params.hash(),
+            "contract_version": CONTRACT_VERSION, "usage": llm.usage, "data_revision": "92796ab (lerobot/robomme)"}
+    (out / "meta.json").write_text(json.dumps(meta, indent=1, default=str))
+    print("wrote", out.relative_to(ROOT), "usage", {k: round(v, 4) if isinstance(v, float) else v for k, v in llm.usage.items()})
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--tasks", default="PickXtimes,SwingXtimes,BinFill")
+    ap.add_argument("--n", type=int, default=30, help="episodes per task")
+    ap.add_argument("--arms", default="N,P,K,KO")
+    ap.add_argument("--effort", default="off,default")
+    ap.add_argument("--model", default="qwen/qwen3.6-35b-a3b")
+    ap.add_argument("--max-usd", dest="max_usd", type=float, default=2.0)
+    ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=4000)
+    ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--print", action="store_true", help="show the first prompt and the request count; no API call")
+    ap.add_argument("--call", action="store_true", help="required to spend money")
+    a = ap.parse_args()
+    if not (a.print or a.call):
+        sys.exit("pass --print (free) or --call")
+    run(a)
+
+
+if __name__ == "__main__":
+    main()

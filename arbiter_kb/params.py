@@ -35,6 +35,8 @@ class DetectParams:
     v_move: float = 0.001  # m/frame (2 cm/s at 20 Hz): xy speed above which a container counts as moving
     g_close: float = 0.07  # m: gripper width below this -> closed (RoboMME: 0.04 per finger = fully open)
     g_open: float = 0.075  # m: above this -> open again (hysteresis)
+    v_pause: float = 0.002  # m/frame: the hand counts as still below this speed (RoboMME dataset: 10 fps)
+    n_pause: int = 4  # frames still, after moving, before a `hand_pause` evidence
 
 
 @dataclass(frozen=True)

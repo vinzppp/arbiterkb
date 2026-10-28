@@ -26,6 +26,7 @@ class Detectors:
         self.moving: dict[str, bool] = {}
         self.passes: dict[tuple, dict] = {}  # open near-passes
         self.closed = False  # gripper state, with hysteresis
+        self.ee_prev, self.still, self.paused = None, 0, True  # hand-pause state (starts at rest)
 
     def step(self, frame: FrameObs) -> list[AddEvidence]:
         t, ops = frame.t, []
@@ -39,6 +40,7 @@ class Detectors:
         ops += self._motion(frame)
         ops += self._near_passes(frame)
         ops += self._gripper(frame)
+        ops += self._hand_pause(frame)
         self.prev = dict(frame.objects)
         return ops
 
@@ -87,6 +89,22 @@ class Detectors:
         self.closed = not self.closed
         data = {"ee": [round(float(v), 4) for v in frame.ee_xyz], "width": round(w, 4), "obs": [obs_id(frame.t, "ee")]}
         return [AddEvidence(frame.t, "grip_close" if self.closed else "grip_open", (), data)]
+
+    def _hand_pause(self, frame: FrameObs) -> list[AddEvidence]:
+        """`hand_pause` once the end effector has been still for n_pause frames after moving: where the robot
+        stopped (the robot's own actions, no vision needed; M3 robot-state memory)."""
+        ee = np.asarray(frame.ee_xyz, float)
+        moved = self.ee_prev is not None and float(np.linalg.norm(ee - self.ee_prev)) > self.p.v_pause
+        self.ee_prev = ee
+        if moved:
+            self.still, self.paused = 0, False
+            return []
+        self.still += 1
+        if self.paused or self.still < self.p.n_pause:
+            return []
+        self.paused = True
+        data = {"ee": [round(float(v), 4) for v in ee], "closed": self.closed, "obs": [obs_id(frame.t, "ee")]}
+        return [AddEvidence(frame.t, "hand_pause", (), data)]
 
     def _distance(self, oa, ob) -> tuple[float, float]:
         if oa.uv is not None and ob.uv is not None:

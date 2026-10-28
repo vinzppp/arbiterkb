@@ -22,7 +22,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "r
 FAMILIES = [("first target it was previously", "VideoPlaceOrder"), ("second target", "VideoPlaceOrder"),
             ("third target", "VideoPlaceOrder"), ("fourth target", "VideoPlaceOrder"),
             ("same block that was previously", "VideoRepick"), ("place it on the target", "PickXtimes"),
-            ("back-and-forth", "SwingXtimes"), ("into the bin", "BinFill"), ("same manner", "MoveCube"),
+            ("right-side target", "SwingXtimes"), ("into the bin", "BinFill"), ("same manner", "MoveCube"),
             ("button was pressed", "VideoPlaceButton"), ("stop the cube", "StopCube")]
 
 

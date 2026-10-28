@@ -788,3 +788,23 @@ Decision with the user: test tasks where memory is about order, counts and "wher
   - The reason, checked on VideoRepick episodes: in the demo the robot puts the cube back where it picked it up, but **at execution the "same cube" is somewhere else**. The scene is rearranged, so the task asks which cube (colour / appearance), not where the hand went.
   - These tasks need vision to identify the object: for example, the annotator naming the cube in the gripper at each grasp event. Front-video files: VideoRepick 0.67 GB, VideoPlaceOrder 0.92 GB (files 018–023, partly shared, about 1.4 GB together).
   - **Counting tasks** (PickXtimes, SwingXtimes, BinFill) depend on the robot's own actions, so they can be tested from robot state alone.
+
+## Counting tasks from robot state: the test, fixed before running (2026-10-28)
+- **Data:** RoboMME dataset, the first 30 episodes each of PickXtimes, SwingXtimes and BinFill. Decision points are the first frame after each completed place / put-into-bin / left-side move in the execution phase: 234 in all.
+- **Truth:** the action class of the next subgoal, from the dataset authors' labels. It is "repeat" (pick again / move right) or "wrap up" (press the button / put the cube on the table). Always answering "repeat" scores 64% / 55% / 65%: the floor.
+- **Arms:**
+  - N: no memory.
+  - P: raw robot log, hand xyz + gripper every 10 frames.
+  - K: the KB run on robot state only. It shows grip close / open evidence, the new `hand_pause` evidence (hand still for `n_pause` = 4 frames at < `v_pause` = 2 mm/frame), progress counts and the event log, via `views.controller_view`.
+  - KO: oracle, the completed subgoals as text.
+- Effort off and default; qwen/qwen3.6-35b-a3b (DeepInfra); cap $4. The answer is one action from a fixed 7-item list shared by all tasks.
+- **Rule** (`scripts/count_test.py`, report below): accuracy per (task, arm, effort) with Wilson CIs; the paired difference against K at the same effort, bootstrapped over decision points (2000 draws, seed 0):
+  - **better / worse:** the CI excludes 0;
+  - **same:** the CI lies within ±10 pp;
+  - **undecided:** otherwise.
+- **The question:** does a structured record of the robot's own actions help the controller know where it is in the task, against a raw log, and with and without thinking?
+- **Code:**
+  - `arbiter_kb/sources/lerobot.py` (robot-state observation tables, subgoal segments);
+  - the `hand_pause` detector (params re-frozen to **354e33c10d24**);
+  - the progress line now counts grip and pause evidence;
+  - `scripts/count_test.py`.
