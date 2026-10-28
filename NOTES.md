@@ -878,3 +878,27 @@ Reading:
   | qwen3-vl-8b | Parasail | 1.0–1.8 | f325 again 1 object: wrong |
 
   The 4 s seen above was the DeepInfra-first order: each call waited for the rate-limited provider before falling back. The order is now **Parasail, then DeepInfra**; params re-frozen. The model stays qwen3.5-9b: as fast on the same provider, more accurate, cheaper.
+
+**Counting test v2 results: the KB with semantic actions** (`results/latest/count_robot_state_v2/`; run `results/runs/count_20261028_113317`; 1,872 calls, **$0.97**, all answers valid; decisions 5 frames after each step for every arm; SwingXtimes wrap-up accepts put-down or press, as in v1):
+
+| effort | N | P (raw log) | **K v2** (semantic actions) | KO (oracle) |
+|---|---|---|---|---|
+| off | 0.46 [0.40, 0.53] | 0.60 [0.54, 0.66] | **0.85** [0.79, 0.89] | 0.98 [0.95, 0.99] |
+| default | 0.61 [0.54, 0.67] | 0.79 [0.73, 0.83] | **0.91** [0.86, 0.94] | 0.98 [0.96, 0.99] |
+
+- Per task, off / default: PickXtimes K 0.90 / 0.96 (P 0.71 / 0.94); **SwingXtimes K 0.65 / 0.80 (P 0.42 / 0.36)**; BinFill K 0.94 / 0.93 (P 0.64 / 0.96).
+- Paired against K (rule fixed before v1):
+  - off: P −0.24 [−0.33, −0.16], **worse**; N −0.39, **worse**; KO +0.13 [+0.08, +0.18], **better**;
+  - default: P −0.12 [−0.18, −0.06], **worse**; N −0.30, **worse**; KO +0.08 [+0.04, +0.12], **better**.
+- Input tokens per call: K 505, P 1,385, KO 244, N 191. Seconds per call, off: about 0.8 for every arm. With thinking, K 15 s against P 23 s (the latencies are inflated by the parallel runs).
+
+Reading:
+- **This is the first result where the KB beats the raw log, and the gap is largest without thinking**: 0.85 vs 0.60 at about 0.8 s per call, with about a third of the input tokens.
+  - A non-thinking model reading the KB (0.85) beats a thinking model reading the raw log (0.79): **claims 1–2 in miniature, on RoboMME data.**
+  - The gain over v1 (K 0.49 → 0.85 off) comes only from turning grip / pause signals into semantic actions.
+- **Caveats, all to close before any claim:**
+  1. The action thresholds were read from these same three tasks' data, and the test ran on episodes from them. **Confirm on unseen episodes (31–100) and on other tasks.**
+  2. KO's wording carries ordinals ("for the second time"), so part of its 0.98 comes from the labels themselves. K has no ordinals yet; v3 adds them.
+  3. The decisions are offline and single-step; the answers are action choices, not waypoints. There is no closed loop and no frontier-model reference yet.
+  4. The same model throughout (qwen3.6-35b-a3b), 30 episodes per task.
+- **Next:** v3 view (ordinals, merged transit holds, no empty sections or coordinates; changes batched), confirmed on unseen episodes, with a frontier-model reference arm. The rule is to be written here before the run.
