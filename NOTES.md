@@ -741,3 +741,34 @@ Reading (plumbing on clean synthetic data; no claim moves):
   - tasks beyond permanence, where the answer is not one Inside line.
 
   These are the next tests, not this one.
+
+## G_M4 reviews: the five MAJORs fixed (2026-10-28)
+Reviews: `reviews/G_M4_code.md` (PASS-WITH-NOTES) and `reviews/G_M4_goal.md` (ON-TRACK-WITH-CHANGES). Scope: G plus M4 up to 89aa725; Batch A's results commit (9876a81) came after the reviews. MINORs and the goal review's plan changes are not done yet.
+1. **Swap shape (`swapstats._outcome`, `MeasuredSwapSource`).**
+   - Every pass now has a `kind`: exchange / merge (both slots on one container) / lost (the other slot on none) / clean.
+   - G: 77 / 30 / 23 of 130 swaps. `kind_counts` is in `g_signature.json`; the per-setting table has `swap_exchange` / `swap_merge` / `swap_lost`.
+   - Passes no slot sat on are now counted (`unmatched`, 51 of 404) instead of dropped silently.
+   - `id_swap_measured` draws the kind at G's rates. A merge leaves two labels reporting one container. A lost swap hides the other label. Both last to the end of the episode, as most of G's do.
+   - New tests: one per kind in swapstats, plus merge and lost in the source.
+   - **The id_swap_measured table changes** (train seeds; calibration 150–449, eval 450–749):
+     - Bound AURC 0.407;
+     - ArbiterKB 0.182 against SoftHaircut 0.180: ΔAURC +0.002 [0.0, 0.005], 290 / 300 same answers.
+     - Merges and lost tracks make ArbiterKB very slightly *worse* than SoftHaircut, not better.
+     - This replaces the "First table" numbers in "G — gate result" (0.169 / 0.427, exact tie).
+2. **Cite check.**
+   - `controller.check` accepts only ids the arm's prompt printed (`controller.shown_ids`: bracketed ids plus object names in the text).
+   - `o99999:bin_0`, a future frame, `o<t>:image` on a text arm and LeftOf ids that are never printed are now `unknown cite`.
+   - Batch A was scored with the old check: 192 of 600 rows already had problems, and the new check can only add to them. Its right-container numbers do not use cites.
+3. **Cache and budget (`llm.py`, `dry_run.py`).**
+   - A cache hit reports the original call's tokens, seconds and cost (`cached_usd`), and `usd` stays 0.
+   - dry.csv has `cache_hit`, and its `usd` is the call's cost. A replay writes the same dry.csv apart from `cache_hit` (test).
+   - One client and one locked budget serve all threads. A call is refused when spend + calls in flight + itself, each at the dearest price seen, would pass the cap. Test: a $0.25 cap at $0.10 a call stops at $0.20.
+   - Rows are written as they arrive, so a budget stop keeps the paid rows.
+   - Batch A has no zero-token rows, so its token numbers stand.
+4. **Provenance (E4).**
+   - dry_run writes `meta.json`: commit, dirty, args, params hash, contract version and LLM usage incl. hits / refused.
+   - `g_summary.json` / `g_signature.json` carry `provenance`: commit, args and one sha256 over the 180 inputs, `3f33698888bc…`. They were written from a dirty tree; regenerate after the commit.
+   - Run meta records `g_signature_sha256` when id_swap_measured runs.
+5. **G Done-when (b).** `figures/g_features.png` (per-feature histograms, swapped vs clean, with AUC) and `figures/g_roc.png` (one-feature ROCs), written by measure_swaps.
+
+`make check`: 159 passed; quality 0 problems; selftest 16 PASS, 1 SKIPPED (no replays).

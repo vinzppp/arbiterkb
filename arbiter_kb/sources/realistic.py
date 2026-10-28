@@ -97,8 +97,12 @@ class MeasuredSwapSource:
     (results/g_signature.json, written by scripts/measure_swaps.py), not chosen by us.
     - Each pass swaps with p = logistic(min_3d, speed). min_3d is clamped to the range G saw: real
       containers never come closer than about 5 cm, while synthetic lanes <= 0.02 do.
-    - A swapped pass exchanges the ids at t_min + an offset drawn from G's, right after one of the two
-      tracks has been absent for a drawn number of frames (G: most swaps follow a mask dropout).
+    - A swapped pass goes wrong at t_min + an offset drawn from G's, right after one of the two tracks has
+      been absent for a drawn number of frames (G: most swaps follow a mask dropout). Its shape is drawn at
+      G's rates (kind_counts): exchange (the two labels trade containers), merge (one label jumps onto the
+      other's container, so both report it and nothing reports the first), lost (one label jumps onto the
+      other's container and the other label is hidden). G's merges and lost tracks mostly last to the end
+      of the episode, so here they do. A later pass of a container no label reports changes nothing.
     - A clean pass drops a track for a length drawn from G's clean passes (often 0).
     Every draw is seeded per pass, so results are reproducible and nested in nothing."""
 
@@ -122,6 +126,16 @@ class MeasuredSwapSource:
         (wd, ws), b = self.sig["w"], self.sig["b"]
         return float(1 / (1 + np.exp(-(wd * min(max(d, lo), hi) + ws * speed + b))))
 
+    def _kind(self, u: float) -> str:
+        """exchange / merge / lost at G's rates (a signature without kind_counts: exchanges only)."""
+        counts = self.sig.get("kind_counts") or {"exchange": 1}
+        acc, total = 0.0, sum(counts.values())
+        for k, c in counts.items():
+            acc += c / total
+            if u < acc:
+                return k
+        return k
+
     def _plan(self, ep: int, frames: list[FrameObs]) -> tuple[list[dict], set]:
         """(swaps, hidden (t, physical container) pairs) for one episode."""
         T, swaps, hidden = len(frames), [], set()
@@ -135,7 +149,8 @@ class MeasuredSwapSource:
             if u01(*key, "swap") < pr:
                 t_sw = int(np.clip(p["t_min"] + draw(self.sig["swap_dt"], "dt"), 1, T - 1))
                 n = draw(self.sig["dropout_swapped"], "drop")
-                swaps.append({**p, "t_sw": t_sw, "p": pr, "dropout": n})
+                swaps.append({**p, "t_sw": t_sw, "p": pr, "dropout": n, "kind": self._kind(u01(*key, "kind")),
+                              "mover": p["a"] if u01(*key, "mover") < 0.5 else p["b"]})
                 t0 = t_sw - n
             else:
                 n = draw(self.sig["dropout_clean"], "drop")
@@ -149,28 +164,43 @@ class MeasuredSwapSource:
         lo = self.sig["min_3d_range"][0]
         jumps: list[float] = []  # filled while frames are yielded
         self.log[ep] = {"corrupted": bool(swaps), "n_passes": len(passes(frames, self.v_move)),
-                        "swaps": [[s["t_sw"], s["a"], s["b"], round(s["d_min"], 4), round(s["p"], 3), s["dropout"]]
-                                  for s in swaps],
+                        "swaps": [[s["t_sw"], s["a"], s["b"], round(s["d_min"], 4), round(s["p"], 3), s["dropout"],
+                                   s["kind"]] for s in swaps],
                         "n_clamped": sum(p["d_min"] < lo for p in passes(frames, self.v_move)),
                         "hidden_frames": len(hidden), "label_jumps_m": jumps}  # before the first frame
-        perm = {k: k for k in frames[0].objects}  # label -> physical object it now reports
+        perm: dict[str, str | None] = {k: k for k in frames[0].objects}  # label -> physical object it reports
         last: dict[str, np.ndarray] = {}  # label -> last reported position
         for f in frames:
             for s in swaps:
                 if s["t_sw"] == f.t:
-                    la, lb = (lab for lab, phys in perm.items() if phys in (s["a"], s["b"]))
-                    perm[la], perm[lb] = perm[lb], perm[la]
-                    s["labels"] = (la, lb)
+                    s["labels"] = self._go_wrong(perm, s)
             objs = {}
             for lab, phys in perm.items():
-                o = replace(f.objects[phys], id=lab)
-                objs[lab] = replace(o, visible=False, xyz=None, uv=None) if (f.t, phys) in hidden else o
+                o = replace(f.objects[phys or lab], id=lab)
+                objs[lab] = replace(o, visible=False, xyz=None, uv=None) if phys is None or (f.t, phys) in hidden else o
             for s in swaps:
                 if s["t_sw"] == f.t:
                     jumps += [round(float(np.linalg.norm(objs[k].xyz - last[k])), 4)
                               for k in s["labels"] if objs[k].visible and k in last]
             last.update({k: o.xyz for k, o in objs.items() if o.visible})
             yield replace(f, objects=objs)
+
+
+    @staticmethod
+    def _go_wrong(perm: dict, s: dict) -> tuple:
+        """Apply swap s to perm (label -> physical container, None = lost); the labels it changed."""
+        on = {phys: sorted(lab for lab, ph in perm.items() if ph == phys) for phys in (s["a"], s["b"])}
+        if not (on[s["a"]] and on[s["b"]]):
+            return ()  # a container no label reports any more: nothing to confuse
+        la, lb = on[s["a"]][0], on[s["b"]][0]
+        if s["kind"] == "exchange":
+            perm[la], perm[lb] = s["b"], s["a"]
+            return la, lb
+        jumper, other = (la, lb) if s["mover"] == s["a"] else (lb, la)
+        perm[jumper] = perm[other]
+        if s["kind"] == "lost":
+            perm[other] = None
+        return (jumper, other) if s["kind"] == "lost" else (jumper,)
 
 
 class NoisySource:

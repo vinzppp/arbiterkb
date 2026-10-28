@@ -82,3 +82,35 @@ def test_measured_swap_is_seeded_and_clamps_distance():
     first = [[o.visible for o in f.objects.values()] for f in src.frames(ep)]
     again = [[o.visible for o in f.objects.values()] for f in src.frames(ep)]
     assert first == again and src.log[ep]["n_clamped"] == src.log[ep]["n_passes"]
+
+
+def _first_swap(kind: str):
+    from arbiter_kb.sources.realistic import MeasuredSwapSource
+
+    base = SyntheticSource(lane_offset=0.04)
+    src = MeasuredSwapSource(base, {**_sig(50.0, drop_sw=(0,)), "kind_counts": {kind: 1}})
+    ep = base.episodes("train", 1)[0]
+    clean, bad = list(base.frames(ep)), list(src.frames(ep))
+    t_sw, a, b = src.log[ep]["swaps"][0][:3]
+    assert src.log[ep]["swaps"][0][6] == kind
+    return clean, bad, t_sw, a, b
+
+
+def test_measured_merge_puts_two_labels_on_one_container():
+    """G: 30 of 130 swaps leave both tracks on one container; the other container is then unreported."""
+    clean, bad, t, a, b = _first_swap("merge")
+    reported = [k for k in (a, b) if (bad[t].objects[k].xyz == clean[t].objects[a].xyz).all()]
+    other = [k for k in (a, b) if (bad[t].objects[k].xyz == clean[t].objects[b].xyz).all()]
+    assert sorted([len(reported), len(other)]) == [0, 2]  # both labels report one physical container
+    assert all(bad[t - 1].objects[k].xyz is not None for k in (a, b))
+
+
+def test_measured_lost_moves_one_label_and_hides_the_other():
+    """G: 23 of 130 swaps take one track onto the other container while that track is lost."""
+    clean, bad, t, a, b = _first_swap("lost")
+    vis = [k for k in (a, b) if bad[t].objects[k].visible]
+    assert len(vis) == 1
+    k = vis[0]
+    other = b if k == a else a
+    assert (bad[t].objects[k].xyz == clean[t].objects[other].xyz).all()  # it reports the other container
+    assert not any(f.objects[other].visible for f in bad[t:])  # and the lost label stays lost

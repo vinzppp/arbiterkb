@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import io
 import json
+import re
 
 import numpy as np
 
@@ -147,8 +148,10 @@ def to_action(answer) -> tuple[np.ndarray | None, str | None]:
 
 def check(action: np.ndarray, answer: dict, known: set[str]) -> list[str]:
     """Our checks before execution: workspace box, coarse reach (shoulder sphere; the authoritative IK /
-    mplib check runs on the pod), and that target / cites name real KB ids. Problems are returned, not raised:
-    the harness gives the model one retry with them, as an executor error would."""
+    mplib check runs on the pod), and that target / cites name ids this arm was shown (`known`, from
+    shown_ids: an id the prompt never printed, such as a future frame's observation, is invented).
+    Problems are returned, not raised: the harness gives the model one retry with them, as an executor
+    error would."""
     errs = [f"{'xyz'[i]}={action[i]:.3f} outside [{lo}, {hi}]" for i, (lo, hi) in enumerate(WORKSPACE)
             if not lo <= action[i] <= hi]
     if (d := float(np.linalg.norm(action[:3] - SHOULDER))) > REACH:
@@ -156,18 +159,16 @@ def check(action: np.ndarray, answer: dict, known: set[str]) -> list[str]:
     tgt, cites = answer.get("target"), answer.get("cites") or []
     if tgt is not None and tgt not in known:
         errs.append(f"unknown target {tgt!r}")
-    errs += [f"unknown cite {c!r}" for c in cites if not _citable(c, known)]
+    errs += [f"unknown cite {c!r}" for c in cites if not (isinstance(c, str) and c in known)]
     return errs
 
 
-def _citable(c, known: set[str]) -> bool:
-    """An evidence / event / object id the KB holds, or an observation id o<t>:<object | ee | image>."""
-    if not isinstance(c, str):
-        return False
-    if c in known:
-        return True
-    head, _, obj = c.partition(":")
-    return head[:1] == "o" and head[1:].isdigit() and (obj in known or obj in ("ee", "image"))
+def shown_ids(text: str, objects) -> set[str]:
+    """The ids a prompt's memory text prints: every id inside [...] (a comma-separated support list
+    splits; 'On(a, b)' keeps its comma-space) and every object id that appears in it as a word."""
+    ids = {x.strip() for group in re.findall(r"\[([^\]]*)\]", text) for x in re.split(r",(?! )", group)}
+    words = set(re.findall(r"[\w]+", text))
+    return {x for x in ids if x} | {o for o in objects if o in words}
 
 
 def target_distance(action: np.ndarray, answer: dict, pose_of) -> float | None:

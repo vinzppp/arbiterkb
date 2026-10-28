@@ -24,7 +24,7 @@ from arbiter_kb import CONTRACT_VERSION, ledger  # noqa: E402
 from arbiter_kb.evaluate import run, save_run  # noqa: E402
 from arbiter_kb.params import Params  # noqa: E402
 from arbiter_kb.sources.corrupt import CorruptedSource  # noqa: E402
-from arbiter_kb.sources.realistic import MeasuredSwapSource, NoisySource, OverlapSwapSource  # noqa: E402
+from arbiter_kb.sources.realistic import SIGNATURE, MeasuredSwapSource, NoisySource, OverlapSwapSource  # noqa: E402
 from arbiter_kb.sources.replay import OracleReplaySource  # noqa: E402
 from arbiter_kb.sources.synthetic import SyntheticSource  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
@@ -127,7 +127,9 @@ def evaluate(args, params: Params) -> tuple[Path | None, list[dict], dict]:
             "contract_version": CONTRACT_VERSION, "created": time.strftime("%Y-%m-%d %H:%M:%S"),
             "settings": {ep: base.settings(ep) for ep in eps} if hasattr(base, "settings") else None,
             "corruption_log": logs, "median_step_ms": 1000 * sorted(step_s)[len(step_s) // 2] if step_s else None,
-            "llm_cache": {"hits": 0, "misses": 0}}
+            "llm_cache": {"hits": 0, "misses": 0},
+            "g_signature_sha256": hashlib.sha256(SIGNATURE.read_bytes()).hexdigest()
+            if "id_swap_measured" in args.corrupt.split(",") else None}
     summary = save_run(run_dir, rows, params, meta, traces)
     keep = keep_dir(args)
     if keep is not None:  # results/latest is committed: only on request, from a clean tree

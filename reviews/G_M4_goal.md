@@ -1,0 +1,27 @@
+# Goal review — G_M4 (phase G + M4 Mac side + Batch A) — 2026-10-28
+Verdict: ON-TRACK-WITH-CHANGES
+
+## Claim movement
+- **Falsifier "a one-feature threshold rule separates swaps" → not triggered, moderate evidence.** 353 real passes, 130 swaps: best single AUC 0.874 (`max_iou`), best 2-feature CV AUC 0.926 (`g_summary.json`). I recomputed AUCs within each setting (setting is our own design and drives `min_3d`/`speed`). They drop to 0.50–0.93, so the pooled result is not a setting artefact, and the "no threshold suffices" reading holds. Caveat: the run used `--vocab scene` (privileged word list), so it holds only for that perception.
+- **Claim 3 viability → mixed, strong evidence.** Stock RoboMME never swaps (0/44, 0/116 with camera shifts). So claim 3 on real errors exists only in stress settings we chose. It has no bearing on the permanence episodes where claims 1–2 will be run.
+- **Claim 3 "beats a threshold haircut on the same evidence" → none, and it cannot move as built.** On `id_swap_measured`, ArbiterKB = SoftHaircut exactly (ΔAURC 0.0 [0.0, 0.0001], 300/300 same answers). This is the third exact tie. "Both beat Bound" (ΔAURC −0.258) holds by construction: Bound's confidence is always 1, so its AURC equals its error rate.
+- **Claims 1–2 → none to weak, and the weak part points at a falsifier.** In the M4 dry run (n = 20, clean synthetic, oracle, text only), R (raw tracker log) names the right container 18/20 vs K 19/20 and K-L3 20/20. R's waypoint misses came from the containment misunderstanding, and Batch A now puts the containment rule into every arm's prompt, R included. If R ties K on the Batch A test, that is evidence for the falsifier "the raw tracker log does as well". The test is fair, so that result must be reported as such.
+
+## Risks of self-deception
+1. **The planned M2 branch is predicted to tie again (sharp objection).** SoftHaircut is "R6's formula without a KB", and the plan gives SoftHaircut the same new feature. On VideoUnmaskSwap only R6 acts, so ArbiterKB and SoftHaircut produce the same score by construction, whatever feature `identity.py` adds. Also, G already measured the Hungarian margin (`min_margin`): AUC 0.829, worse than `max_iou` 0.874 and `min_3d` 0.870. → Cheapest control (zero cost): before building `identity.py`, R6 v2 or MarginHaircut, write down which piece of KB-only evidence SoftHaircut cannot have. Candidates: re-observation at reveal, mutual exclusion across cubes, cascade retraction. If there is none, write "a calibrated feature score suffices" (M2 done-when (c)) now and skip the build.
+2. **Tuning and scoring claim 3 on `id_swap_measured` leaks our own model.** The generator is a 2-feature logistic we fitted, with lanes clamped to 5.1 cm and dropout drawn conditional on the swap label. The best system copies that logistic. → Score claim 3 on G's 180 real perceived episodes (`data/g_perceived`, oracle included, already on the Mac, CPU only; M2 item 2's `PerceivedSource` does not exist yet). Use `id_swap_measured` for plumbing only.
+3. **"Memory matters" (NOTES, M4 dry run) is true by construction.** K0 sees only the current frame on a task whose answer is hidden, so chance is its only possible result. It rules out "coordinates alone" but says nothing about how much memory is needed.
+4. **The Batch A test sits at the ceiling.** On clean oracle synthetic, Inside equals the truth (ArbiterKB AURC 0.0012 under `none`). n = 50 with ±10 pp margins can show effort-level cost savings, and an R/K tie. It cannot show K > anything.
+
+## Missing baseline(s)
+- **S + K0 in text** (the current object table plus "cube_red is under bin_2"): it can be run now without images. K-L3 at 20/20 suggests it would tie K, which would show that permanence needs one argmax line, not a KB. Add it to the Batch A grid. It costs cents.
+- **"Flag every pass with a dropout" for claim 3:** TPR 0.88 at FPR 0.39 on G's passes. Any ArbiterKB detection result must beat this one-bit rule as well as SoftHaircut.
+
+## Cut or defer
+- `identity.py`, R6 v2, MarginHaircut, `tune.py`: defer until risk 1 is answered (`min_margin` already loses).
+- `annotate.py` (never called on the real model), `som.py` refinements, `clue_objects.py` re-benchmark: these serve M5's K+A ablation and the image arms. Defer them until a text arm shows that the KB beats S/R.
+- The cam_left/cam_right settings: they gave 0 swaps and need no further runs.
+- `--vocab open` (untested): keep it, but it is a precondition for any claim, not optional polish.
+
+## Recommendation for the next phase
+**Modify.** Run the pre-registered Batch A test as fixed, and add one arm, S+K0 text. Keep the reading of a K≈R or K≈S tie on permanence honest: it is a falsifier result for this suite, not a prompt bug to iterate away. Replace M2's "frequent and hard" build with a zero-build table on G's real perceived episodes: Bound vs SoftHaircut vs ArbiterKB vs the dropout flag, train/test split by seed. If ArbiterKB still ties SoftHaircut there, drop the "beats haircut" part of claim 3 and keep claim 3 as "calibrated beliefs passed to the controller". Then test that controller-side value directly at M5: does an uncertain Inside lead to "look first"? Spend pod and closed-loop budget on claims 1–2 only after a text arm separates K from S and R on some task. Since permanence probably cannot do that, plan the counting/imitation suite, and the motion-detector fix on G's real noise that it needs, as the next step after M4.

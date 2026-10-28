@@ -48,3 +48,46 @@ def belief_timeline(arb_rows: list[dict], baselines: dict[str, list[dict]], cube
     fig.savefig(path, dpi=120)
     plt.close(fig)
     return path
+
+
+def roc_curve(score: np.ndarray, label: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """(false-positive rate, true-positive rate) over every threshold of `score` (nan rows dropped)."""
+    ok = np.isfinite(score)
+    s, y = score[ok], label[ok].astype(bool)
+    order = np.argsort(-s, kind="stable")
+    tp, fp = np.cumsum(y[order]), np.cumsum(~y[order])
+    return np.r_[0, fp / max(fp[-1], 1)], np.r_[0, tp / max(tp[-1], 1)]
+
+
+def g_features(rows: list[dict], features: tuple, direction: dict, aucs: dict, folder: Path) -> list[Path]:
+    """Phase G Done-when (b): per feature, the histogram of swapped vs clean passes (g_features.png), and
+    every feature's ROC oriented so that higher means 'swapped' (g_roc.png)."""
+    y = np.array([r["swapped"] for r in rows], bool)
+    col = {f: np.array([r[f] for r in rows], float) for f in features}
+    fig, axes = plt.subplots(2, (len(features) + 1) // 2, figsize=(11, 6))
+    for ax, f in zip(axes.flat, features):
+        x = col[f][np.isfinite(col[f])]
+        bins = np.histogram_bin_edges(x, 20) if len(x) else 10
+        for lab, name, c in ((False, "clean", "tab:blue"), (True, "swapped", "tab:red")):
+            v = col[f][(y == lab) & np.isfinite(col[f])]
+            ax.hist(v, bins=bins, alpha=0.55, color=c, label=f"{name} ({len(v)})", density=True)
+        ax.set_title(f"{f}  AUC {aucs.get(f, np.nan):.3f}", fontsize=9)
+        ax.legend(fontsize=7)
+    fig.suptitle(f"G: {len(rows)} passes, {int(y.sum())} swaps (density per class)", fontsize=10)
+    fig.tight_layout()
+    fig2, ax = plt.subplots(figsize=(5, 5))
+    for f in features:
+        fpr, tpr = roc_curve(direction[f] * col[f], y)
+        ax.plot(fpr, tpr, label=f"{f} ({aucs.get(f, np.nan):.3f})")
+    ax.plot([0, 1], [0, 1], "k:", lw=0.8)
+    ax.set_xlabel("false-positive rate (clean passes flagged)")
+    ax.set_ylabel("true-positive rate (swaps flagged)")
+    ax.set_title("G: one-feature rules", fontsize=10)
+    ax.legend(fontsize=7, loc="lower right")
+    fig2.tight_layout()
+    folder.mkdir(parents=True, exist_ok=True)
+    out = [folder / "g_features.png", folder / "g_roc.png"]
+    for fg, p in zip((fig, fig2), out):
+        fg.savefig(p, dpi=120)
+        plt.close(fg)
+    return out

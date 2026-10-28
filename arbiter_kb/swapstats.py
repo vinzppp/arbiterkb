@@ -76,11 +76,18 @@ def _iou(b1: np.ndarray, b2: np.ndarray) -> float:
     return float(inter / (area(b1) + area(b2) - inter + 1e-12))
 
 
-def _outcome(ids: np.ndarray, sa: int, sb: int, p: dict, t1: int, settle: int) -> tuple[int, int]:
-    """(swapped, lost): the containers the two slots settle on after the pass."""
+KINDS = ("exchange", "merge", "lost")  # the shapes a swap takes (G review: 41% are not exchanges)
+
+
+def _outcome(ids: np.ndarray, sa: int, sb: int, p: dict, t1: int, settle: int) -> tuple[int, int, str]:
+    """(swapped, lost, kind) from the containers the two slots settle on after the pass. A swap is one slot
+    ending on the other's container; kind: exchange (both did, or the other took a third container), merge
+    (both slots on one container), lost (the other slot is on none), or clean (no swap)."""
     after = {s: [n for n in ids[t1 - settle:t1, s] if n >= 0] for s in (sa, sb)}
     end = {s: (max(set(v), key=v.count) if v else -1) for s, v in after.items()}
-    return int(end[sa] == p["b"] or end[sb] == p["a"]), int(end[sa] < 0 or end[sb] < 0)
+    swapped, lost = int(end[sa] == p["b"] or end[sb] == p["a"]), int(end[sa] < 0 or end[sb] < 0)
+    kind = "clean" if not swapped else "merge" if end[sa] == end[sb] else "lost" if lost else "exchange"
+    return swapped, lost, kind
 
 
 def _image_features(ep: dict, p: dict, sa: int, sb: int, win: range) -> dict:
@@ -145,27 +152,29 @@ def pass_features(p: dict, ep: dict, ids: np.ndarray, settle: int = 5) -> dict |
     if sa is None or sb is None or sa == sb:
         return None
     t1 = min(len(per), p["t_close"] + settle)
-    swapped, lost = _outcome(ids, sa, sb, p, t1, settle)
+    swapped, lost, kind = _outcome(ids, sa, sb, p, t1, settle)
     win = range(p["t_open"], min(len(per), p["t_close"]))
     row = {"node_a": p["a"], "node_b": p["b"], "slot_a": sa, "slot_b": sb, "t_open": p["t_open"],
            "t_min": p["t_min"], "duration": p["t_close"] - p["t_open"], "swapped": swapped, "lost": lost,
-           "min_3d": p["min_3d"]}
+           "kind": kind, "min_3d": p["min_3d"]}
     return {**row, **_image_features(ep, p, sa, sb, win), **_motion_features(per, sa, sb, win),
             **_signature_features(ep, ids, p, sa, sb, t1, swapped)}
 
 
 def episode_passes(ep: dict, v_move: float = 0.001) -> tuple[list[dict], dict]:
-    """(one feature row per pass, identity summary) for one perceived episode."""
+    """(one feature row per pass, identity summary); a pass no slot sat on is counted in n_unmatched."""
     per, orc = ep["perceived"], ep["oracle"]
     nodes = [int(n) for n in range(orc.shape[1]) if np.nanmax(orc[:, n, F_LABEL]) == 0]
     assignment, _ = assign_slots_seeded(per, orc)
     slots = [s for s, n in assignment.items() if n in nodes]
     ids = identities(per, orc, slots, nodes)
-    rows = [r for p in oracle_passes(orc, nodes, v_move) if (r := pass_features(p, ep, ids)) is not None]
+    ps = oracle_passes(orc, nodes, v_move)
+    rows = [r for p in ps if (r := pass_features(p, ep, ids)) is not None]
     seen = [(t, s) for s in slots for t in range(len(per)) if ids[t, s] >= 0]
     ok = sum(ids[t, s] == assignment[s] for t, s in seen)
     summary = {"identity_accuracy": ok / len(seen) if seen else np.nan, "n_slots": len(slots),
-               "n_container_nodes": len(nodes), "n_passes": len(rows), "n_swaps": sum(r["swapped"] for r in rows)}
+               "n_container_nodes": len(nodes), "n_passes": len(rows), "n_unmatched": len(ps) - len(rows),
+               "n_swaps": sum(r["swapped"] for r in rows)}
     return rows, summary
 
 
@@ -212,7 +221,8 @@ def logistic_cv_auc(X: np.ndarray, y: np.ndarray, folds: int = 5, l2: float = 1e
 def signature(rows: list[dict]) -> dict:
     """id_swap_measured's parameters (DEVELOPMENT §3.11), from G's passes: p(swap | min_3d, speed) as a
     logistic fit, the range of min_3d seen (real containers never come closer, so callers clamp to it),
-    and the empirical swap-frame offsets and dropout lengths to resample from."""
+    the empirical swap-frame offsets and dropout lengths to resample from, and how often a swap is each
+    of KINDS."""
     X = np.array([[r["min_3d"], r["speed"]] for r in rows], float)
     y = np.array([r["swapped"] for r in rows], float)
     ok = np.all(np.isfinite(X), axis=1)
@@ -223,6 +233,7 @@ def signature(rows: list[dict]) -> dict:
             "speed_range": [float(X[ok, 1].min()), float(X[ok, 1].max())],
             "swap_dt": pick("swap_dt", 1), "dropout_swapped": pick("dropout", 1), "dropout_clean": pick("dropout", 0),
             "n_passes": int(ok.sum()), "n_swaps": int(y[ok].sum()),
+            "kind_counts": {k: sum(r["swapped"] == 1 and r["kind"] == k for r in rows) for k in KINDS},
             "lost_rate": {"swapped": float(np.mean([r["lost"] for r in rows if r["swapped"]] or [np.nan])),
                           "clean": float(np.mean([r["lost"] for r in rows if not r["swapped"]] or [np.nan]))}}
 
