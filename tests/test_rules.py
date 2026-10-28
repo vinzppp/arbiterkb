@@ -59,22 +59,26 @@ def kb_hidden_in(bin_id):
     return kb
 
 
-def near_pass(kb, closeness):
-    kb.apply([AddEvidence(90, "near_pass", ("bin_a", "bin_b"), {"closeness": closeness, "obs": []})])
+def near_pass(kb, min_3d):
+    kb.apply([AddEvidence(90, "near_pass", ("bin_a", "bin_b"), {"closeness": 0.5, "min_3d": min_3d, "obs": []})])
     return kb.evidence[-1]
 
 
-def test_r6_weight_formula():
+@pytest.mark.parametrize("d, w", [(0.0, 0.5), (0.02, 0.5 * np.exp(-1)), (0.12, 0.5 * np.exp(-6))])
+def test_r6_v15_weight(d, w):
+    """w = w_max·exp(-min_3d/d0): 0.5 at contact, 0.1839 at 2 cm, 0.0012 at 12 cm (defaults)."""
     kb = kb_hidden_in("bin_a")
-    ev = near_pass(kb, 0.4)
+    ev = near_pass(kb, d)
     mix = [o for o in r6_swap(kb, [ev], frame(90, {"bin_a": (0, 0), "bin_b": (0.1, 0)}), RuleParams()) if isinstance(o, MixDist)]
-    assert len(mix) == 1 and mix[0].w == pytest.approx(0.5 * (1 - 0.4))
+    assert len(mix) == 1 and mix[0].w == pytest.approx(w)
 
 
-def test_r6_no_mix_when_not_close():
+def test_r6_uses_3d_distance_not_image_closeness():
     kb = kb_hidden_in("bin_a")
-    ev = near_pass(kb, 1.0)  # closeness = 1 means at the threshold: w = 0
-    assert not [o for o in r6_swap(kb, [ev], frame(90, {}), RuleParams()) if isinstance(o, MixDist)]
+    ev = near_pass(kb, 0.05)
+    ev.data["closeness"] = 0.0  # the image says touching; 3D says 5 cm apart
+    mix = [o for o in r6_swap(kb, [ev], frame(90, {}), RuleParams()) if isinstance(o, MixDist)]
+    assert mix[0].w == pytest.approx(0.5 * np.exp(-2.5))
 
 
 def test_r6_ignores_visible_cubes():
@@ -138,3 +142,33 @@ def test_r5_runs_only_when_a_cube_was_just_covered():
     ops = r5_exclusive(kb, [e1], frame(32, {}), RuleParams())
     assert {o.subj: o.dist.argmax() for o in ops}["cube_g"] == ("bin_a", pytest.approx(1.0))
     assert r5_exclusive(kb, [], frame(33, {}), RuleParams()) == []
+
+
+def test_joint_exclusive_infeasible_returns_none_and_r5_records_a_conflict():
+    from arbiter_kb.beliefs import joint_exclusive
+    from arbiter_kb.rules import r5_exclusive
+    assert joint_exclusive({"x": Distribution({"b": 1.0}, 0), "y": Distribution({"b": 1.0}, 0)}, 1) is None
+    kb = KB(OBJS + [("cube_r", "cube", {"color": "r"})])
+    e1 = disappear(kb, 32, (0.0, 0.0))
+    e2, = kb.apply([AddEvidence(32, "disappear", ("cube_r",), {"last_xyz": [0.1, 0, 0.017], "obs": []})])
+    kb.apply([SetDist("Inside", "cube_g", Distribution({"bin_b": 1.0}, 32, [e1.id])),
+              SetDist("Inside", "cube_r", Distribution({"bin_b": 1.0}, 32, [e2])),
+              SetVis("cube_g", "hidden", 1.0, 32, [e1.id]), SetVis("cube_r", "hidden", 1.0, 32, [e2])])
+    ops = r5_exclusive(kb, [e1], frame(32, {}), RuleParams())
+    assert len(ops) == 1 and ops[0].kind == "exclusive_conflict" and set(ops[0].args) == {"cube_g", "cube_r"}
+
+
+def test_r5_skips_cubes_mixed_by_a_swap():
+    """cube_g was mixed 50/50 by a contact swap; a new cover pins cube_r to bin_b. Joint-normalising would
+    snap cube_g to bin_a with certainty (overconfident after a mix), so R5 must leave it alone."""
+    from arbiter_kb.rules import r5_exclusive
+    kb = KB(OBJS + [("cube_r", "cube", {"color": "r"})])
+    e1 = disappear(kb, 32, (0.0, 0.0))
+    kb.apply([SetDist("Inside", "cube_g", Distribution.point("bin_a", 32, [e1.id])),
+              SetVis("cube_g", "hidden", 1.0, 32, [e1.id])])
+    kb.apply(r6_swap(kb, [near_pass(kb, 0.0)], frame(90, {}), RuleParams()))
+    assert kb.inside("cube_g").probs == pytest.approx({"bin_a": 0.5, "bin_b": 0.5})
+    e2, = kb.apply([AddEvidence(95, "disappear", ("cube_r",), {"last_xyz": [0.1, 0, 0.017], "obs": []})])
+    kb.apply([SetDist("Inside", "cube_r", Distribution({"bin_b": 1.0}, 95, [e2])),
+              SetVis("cube_r", "hidden", 1.0, 95, [e2])])
+    assert r5_exclusive(kb, [kb.evidence[-1]], frame(95, {}), RuleParams()) == []

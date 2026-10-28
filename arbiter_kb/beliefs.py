@@ -56,8 +56,11 @@ class Distribution:
             total = sum(probs.values())
             probs = {k: (1 - eps_none) * v / total for k, v in probs.items()}
             probs[None] = eps_none
-        all_ids = sorted({i for ids in support.values() for i in ids})
-        return Distribution(probs, t, all_ids, {k: list(support.get(k, [])) for k in probs})
+        all_ids = sorted({i for ids in support.values() for i in ids} | set(none_support or []))
+        hs = {k: list(support.get(k, [])) for k in probs}
+        if None in probs:
+            hs[None] = list(none_support or [])  # "elsewhere" rests on the evidence that triggered R1
+        return Distribution(probs, t, all_ids, hs)
 
     # ---- operations ---------------------------------------------------------------------
     def swap_mix(self, a: str, b: str, w: float, t: int, ev_id: str) -> "Distribution":
@@ -104,7 +107,7 @@ class Distribution:
 
     # ---- reads --------------------------------------------------------------------------
     def argmax(self) -> tuple[str | None, float]:
-        k = max(self.probs, key=lambda key: (self.probs[key], str(key)))
+        k = max(self.probs, key=self.probs.__getitem__)  # ties -> the first key (callers order keys)
         return k, self.probs[k]
 
     def max_prob(self) -> float:
@@ -117,11 +120,12 @@ class Distribution:
         return {str(k): round(p, 6) for k, p in sorted(self.probs.items(), key=lambda kv: str(kv[0]))}
 
 
-def joint_exclusive(dists: dict[str, Distribution], t: int, max_states: int = 5000) -> dict[str, Distribution]:
+def joint_exclusive(dists: dict[str, Distribution], t: int, max_states: int = 5000) -> dict[str, Distribution] | None:
     """R5: at most one cube per container. Treats the cube marginals as INDEPENDENT evidence, forms the
     joint over assignments with no container used twice (None may repeat), and returns the marginals.
     Only valid when the marginals really are independent (e.g. merging a new cover); after swap_mix the
-    cubes are correlated and this would be overconfident, so R5 runs only on cover frames."""
+    cubes are correlated and this would be overconfident, so R5 skips mixed cubes. Returns None when no
+    assignment is consistent (e.g. two cubes certain of the same container); too many states -> input."""
     cubes = list(dists)
     keys = [list(dists[c].probs) for c in cubes]
     if not cubes or math.prod(len(k) for k in keys) > max_states:
@@ -137,7 +141,7 @@ def joint_exclusive(dists: dict[str, Distribution], t: int, max_states: int = 50
         for c, k in zip(cubes, combo):
             marg[c][k] = marg[c].get(k, 0.0) + w
     if total <= 0:
-        return dict(dists)
+        return None
     sup = sorted({i for d in dists.values() for i in d.support})
     return {c: Distribution(marg[c], t, sup, {k: list(v) for k, v in dists[c].hyp_support.items()}) for c in cubes}
 

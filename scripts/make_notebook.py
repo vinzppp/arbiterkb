@@ -69,10 +69,12 @@ M1 = [
              "print(explain(traces[('overlap_haircut', ep)], cube))"),
     ("md", "**Reading the table.** OverlapHaircut is Bayes-optimal under id_swap_overlap because we wrote both: "
            "ArbiterKB − OverlapHaircut ≈ 0 here is expected and says nothing about real trackers. That is why "
-           "phase G measures a real tracker's swaps before M2 tunes anything. JumpDetector equals Bound here "
-           "(jumps < j_max) and collapses under position noise."),
+           "phase G measures a real tracker's swaps before M2 tunes anything. Read silent failure together with "
+           "coverage (share answered with p_max ≥ 0.8): a 50/50 haircut scores 0 silent failures by never being sure. "
+           "AURC summarises the whole risk–coverage curve. JumpDetector equals Bound here (jumps < j_max) and "
+           "collapses under position noise."),
     ("code", "import pandas as pd, glob\npd.read_csv('../results/latest/m1_table/summary.csv')"
-             "[['condition', 'system', 'acc', 'silent', 'brier', 'ece', 'silent_on_corrupted']]"),
+             "[['condition', 'system', 'acc', 'silent', 'coverage', 'aurc', 'brier', 'silent_on_corrupted']]"),
     ("code", "from IPython.display import Image, display\nfor f in sorted(glob.glob('../figures/*_test_p0.5.png')):\n"
              "    print(f); display(Image(f))"),
 ]

@@ -56,15 +56,24 @@ def explain(rows: list[dict], cube: str, t: int | None = None) -> str:
 
 
 def _explain_tracker(rows: list[dict], cube: str, t: int | None) -> str:
-    """Deterministic baselines keep no beliefs: report the one-hot answer and the observation it rests on."""
+    """Tracker baselines keep no beliefs: report the answer and look up the observations it rests on
+    (the predicted container now, and the cube's last sighting) in the trace."""
     rows = [r for r in rows if "pred" in r and (t is None or r["t"] <= t)]
     if not rows:
         return f"no Inside({cube}) belief up to t={t}"
     r = rows[-1]
     pred, conf, doubt = r["pred"].get(cube), r.get("p_max", {}).get(cube, 1), r.get("doubt", {}).get(cube)
-    why = f"; doubt from trigger on ({doubt[0]}, {doubt[1]}) at t={doubt[2]}" if doubt else ""
-    return (f"{cube} -> {pred} with confidence {conf} at t={r['t']} (tracker: nearest container to the tracked "
-            f"cube position; rests on observation o{r['t']}:{pred}, no evidence kept{why})")
+    lines = [f"{cube} -> {pred} with confidence {conf} at t={r['t']} (tracker: nearest container to the tracked "
+             f"cube position; no evidence kept)"]
+    if doubt:
+        lines.append(f"  doubt from a trigger on ({doubt[0]}, {doubt[1]}) at t={doubt[2]}")
+    o = r.get("obs", {}).get(pred) if pred else None
+    lines.append(f"  o{r['t']}:{pred}: observation {pred} at t={r['t']} -> {o}" if o and o[0]
+                 else f"  o{r['t']}:{pred}: NOT FOUND (no visible observation of the predicted container)")
+    seen = [x for x in rows if x.get("obs", {}).get(cube, [False])[0]]
+    lines.append(f"  o{seen[-1]['t']}:{cube}: observation {cube} at t={seen[-1]['t']} -> {seen[-1]['obs'][cube]}"
+                 if seen else f"  {cube}: NOT FOUND (never observed)")
+    return "\n".join(lines)
 
 
 def _walk(ident: str, ev: dict, evt: dict, obs: dict, depth: int, seen: set) -> list[str]:

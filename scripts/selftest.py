@@ -1,5 +1,6 @@
 """Phase 'Done when' checks (DEVELOPMENT.md §6 M0 and M1), printed as PASS / FAIL / SKIPPED / INFO lines.
-Run through `python scripts/run.py --selftest` (or `make selftest`). Exit code 1 if any FAIL."""
+Run through `python scripts/run.py --selftest` (or `make selftest`). Exit code 1 if any FAIL.
+Train seeds only: `make check` never reads the test split, so it adds nothing to the ledger (E5c)."""
 from __future__ import annotations
 
 import hashlib
@@ -15,7 +16,7 @@ from arbiter_kb.sources.replay import OracleReplaySource
 from arbiter_kb.systems.baselines import TrackerSystem
 
 RESULTS: list[str] = []
-M1_ARGV = ["--systems", "all", "--corrupt", "none,id_swap_overlap,pos_noise", "--p", "0.5",
+M1_ARGV = ["--split", "train", "--systems", "all", "--corrupt", "none,id_swap_overlap,pos_noise", "--p", "0.5",
            "--lane", "mix", "--steps", "mix", "--n", "60"]
 
 
@@ -61,7 +62,7 @@ def replay_check() -> None:
 
 
 def m0_checks() -> None:
-    args = parse(["--p", "1.0"])
+    args = parse(["--split", "train", "--p", "1.0"])
     run_dir, summary, inf = evaluate(args, load_params())
     a, b, f = row(summary, "none", "arbiterkb"), row(summary, "none", "bound"), row(summary, "none", "frozen")
     check("M0 (b) clean accuracy ArbiterKB / Bound = 1.0", a["acc"] == 1.0 and b["acc"] == 1.0, (a["acc"], b["acc"]))
@@ -74,7 +75,7 @@ def m0_checks() -> None:
     info("M0 (d) ArbiterKB mean confidence when right, clean", a["conf_right"])
     hashes = []
     for _ in range(2):
-        rd, _, _ = evaluate(parse(["--p", "1.0", "--n", "10"]), load_params())
+        rd, _, _ = evaluate(parse(["--split", "train", "--p", "1.0", "--n", "10"]), load_params())
         hashes.append(hashlib.sha256((rd / "summary.csv").read_bytes()).hexdigest()[:12])
     check("M0 (f) two identical runs give the same summary hash", hashes[0] == hashes[1], hashes)
 
@@ -98,13 +99,14 @@ def m1_checks() -> dict:
           f"{oh['silent_on_corrupted']} vs {bo['silent_on_corrupted']}")
     for cond in conds:
         a, o = row(summary, cond, "arbiterkb"), row(summary, cond, "overlap_haircut")
-        info(f"M1 {cond}: ArbiterKB - OverlapHaircut (silent, brier)",
-             f"{a['silent'] - o['silent']:+.3f}, {a['brier'] - o['brier']:+.3f}  (plumbing only; untuned)")
+        info(f"M1 {cond}: ArbiterKB vs OverlapHaircut (coverage, silent, AURC, brier)",
+             f"({a['coverage']}, {a['silent']}, {a['aurc']}, {a['brier']}) vs ({o['coverage']}, {o['silent']}, "
+             f"{o['aurc']}, {o['brier']})  (plumbing only; untuned)")
     bad = []
     for r in inf["rows"]:
         tr = inf["traces"][(f"{r['condition']}_{r['system']}", r["episode"])]
         text = explain(tr, r["cube"], r["t_star"])
-        if "observation" not in text:
+        if "observation" not in text or "NOT FOUND" in text:
             bad.append((r["condition"], r["system"], r["episode"]))
     check("M1 E2: explain reaches an observation for every scored row", not bad,
           f"{len(inf['rows'])} rows, {len(bad)} failing {bad[:3]}")
@@ -112,7 +114,8 @@ def m1_checks() -> dict:
              for x in tr for op in x["ops"] if op.get("rule") == "R5")
     info("M1 R5 joint_exclusive ops in the table run (cover frames only)", r5)
     figs = all_figures(run_dir, inf, base_source(args), args)
-    check("M1 figures written (timeline, reliability, label jumps)", len(figs) == 3 and all(f.exists() for f in figs),
+    check("M1 figures written (timeline, reliability, label jumps, risk-coverage)",
+          len(figs) == 4 and all(f.exists() for f in figs),
           [f.name for f in figs])
     return inf
 

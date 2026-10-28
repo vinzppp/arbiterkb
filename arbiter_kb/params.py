@@ -16,7 +16,6 @@ from pathlib import Path
 class RuleParams:
     r_cover: float = 0.06  # m: a container within this xy distance of a vanishing cube can cover it
     sigma_cover: float = 0.02  # m: width of the distance kernel over cover candidates (R1)
-    w_mix: float = 0.5  # R6 fallback without 3D: w = w_mix·(1 - closeness in the image)
     w_max: float = 0.5  # R6 (M1): w = w_max·exp(-d/d0), d = closest 3D centre distance of the pass
     d0: float = 0.02  # m
     lam: float = 1.0  # per-frame decay toward uniform for unconfirmed beliefs (R7); 1 = off

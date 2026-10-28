@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 from run import ROOT  # noqa: E402
+from arbiter_kb.metrics import risk_coverage  # noqa: E402
 from arbiter_kb.plots import belief_timeline  # noqa: E402
 from arbiter_kb.sources.synthetic import COVER_T  # noqa: E402
 
@@ -86,6 +87,24 @@ def jump_figure(run_dir: Path, info: dict, args, params_d_ov: float | None = Non
     return _save(fig, out_dir(info, run_dir) / f"label_jumps_{args.split}_p{args.p}.png")
 
 
+def risk_coverage_figure(run_dir: Path, info: dict, args) -> Path | None:
+    """Risk (error rate among answered rows) vs coverage (share answered), one panel per condition.
+    Lower and further right is better; the area under each curve is the AURC column."""
+    rows = info["rows"]
+    if not rows:
+        return None
+    conds = list(dict.fromkeys(r["condition"] for r in rows))
+    fig, axes = plt.subplots(1, len(conds), figsize=(4 * len(conds), 4), squeeze=False)
+    for ax, cond in zip(axes[0], conds):
+        for s in dict.fromkeys(r["system"] for r in rows):
+            pts = risk_coverage([r for r in rows if r["condition"] == cond and r["system"] == s])
+            ax.step([0] + [c for c, _ in pts], [pts[0][1]] + [r for _, r in pts], where="post", label=s)
+        ax.set(title=cond, xlabel="coverage (share of rows answered)", ylabel="risk (error rate when answering)",
+               xlim=(0, 1.02))
+    axes[0][0].legend(fontsize=7)
+    return _save(fig, out_dir(info, run_dir) / f"risk_coverage_{args.split}_p{args.p}.png")
+
+
 def _save(fig, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
@@ -96,5 +115,5 @@ def _save(fig, path: Path) -> Path:
 
 def all_figures(run_dir: Path, info: dict, base, args) -> list[Path]:
     figs = [timeline_figure(run_dir, info, base, args), reliability_figure(run_dir, info, args),
-            jump_figure(run_dir, info, args)]
+            jump_figure(run_dir, info, args), risk_coverage_figure(run_dir, info, args)]
     return [f for f in figs if f is not None]

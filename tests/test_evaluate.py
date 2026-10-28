@@ -6,7 +6,7 @@ from arbiter_kb.evaluate import run, save_run
 from arbiter_kb.params import Params
 from arbiter_kb.sources.synthetic import SyntheticSource
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
-from arbiter_kb.systems.baselines import TrackerSystem
+from arbiter_kb.systems.baselines import GuardedBound, TrackerSystem
 
 
 class PoisonedSource:
@@ -25,14 +25,15 @@ class PoisonedSource:
 
 
 def systems():
-    return [TrackerSystem("frozen"), TrackerSystem("bound"), ArbiterKBSystem()]
+    return [TrackerSystem("frozen"), TrackerSystem("bound"), GuardedBound("haircut"), GuardedBound("overlap_haircut"),
+            GuardedBound("jump"), ArbiterKBSystem()]
 
 
 def test_causality_and_no_ground_truth_access():
     sy = systems()
     src = PoisonedSource(SyntheticSource(), sy)
     rows, _, _ = run(sy, src, src.episodes("train", 2), Params(), "none")
-    assert len(rows) == 6
+    assert len(rows) == 2 * len(sy)
     for s in sy:
         assert not any(hasattr(s, a) for a in ("gt", "ground_truth")), "systems must never hold GroundTruth"
 
@@ -58,7 +59,7 @@ def test_test_split_needs_freeze_before_read(tmp_path):
 
 def test_hand_edited_params_rejected(tmp_path):
     Params(frozen=True).save(tmp_path / "params.json")
-    text = (tmp_path / "params.json").read_text().replace('"w_mix": 0.5', '"w_mix": 0.9')
+    text = (tmp_path / "params.json").read_text().replace('"w_max": 0.5', '"w_max": 0.9')
     (tmp_path / "params.json").write_text(text)
     with pytest.raises(ValueError):
         Params.load(tmp_path / "params.json")
@@ -78,3 +79,15 @@ def test_every_arbiterkb_row_has_support():
     src = SyntheticSource()
     rows, _, _ = run(systems(), src, src.episodes("train", 3), Params(), "none")
     assert all(r["n_support"] > 0 for r in rows if r["system"] == "arbiterkb")
+
+
+def test_aurc_and_coverage():
+    from arbiter_kb.metrics import aurc, summarize
+    r = lambda p, ok: {"p_max": p, "correct": ok}  # noqa: E731
+    assert aurc([r(0.9, True), r(0.6, False)]) == pytest.approx((0 + 0.5) / 2)  # the error answered last
+    assert aurc([r(0.9, False), r(0.6, True)]) == pytest.approx((1 + 0.5) / 2)  # the error answered first
+    assert aurc([r(0.5, False), r(0.5, True)]) == pytest.approx(0.5)  # ties enter together
+    rows = [{**r(p, ok), "condition": "c", "system": "s", "brier": 0, "moved": False, "corrupted": False,
+             "grasp_err_m": 0.0} for p, ok in [(0.9, True), (0.7, True), (0.95, False)]]
+    s = summarize(rows, 0.8)[0]
+    assert s["coverage"] == pytest.approx(2 / 3, abs=1e-4) and s["silent"] == pytest.approx(1 / 3, abs=1e-4)

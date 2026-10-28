@@ -2,7 +2,8 @@
 
 Thin adapters around sg_compat.GraphTracker (copied from sg_pilot.py). Their answer about a hidden
 cube is the container nearest to the tracked cube position, with confidence 1: the one-hot answer
-these memories implicitly give.
+these memories implicitly give. Trace rows keep the observations each answer rests on (the predicted
+container's and the cubes'), so `debug explain` can look them up rather than assert them.
 """
 from __future__ import annotations
 
@@ -29,6 +30,15 @@ def frame_to_rows(frame: FrameObs, order: list[str]) -> np.ndarray:
     return rows
 
 
+def obs_rows(frame: FrameObs, ids: list[str]) -> dict:
+    """{id: [visible, xyz rounded]} for the objects an answer rests on (same layout as ArbiterKB's trace)."""
+    out = {}
+    for k in dict.fromkeys(ids):
+        o = frame.objects[k]
+        out[k] = [o.visible, None if o.xyz is None else [round(float(v), 4) for v in o.xyz]]
+    return out
+
+
 class TrackerSystem:
     def __init__(self, rule: str, params: Params | None = None):
         assert rule in ("frozen", "bound")
@@ -44,7 +54,8 @@ class TrackerSystem:
         self.t = frame.t
         self.out = self.tracker.update(frame_to_rows(frame, self.order), frame.gripper_width, frame.ee_xyz)
         cubes = [o for o in self.order if self.cls[o] == "cube"]
-        self.rows.append({"t": frame.t, "pred": {c: self.believe_inside(c).argmax()[0] for c in cubes}})
+        pred = {c: self.believe_inside(c).argmax()[0] for c in cubes}
+        self.rows.append({"t": frame.t, "pred": pred, "obs": obs_rows(frame, cubes + [p for p in pred.values() if p])})
 
     def xyz(self, oid: str) -> np.ndarray | None:
         v = self.out[self.order.index(oid), sg.F_X:sg.F_Z + 1].astype(float)
@@ -77,7 +88,8 @@ class GuardedBound:
     - haircut: after any near-pass involving the cube's container, answer {pred: c, partner: 1 - c};
     - overlap_haircut: the same, only for passes whose closest 3D distance < d_ov (Bayes-optimal
       under id_swap_overlap, which we designed: it shows what copying our own choices achieves);
-    - jump: a container label that moves > j_max in one frame -> {pred: 0.5, nearest other: 0.5}."""
+    - jump: a container label that moves > j_max in one frame -> {pred: 0.5, nearest other: 0.5}.
+    The prediction is listed first, so a 50/50 haircut keeps Bound's answer (argmax ties -> first key)."""
 
     def __init__(self, mode: str, params: Params | None = None):
         assert mode in NAMES
@@ -88,9 +100,10 @@ class GuardedBound:
         from ..detectors import Detectors
 
         self.inner.reset(meta)
-        self.det, self.doubt, self.prev, self.rows = Detectors(self.params.detect), {}, None, []
+        self.det, self.doubt, self.prev, self.rows, self.t = Detectors(self.params.detect), {}, None, [], -1
 
     def step(self, frame: FrameObs) -> None:
+        self.t = frame.t
         self.inner.step(frame)
         cubes = [c for c in self.inner.order if self.inner.cls[c] == "cube"]
         pairs = self._triggers(frame)
@@ -100,9 +113,11 @@ class GuardedBound:
                 if pred in (a, b):
                     self.doubt[cube] = (a, b, frame.t)
         self.prev = frame
-        self.rows.append({"t": frame.t, "pred": {c: self.believe_inside(c).argmax()[0] for c in cubes},
-                          "p_max": {c: round(self.believe_inside(c).argmax()[1], 4) for c in cubes},
-                          "doubt": {c: list(v) for c, v in self.doubt.items()}})
+        ans = {c: self.believe_inside(c).argmax() for c in cubes}
+        self.rows.append({"t": frame.t, "pred": {c: a[0] for c, a in ans.items()},
+                          "p_max": {c: round(a[1], 4) for c, a in ans.items()},
+                          "doubt": {c: list(v) for c, v in self.doubt.items()},
+                          "obs": obs_rows(frame, cubes + [a[0] for a in ans.values() if a[0]])})
 
     def _triggers(self, frame: FrameObs) -> list[tuple[str, str]]:
         b = self.params.baseline

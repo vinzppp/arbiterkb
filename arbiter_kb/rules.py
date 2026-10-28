@@ -6,7 +6,7 @@ from __future__ import annotations
 import numpy as np
 
 from .beliefs import Distribution, joint_exclusive
-from .kb import KB, AddEvent, FlattenDist, MixDist, SetDist, SetPose, SetVis
+from .kb import KB, AddEvent, AddEvidence, FlattenDist, MixDist, SetDist, SetPose, SetVis
 from .observe import obs_id
 from .params import RuleParams
 from .types import FrameObs
@@ -41,17 +41,13 @@ def r1_cover(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
 def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """Two containers passed close to each other: with probability w their tracks may have exchanged
     identity, so every HIDDEN cube with mass on either gets w of its mass moved across.
-    M1: w = w_max·exp(-d/d0), d = the pass's closest 3D centre distance; without 3D, the M0 form
-    w = w_mix·(1 - closeness in the image)."""
+    M1: w = w_max·exp(-d/d0), d = the pass's closest 3D centre distance (the detector always records it)."""
     ops = []
     for ev in new_ev:
         if ev.kind != "near_pass":
             continue
         a, b = ev.args
-        if "min_3d" in ev.data:
-            w = p.w_max * float(np.exp(-ev.data["min_3d"] / p.d0))
-        else:
-            w = p.w_mix * max(0.0, 1.0 - ev.data["closeness"])
+        w = p.w_max * float(np.exp(-ev.data["min_3d"] / p.d0))
         if w > 0:  # the motion is certain; the event marks a pass that may have exchanged identities
             ops.append(AddEvent(frame.t, "swap", (a, b), 1.0, [ev.id]))
         for (pred, cube), d in kb.relations.items():
@@ -72,16 +68,22 @@ def r7_decay(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
 
 
 def r5_exclusive(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
-    """At most one cube per container (joint over hidden cubes, marginals back). Runs only on frames
-    where a cube was just covered: that is when independent evidence is merged. After R6 mixes the
-    cubes' beliefs are correlated, and re-normalising their marginals would be overconfident."""
+    """At most one cube per container: on a frame where a cube was just covered, combine the hidden
+    cubes whose beliefs are still independent (never mixed by R6) into a joint and write back the
+    marginals. Mixed cubes are left alone: after a swap they are correlated, and treating their
+    marginals as independent would be overconfident (test_joint_exclusive_would_overconfide_after_a_mix).
+    No consistent assignment -> an `exclusive_conflict` evidence (for M3's R8), beliefs unchanged."""
     if not any(e.kind == "disappear" and kb.objects[e.args[0]].cls == "cube" for e in new_ev):
         return []
+    passes = {e.id for e in kb.evidence if e.kind == "near_pass"}
     hidden = {cube: d for (pred, cube), d in kb.relations.items()
-              if pred == "Inside" and kb.objects[cube].visibility.value == "hidden"}
+              if pred == "Inside" and kb.objects[cube].visibility.value == "hidden" and not passes & set(d.support)}
     if len(hidden) < 2:
         return []
     out = joint_exclusive(hidden, frame.t)
+    if out is None:
+        sup = sorted({i for d in hidden.values() for i in d.support})
+        return [AddEvidence(frame.t, "exclusive_conflict", tuple(sorted(hidden)), {"obs": [], "support": sup})]
     return [SetDist("Inside", c, out[c]) for c in hidden
             if any(abs(out[c].probs.get(k, 0) - hidden[c].probs.get(k, 0)) > 1e-9 for k in set(out[c].probs) | set(hidden[c].probs))]
 

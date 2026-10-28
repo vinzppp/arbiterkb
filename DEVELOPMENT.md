@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.2 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger.
+Version 1.3 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 reviews, silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -164,8 +164,8 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 | R2 follow | each frame for hidden cubes | update display pose | M0 |
 | R3 held | gripper closed near x | `Held(x)`; pose follows the EE | after G (no current metric needs it) |
 | R4 reveal | container z > 0.15 and cube x observed at the container's former xy | `SetDist(Inside(x), {c: 1})`, `source="verified"`, plus `Retract` of contradicted hypotheses | M5 (needs the peek variant) |
-| R5 exclusive | after any change to an `Inside` | `SetDist` = marginals of `joint_exclusive` | M1 |
-| R6 swap | a `near_pass(a, b)` evidence closes (M0), or `id_margin < m_thr` (M2) | `MixDist(Inside(h), a, b, w)` for every **hidden** h with mass on a or b; `AddEvent(swap)` only when w > 0. M0: w = w_mix·(1 − closeness). M1: w = w_max·exp(−d/d0), with d the 3D closest-approach distance (image distance as fallback). M2: w from the identity margin and G's measured signature | M0 / M1 / M2 |
+| R5 exclusive | a cube was just covered (a `disappear` of a cube this frame) | `SetDist` = marginals of `joint_exclusive` over the hidden cubes whose beliefs were never mixed by R6 (after a mix they are correlated, and joint-normalising the marginals is overconfident). No consistent assignment → `AddEvidence(exclusive_conflict)` for M3's R8 | M1 |
+| R6 swap | a `near_pass(a, b)` evidence closes (M0), or `id_margin < m_thr` (M2) | `MixDist(Inside(h), a, b, w)` for every **hidden** h with mass on a or b; `AddEvent(swap)` only when w > 0. M0: w = w_mix·(1 − closeness). M1: w = w_max·exp(−d/d0), with d the 3D closest-approach distance (the M0 image form was removed in M1.1: the detector always records d). M2: w from the identity margin and G's measured signature | M0 / M1 / M2 |
 | R7 decay | each frame for unconfirmed items (Δt > 0) | `flatten`, pose conf decay | wired since M0 (λ = 1, off); λ is tuned in M2 |
 | R8 consistency | two objects within `d_same`; a "hidden" cube observed; an expected container missing | `AddEvidence(risk)` + `MixDist` toward uniform with `w_risk` | M3 |
 
@@ -206,7 +206,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 - **Ground truth:** `cube_to_bin` (fixed at cover time; the cube rides with its container); `t_star` = synthetic: last frame; replays: `decision_frame(rep)`; the target from `task_goal` (`target_cube_nodes`). Multi-target episodes: evaluate each target at the frame it becomes active (`ActiveTarget`).
 - **Correctness is physical:** the system's label whose believed position is nearest the true container at t* (≤ 5 cm). Under id corruption labels lie, so the id alone cannot be trusted (NOTES M0 deviation 2).
 - **Per row:** `pred, p_max, correct, decision, entropy, grasp_err_m, moved, corrupted`.
-- **Metrics:** accuracy; **silent-failure rate** = P(wrong ∧ p_max ≥ τ_hi); detection rate = P(p_max < τ_hi ∨ risk | wrong); Brier = mean Σ_c (p_c − 1[c = true])²; ECE (10 equal-width bins on p_max); reliability diagram; decision outcomes; cost per episode (calls, tokens, s, $); grasp error. 95% Wilson intervals for rates. Split moved vs back-at-start.
+- **Metrics:** accuracy; **silent-failure rate** = P(wrong ∧ p_max ≥ τ_hi), always reported with **coverage** = P(p_max ≥ τ_hi) (a system can reach 0 silent failures by lowering all confidences, so the two are only meaningful together) and **AURC** (area under the risk–coverage curve: rows answered from most to least confident; risk = error rate among rows at least that confident; ties enter together; threshold-free, lower is better), with a risk–coverage figure; detection rate = P(p_max < τ_hi ∨ risk | wrong); Brier = mean Σ_c (p_c − 1[c = true])²; ECE (10 equal-width bins on p_max); reliability diagram; decision outcomes; cost per episode (calls, tokens, s, $); grasp error. 95% Wilson intervals for rates. Split moved vs back-at-start.
 - **Splits:** synthetic train seeds 0–999, test seeds 1000–1999; RoboMME train episodes for tuning, the 50 test episodes only after the freeze. A split is read from `EpisodeMeta.split`. Every test read is checked against, and appended to, `results/test_reads.log` (E5c). **Any new or changed parameter** (e.g. M1's w_max, d0, c, j_max) means re-freezing `params.json` (a new FREEZE line) before the next test read.
 
 ### 3.11 Corruption model (input side, never output side)
@@ -385,7 +385,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 4. **R5** `joint_exclusive`, ε_none = 0.01. R5 is the one rule that can beat any haircut (3 cubes in 3 containers: pinning one cube informs the others).
 5. **R6 v1.5:** w = w_max·exp(−d/d0) from the 3D closest-approach distance (image distance as fallback). Defaults, not tuned.
 6. **Metrics:** ECE and a reliability diagram.
-7. **Parameters (defaults, untuned; all in `params.py`):** w_max 0.5, d0 0.02 m, d_ov 0.03 m, c 0.5 for both haircuts (the Bayes-optimal value at p_swap 0.5, i.e. it copies our own choice on purpose), j_max 0.03 m, ε_none 0.01. They change `params.json`, so re-freeze with a new FREEZE line before the test table. Corruption settings (p_swap, d_ov, pos_noise σ) are source arguments recorded in meta.json, not system parameters.
+7. **Parameters (defaults, untuned; all in `params.py`):** w_max 0.5, d0 0.02 m, d_ov 0.03 m, c 0.5 for both haircuts (the Bayes-optimal value at p_swap 0.5, i.e. it copies our own choice on purpose; Bound's answer is listed first, so the 50/50 tie keeps it), j_max 0.03 m, ε_none 0.01. They change `params.json`, so re-freeze with a new FREEZE line before the test table. Corruption settings (p_swap, d_ov, pos_noise σ) are source arguments recorded in meta.json, not system parameters.
 8. **Debuggability carried over from the M0.1 code review:** a test that `debug explain` reaches observation ids for **every** ArbiterKB row of a small evaluation (not just five episodes).
 9. **CLI:** `scripts/run.py --systems` to choose systems, `--corrupt id_swap_overlap`, `--pos-noise`.
 
@@ -393,7 +393,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 - (a) `make check`.
 - (b) One table on test seeds at the frozen default parameters: Frozen, Bound, BoundHaircut, OverlapHaircut, JumpDetector and ArbiterKB under {clean, `id_swap_overlap` p = 0.5, `pos_noise` 15 mm}, with Wilson intervals. The column that matters is **ArbiterKB minus OverlapHaircut**. NOTES must say that, at about 0, M1 shows plumbing only.
 - (c) The label-jump histogram of `id_swap_overlap`: median ≤ `d_ov`, and JumpDetector ≈ Bound.
-- (d) The R5 test: two hidden cubes, one pinned → the other's mass moves; plus one synthetic scenario where R5 beats OverlapHaircut.
+- (d) The R5 test: two hidden cubes, one pinned → the other's mass moves; plus one synthetic scenario where R5 beats OverlapHaircut (M1.1: `tests/test_r5_scenario.py`, an ambiguous cover; R5 never fires on stock VideoUnmaskSwap layouts).
 
 **Deferred until G's measurements exist:** `scripts/tune.py`, the trade-off curve, R3 held and the full visibility state machine (no VideoUnmaskSwap metric reads them).
 
@@ -411,15 +411,16 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
    - camera shifted ±5 cm
 2. `stress/render.py`: render 20 episodes per setting into the existing `Replay` npz format (front RGB, depth, segmentation, E, obj_xyz). Print the total size first; it must stay under 8 GB on the volume.
 3. `stress/perceive.py`: run the existing `PerceptionWorker` on each replay and save small per-frame outputs (track centroids, mask areas, scores).
-4. `scripts/measure_swaps.py` (CPU, `arbiter_kb` side): match tracks to the oracle each frame. Report identity accuracy and swap events per episode, and for each swap: min 3D distance, image IoU, `track_q` / mask-area change, label-jump size, and swap phase. Outputs: `results/g_swaps.csv` plus a summary table.
+4. `scripts/measure_swaps.py` (CPU, `arbiter_kb` side): match tracks to the oracle each frame. Report identity accuracy and swap events per episode. For **every pass** (two containers moving together, as in `realistic.passes`), swapped or not, record: swapped (0/1), min 3D distance, image IoU, `track_q` / mask-area change, label-jump size, Hungarian margin, and phase. Outputs: `results/g_passes.csv` plus a summary table. Recording clean passes too is what makes an ROC possible (M1 goal review).
 5. `stress/POD_RUN.md`: the exact commands (tmux, environment, Vulkan fix from `POD_RUNBOOK.md`), a cost estimate, and "stop the pod" as the last step. In the same session, run `scripts/copy_replays.sh` to bring the stock train/test oracle replays to the Mac.
 
 **Done when.**
 - (a) A table of identity error and swap rate per setting.
-- (b) Histograms of the swap signature.
+- (b) Histograms of each feature for swapped vs clean passes, and the ROC / AUC of each single feature for "this pass swapped".
 - (c) **The gate decision, written in NOTES:**
   - if swaps occur in < 2% of passes in every setting, claim 1 cannot be tested with real errors on RoboMME, so switch to the plan's fallback (failure-attribution paper) or choose a harder task;
-  - otherwise, define `id_swap_measured` from the measured signature, and M2 uses it.
+  - otherwise, define `id_swap_measured` from the measured signature, and M2 uses it;
+  - **and** if the best single feature separates swapped from clean passes almost perfectly (AUC ≥ 0.98), write in NOTES that a threshold rule on it solves claim 1's detection part, before M2 builds R6 v2; the belief layer must then show value through propagation (R5, retraction, arbiter), not detection.
 
 ### M2 — Evidence layer: change detectors + Hungarian identity check (2 days, CPU)
 
@@ -430,12 +431,14 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 2. `identity.py`: each frame (oracle) or every `N_id` frames (perceived), solve `linear_sum_assignment` on the cost = 3D distance between each container's predicted pose (constant velocity) and the observed tracks. Margin = (second-best total − best total) / best total. Emit `id_margin` evidence when the margin < `m_thr`.
 3. R6 v2: `w = w_max·exp(−margin/m0)`.
 4. `corrupt.py`: `id_swap_measured` from G's signature (no hand-chosen sigmoid), plus `pos_noise`.
-5. `scripts/tune.py` (first tuning in the project): train seeds only, against `id_swap_measured`. Writes `params.json` and a FREEZE ledger entry. The trade-off curve (clean ECE vs silent failure) is drawn here.
+5. `scripts/tune.py` (first tuning in the project): train seeds only, against `id_swap_measured`. Writes `params.json` and a FREEZE ledger entry. The trade-off curve (clean coverage vs silent failure) is drawn here.
+6. `MarginHaircut` baseline: the GuardedBound threshold rule on the same margin feature R6 v2 uses (threshold tuned on train). Without it a win only shows that the margin is a better feature than 3D distance, not that a belief layer helps (M1 goal review).
+7. Evaluate on fresh test seeds (synthetic ≥ 1060): seeds 1000–1059 have been read many times during M0/M1 (harmless while nothing was tuned).
 
 **Done when.**
 - (a) `make check`.
 - (b) On synthetic, the minimum margin falls inside a swap window in ≥ 95% of episodes.
-- (c) Under `id_swap_measured`, ArbiterKB's silent-failure rate < that of Bound, BoundHaircut, OverlapHaircut and JumpDetector, with non-overlapping Wilson intervals; otherwise report honestly.
+- (c) Under `id_swap_measured`, **at matched clean coverage**, ArbiterKB's silent-failure rate < that of Bound, OverlapHaircut and MarginHaircut, with non-overlapping Wilson intervals, and its AURC is lower; otherwise report honestly. (A fixed-τ_hi silent rate alone is not a criterion: any haircut below τ_hi scores 0.)
 - (d) Clean accuracy holds (M1 criterion).
 
 ### M3 — Monitor and decisions (1 day, CPU)

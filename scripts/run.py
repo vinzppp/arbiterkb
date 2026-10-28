@@ -29,8 +29,8 @@ from arbiter_kb.sources.synthetic import SyntheticSource  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
 from arbiter_kb.systems.baselines import GuardedBound, TrackerSystem  # noqa: E402
 
-COLS = ["condition", "system", "n", "acc", "silent", "silent_lo", "silent_hi", "brier", "ece", "conf_right",
-        "conf_wrong", "acc_moved", "acc_back", "n_corrupted", "silent_on_corrupted", "grasp_err_m"]
+COLS = ["condition", "system", "n", "acc", "silent", "silent_lo", "silent_hi", "coverage", "aurc", "brier", "ece",
+        "detect_among_wrong", "conf_right", "conf_wrong", "n_corrupted", "silent_on_corrupted", "grasp_err_m"]
 SYSTEMS = {  # ArbiterKB last: evaluate.run times the last system (E7)
     "frozen": lambda p: TrackerSystem("frozen", p), "bound": lambda p: TrackerSystem("bound", p),
     "bound_haircut": lambda p: GuardedBound("haircut", p),
@@ -39,7 +39,7 @@ SYSTEMS = {  # ArbiterKB last: evaluate.run times the last system (E7)
 }
 CONDITIONS = ("none", "id_swap", "id_swap_overlap", "pos_noise")
 PARAMS_FILE = ROOT / "params.json"
-FREEZE_NOTE = ("M1 defaults, untuned (R6 v1.5 with 3D distance, eps_none, baseline parameters). Nothing has "
+FREEZE_NOTE = ("M1.1 defaults, untuned (R6 v1.5 with 3D distance only, w_mix removed; eps_none; baseline parameters). Nothing has "
                "been tuned on test seeds; tuning starts in M2 on train seeds against id_swap_measured.")
 
 

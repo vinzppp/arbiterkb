@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from arbiter_kb.detectors import Detectors
 from arbiter_kb.params import DetectParams
@@ -37,6 +38,7 @@ def test_near_pass_emitted_with_min_distance_when_pass_ends():
     np_ev = [e for e in run(frames) if e.kind == "near_pass"]
     assert len(np_ev) == 1
     assert np_ev[0].data["min_d"] < 0.03 and 0 <= np_ev[0].data["closeness"] < 1
+    assert np_ev[0].data["min_3d"] == pytest.approx(0.02)  # true closest 3D centre distance (t = 5)
 
 
 def test_no_near_pass_when_image_distance_stays_above_threshold():

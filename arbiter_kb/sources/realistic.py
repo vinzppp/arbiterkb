@@ -102,6 +102,7 @@ class NoisySource:
 
     def frames(self, ep: int):
         rng, meta = np.random.default_rng([self.seed, ep, 7]), self.inner.meta(ep)
+        self.log[ep] = {"corrupted": False}  # before the first frame, like OverlapSwapSource
         for f in self.inner.frames(ep):
             objs = {}
             for k, o in f.objects.items():
@@ -111,4 +112,3 @@ class NoisySource:
                     o = replace(o, xyz=xyz, uv=uv)
                 objs[k] = o
             yield replace(f, objects=objs)
-        self.log[ep] = {"corrupted": False}

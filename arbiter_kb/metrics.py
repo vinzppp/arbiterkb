@@ -27,6 +27,31 @@ def ece(rows: list[dict], bins: int = 10) -> float:
                for g in groups.values())
 
 
+def aurc(rows: list[dict]) -> float:
+    """Area under the risk-coverage curve: answer rows from most to least confident; risk at a row =
+    error rate among all rows at least that confident (ties enter together). Lower is better; it does
+    not depend on a threshold, so a system cannot win by uniformly lowering its confidence."""
+    if not rows:
+        return math.nan
+    ps = sorted({r["p_max"] for r in rows}, reverse=True)
+    risk, n_seen, err_seen, total = 0.0, 0, 0, len(rows)
+    for p in ps:
+        g = [r for r in rows if r["p_max"] == p]
+        n_seen, err_seen = n_seen + len(g), err_seen + sum(1 for r in g if not r["correct"])
+        risk += len(g) * err_seen / n_seen
+    return risk / total
+
+
+def risk_coverage(rows: list[dict]) -> list[tuple[float, float]]:
+    """[(coverage, risk)] at each distinct confidence, most confident first (for the figure)."""
+    out, n, err = [], 0, 0
+    for p in sorted({r["p_max"] for r in rows}, reverse=True):
+        g = [r for r in rows if r["p_max"] == p]
+        n, err = n + len(g), err + sum(1 for r in g if not r["correct"])
+        out.append((n / len(rows), err / n))
+    return out
+
+
 def _rate(rows, pred) -> tuple[float, float, float, int, int]:
     k, n = sum(1 for r in rows if pred(r)), len(rows)
     if n == 0:
@@ -51,6 +76,7 @@ def summarize(rows: list[dict], tau_hi: float) -> list[dict]:
         row.update({
             "n": len(g), "acc": acc[0], "acc_lo": acc[1], "acc_hi": acc[2],
             "silent": silent[0], "silent_lo": silent[1], "silent_hi": silent[2],
+            "coverage": _rate(g, lambda r: r["p_max"] >= tau_hi)[0], "aurc": aurc(g),
             "detect_among_wrong": _rate(wrong, lambda r: r["p_max"] < tau_hi)[0],
             "brier": sum(r["brier"] for r in g) / len(g), "ece": ece(g),
             "conf_right": _mean([r["p_max"] for r in right]), "conf_wrong": _mean([r["p_max"] for r in wrong]),

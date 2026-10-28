@@ -43,7 +43,7 @@ def test_rules_do_not_mutate_kb():
     for f in frames[:40]:
         s.step(f)
     s.kb.apply([AddEvidence(40, "disappear", ("cube_red",), {"last_xyz": [0.0, 0.0, 0.017], "obs": []}),
-                AddEvidence(40, "near_pass", ("bin_0", "bin_1"), {"closeness": 0.1, "obs": []})])
+                AddEvidence(40, "near_pass", ("bin_0", "bin_1"), {"closeness": 0.1, "min_3d": 0.01, "obs": []})])
     ev = s.kb.evidence[-2:]
     state = lambda kb: copy.deepcopy((kb.objects, kb.relations, kb.events, kb.evidence))  # noqa: E731
     before = state(s.kb)

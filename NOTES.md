@@ -151,3 +151,73 @@ Reading:
   - reliability diagram (bins with a few rows are noisy at n = 60);
   - label-jump histogram.
 - **Not done in M1 (by design, v1.2):** tuning, the trade-off curve, R3, the visibility state machine. These wait for G.
+
+## M1.1 — fixes after the M1 reviews (2026-10-28)
+Reviews: `reviews/M1_code.md` (PASS-WITH-NOTES, 3 MAJOR), `reviews/M1_goal.md` (ON-TRACK-WITH-CHANGES). All findings accepted.
+
+**The goal review's point, in one line:** silent failure at a fixed τ_hi can be gamed. Any haircut below τ_hi scores 0 with Bound's accuracy. And ArbiterKB's R6 thresholds the same feature (3D distance) as OverlapHaircut, only softly. So the M1 table could not tell ArbiterKB from a threshold heuristic, and M2 (c) as written was unreachable.
+
+Changes:
+- **Metrics:**
+  - coverage = P(p_max ≥ τ_hi) and AURC (area under the risk–coverage curve, threshold-free, tie-aware) in every summary;
+  - a risk–coverage figure.
+
+  GOALS claim 1 now reads "lower silent rate than Bound **and a haircut on the same feature, at matched clean coverage**", with AURC as the summary. A new falsifier was added: a single feature separates swaps almost perfectly (G's ROC).
+- **Spec v1.3:**
+  - M2 (c) compares at matched coverage and adds `MarginHaircut`, a threshold on R6 v2's margin feature;
+  - M2 evaluates on fresh test seeds (≥ 1060);
+  - G's `measure_swaps.py` records every pass, swapped or not (`results/g_passes.csv`), with per-feature ROC/AUC. If the best feature reaches AUC ≥ 0.98, NOTES must say that a threshold rule solves detection, before R6 v2 is built.
+- **Code MAJOR 1 (E2 tautology):**
+  - Tracker baselines now store the observations each answer rests on, and `debug explain` looks them up; a missing one prints NOT FOUND.
+  - The selftest also fails on NOT FOUND.
+  - `tests/test_baselines.py` checks that a missing cube gives NOT FOUND.
+- **Code MAJOR 2 (untested numbers):**
+  - `test_r6_v15_weight` checks w = 0.5 / 0.1839 / 0.0012 at d = 0 / 2 / 12 cm.
+  - `test_r6_uses_3d_distance_not_image_closeness` checks that R6 ignores image closeness.
+  - The detector min_3d now equals the true closest 3D distance.
+  - `tests/test_baselines.py` covers:
+    - the OverlapHaircut gate: fires at 2 cm, not at 5 cm;
+    - the haircut: fires on any pass;
+    - JumpDetector: 0.04 m fires, 0.02 m does not;
+    - the stale-doubt guard.
+  - Both mutations the reviewer used now fail the tests (checked by hand).
+  - The dead M0 closeness branch of R6 and `RuleParams.w_mix` are removed. This changes the hash, so params.json was re-frozen with M1.1 defaults.
+- **Code MAJOR 3 / goal risk 3 (R5 scenario):** `tests/test_r5_scenario.py`.
+  - Setup:
+    - two containers 4 cm apart;
+    - the red cube's last sighting is 2.5 cm off (position noise), nearer the wrong container.
+  - Bound, and so OverlapHaircut (which sees no pass), puts both cubes in bin_a with confidence 1: a silent failure.
+  - ArbiterKB with R5 moves red to bin_b (p 0.79, below τ_hi) and has a lower Brier. Without R5, ArbiterKB is wrong too.
+
+  This is propagation, not a better swap feature. **On stock VideoUnmaskSwap layouts R5 still never fires** (0 ops in the table run): the covers are not ambiguous there. The claim "R5 is the edge over haircuts" is therefore untested on the benchmark. It needs ambiguous covers or reveals (M5's R4).
+- **R5 correctness:**
+  - R5 now skips cubes whose belief was mixed by R6 (their support contains a near_pass), with a test that fails without the filter.
+  - An infeasible joint returns None, and R5 records `exclusive_conflict` evidence for M3's R8 (test).
+- **Goal risk 4 / code MINOR (haircut tie):**
+  - `Distribution.argmax` breaks ties by key order; it no longer uses the label string.
+  - GuardedBound lists Bound's answer first, so a 50/50 haircut keeps it. The haircut baselines' accuracy now equals Bound's (it was 0.68 / 0.88 under id_swap_overlap).
+- **Minor fixes:**
+  - NoisySource writes its log before the first frame.
+  - GuardedBound sets `.t`, and the three GuardedBound systems are in the causality test.
+  - The eps_none `None` hypothesis now carries the evidence that triggered R1.
+  - The selftest uses train seeds only, so `make check` no longer appends READ lines or dirties the ledger.
+- **Correction to the M1 NOTES:** the claim "explain reaches an observation for all 1080 rows, all six systems" was true only for ArbiterKB until this fix. It now holds with a real lookup.
+
+M1.1 table (`results/latest/m1_1_table/summary.csv`; test seeds 1000–1059, same command as M1 plus `--keep-as m1_1_table`; untuned):
+
+| condition | system | acc | silent | coverage | AURC | Brier |
+|---|---|---|---|---|---|---|
+| none | Bound | 1.00 | 0.00 | 1.00 | 0.000 | 0.000 |
+| none | OverlapHaircut | 1.00 | 0.00 | 0.80 | 0.000 | 0.100 |
+| none | ArbiterKB | 1.00 | 0.00 | 0.90 | 0.000 | 0.042 |
+| id_swap_overlap | Bound | 0.90 | 0.10 | 1.00 | 0.100 | 0.200 |
+| id_swap_overlap | OverlapHaircut | 0.90 | 0.00 | 0.80 | 0.020 | 0.100 |
+| id_swap_overlap | ArbiterKB | 0.90 | 0.03 | 0.90 | 0.011 | 0.106 |
+| pos_noise | Bound | 0.98 | 0.02 | 1.00 | 0.017 | 0.033 |
+| pos_noise | ArbiterKB | 0.98 | 0.02 | 0.97 | 0.019 | 0.042 |
+
+Reading:
+- ArbiterKB and OverlapHaircut are two operating points on the same feature:
+  - ArbiterKB answers more (clean coverage 0.90 vs 0.80) and misses 2 of the 6 wrong rows;
+  - OverlapHaircut catches all 6 and answers less.
+- ArbiterKB's AURC is lower (0.011 vs 0.020). But that rests on 6 wrong rows out of 60 (n is small), and both systems use the feature we chose for the corruption. **No claim moves.** Only G's measured swaps, and MarginHaircut in M2, can change that.
