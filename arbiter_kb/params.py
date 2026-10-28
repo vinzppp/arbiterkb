@@ -47,6 +47,9 @@ class MonitorParams:
 class ArbiterParams:
     every_k: int = 50  # frames between periodic triggers while something is hidden
     max_calls: int = 6  # per episode
+    p_clear: float = 0.9  # annotator verdict -> belief probability (fixed table, measured against truth in M4)
+    p_ambiguous: float = 0.5
+    p_unlikely: float = 0.1
 
 
 @dataclass(frozen=True)

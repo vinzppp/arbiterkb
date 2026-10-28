@@ -129,7 +129,7 @@ def main() -> None:
     ap.add_argument("--n", type=int, default=5)
     ap.add_argument("--model", default="qwen/qwen3.6-35b-a3b")
     ap.add_argument("--max-usd", dest="max_usd", type=float, default=0.25)
-    ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=800)
+    ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=4000)  # reasoning models think first
     ap.add_argument("--print", action="store_true", help="print the first prompt and stop (no API call)")
     ap.add_argument("--call", action="store_true", help="required to spend money")
     args = ap.parse_args()

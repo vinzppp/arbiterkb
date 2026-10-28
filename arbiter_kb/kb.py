@@ -13,7 +13,7 @@ import numpy as np
 
 from .beliefs import SOURCES, Belief, Distribution
 from .ops import (AddEvent, AddEvidence, FlattenDist, MixDist, Retract, SetDist,  # noqa: F401 (re-exported)
-                  SetPose, SetVis)
+                  SetFact, SetPose, SetVis)
 
 _ID = re.compile(r"^(e\d+|v\d+|o\d+:[\w.]+)$")  # evidence, event, observation ids
 
@@ -64,6 +64,7 @@ class KB:
             self.objects[oid] = ObjectFrame(oid, cls, desc, dict(attrs), Belief(None, 0.0, -1, "prior"),
                                             Belief("unknown", 1.0, -1, "prior"))
         self.relations: dict[tuple[str, str], Distribution] = {}
+        self.facts: dict[tuple, Belief] = {}  # open relation table: (pred, *args) -> Belief (spec §2.3)
         self.evidence: list[Evidence] = []
         self.events: list[Event] = []
         self.task: dict = {}
@@ -112,11 +113,20 @@ class KB:
             self._log(name, ev.id, None, {"type": ev.type, "args": list(ev.args), "conf": ev.conf,
                                           "support": ev.support}, rule)
             return [ev.id]
+        elif isinstance(op, SetFact):
+            self._apply_fact(op, rule)
         elif isinstance(op, Retract):
             self.retract(op.ident)
         else:
             raise TypeError(f"unknown op {op!r}")
         return []
+
+    def _apply_fact(self, op: SetFact, rule: str) -> None:
+        key = (op.pred, *op.args)
+        old = self.facts.get(key)
+        self.facts[key] = Belief(op.value, op.conf, op.t, op.source, list(op.support))
+        self._log("SetFact", f"{op.pred}({', '.join(op.args)})", None if old is None else [old.value, old.conf],
+                  {"value": op.value, "conf": op.conf, "source": op.source, "support": list(op.support)}, rule)
 
     def _apply_dist(self, op, rule: str) -> None:
         key = (op.pred, op.subj)
@@ -192,6 +202,9 @@ class KB:
             assert b.source != "arbiter" or not isinstance(b.value, np.ndarray), f"I5 arbiter wrote a pose for {oid}"
         for e in self.events:
             assert e.support or e.conf < 0.5, f"I4 event {e.id} without support"
+        for key, b in self.facts.items():
+            assert b.source in SOURCES and (b.support or b.source in ("observed", "prior")), f"I4 fact {key} without support"
+            assert not isinstance(b.value, (np.ndarray, list, float)), f"I5 fact {key} holds numbers"
         for ident in self._all_support_ids():
             assert _ID.match(ident), f"I4 malformed support id {ident!r}"
             assert not ident[0] in "ev" or ident in known, f"I4 unknown support id {ident}"
@@ -204,6 +217,8 @@ class KB:
             ids |= set(d.support) | {i for v in d.hyp_support.values() for i in v}
         for e in self.events:
             ids |= set(e.support)
+        for b in self.facts.values():
+            ids |= set(b.support)
         return ids
 
     def snapshot(self) -> dict:

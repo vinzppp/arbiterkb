@@ -10,7 +10,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
-SOURCES = ("observed", "inferred", "prior", "verified", "arbiter")  # enforced by KB.check()
+SOURCES = ("observed", "inferred", "prior", "verified", "arbiter", "vlm")  # enforced by KB.check(); vlm: the annotator (v1.6)
 
 
 @dataclass

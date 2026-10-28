@@ -4,6 +4,9 @@ The key comes from the git-ignored .env (OPENROUTER_API_KEY=...) or the environm
 logged or cached. Cache key = sha256(model, provider, messages, schema, temperature, seed, max_tokens);
 a hit costs 0 and is counted. ARBITER_MAX_USD (default 2.00) caps the spend of one LLM object: the call
 that would start above the cap raises BudgetExceeded instead.
+Reasoning models (the default Qwen3.6 thinks before answering) spend completion tokens on reasoning; pass
+`reasoning` (OpenRouter's {"effort": "low|medium|high"} or {"enabled": false}) and leave room in max_tokens.
+An answer cut off before any content returns "" (counted as `empty`), never None.
 """
 from __future__ import annotations
 
@@ -58,19 +61,23 @@ def post(body: dict, key: str, timeout: float = 60.0) -> dict:
 
 class LLM:
     def __init__(self, model: str = DEFAULT_MODEL, cache_dir: Path = ROOT / "results" / "llm_cache",
-                 max_usd: float | None = None, transport=post, provider: dict | None = PROVIDER):
+                 max_usd: float | None = None, transport=post, provider: dict | None = PROVIDER,
+                 reasoning: dict | None = None):
         env = {**load_env(), **os.environ}
         self.key = env.get("OPENROUTER_API_KEY", "")
         self.max_usd = float(max_usd if max_usd is not None else env.get("ARBITER_MAX_USD", 2.0))
         self.model, self.cache_dir, self.transport, self.provider = model, Path(cache_dir), transport, provider
+        self.reasoning = reasoning
         self.usage = {"calls": 0, "hits": 0, "misses": 0, "prompt_tokens": 0, "completion_tokens": 0,
-                      "images": 0, "usd": 0.0, "seconds": 0.0}
+                      "reasoning_tokens": 0, "images": 0, "usd": 0.0, "seconds": 0.0, "empty": 0}
 
     def body(self, messages: list, schema: dict | None, temperature: float, seed: int, max_tokens: int) -> dict:
         b = {"model": self.model, "messages": messages, "temperature": temperature, "seed": seed,
              "max_tokens": max_tokens, "usage": {"include": True}}
         if self.provider:
             b["provider"] = self.provider
+        if self.reasoning:
+            b["reasoning"] = self.reasoning
         if schema:
             b["response_format"] = {"type": "json_schema", "json_schema": {"name": "action", "strict": True, "schema": schema}}
         return b
@@ -85,7 +92,7 @@ class LLM:
         self.usage["images"] += count_images(messages)
         if path.exists():
             self.usage["hits"] += 1
-            return json.loads(path.read_text())["response"]["choices"][0]["message"]["content"]
+            return self._content(json.loads(path.read_text())["response"])
         if self.usage["usd"] >= self.max_usd:
             raise BudgetExceeded(f"spent ${self.usage['usd']:.4f} >= cap ${self.max_usd:.2f} (ARBITER_MAX_USD)")
         if not self.key:
@@ -96,10 +103,18 @@ class LLM:
         self.usage.update(misses=self.usage["misses"] + 1, seconds=self.usage["seconds"] + time.time() - t0,
                           prompt_tokens=self.usage["prompt_tokens"] + int(u.get("prompt_tokens", 0)),
                           completion_tokens=self.usage["completion_tokens"] + int(u.get("completion_tokens", 0)),
-                          usd=self.usage["usd"] + float(u.get("cost", 0.0)))
+                          usd=self.usage["usd"] + float(u.get("cost", 0.0)),
+                          reasoning_tokens=self.usage["reasoning_tokens"]
+                          + int((u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0))
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"request": body, "response": resp}))
-        return resp["choices"][0]["message"]["content"]
+        return self._content(resp)
+
+    def _content(self, resp: dict) -> str:
+        text = resp["choices"][0]["message"].get("content")
+        if not text:
+            self.usage["empty"] += 1
+        return text or ""
 
 
 def count_images(messages: list) -> int:

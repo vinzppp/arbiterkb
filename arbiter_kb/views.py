@@ -47,6 +47,7 @@ def facts(kb: KB, p: RuleParams = RuleParams()) -> list[tuple[tuple, float]]:
         elif vis == "visible":
             out.append((("Visible", o.id), o.visibility.conf))
     out += [(("Held", k), 1.0) for k in held(kb)]
+    out += [(k, b.conf) for k, b in kb.facts.items() if b.value is True]
     return out + [(f, c) for f, c, _ in geometric(kb, p)]
 
 
@@ -165,12 +166,16 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
             pos = "" if o.pose.value is None else " at " + ", ".join(f"{v:.3f}" for v in o.pose.value)
             pos += " (inferred)" if o.pose.source == "inferred" else ""
         sup = f" [{o.pose.support[-1]}]" if o.pose.support and vis != "hidden" else ""
-        lines.append(f"  [{o.id}] {o.description}, {vis}{pos}, last seen t={o.t_last_seen}{sup}")
+        seen = kb.facts.get(("description", o.id))
+        look = f'; looks like "{seen.value}" (vlm, t={seen.t})' if seen else ""
+        lines.append(f"  [{o.id}] {o.description}, {vis}{pos}, last seen t={o.t_last_seen}{sup}{look}")
     lines.append("Relations:")
     for (pred, subj), d in kb.relations.items():
         hyps = " | ".join(f"{k or 'elsewhere'} {p:.2f}" for k, p in sorted(d.probs.items(), key=lambda kv: -kv[1]))
         lines.append(f"  {pred}({subj}): {hyps}  [{','.join(d.support[-3:])}]")
     lines += [f"  {f[0]}({', '.join(f[1:])}) from positions [{','.join(sup)}]" for f, _, sup in geometric(kb, p)
               if f[0] != "LeftOf"]
+    lines += [f"  {k[0]}({', '.join(k[1:])}) {b.conf:.2f} ({b.source}) [{','.join(b.support[-3:])}]"
+              for k, b in kb.facts.items() if k[0] != "description"]
     lines.append("Event log (oldest first):")
     return "\n".join(lines + ["  " + x for x in event_log(kb)])

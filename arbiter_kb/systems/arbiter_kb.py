@@ -51,7 +51,8 @@ class ArbiterKBSystem:
             "t": frame.t,
             "obs": {**{k: [o.visible, None if o.xyz is None else [round(float(v), 4) for v in o.xyz], o.track_q]
                        for k, o in frame.objects.items()},
-                    "ee": [True, [round(float(v), 4) for v in frame.ee_xyz], round(float(frame.gripper_width), 4)]},
+                    "ee": [True, [round(float(v), 4) for v in frame.ee_xyz], round(float(frame.gripper_width), 4)],
+                    "image": [frame.rgb is not None, None, None]},  # o<t>:image, cited by the annotator
             "ops": kb.pop_log(),
             "arbiter": arb,
         })

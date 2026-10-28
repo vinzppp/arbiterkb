@@ -33,6 +33,13 @@ class FlattenDist:
 
 
 @dataclass
+class SetFact:
+    """Open relation table (spec §2.3): (pred, *args) -> Belief(value, conf, source, support). Relations
+    (value True) and object descriptions (value = text) from the VLM annotator, or from rules later."""
+    pred: str; args: tuple; value: Any; conf: float; t: int; source: str; support: list  # noqa: E702
+
+
+@dataclass
 class AddEvidence:
     t: int; kind: str; args: tuple; data: dict  # noqa: E702
 
