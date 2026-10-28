@@ -767,7 +767,7 @@ Reviews: `reviews/G_M4_code.md` (PASS-WITH-NOTES) and `reviews/G_M4_goal.md` (ON
    - Batch A has no zero-token rows, so its token numbers stand.
 4. **Provenance (E4).**
    - dry_run writes `meta.json`: commit, dirty, args, params hash, contract version and LLM usage incl. hits / refused.
-   - `g_summary.json` / `g_signature.json` carry `provenance`: commit, args and one sha256 over the 180 inputs, `3f33698888bc…`. They were written from a dirty tree; regenerate after the commit.
+   - `g_summary.json` / `g_signature.json` carry `provenance`: commit, args and one sha256 over the 180 inputs, `3f33698888bc…`. Regenerated from the clean tree at 52f7ca4 (only the provenance changed).
    - Run meta records `g_signature_sha256` when id_swap_measured runs.
 5. **G Done-when (b).** `figures/g_features.png` (per-feature histograms, swapped vs clean, with AUC) and `figures/g_roc.png` (one-feature ROCs), written by measure_swaps.
 
