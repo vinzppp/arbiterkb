@@ -168,5 +168,5 @@ def test_vlm_client_uses_the_params_model_pinned_provider_and_no_thinking():
 
     c = vlm_client(ArbiterParams())
     b = c.body([{"role": "user", "content": "x"}], None, 0.0, 0, 10)
-    assert b["model"] == "qwen/qwen3.5-9b" and b["provider"]["order"] == ["DeepInfra", "Parasail"]
+    assert b["model"] == "qwen/qwen3.5-9b" and b["provider"]["order"] == ["Parasail", "DeepInfra"]
     assert b["provider"]["allow_fallbacks"] is False and b["reasoning"] == {"enabled": False}

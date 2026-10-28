@@ -868,3 +868,13 @@ Reading:
   - Task items right (green cube, containers).
   - 0 reasoning tokens, $0.0001 for 4 calls, but **about 4 s per call via Parasail** (1.1 s in the earlier benchmark): latency depends on provider load.
 - Still to do: compare the two models on many frames with truth (VideoRepick / VideoPlaceOrder keyframes) before freezing for a claim.
+- **Latency check, same 4 frames, one provider each** (2026-10-28):
+
+  | model | provider | s / call | result |
+  |---|---|---|---|
+  | qwen3.5-9b | DeepInfra | 34–65, then HTTP 429 | unusable right now |
+  | qwen3.5-9b | Parasail | 1.1–1.6 | 3, 3, 3, 4 objects: all right |
+  | qwen3.5-9b | SiliconFlow / Together | — | HTTP 404 "no endpoints": likely they do not support the reasoning switch |
+  | qwen3-vl-8b | Parasail | 1.0–1.8 | f325 again 1 object: wrong |
+
+  The 4 s seen above was the DeepInfra-first order: each call waited for the rate-limited provider before falling back. The order is now **Parasail, then DeepInfra**; params re-frozen. The model stays qwen3.5-9b: as fast on the same provider, more accurate, cheaper.
