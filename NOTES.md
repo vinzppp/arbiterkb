@@ -269,3 +269,53 @@ Written, not yet run on a pod (the user's go is needed for GPU time).
   - Tests on fake perceived episodes built from synthetic data, with one injected exchange, plus an end-to-end CLI test.
 - `stress/POD_RUN.md`: the steps, a smoke test first, about 3–4 h and about $2–3 (rough), and "stop the pod" last.
 - **Risk:** the pod-side code has never run against the simulator. The hand-off prompt says to fix only `stress/` and to stop after the smoke test.
+
+## M2 infra — SoftHaircut, CIs, matched coverage (2026-10-28)
+Built while G runs on the pod (HANDOFF "Parallel work" 1). No parameter changed (params hash 4e44acb946f6, no re-freeze); no test seed was read.
+- **`SoftHaircut(feature)`** (`arbiter_kb/systems/soft_haircut.py`): R6 with no KB.
+  - It starts from Bound's answer as a point mass. Each near-pass seen while the cube is hidden applies R6's own `swap_mix` with w = w_max·exp(−feature/d0), using R6's parameters.
+  - After one pass on Bound's container, the confidence is 1 − w_max·exp(−feature/d0), as specified.
+  - **Deviation from the HANDOFF wording ("Bound's answer"):** a first version kept Bound's answer and multiplied (1 − w) over passes. On train seeds 0–299 (clean + id_swap_overlap, 600 rows; a scratch run, not kept), 36 rows then had a partner with more mass than the answer. Sequential `swap_mix` is what R6 does, so SoftHaircut uses it. Its answer can then differ from Bound's after several passes, as ArbiterKB's does (4 of 300 id_swap_overlap rows below, `same_answers` vs bound in `results/latest/m2_infra_train/compare.csv`).
+  - The feature is `min_3d` now; M2 passes the margin.
+  - It has no cover kernel, no R5 and no `elsewhere` floor. Whatever ArbiterKB adds beyond SoftHaircut is the KB.
+- **Metrics:**
+  - `summary.csv` has a Wilson interval on coverage (`cov_lo`, `cov_hi`).
+  - `arbiter_kb/compare.py` + `scripts/compare.py`:
+    - AURC with a 95% bootstrap CI, resampling episodes (2000 draws, seed 0);
+    - the paired AURC difference ref − base, with the same episodes drawn for both;
+    - matched coverage: on a **train** calibration run, θ is the baseline confidence whose clean coverage is nearest the reference's clean coverage at τ_hi; then, on the eval run, the baseline's silent rate at θ (Wilson) next to the reference's at τ_hi.
+    - A binary haircut can reach only a few coverages, so the achieved calibration coverage is reported next to the target.
+- **CLI:** `--first K` skips a split's first K seeds (M2: `--split test --first 60 --n 300` = seeds 1060–1359); it refuses to leave the 1000-seed range. `--systems m2` = bound, overlap_haircut, soft_haircut, arbiterkb (no Frozen / BoundHaircut / JumpDetector). `--systems all` is unchanged (the M1 table).
+- **Selftest:** the m2 preset runs, and every SoftHaircut row is explainable (E2).
+
+**ArbiterKB vs SoftHaircut under the M1.1 conditions, train seeds only.** θ is calibrated on seeds 0–149 (`results/runs/synthetic_train_bdb06d98`) and the table is on seeds 150–449 (n = 300 rows per cell; `results/latest/m2_infra_train/summary.csv` and `compare.csv`, commit 73fab80, clean tree). Untuned defaults, p_swap 0.5, lane and steps "mix", pos_noise 15 mm.
+
+| condition | system | acc | silent | coverage [Wilson] | AURC [boot] | Brier |
+|---|---|---|---|---|---|---|
+| none | Bound | 1.00 | 0.000 | 1.000 [0.987, 1] | 0.000 | 0.000 |
+| none | OverlapHaircut | 1.00 | 0.000 | 0.683 [0.629, 0.733] | 0.000 | 0.158 |
+| none | SoftHaircut | 1.00 | 0.000 | 0.803 [0.755, 0.844] | 0.000 | 0.081 |
+| none | ArbiterKB | 1.00 | 0.000 | 0.803 [0.755, 0.844] | 0.000 | 0.082 |
+| id_swap_overlap | Bound | 0.847 | 0.153 | 1.000 | 0.153 [0.113, 0.197] | 0.307 |
+| id_swap_overlap | OverlapHaircut | 0.847 | 0.000 | 0.683 | 0.049 [0.032, 0.069] | 0.185 |
+| id_swap_overlap | SoftHaircut | 0.857 | 0.047 | 0.800 | 0.0275 [0.017, 0.040] | 0.179 |
+| id_swap_overlap | ArbiterKB | 0.857 | 0.047 | 0.800 | 0.0275 [0.017, 0.040] | 0.179 |
+| pos_noise | Bound | 0.987 | 0.013 | 1.000 | 0.013 [0.003, 0.027] | 0.027 |
+| pos_noise | OverlapHaircut | 0.987 | 0.013 | 0.957 | 0.014 [0.003, 0.028] | 0.048 |
+| pos_noise | SoftHaircut | 0.987 | 0.013 | 0.967 | 0.012 [0.000, 0.028] | 0.032 |
+| pos_noise | ArbiterKB | 0.980 | 0.020 | 0.967 | 0.044 [0.014, 0.080] | 0.047 |
+
+Paired AURC difference ArbiterKB − baseline [95% bootstrap] and matched coverage (θ from seeds 0–149):
+
+| condition | baseline | ΔAURC [CI] | θ (calib coverage, target 0.80) | ArbiterKB coverage / silent at τ_hi | baseline coverage / silent at θ |
+|---|---|---|---|---|---|
+| id_swap_overlap | SoftHaircut | 0.000 [0, 0] | 0.816 (0.800) | 0.800 / 0.047 | 0.793 / 0.047 [0.028, 0.077] |
+| id_swap_overlap | OverlapHaircut | −0.021 [−0.030, −0.013] | 1.0 (0.727) | 0.800 / 0.047 | 0.683 / 0.000 [0, 0.013] |
+| id_swap_overlap | Bound | −0.126 [−0.155, −0.094] | 1.0 (1.000) | 0.800 / 0.047 | 1.000 / 0.153 |
+| pos_noise | SoftHaircut | +0.031 [+0.007, +0.059] | 0.816 (0.800) | 0.967 / 0.020 | 0.967 / 0.013 |
+
+Reading:
+- **ArbiterKB and SoftHaircut tie exactly under id_swap_overlap and on clean input.** Same answers in 300 of 300 rows, ΔAURC 0 with a zero-width CI, and the same silent rate at matched coverage. As expected, the rule layer is today a scoring formula: R6's distance score, which needs no KB. This moves no claim. M2 (c) must show a gap on the margin and on `id_swap_measured`, or say so in NOTES.
+- **Under pos_noise ArbiterKB is worse than SoftHaircut** (ΔAURC +0.031, CI excludes 0). The cause is six rows where ArbiterKB answers `None` ("elsewhere") with p = 1.0, a confident wrong answer. The noisy last sighting of the cube leaves no container within r_cover, so R1 returns {None: 1} (seeds 201, 218, 253, 259, 297, 371 in `results/runs/synthetic_train_9ec184d5/rows.csv`). In two of those rows SoftHaircut is right. **Here the KB adds a failure mode a tracker does not have.** It is not fixed here: it is a rule change, so it belongs in M2 with a re-freeze. A candidate fix is to give the nearest container mass when no container is within r_cover, or to cap {None} below τ_hi.
+- OverlapHaircut cannot reach coverage 0.80 (it is binary: 0.727 on calib). The matched comparison against it is therefore only approximate: 0.683 vs 0.800 on eval.
+- In the M1.1 test table (seeds 1000–1059) ArbiterKB's answers equalled Bound's in every row. On train seeds 150–449 they differ in 4 of 300 id_swap_overlap rows and 6 of 300 pos_noise rows (`same_answers`). So "equal in every row" was a property of those 60 seeds.

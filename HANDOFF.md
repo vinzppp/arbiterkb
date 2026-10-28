@@ -53,13 +53,9 @@ Read first: `DEVELOPMENT.md` (spec v1.3, §6 phases), `docs/GOALS.md` (claims, f
 - Remind the user to STOP THE POD.
 
 ## Parallel work that does not depend on G (candidates for the new window)
-1. **M2 / M4 infrastructure (independent of G's numbers):**
-   - `SoftHaircut(feature)` baseline (Bound's answer, confidence 1 − w_max·exp(−feature/scale));
-   - Wilson CI on coverage;
-   - bootstrap CIs for AURC;
-   - matched-coverage comparison (sweep the haircut threshold on train);
-   - support for n ≥ 300 fresh test seeds (≥ 1060);
-   - drop Frozen / BoundHaircut / JumpDetector from M2 tables.
+1. **M2 infrastructure: done** (NOTES "M2 infra", commit 73fab80 and the NOTES commit after it).
+   - Built: `SoftHaircut`, Wilson CI on coverage, bootstrap / paired-bootstrap AURC, matched coverage (`scripts/compare.py`), `--first` for fresh seeds, and `--systems m2`.
+   - Findings on train seeds: ArbiterKB = SoftHaircut exactly under id_swap_overlap. Under pos_noise ArbiterKB is worse, because R1 returns a confident {None: 1}. That fix is open, for M2.
 2. **M4 skeleton:**
    - `llm.py` (OpenRouter `qwen/qwen3.6-35b-a3b`, DeepInfra pinned; key in the git-ignored `.env`, never printed), with a cache and a budget cap;
    - the prompt builder for arm D (KB text view + cited evidence);

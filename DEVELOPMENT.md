@@ -297,6 +297,8 @@ make eval ARGS="--source synthetic --corrupt none,id_swap --p 0.5 --split test -
 python scripts/run.py --freeze [--force]   # untuned phases (M0, M1): params.json from defaults + FREEZE ledger line
 python scripts/run.py --systems all --corrupt none,id_swap_overlap,pos_noise --lane mix --steps mix --n 60 --keep-as m1_table
 python scripts/run.py --keep[-as NAME] ...  # also copy summary/meta to results/latest and figures to figures/, from a clean tree
+python scripts/run.py --systems m2 --split test --first 60 --n 300 ...   # M2: bound, overlap/soft haircut, ArbiterKB on fresh seeds 1060-1359
+python scripts/compare.py --calib results/runs/<train run> --eval results/runs/<run> --keep-as NAME   # AURC CIs, paired diff, matched coverage
 make notebook   # regenerate + execute the phase walkthrough
 ```
 
