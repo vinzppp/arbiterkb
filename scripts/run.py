@@ -44,8 +44,8 @@ PRESETS = {"all": [k for k in SYSTEMS if k != "soft_haircut"],  # the M1 table, 
            "m2": ["bound", "overlap_haircut", "soft_haircut", "arbiterkb"]}  # M2 drops the uninformative three
 CONDITIONS = ("none", "id_swap", "id_swap_overlap", "pos_noise")
 PARAMS_FILE = ROOT / "params.json"
-FREEZE_NOTE = ("M1.1 defaults plus R1 eps_far 0.5 (M2 infra: no container within r_cover -> nearest vs elsewhere at even odds), untuned. "
-               "Nothing has been tuned on test seeds; tuning starts in M2 on train seeds against id_swap_measured.")
+FREEZE_NOTE = ("M1.1 defaults plus R1 eps_far 0.5 (M2 infra) and M3's r_grasp / r_on / r_near / g_close / g_open, untuned. "
+               "Nothing has been tuned on test seeds.")
 
 
 def git_state() -> tuple[str, bool | None]:

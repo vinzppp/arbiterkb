@@ -1,5 +1,6 @@
 """Forward rules. Each rule is a pure function (kb, new_evidence, frame, params) -> list[Op]; only
 KB.apply mutates (DEVELOPMENT.md §1, §3.5). M0: R1, R2, R6, R7 (wired). M1: R5, R6 with 3D distance.
+M3: R3 grasp / place (gripper evidence), and R2 also moves a held object with the end effector.
 """
 from __future__ import annotations
 
@@ -25,7 +26,8 @@ def r1_cover(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     and the cube 'unknown'. Before, any miss was a confident {None: 1} (M2 infra finding)."""
     ops = []
     for ev in new_ev:
-        if ev.kind != "disappear" or kb.objects[ev.args[0]].cls != "cube":
+        if ev.kind != "disappear" or kb.objects[ev.args[0]].cls != "cube" \
+                or ev.args[0] in held(kb):  # hidden by the fingers, not covered
             continue
         cube, last = ev.args[0], np.asarray(ev.data["last_xyz"])
         seen = {c: float(np.linalg.norm(frame.objects[c].xyz[:2] - last[:2])) for c in containers(kb)
@@ -41,6 +43,45 @@ def r1_cover(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
         if best is not None:
             ops.append(AddEvent(frame.t, "cover", (best, cube), pm, [ev.id]))
     return ops
+
+
+def r3_grasp(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
+    """grip_close: the object nearest the end effector, within r_grasp, is held (event `grasp`).
+    grip_open: each held object is released (event `place`, onto the object below it within r_on, else
+    the table); it is `visible` again if seen, else `unknown` until the next sighting."""
+    ops = []
+    for ev in new_ev:
+        ee = np.asarray(ev.data.get("ee", frame.ee_xyz), float)
+        if ev.kind == "grip_close":
+            near = [(float(np.linalg.norm(o.pose.value - ee)), o.id) for o in kb.objects.values()
+                    if o.pose.value is not None and o.visibility.value != "hidden"]
+            near = [dn for dn in near if dn[0] < p.r_grasp]
+            if near:
+                obj = min(near)[1]
+                ops += [SetVis(obj, "held", 1.0, frame.t, [ev.id]), AddEvent(frame.t, "grasp", (obj,), 1.0, [ev.id])]
+        elif ev.kind == "grip_open":
+            for o in [kb.objects[k] for k in held(kb)]:
+                vis = frame.objects[o.id].visible
+                ops += [SetVis(o.id, "visible" if vis else "unknown", 1.0, frame.t, [ev.id]),
+                        AddEvent(frame.t, "place", (o.id, below(kb, o.id, ee, p) or "table"), 1.0, [ev.id])]
+    return ops
+
+
+def held(kb: KB) -> list[str]:
+    """Objects grasped and not placed since (from the event log; observe() may mark them visible)."""
+    out: dict[str, bool] = {}
+    for e in kb.events:
+        if e.type in ("grasp", "place"):
+            out[e.args[0]] = e.type == "grasp"
+    return [k for k, v in out.items() if v]
+
+
+def below(kb: KB, obj: str, xyz: np.ndarray, p: RuleParams) -> str | None:
+    """The object right under xyz (xy within r_on, lower centre), the nearest one in xy."""
+    cands = [(float(np.linalg.norm(o.pose.value[:2] - xyz[:2])), o.id) for o in kb.objects.values()
+             if o.id != obj and o.pose.value is not None and o.pose.value[2] < xyz[2]]
+    cands = [c for c in cands if c[0] < p.r_on]
+    return min(cands)[1] if cands else None
 
 
 def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
@@ -92,8 +133,11 @@ def r5_exclusive(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
 
 
 def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
-    """Hidden cube display pose = probability-weighted container pose (decisions use the distribution)."""
-    ops = []
+    """Hidden cube display pose = probability-weighted container pose (decisions use the distribution).
+    A held object that is not seen follows the end effector."""
+    ops = [SetPose(o.id, np.asarray(frame.ee_xyz, float), o.visibility.conf, frame.t, "inferred",
+                   list(o.visibility.support)) for o in kb.objects.values()
+           if o.id in held(kb) and not frame.objects[o.id].visible]
     for (pred, cube), d in kb.relations.items():
         if pred != "Inside" or kb.objects[cube].visibility.value != "hidden":
             continue
@@ -106,4 +150,4 @@ def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     return ops
 
 
-RULES = [("R1", r1_cover), ("R6", r6_swap), ("R7", r7_decay), ("R5", r5_exclusive), ("R2", r2_follow)]
+RULES = [("R3", r3_grasp), ("R1", r1_cover), ("R6", r6_swap), ("R7", r7_decay), ("R5", r5_exclusive), ("R2", r2_follow)]

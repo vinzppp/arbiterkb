@@ -20,6 +20,9 @@ class RuleParams:
     d0: float = 0.02  # m
     lam: float = 1.0  # per-frame decay toward uniform for unconfirmed beliefs (R7); 1 = off
     eps_none: float = 0.01  # floor for the "elsewhere" hypothesis in R1
+    r_grasp: float = 0.05  # m: R3, an object within this 3D distance of the end effector when the gripper closes is held
+    r_on: float = 0.04  # m: On(x, y) / place target: xy distance at most this, and x above y
+    r_near: float = 0.08  # m: Near(x, y): centre distance below this
     eps_far: float = 0.5  # R1, no container within r_cover: nearest vs "elsewhere" at even odds (the cover was not seen)
 
 
@@ -28,6 +31,8 @@ class DetectParams:
     d_px: float = 30.0  # px: two moving containers closer than this in the image -> near-pass
     d_3d: float = 0.10  # m: same, used when there is no camera
     v_move: float = 0.001  # m/frame (2 cm/s at 20 Hz): xy speed above which a container counts as moving
+    g_close: float = 0.07  # m: gripper width below this -> closed (RoboMME: 0.04 per finger = fully open)
+    g_open: float = 0.075  # m: above this -> open again (hysteresis)
 
 
 @dataclass(frozen=True)

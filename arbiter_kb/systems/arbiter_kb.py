@@ -28,6 +28,7 @@ class ArbiterKBSystem:
 
     def reset(self, meta: EpisodeMeta) -> None:
         self.kb = KB(meta.objects)
+        self.kb.task["goal"] = meta.task_goal  # L4
         self.det = Detectors(self.params.detect)
         self.trigger = Trigger(self.params.arbiter)
         self.rows: list[dict] = []

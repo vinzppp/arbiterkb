@@ -12,6 +12,8 @@ The reference point is arXiv 2610.17350:
 - Its authors state that they did not isolate which part of the context acts as memory.
 
 ## Claims to establish
+Claims 1 and 2 are alternatives: either one makes the memory module worth having. A frontier model as the controller is acceptable (user, 2026-10-28). The structured memory has value of its own: it is inspectable, it cites evidence and it carries calibrated beliefs. So claim 2 with a frontier model, at a large token saving, is a full result.
+
 1. **Smaller model.** A small open model (primary: `qwen/qwen3.6-35b-a3b`, 3B active) reading the KB approaches the frontier VLM's success on RoboMME. The same small model reading the raw image history does clearly worse.
 2. **Fewer tokens.** With the latest KB text plus the current frame(s), the same model matches its own success with the full image history. It must use far fewer input tokens, images and dollars per episode. This is tested for the small model, and for a larger model if the budget allows.
 3. **Knows when it is wrong.** The KB's beliefs are calibrated against ground truth: silent failure (wrong with p_max ≥ τ_hi, scored **physically**) is lower than for deterministic memory (HODOR-frozen, bound rule) **and than for a threshold haircut on the same evidence feature, at matched clean coverage**; AURC is the threshold-free summary; Brier and ECE are reported. The controller sees these probabilities, so an uncertain memory can lead to "look first" instead of a confident wrong grasp. Silent failure alone is not enough: any system that lowers every confidence scores 0 (M1 goal review).

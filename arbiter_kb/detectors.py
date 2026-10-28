@@ -1,5 +1,7 @@
 """Change detectors: observations -> numbered evidence (appear, disappear, move_start, move_stop,
-near_pass). Task-agnostic and causal: they only use frames up to t.
+near_pass, grip_close, grip_open). Task-agnostic and causal: they only use frames up to t.
+move_start / move_stop carry the object's xyz, so the event log can say from where to where (M3);
+grip_close / grip_open carry the end-effector xyz and the gripper width (hysteresis g_close < g_open).
 
 near_pass(a, b): two containers both moving come closer than d_px in the image (d_3d metres without a
 camera); it is emitted when the pass ends, with closeness = min distance / threshold in [0, 1) and
@@ -23,6 +25,7 @@ class Detectors:
         self.prev: dict = {}  # id -> last ObjObs
         self.moving: dict[str, bool] = {}
         self.passes: dict[tuple, dict] = {}  # open near-passes
+        self.closed = False  # gripper state, with hysteresis
 
     def step(self, frame: FrameObs) -> list[AddEvidence]:
         t, ops = frame.t, []
@@ -35,6 +38,7 @@ class Detectors:
                                                                 "obs": [obs_id(t - 1, oid)]}))
         ops += self._motion(frame)
         ops += self._near_passes(frame)
+        ops += self._gripper(frame)
         self.prev = dict(frame.objects)
         return ops
 
@@ -47,8 +51,9 @@ class Detectors:
                 continue
             mv = float(np.linalg.norm(o.xyz[:2] - prev.xyz[:2])) > self.p.v_move
             if mv != self.moving.get(oid, False):
-                kind = "move_start" if mv else "move_stop"
-                ops.append(AddEvidence(frame.t, kind, (oid,), {"obs": [obs_id(frame.t, oid)]}))
+                kind, at = ("move_start", prev.xyz) if mv else ("move_stop", o.xyz)
+                ops.append(AddEvidence(frame.t, kind, (oid,), {"xyz": [round(float(v), 4) for v in at],
+                                                               "obs": [obs_id(frame.t, oid)]}))
             self.moving[oid] = mv
         return ops
 
@@ -73,6 +78,15 @@ class Detectors:
                         "obs": [obs_id(ps["t_min"], a), obs_id(ps["t_min"], b)]}
                 ops.append(AddEvidence(t, "near_pass", (a, b), data))
         return ops
+
+    def _gripper(self, frame: FrameObs) -> list[AddEvidence]:
+        w = float(frame.gripper_width)
+        flip = (not self.closed and w < self.p.g_close) or (self.closed and w > self.p.g_open)
+        if not flip:
+            return []
+        self.closed = not self.closed
+        data = {"ee": [round(float(v), 4) for v in frame.ee_xyz], "width": round(w, 4), "obs": []}
+        return [AddEvidence(frame.t, "grip_close" if self.closed else "grip_open", (), data)]
 
     def _distance(self, oa, ob) -> tuple[float, float]:
         if oa.uv is not None and ob.uv is not None:
