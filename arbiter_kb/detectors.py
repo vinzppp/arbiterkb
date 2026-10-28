@@ -14,6 +14,7 @@ from itertools import combinations
 import numpy as np
 
 from .kb import AddEvidence
+from .actions import Actions
 from .observe import obs_id
 from .params import DetectParams
 from .types import FrameObs
@@ -27,6 +28,7 @@ class Detectors:
         self.passes: dict[tuple, dict] = {}  # open near-passes
         self.closed = False  # gripper state, with hysteresis
         self.ee_prev, self.still, self.paused = None, 0, True  # hand-pause state (starts at rest)
+        self.actions = Actions(p)  # semantic actions from the robot's own state
 
     def step(self, frame: FrameObs) -> list[AddEvidence]:
         t, ops = frame.t, []
@@ -39,8 +41,8 @@ class Detectors:
                                                                 "obs": [obs_id(t - 1, oid)]}))
         ops += self._motion(frame)
         ops += self._near_passes(frame)
-        ops += self._gripper(frame)
-        ops += self._hand_pause(frame)
+        robot = self._gripper(frame) + self._hand_pause(frame)
+        ops += robot + self.actions.step(frame, self.closed, robot)
         self.prev = dict(frame.objects)
         return ops
 

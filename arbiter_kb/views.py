@@ -99,6 +99,15 @@ def text_view(kb: KB) -> str:
     return "\n".join(lines)
 
 
+ACTION_TEXT = {  # semantic actions (actions.py), in words
+    "pick_up": lambda d: "picked up an object",
+    "release": lambda d: {"placed": "placed the held object down", "dropped": "dropped the held object from above",
+                          "set_down": "set the held object down"}[d["how"]],
+    "press": lambda d: "pressed down with the closed gripper (a button press)",
+    "hold_above": lambda d: f"held the object up on the robot's {d['side']} side",
+}
+
+
 def _xyz(v) -> str:
     return f"({v[0]:.2f}, {v[1]:.2f}, {v[2]:.2f})"
 
@@ -116,6 +125,8 @@ def _ev_line(e) -> str | None:
         return f"t={e.t} {a} moved {_xy(d['from'])} -> {_xy(d['xyz'])} (t={d['t_from']}-{e.t})"
     if e.kind == "near_pass":
         return f"t={e.t} {a} passed close to each other, closest {100 * d['min_3d']:.1f} cm (detected)"
+    if e.kind in ACTION_TEXT:
+        return f"t={e.t} " + ACTION_TEXT[e.kind](d) + f" at {_xyz(d['ee'])}"
     if e.kind == "hand_pause":
         return f"t={e.t} hand stopped at {_xyz(d['ee'])}, gripper {'closed' if d['closed'] else 'open'}"
     if e.kind in ("grip_close", "grip_open"):
@@ -126,7 +137,10 @@ def _ev_line(e) -> str | None:
 KEEP = ("cover", "grasp", "place")  # events never dropped from the log: they say where things are
 
 
-def event_log(kb: KB, last: int = 30) -> list[str]:
+LOW_LEVEL = ("grip_close", "grip_open", "hand_pause")  # explained by the semantic actions when those exist
+
+
+def event_log(kb: KB, last: int = 30, low_level: bool = True) -> list[str]:
     """Evidence and events in time order, with ids so the controller can cite them. A move_stop is joined
     with its move_start, so each motion reads 'from -> to'. Over `last` lines, the oldest others are dropped
     (cover / grasp / place events are always kept) and a first line says how many were omitted."""
@@ -134,7 +148,7 @@ def event_log(kb: KB, last: int = 30) -> list[str]:
     rows = []
     covered = {s for v in kb.events if v.type == "cover" for s in v.support}  # shown in the cover line instead
     for e in kb.evidence:
-        if e.kind == "disappear" and e.id in covered:
+        if (e.kind == "disappear" and e.id in covered) or (not low_level and e.kind in LOW_LEVEL):
             continue
         if e.kind == "move_start":
             start[e.args[0]] = (e.data.get("t_at", e.t - 1), e.data.get("xyz"))
@@ -173,8 +187,11 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
     lines = [f"Goal: {kb.task.get('goal', '?')}"]
     names = {"grasp": "grasps", "place": "places", "cover": "covers", "swap": "close passes"}
     done = [f"{names[t]} {n}" for t in names if (n := sum(e.type == t for e in kb.events))]
-    grips = {k: sum(e.kind == k for e in kb.evidence) for k in ("grip_close", "grip_open", "hand_pause")}
-    done += [f"{n} {k.replace('_', ' ')}s" for k, n in grips.items() if n]
+    acts = {"pick_up": "pick-ups", "release": "releases", "press": "button presses",
+            "hold_above": "holds on a side"}
+    done += [f"{n} {name}" for k, name in acts.items() if (n := sum(e.kind == k for e in kb.evidence))]
+    sides = [e.data["side"] for e in kb.evidence if e.kind == "hold_above"]
+    done += [f"holds on the left {sides.count('left')}, right {sides.count('right')}"] if sides else []
     lines.append("Progress: " + (", ".join(done) or "nothing yet"))
     items = kb.task.get("items", [])
     lines.append("Task items (named by the goal): " + (", ".join(i["phrase"] for i in items) or "none"))
@@ -199,7 +216,7 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
     lines += [f"  [{rel_id(k)}] {b.conf:.2f} ({b.source}) [{','.join(b.support[-3:])}]"
               for k, b in kb.facts.items() if k[0] != "description"]
     lines.append("Event log (oldest first):")
-    return "\n".join(lines + ["  " + x for x in event_log(kb)])
+    return "\n".join(lines + ["  " + x for x in event_log(kb, low_level=False)])
 
 
 def rel_id(fact: tuple) -> str:

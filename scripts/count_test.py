@@ -10,8 +10,9 @@ Arms (same prompt skeleton, same action list; only the memory differs):
   K   the KB run on the robot state (grip and hand-pause evidence, progress counts, event log; views.controller_view);
   KO  oracle: the subgoals completed so far, from the dataset authors' labels (upper bound).
 The answer is one action from a fixed list (no object positions exist without vision, so no waypoint is scored).
-Truth = the action class of the next subgoal. Decision points = the first frame after each "place / put into
-the bin / reach the left-side target" subgoal in the execution phase.
+Truth = the action class of the next subgoal. Decision points = LAG frames after each "place / put into the bin /
+reach the left-side target" subgoal ends in the execution phase (v1 used the boundary itself).
+KS (v2) = K with the semantic actions (actions.py); K in v1 had only grip / pause events.
 """
 from __future__ import annotations
 
@@ -40,6 +41,7 @@ ACTIONS = ["pick up a cube", "place the cube on the target", "put the cube into 
 KEYS = [("press the button", 6), ("into the bin", 2), ("on the table", 5), ("right-side target", 3),
         ("left-side target", 4), ("onto the target", 1), ("pick up", 0)]
 EFFORT = {"default": None, "off": {"enabled": False}}
+LAG = 5  # frames after a step's end before deciding, for every arm (v2 of this test; v1 decided at the boundary)
 SYSTEM = ("You decide a robot's next step. You get the task, a memory of what the robot has done so far, and the "
           "robot's current state. Answer with JSON only: {\"next\": \"<one action, copied exactly from this list>\"}. "
           "Actions: " + json.dumps(ACTIONS))
@@ -54,8 +56,9 @@ def decisions(ep: dict) -> list[tuple[int, int]]:
     segs = [s for s in L.segments(ep["simple"]) if not ep["demo"][s[0]]]
     out = []
     for prev, nxt in zip(segs, segs[1:]):
-        if action_of(prev[2]) in (1, 2, 4) and action_of(nxt[2]) is not None:
-            out.append((nxt[0], action_of(nxt[2])))
+        t = nxt[0] + LAG  # a step counts as done once it is observable (the KB needs n_pause still frames)
+        if action_of(prev[2]) in (1, 2, 4) and action_of(nxt[2]) is not None and t < nxt[1]:
+            out.append((t, action_of(nxt[2])))
     return out
 
 

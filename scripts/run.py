@@ -44,7 +44,7 @@ PRESETS = {"all": [k for k in SYSTEMS if k != "soft_haircut"],  # the M1 table, 
            "m2": ["bound", "soft_haircut", "arbiterkb"]}  # claim 3's table since v1.6 (DEVELOPMENT §6 M2)
 CONDITIONS = ("none", "id_swap", "id_swap_overlap", "id_swap_measured", "pos_noise")
 PARAMS_FILE = ROOT / "params.json"
-FREEZE_NOTE = ("M1.1 defaults plus R1 eps_far 0.5 (M2 infra) and M3's r_grasp / r_on / r_near / left_margin / on_dz / g_close / g_open, untuned; R7 (lam) removed in v1.6; hand-pause detector (v_pause, n_pause). "
+FREEZE_NOTE = ("M1.1 defaults plus R1 eps_far 0.5 (M2 infra) and M3's r_grasp / r_on / r_near / left_margin / on_dz / g_close / g_open, untuned; R7 (lam) removed in v1.6; hand-pause detector (v_pause, n_pause); semantic actions (z_low, z_drop, z_hold, press_rise, y_side). "
                "Nothing has been tuned on test seeds.")
 
 

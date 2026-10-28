@@ -37,6 +37,11 @@ class DetectParams:
     g_open: float = 0.075  # m: above this -> open again (hysteresis)
     v_pause: float = 0.002  # m/frame: the hand counts as still below this speed (RoboMME dataset: 10 fps)
     n_pause: int = 4  # frames still, after moving, before a `hand_pause` evidence
+    z_low: float = 0.05  # m: hand below this = at table / object level (actions.py; dataset: pick 0.020, place 0.015)
+    z_drop: float = 0.12  # m: a release above this is a drop from above (dataset: into the bin at 0.20)
+    z_hold: float = 0.07  # m: a pause while holding above this = holding something up (dataset: 0.10)
+    press_rise: float = 0.03  # m: a press is complete when the hand rises this far above its lowest point
+    y_side: float = 0.10  # m: |y| beyond this = the robot's left (+y) / right (-y) side (dataset: 0.21)
 
 
 @dataclass(frozen=True)
