@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.3 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes.
+Version 1.4 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -14,7 +14,7 @@ To build a phase, tell the coding agent: *"Build phase Mx of `arbiter-kb/DEVELOP
 2. **Interfaces first, implementations later.** The contracts in §4 are fixed in M0. Changing one needs a `NOTES.md` entry ("contract change: what, why") and a bump of `arbiter_kb.CONTRACT_VERSION`.
 3. **Never fake an output.** If something cannot run, print exactly what is missing (`SKIPPED: <reason>; to enable: <command>`) and continue.
 4. **Don't modify `~/Code/active/scene-graph-robot/`. Copy, don't import.** The few functions ArbiterKB needs from `notebooks/pilot/sg_pilot.py` are copied verbatim into one file, `arbiter_kb/sg_compat.py`. Each copied function carries `# copied from sg_pilot.py:<line> @ e2e06f9`. The set is `Replay`, `load_replay`, `target_cube_nodes`, `ActiveTarget`, `decision_frame`, `cam_to_world`, `project_points`, `backproject_mask`, `oracle_graph`, `RuleParams`, `GraphTracker`, `wilson`, plus the `F_*` constants. This keeps arbiter-kb self-contained: its results cannot change because the other repo or branch changed. `tests/test_sg_compat.py` imports the original `sg_pilot` when it is present and asserts identical outputs on a synthetic input; otherwise it is skipped. Nothing else from scene-graph-robot is used.
-5. **Compute.** M0–M4 run on the Mac CPU. GPU appears only in M6 (simulator rendering and perception), and only after the user says go. The LLM is reached through OpenRouter from M4 onward.
+5. **Compute.** M0–M4 run on the Mac CPU. GPU appears only in G, M5 and M6 (simulator rendering, perception and closed-loop control), and only after the user says go. The LLM is reached through OpenRouter from M4 onward.
 6. **The user is learning.** Docstrings say *what, why and units*. Every phase adds a short walkthrough notebook (≤ 15 cells) that calls the package and shows intermediate results.
 
 ---
@@ -30,9 +30,9 @@ Each eval is a concrete check that `make check` runs. A phase is not done until 
 | E3 | **Correct by construction** | Invariants hold at every frame, not just at the end | `KB.check()` asserts the invariants (§3.2) after every `apply()` when `ARBITER_DEBUG=1` (the default in tests). Each rule has a unit test on hand-made frames |
 | E4 | **Reproducible** | Same inputs → same bytes | Run twice → identical `summary.csv` hash (test). Every results file records the commit, args, `params.json` hash, contract version and LLM cache hit/miss counts |
 | E5 | **Honest evaluation** | No future information, no test leakage, the same treatment for every system | (a) Causality test: a `PoisonedSource` raises if any frame after t is requested before step(t) returns. (b) Systems never see `GroundTruth`. (c) `evaluate.run` refuses test episodes unless the Params was loaded from a `params.json` whose stored hash matches, has `frozen: true`, and has a FREEZE entry in the append-only ledger `results/test_reads.log` (`arbiter_kb/ledger.py`); every test read appends a READ entry. (d) Baselines run through the same `MemorySystem` interface and the same evaluation code |
-| E6 | **Explainable outputs** | Every decision says why | Every `PlanStep` carries `support` (evidence ids) and every arbiter patch cites evidence ids. Test: no inferred / arbiter item has empty support |
+| E6 | **Explainable outputs** | Every decision says why | Every `PlanStep` carries `support` (evidence ids), every arbiter patch cites evidence ids, and every controller action names its target object and cites the KB items it used (from M4). Test: no inferred / arbiter item has empty support |
 | E7 | **Fast feedback** | Iterate in seconds, not minutes | `pytest` < 60 s; the M0 synthetic evaluation < 60 s; median KB update < 1 ms per frame (printed by `--selftest`) |
-| E8 | **Cost-bounded** | LLM spend cannot surprise you | Every call is cached on disk; the hard cap is `ARBITER_MAX_USD` (default 2.00) per run, after which the backend raises. Calls, tokens, seconds and dollars are counted per episode |
+| E8 | **Cost-bounded** | LLM spend cannot surprise you | Every call is cached on disk; the hard cap is `ARBITER_MAX_USD` (default 2.00) per run, after which the backend raises. Closed-loop arms (M5) need a higher cap: the user sets it per experiment after seeing the estimate. Calls, tokens, seconds and dollars are counted per episode |
 | E9 | **Stable interfaces** | Later phases don't rewrite earlier ones | `tests/test_contracts.py` snapshots the field names of every contract dataclass. A change fails the test until `CONTRACT_VERSION` is bumped and NOTES updated |
 | E10 | **Measured, not claimed** | Every claim in a README or NOTES points to a results file | Review item: each number in README/NOTES is followed by `(results/<file>)` |
 
@@ -80,9 +80,10 @@ The design follows Murphy's hybrid architecture as taught in the course: a knowl
                                         ▼                       │
                                  arbiter (small LLM via OpenRouter, JSON only, cites evidence)
                                         │
- decision point ──► planner: KB → (skill, target, conf, decision) ──► skills: target → 4 waypoints
-                                                                     ──► executor (RoboMME waypoint,
-                                                                          offline: evaluated vs truth)
+ decision point ──► LLM controller (§3.8): KB text view (L0–L4 + event log) + current frame(s)
+     (each control step)    ──► one waypoint (x, r, γ) + target id + cites ──► validator (schema, workspace, reach)
+                            ──► RoboMME motion planner (closed loop, pod) ──► new frames + TCP feedback
+ baseline: rule planner: KB → argmax target → 4 fixed waypoints (§3.8, M0–M2 offline evaluation)
 ```
 
 | Report concept | Code |
@@ -93,7 +94,8 @@ The design follows Murphy's hybrid architecture as taught in the course: a knowl
 | Rules R1–R8 | `rules.py` |
 | Monitor, decision rule | `monitor.py` (M3) |
 | Arbiter + validator | `arbiter.py`, `llm.py` (M4) |
-| Planner + skills | `planner.py`, `skills.py`, `reach.py` (M5) |
+| LLM controller (v1.4) | `controller.py`, `harness.py` (M4), `llm.py` |
+| Rule planner + skills (baseline) | `planner.py`, `skills.py`, `reach.py` |
 | Baselines (HODOR frozen, bound; from M1 also BoundHaircut, OverlapHaircut, JumpDetector) | `systems/baselines.py` |
 | Evaluation, metrics | `evaluate.py`, `metrics.py` |
 | Debugging | `trace.py`, `debug.py` |
@@ -134,7 +136,7 @@ Invariants (`KB.check()`): (I1) every Distribution sums to 1 ± 1e-9; (I2) no po
 
 `retract(id)` (as implemented in M0.2): every item whose support contains `id` (transitively, through events) is downgraded, and every step is logged.
 - A Belief gets `conf ← conf · 0.5` with the id removed from its support. Its source stays `inferred` while support remains, otherwise it becomes `prior` (keeps I4).
-- A Distribution hypothesis backed by `id` loses its **current** mass, and the rest is renormalised; if nothing is left → `{None: 1}`. After a `swap_mix`, each hypothesis keeps its own evidence (a key that receives mass for the first time inherits the partner's), so this is an approximation. Exact per-origin mass tracking is due in M5, where R4 first retracts.
+- A Distribution hypothesis backed by `id` loses its **current** mass, and the rest is renormalised; if nothing is left → `{None: 1}`. After a `swap_mix`, each hypothesis keeps its own evidence (a key that receives mass for the first time inherits the partner's), so this is an approximation. Exact per-origin mass tracking is due in M3, where R4 first retracts.
 - Retracting an id that backs only the whole distribution (e.g. a near-pass) moves half of the mass to `None`; it does **not** undo the mix. To undo a mix (M4's `unlikely`), restore the pre-mix distribution from the trace.
 
 Views: `ask(pattern)` (course `unify` / `satisfy`; returns `[(bindings, prob)]`); `text_view()` (one line per object, ≤ 40 tokens each); `som_image(frame_rgb)` (Set-of-Mark: ids + top-2 hypotheses drawn on the image; needs RGB, so replays only).
@@ -163,7 +165,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 | R1 cover | cube visible→not visible at t, and containers visible at t with xy distance d < `r_cover` to the cube's last xy | `SetDist(Inside(cube), from_scores(d, σ_cover))`; no container within `r_cover` → `{nearest visible container: 0.5, None: eps_far = 0.5}` (the cover was not seen; the container is listed first, so it stays the answer; M2 infra); no visible container → `{None: 1}`; `AddEvent(cover)`. Covers the teleport case: the container appears in the same frame | M0 |
 | R2 follow | each frame for hidden cubes | update display pose | M0 |
 | R3 held | gripper closed near x | `Held(x)`; pose follows the EE | after G (no current metric needs it) |
-| R4 reveal | container z > 0.15 and cube x observed at the container's former xy | `SetDist(Inside(x), {c: 1})`, `source="verified"`, plus `Retract` of contradicted hypotheses | M5 (needs the peek variant) |
+| R4 reveal | container z > 0.15 and cube x observed at the container's former xy | `SetDist(Inside(x), {c: 1})`, `source="verified"`, plus `Retract` of contradicted hypotheses | M3 (needs a reveal: a container lifted) |
 | R5 exclusive | two or more cubes covered in the same frame | `SetDist` = marginals of `joint_exclusive` over the cubes covered **in this frame** only (their R1 beliefs are independent, so the joint is exact). Earlier cubes are left out: their beliefs may already be R5/R6 outputs, and recombining them counts the constraint twice (M1.1 review). Covers on different frames are not linked; an exact joint table over all hidden cubes is the upgrade if a source needs it. No consistent assignment → `AddEvidence(exclusive_conflict)` for M3's R8 | M1 |
 | R6 swap | a `near_pass(a, b)` evidence closes (M0), or `id_margin < m_thr` (M2) | `MixDist(Inside(h), a, b, w)` for every **hidden** h with mass on a or b; `AddEvent(swap)` only when w > 0. M0: w = w_mix·(1 − closeness). M1: w = w_max·exp(−d/d0), with d the 3D closest-approach distance (the M0 image form was removed in M1.1: the detector always records d). M2: w from the identity margin and G's measured signature | M0 / M1 / M2 |
 | R7 decay | each frame for unconfirmed items (Δt > 0) | `flatten`, pose conf decay | wired since M0 (λ = 1, off); λ is tuned in M2 |
@@ -173,7 +175,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 
 `decide(dist) → act | act_on_argmax | verify`, with thresholds `τ_hi`, `τ_lo` (M3 tunes them on train). They maximise expected utility U = +1 (act, correct), −`c_wrong` (act, wrong), −`c_verify` (verify), with defaults c_wrong = 1, c_verify = 0.3. On stock RoboMME, "verify" cannot execute (a wrong lift is an immediate failure), so it is scored as an outcome only.
 
-### 3.7 Arbiter protocol (M4)
+### 3.7 Arbiter protocol (optional since v1.4: an ablation inside the KB arm)
 
 - **Triggers:** a `near_pass` closes; a cube disappears with ≥ 2 candidate containers; `track_drop`; a risk evidence; and every `K` frames while something is hidden. Budget: ≤ 6 calls per episode, at least 20 frames apart.
 - **Input** (≤ 1,500 tokens): the system prompt (role: reconcile hypotheses; JSON only; cite evidence ids; never output coordinates or probabilities), `kb.text_view()`, the evidence lines since the last call, and ≤ 2 Set-of-Mark keyframes (max-overlap frame and min-margin frame; replays only).
@@ -187,11 +189,36 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 - **Patch → ops:** swap `clear` → `MixDist(w = 1 − ε)` (a full exchange); `ambiguous` → `w = 0.5`; `unlikely` → `w = 0`, which undoes the rule's mix by restoring the pre-mix distribution from the trace (not via Retract, which only moves mass to None; §3.2). `keep` drops the mass of the other containers (renormalised). Each risk becomes `AddEvidence(risk)`. Numbers come from this fixed table (method a) or, as an ablation, from self-consistency over k = 5 samples (method b: the agreement rate becomes w).
 - **What the arbiter can never do:** write a pose, create an object, or edit evidence.
 
-### 3.8 Planner and skills
+### 3.8 Controller (v1.4) and the rule-planner baseline
 
+**LLM controller** (M4–M5). It follows the 2610.17350 harness, whose code is released (github.com/jackbjed/embodied-astra-robomme), so that the only difference between arms is the memory the controller reads.
+- **Loop.** One call per action. After each executed waypoint, the controller receives the feedback the paper gives: TCP pose, finger positions, elapsed control steps, camera intrinsics / extrinsics, plus the new frames. The episode ends at the RoboMME step limit (1300) or when the model declares completion. Failures are counted with the paper's rules: simulator errors, unusable answers, three consecutive actions that execute no steps. No episode is excluded or retried.
+- **Action (strict JSON):** `{"waypoint": [x, y, z, roll, pitch, yaw], "gripper": -1|0|1, "target": "<object id or null>", "cites": ["<KB ids>"], "done": false, "note": "<= 80 chars"}`. Units are metres and radians, in the world frame. `target` and `cites` exist for explanation (E6). They do not constrain the waypoint.
+- **Validator:** schema; finite numbers inside the workspace box; `target` and every `cites` id exist in the KB; the reach check (`reach.py`) on the waypoint. An unreachable waypoint is returned to the model once with the reason, as the paper's executor would fail it. A second failure counts as an unusable answer. **Logged, not enforced:** the distance from the waypoint to the cited target's KB centroid, an analysis column that never blocks.
+- **Memory arms** (same model, prompt skeleton, action format, limits):
+
+| arm | the controller reads | tests |
+|---|---|---|
+| H | the full image history, as in 2610.17350 (front every 0.15 s, wrist, task video) | the paper's memory, with our model |
+| R | the raw tracker log as text (per-frame positions and visibility) + current frame(s) | perception without structure |
+| K | the KB text view (L0–L4) + the event log + current frame(s) | **the KB** (claims 1–2) |
+| K−L3 | K without the event log | does the event history matter |
+| K+A | K with the arbiter correcting beliefs at triggers (§3.7) | does belief arbitration help the controller |
+| ref | 2610.17350's GPT-6-Astra row (92.1%, $0.39 per episode), copied from the paper | reference from a different run, labelled |
+
+  Claim 1: K with the small model vs ref, and vs H with the small model. Claim 2: K vs H with the same model, on success and on tokens / images / $ per episode. K with an **oracle** KB (filled from simulator state) is reported as an upper bound only. The claims use a KB filled from perception.
+- **KB text view for the controller** (`views.py`):
+  - one line per object: id, class, colour, 3D centroid, extent, visibility, last seen;
+  - L2 relations with probabilities, e.g. `Inside(cube_red): bin_0 0.55 | bin_2 0.45`;
+  - the L3 event log in time order, with where-from and where-to ("t=60 bin_0 moved (0.14, 0.02) → (−0.03, 0.13); passed bin_2 at 1.2 cm: possible id swap");
+  - L4 goal and progress.
+
+  Budget: ≤ 1,500 tokens. Every line carries its KB id, so `cites` can point to it.
+
+**Rule planner (baseline; M0–M2 offline evaluation).**
 - `plan(view, cube) → PlanStep(skill, target, conf, decision, support, waypoints)`. The target is the argmax of `Inside(cube)`; `decision` comes from §3.6.
-- `pick(c)`: four 7-D waypoints `[x, y, z, roll, pitch, yaw, gripper]` in the world frame: pre-grasp (xy_c, z = 0.20, open), descend (xy_c, z_c, keep), close (−1), lift (z = 0.20, keep). Orientation is top-down (π, 0, yaw_c): yaw 0 until M5 estimates it.
-- M5 adds a **reach check** before any waypoint: a numpy damped-least-squares IK on Panda DH parameters, from the base at (−0.615, 0, 0). mplib has no macOS arm64 wheel, so the authoritative mplib check runs only on the pod.
+- `pick(c)`: four 7-D waypoints `[x, y, z, roll, pitch, yaw, gripper]` in the world frame: pre-grasp (xy_c, z = 0.20, open), descend (xy_c, z_c, keep), close (−1), lift (z = 0.20, keep). Orientation is top-down (π, 0, yaw_c); yaw is 0 until container yaw is estimated.
+- **Reach check** (used by both): a numpy damped-least-squares IK on Panda DH parameters, from the base at (−0.615, 0, 0). mplib has no macOS arm64 wheel, so the authoritative mplib check runs only on the pod.
 
 ### 3.9 Trace and debugging
 
@@ -239,7 +266,7 @@ arbiter-kb/
     sources/  __init__.py synthetic.py replay.py corrupt.py perceived.py(M6)
     systems/  __init__.py baselines.py arbiter_kb.py
     observe.py  detectors.py  identity.py(M2)  rules.py  monitor.py(M3)
-    arbiter.py(M4)  llm.py(M4)  planner.py  skills.py  reach.py(M5)
+    arbiter.py(optional)  llm.py(M4)  controller.py(M4)  harness.py(M4)  planner.py  skills.py  reach.py(M4)
     evaluate.py  metrics.py  plots.py
   scripts/  run.py  selftest.py  quality.py  make_notebook.py  measure_synthetic.py  copy_replays.sh(G)  measure_swaps.py(G)  tune.py(M2)
   stress/   stress_env.py  render.py  perceive.py  POD_RUN.md   (G; runs on the pod, outside the package)
@@ -334,7 +361,7 @@ numpy, scipy, matplotlib, pytest, nbformat, nbconvert, ipykernel. Nothing else w
 
 Time estimates are for a coding agent with review. Each phase lists: **Goal · Build (how) · Params · Done when · Not in scope**.
 
-**Order (v1.2):** M0 → M1 (plumbing) → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code is written right after M1, or alongside it. Tuning starts only after G (M2), against `id_swap_measured`.
+**Order (v1.2):** M0 → M1 (plumbing) → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code is written right after M1, or alongside it. Tuning starts only after G (M2), against `id_swap_measured`. **v1.4:** M2 serves claim 3; M3–M5 serve claims 1–2 and do not depend on M2. So after G, M3 / M4 may go before M2 (the user's call).
 
 ### M0 — Walking skeleton (1–2 days, Mac CPU)
 
@@ -447,74 +474,66 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 - (c) Under `id_swap_measured`, ArbiterKB beats **SoftHaircut(margin)** on AURC (bootstrap CI of the difference excludes 0) and on silent rate at matched clean coverage (the haircut thresholds swept on train to ArbiterKB's clean coverage); MarginHaircut and Bound are reported alongside. If ArbiterKB cannot beat SoftHaircut, NOTES says that the rule layer reduces to "a calibrated feature score suffices", before M3/M4 build on it. That does not decide claim 1: the belief layer's remaining value is propagation and the arbiter, tested in M4 against an LLM without the KB.
 - (d) Clean accuracy holds (M1 criterion).
 
-### M3 — Monitor and decisions (1 day, CPU)
+### M3 — A complete KB: events, relations, task progress (2–3 days, CPU)
 
-**Goal.** Beliefs change behaviour.
+**Goal.** The KB holds what a controller needs to act without the image history: where everything is, what happened (from where to where), and how far the task has got. Each item is a belief with support.
 
 **Build.**
-1. R8 consistency checks → risk evidence + `MixDist` toward uniform (`w_risk`).
-2. `decide()` with τ_hi / τ_lo tuned by expected utility on train (§3.6).
-3. Decision outcome columns: act-correct / act-wrong / verify.
+1. **L3 events from proprioception and geometry** (rules): `grasp` / `release` from gripper closure with an object at the fingers; `place` (where it was released); `press` (the end effector at a button, moving down); `reveal` (a container lifted and the cube seen again: R4). Counts, order and timing are derived from the log by `count()` / `order()` / `t_since()`, never stored.
+2. **L2 relations:** `Held` (R3), `On` (resting, xy overlap, height difference ≈ the lower object's height), `Near`, `LeftOf` (robot frame, RoboMME's convention). `Inside` stays as it is.
+3. **L0 / L1:** extent from the mask (replays) or the generator (synthetic); stationary intervals; visibility `held` and `occluded_by_arm`; container yaw (mask PCA on replays).
+4. **L4:** goal parsed from the task template; progress from L3 against the goal (for example 2 of 3 picks).
+5. **Event log view** (§3.8): the controller's text, deterministic, one line per event with where-from and where-to and the evidence ids. An optional VLM-written one-line summary at event moments, marked as `source: arbiter` with cites, behind a flag. It is measured, not assumed (M4 item 5).
+6. R8 consistency checks → risk evidence (a cube Inside two containers, Held and Inside at once, …).
+
+**Done when.**
+- (a) `make check`, with a unit test per new rule on hand-made frames.
+- (b) On synthetic and oracle replays, each relation and event is compared with simulator truth. Report precision / recall per type, and the calibration of the L2 probabilities.
+- (c) The KB text view of an episode fits in 1,500 tokens, and every line resolves to observations via `debug explain`.
+
+### M4 — Controller harness on the Mac (2–3 days, CPU + OpenRouter)
+
+**Goal.** The same closed-loop harness as 2610.17350, with the memory arm as the only switch, runs end to end on a few episodes.
+
+**Build.**
+1. `llm.py`: the OpenRouter client (§5.2), the cache, the budget cap and usage accounting (calls, input / output tokens, images, s, $).
+2. `harness.py`: port the 2610.17350 loop (prompt skeleton, feedback, completion and failure rules) from its released code. Record what was changed and why, line by line, in NOTES.
+3. `controller.py`: the memory arms of §3.8 (H, R, K, K−L3, K+A), the prompt builder, the action schema, the validator and the reach check.
+4. A **replay-driven dry run** on the Mac: the controller answers on recorded frames without moving the arm, so prompt, parsing and validation can be debugged without a GPU. Prompt iteration happens only on train episodes. The prompt text is frozen, with its hash in `params.json`, before any test read.
+5. **Who should fill L2–L4** (cheap, before M5): on G's episodes, a small VLM labels relations and events at keyframes. Compare its labels with the rules' and with simulator truth, per type, as accuracy and confidence calibration. The result decides which layers the VLM may write.
+
+**Done when.**
+- (a) `make check`: validator tests, including a waypoint outside the workspace, an unreachable one, an invented cite, a missing field and a cache replay that reproduces the run exactly.
+- (b) The dry run on 5 train replays per arm, with tokens / images / $ per call.
+- (c) A cost estimate for M5, shown to the user before any closed-loop spend.
+
+### M5 — Closed-loop comparison on RoboMME (pod GPU + OpenRouter; needs the user's go)
+
+**Goal.** Claims 1 and 2, first on the permanence suite (where the KB is most complete), then on counting and imitation when M3's layers cover them.
+
+**Build.**
+1. On a GPU + Vulkan pod: `make_env(..., action_space="waypoint")` and the M4 harness. Arms H, R, K, K−L3 with the small model on the same train-tuned prompt; K+A if M2 shows that beliefs move.
+2. The KB is filled from **perception** (G's pipeline). The oracle KB is an upper-bound row.
+3. Report success per task and suite (Wilson), calls, input tokens, images and $ per episode, and wall time. Failure categories use the paper's list: premature completion, unintended contact, late press, out of reach, motion planning, unusable answer.
+4. A larger model in arms H and K, if the budget allows: this tests claim 2 for a model that already succeeds with the full history.
 
 **Done when.**
 - (a) `make check`.
-- (b) The table shows decision outcomes for every system (the baselines always "act").
-- (c) Under corruption, ArbiterKB converts a measurable share of act-wrong into verify; the number is reported with intervals.
+- (b) The table: success and cost per arm, with paired bootstrap intervals on K − H and K − R over the same episodes.
+- (c) NOTES says, for each falsifier in GOALS, whether these numbers support or refute it.
 
-### M4 — Arbiter (3 days, CPU + OpenRouter)
+### M6 — Final evaluation (2–3 days; pod for closed-loop runs)
 
-**Goal.** Test whether a small LLM adds value over RuleOnly, at a measured cost, **and whether the KB adds value to the LLM**. Four systems, the same LLM and budget (user discussion, 2026-10-28):
-
-| | system | answers |
-|---|---|---|
-| A | Bound | no KB, no LLM |
-| B | ArbiterKB RuleOnly | KB, no LLM |
-| C | **LLM on the raw tracker log** | no KB: the LLM reads the per-frame tracked positions / visibility (compact text, same keyframes) and answers with the same JSON schema |
-| D | ArbiterKB + LLM arbiter | KB evidence and candidates, cited |
-
-D > B means the LLM helps. **D > C means the KB helps**; this is the main test of the belief layer. Without C, any gain of D could be the LLM's alone.
+**Goal.** The claims are made here: every arm on the RoboMME test episodes after the freeze, plus claim 3's memory table (calibration and silent failure under perceived input and G's stress settings).
 
 **Build.**
-1. `llm.py`: the OpenRouter client (§5.2), `CachedBackend`, budget cap, usage accounting.
-2. `arbiter.py`: triggers, keyframe selection, prompt builder, JSON schema, validator, `patch_to_ops`, retry-then-fallback. Strength-to-weight table (method a); self-consistency k = 5 (method b), behind a flag.
-3. Construct the cases where rules are weakest. Synthetic: 3 containers moving at once, lane_offset 0.02, swap_steps 15, two hidden cubes. Report RuleOnly and +LLM on these and on the standard set.
-4. Prompt iteration only on train episodes. Freeze the prompt text (hash in `params.json`) before test.
-
-**Done when.**
-- (a) `make check` (validator tests, including a patch with a coordinate and a patch with an invented evidence id).
-- (b) 100% of applied patches validate; fallbacks counted.
-- (c) A cache replay reproduces the KB exactly.
-- (d) The table includes calls / tokens / s / $ per episode, next to the 2610.17350 row (9.5 calls, 18.3 s per call, $0.39 per episode; labelled "different system and setting").
-- (e) RuleOnly vs +LLM (B vs D) and **raw-log LLM vs KB + LLM (C vs D)**: differences in AURC, silent failure at matched coverage and Brier, plus tokens / $ per episode, with paired bootstrap intervals. No difference in B vs D is the plan's falsifier 2; no difference in C vs D (at equal or lower cost for C) falsifies "the KB helps the LLM". Both are reportable findings.
-
-### M5 — Planner, skills, reach check (2 days, CPU; optional GPU closed loop)
-
-**Goal.** The KB's output is a usable pose.
-
-**Build.**
-1. Container yaw: replays use PCA of the container mask's back-projected points; synthetic uses the known yaw plus noise. Store it in the L0 pose belief.
-2. `reach.py`: damped-least-squares IK on Panda DH (numpy), with joint limits; reject unreachable waypoints → `decision = "unreachable"` (never send one: a planning failure ends a RoboMME episode).
-3. Grasp-error metric vs the true container pose at t*; project the waypoints onto the image (`figures/`).
-4. Optional, with the user's go, on a GPU + Vulkan pod: closed loop with `make_env(..., action_space="waypoint")` on 5 episodes; report success, steps per waypoint, wall time. The authoritative mplib reach check runs there too.
+1. The frozen prompt and parameters on the test split (E5c ledger).
+2. `PerceivedSource` from G's cached perception outputs, for claim 3's offline table (the systems of M2).
+3. A failure analysis: for every K failure, whether the KB was wrong (claim 3), the KB lacked something (which layer), or the controller misused a correct KB.
 
 **Done when.**
 - (a) `make check`.
-- (b) On clean oracle input the planned grasp is within 3 cm of the true container in ≥ 95% of episodes.
-- (c) Reach-check agreement with mplib on ≥ 50 sampled poses (pod only, else SKIPPED).
-
-### M6 — Full evaluation on real RoboMME data (2–3 days; GPU pod only for new renders)
-
-**Goal.** The claims are made here: every system on the RoboMME oracle replays and on perceived input (stock and G's stress settings), with the frozen parameters.
-
-**Build.**
-1. Run every phase's evaluation on `OracleReplaySource` (train for tuning, test after the freeze).
-2. `PerceivedSource` from G's cached perception outputs (and new renders if more episodes are needed).
-3. The full table on perceived input, per stress setting.
-4. **Peek variant** (optional): `failure_func=None` for the pick tasks plus R4 reveal → measure verify-then-act.
-
-**Done when.**
-- (a) `make check`.
-- (b) The final table (oracle, perceived × stress settings) with Wilson intervals, cost row included.
+- (b) The final tables (success and cost per arm; claim 3 calibration / silent failure), with intervals and the reference row.
 - (c) NOTES maps each claim and falsifier in GOALS.md to the numbers that support or refute it.
 
 ---
@@ -522,6 +541,6 @@ D > B means the LLM helps. **D > C means the KB helps**; this is the main test o
 ## 7. Open questions (track in NOTES; answer by measurement)
 1. Do the pod replay caches contain segmentation and depth? (Checked in G's pod session.)
 2. Does Cutie expose a usable confidence? If not, `track_q` = mask-area change + identity margin (M2).
-3. Is the rule planner enough on RoboMME? The LLM planner is out of scope unless M4 shows the arbiter helps.
+3. ~~Is the rule planner enough on RoboMME?~~ Superseded by v1.4: the LLM controller is the main system and the rule planner is a baseline.
 4. ECoMEM's update parameters are unpublished: implement it as a structural baseline (log-odds + half-life + hysteresis) only if time allows after M4.
 5. **Containment as a defeasible default (user discussion, 2026-10-28).** Bound hard-codes "a covered cube moves with its container", with confidence 1. That is the VideoUnmaskSwap task rule, not physics. In the real world it fails when a container is lifted (the cube stays behind), when a cube slips out during a fast slide, or when someone removes it while it is covered. Frozen (HODOR) is the opposite extreme and fails on this task. ArbiterKB can treat containment as a default that holds unless contradicted: keep mass on `None` ("not inside"; ε_none is only 0.01 now), and move mass there on contrary evidence (the container lifted rather than slid, or the cube seen again at its old spot). This is propagation that a one-line score cannot do, so it is a candidate scenario where the belief layer could show value. Caveat: synthetic data never has a cube left behind. Adding it only in synthetic data repeats the "we design the problem we solve" trap. First check whether RoboMME or G's real data contain such cases (lift vs slide; objects left behind).

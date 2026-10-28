@@ -1,6 +1,6 @@
 # ArbiterKB
 
-A robot knowledge base whose facts carry beliefs (confidence, time, evidence). Classical algorithms propose; a small LLM arbitrates (from M4); the KB outputs a skill plus key poses for an IK / motion-planning executor. Build spec: `DEVELOPMENT.md`. Goals: `docs/GOALS.md`. Log: `NOTES.md`.
+A robot knowledge base whose facts carry beliefs (confidence, time, evidence), used as the memory module of an LLM controller that outputs waypoints for a motion planner (spec v1.4). The goal is to match a frontier VLM that reads the whole image history (arXiv 2610.17350), with a smaller model or far fewer tokens. Build spec: `DEVELOPMENT.md`. Goals: `docs/GOALS.md`. Log: `NOTES.md`.
 
 **Status: M0 (walking skeleton) built.** It runs on synthetic RoboMME-like data on CPU: three systems (Frozen, Bound, ArbiterKB-RuleOnly), id-swap corruption, metrics, traces and debug. Stubs: monitor (M3), arbiter LLM (M4), grasp yaw / reach check (M5), real perception (M6). Real replays are supported but need `scripts/copy_replays.sh`.
 

@@ -1,6 +1,11 @@
 # ArbiterKB: handoff (2026-10-28, 04:20 PT)
 
-Read first: `DEVELOPMENT.md` (spec v1.3, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
+Read first: `DEVELOPMENT.md` (spec v1.4, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
+
+## Direction (changed 2026-10-28, NOTES "Direction v2")
+- The KB is the memory module of an LLM controller that outputs waypoints itself, in the 2610.17350 harness.
+- Claims: (1) a smaller model, or (2) far fewer tokens and images, at matched success; (3) the KB's beliefs are calibrated (G and M2).
+- After G: M3 (complete KB) and M4 (controller harness, dry run on the Mac) may go before M2.
 
 ## Where things are
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
@@ -59,9 +64,11 @@ Read first: `DEVELOPMENT.md` (spec v1.3, §6 phases), `docs/GOALS.md` (claims, f
    - Findings on train seeds: ArbiterKB = SoftHaircut exactly under id_swap_overlap.
    - Under pos_noise ArbiterKB was worse, because R1 returned a confident {None: 1}. Fixed (`eps_far`, re-frozen as f59aaea5e5b2): ArbiterKB now beats SoftHaircut under pos_noise, on held-out train seeds 450–749 as well.
    - That gain is a cover-distance feature, not the KB. In M2, give SoftHaircut the same check.
-2. **M4 skeleton:**
+2. **M4 skeleton (now the controller harness, spec v1.4 §3.8 / M4):**
    - `llm.py` (OpenRouter `qwen/qwen3.6-35b-a3b`, DeepInfra pinned; key in the git-ignored `.env`, never printed), with a cache and a budget cap;
-   - the prompt builder for arm D (KB text view + cited evidence);
-   - **arm C, an LLM on the raw tracker log without a KB** (same schema, same keyframes). C vs D is the main test of whether the KB helps.
+   - `harness.py`, ported from the 2610.17350 code;
+   - `controller.py` with the memory arms H / R / K / K−L3 / K+A and the waypoint validator;
+   - a replay-driven dry run on the Mac (no GPU).
+   - M3's event log and the other KB layers can be built in parallel.
 3. **Open question §7 q5 (containment as a defeasible default):** check whether RoboMME or other tasks have "container lifted, object left behind" cases before building anything synthetic.
 4. **MINORs from the M1.1 code review** (listed at the end of NOTES M1.2): haircut-trigger trace, argmax tie order, and so on.

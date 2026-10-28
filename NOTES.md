@@ -344,3 +344,36 @@ The pos_noise finding above is fixed. The table above is **before the fix** (par
   - The pos_noise gain is real on unseen train seeds. But it is a **cover-distance check** ("no container near where the cube vanished → even odds"), i.e. one more feature. A tracker baseline could copy it in two lines; SoftHaircut lacks it only because it copies R6, not R1.
   - It is not propagation and not evidence for the belief layer. It also lives on our own pos_noise (σ = 15 mm, chosen by us).
   - **No claim moves.** For M2 (c), SoftHaircut should get the same cover-distance check, so that the comparison isolates the KB again.
+
+## Direction v2 — the KB as an LLM controller's memory (2026-10-28, user decision)
+The user, in discussion: "I definitely want the LLM to output the path. Our goal is to use a more complete KB as the memory module that helps a large model control the robot. We want either a smaller model to reach the same result, or to save a large number of tokens: not looking at many photos, just being given the latest KB, can do the same thing." The reference is arXiv 2610.17350:
+- GPT-6-Astra reads the whole image history (a median of 148 images) and outputs one world-frame waypoint per call;
+- 92.1% on RoboMME, $0.39 per episode;
+- its code is released.
+
+**What changes:**
+- `docs/GOALS.md`:
+  - New research question and claims:
+    1. **smaller model:** a small open model with the KB approaches the frontier result;
+    2. **fewer tokens:** the KB + the current frame matches the full image history with the same model.
+  - The old claim ("knows when it is wrong") stays as claim 3: calibration and silent failure. G and M2 serve it.
+  - New falsifiers: the raw image history does as well as the KB; the raw tracker log does as well; KB + current frame loses needed information.
+  - New traps: an oracle KB is an upper bound only; the arms must differ only in memory.
+  - "An LLM planner" is removed from the non-goals. Counting and imitation come after permanence, once their KB layers exist.
+- `DEVELOPMENT.md` v1.4:
+  - §3.8: the LLM controller in the 2610.17350 harness (one waypoint per call, with target and cites). Its validator checks schema, workspace and reach; the distance from the waypoint to the cited target is logged, not enforced.
+  - Memory arms: H (full images), R (raw tracker log), K (KB + event log), K−L3, K+A (with the arbiter). The paper's GPT-6 number is a labelled reference row. The rule planner becomes a baseline. The arbiter (§3.7) becomes an optional ablation.
+  - §6 phases:
+    - **M3:** a complete KB: L3 events (grasp / release / place / press / reveal), L2 Held / On / Near / LeftOf, L0 / L1 extent and stationary intervals, L4 progress, and the event-log view with where-from and where-to. Each is checked against simulator truth.
+    - **M4:** the controller harness, ported from the paper's code, with a replay-driven dry run on the Mac, plus a cheap test of whether a small VLM or the rules should fill each of L2–L4.
+    - **M5:** the closed-loop comparison on a pod (the user's go needed).
+    - **M6:** the final test-split evaluation, the claim 3 table and a failure analysis (KB wrong / KB missing something / controller misused it).
+  - Compute: GPU in G, M5 and M6 only. E6: controller actions cite KB items. E8: closed-loop caps are set per experiment by the user.
+- **Not changed:** code, parameters (hash f59aaea5e5b2), G (running on the pod), M2.
+
+**What this means for the work so far.** M0–M2 built the KB core, the evidence and belief layer, and the evaluation. All of it stays. It becomes claim 3, and the memory that arm K reads. The M2 infra finding (rules = a scoring formula on swap detection) is about claim 3 only. Claims 1–2 have not been tested at all yet.
+
+**Open points for the user:**
+- After G, decide whether M3 / M4 go before M2 (they do not depend on it).
+- Decide on the model for claim 2's larger-model arm (budget).
+- The closed-loop runs need a pod with the simulator. Rough cost: 9.5 calls × 18 s per call in the paper's harness, so about 3 min of model time per episode plus the simulator. A per-arm estimate comes in M4 (c).
