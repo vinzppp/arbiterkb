@@ -18,18 +18,22 @@ def containers(kb: KB) -> list[str]:
 
 def r1_cover(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """A cube vanishes while containers are within r_cover of where it was (in the same frame, which
-    covers RoboMME's teleport) -> Inside(cube) ∝ exp(-d²/2σ²) over those containers."""
+    covers RoboMME's teleport) -> Inside(cube) ∝ exp(-d²/2σ²) over those containers.
+    No container within r_cover (e.g. a noisy last sighting): the cover was not seen, so every visible
+    container is a candidate and 'elsewhere' gets eps_far (no hypothesis above even odds). Only with no
+    visible container at all is the belief {None: 1} and the cube 'unknown' (M2 infra finding)."""
     ops = []
     for ev in new_ev:
         if ev.kind != "disappear" or kb.objects[ev.args[0]].cls != "cube":
             continue
         cube, last = ev.args[0], np.asarray(ev.data["last_xyz"])
-        cand, sup = {}, {}
-        for c in containers(kb):
-            o = frame.objects[c]
-            if o.visible and (d := float(np.linalg.norm(o.xyz[:2] - last[:2]))) < p.r_cover:
-                cand[c], sup[c] = d, [ev.id, obs_id(frame.t, c)]
-        dist = Distribution.from_distances(cand, p.sigma_cover, frame.t, sup, p.eps_none, [ev.id])
+        seen = {c: float(np.linalg.norm(frame.objects[c].xyz[:2] - last[:2])) for c in containers(kb)
+                if frame.objects[c].visible}
+        cand = {c: d for c, d in seen.items() if d < p.r_cover}
+        eps = p.eps_none if cand else p.eps_far
+        cand = cand or seen
+        sup = {c: [ev.id, obs_id(frame.t, c)] for c in cand}
+        dist = Distribution.from_distances(cand, p.sigma_cover, frame.t, sup, eps, [ev.id])
         best, pm = dist.argmax()
         ops.append(SetDist("Inside", cube, dist))
         ops.append(SetVis(cube, "hidden" if cand else "unknown", pm, frame.t, [ev.id]))

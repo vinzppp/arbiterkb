@@ -34,10 +34,29 @@ def test_r1_two_candidates_closest_wins():
     assert d.probs["bin_a"] / d.probs["bin_b"] == pytest.approx(np.exp((0.03**2 - 0.01**2) / (2 * 0.02**2)))
 
 
-def test_r1_no_candidate_is_unknown_with_support():
+def test_r1_no_candidate_within_r_cover_is_at_most_even_odds():
     kb = KB(OBJS)
     ev = disappear(kb, 32, (0.0, 0.0))
     ops = r1_cover(kb, [ev], frame(32, {"bin_a": (0.2, 0), "bin_b": None}), RuleParams())
+    d = next(o.dist for o in ops if isinstance(o, SetDist))
+    vis = next(o for o in ops if isinstance(o, SetVis))
+    assert d.probs == {"bin_a": 0.5, None: 0.5} and vis.state == "hidden"
+    assert d.argmax() == ("bin_a", 0.5)  # below tau_hi: never a silent failure
+    assert d.hyp_support[None] == [ev.id] and ev.id in d.support
+
+
+def test_r1_far_candidates_keep_the_distance_kernel():
+    kb = KB(OBJS)
+    ev = disappear(kb, 32, (0.0, 0.0))
+    ops = r1_cover(kb, [ev], frame(32, {"bin_a": (0.07, 0), "bin_b": (0.12, 0)}), RuleParams())
+    d = next(o.dist for o in ops if isinstance(o, SetDist))
+    assert d.probs[None] == pytest.approx(0.5) and d.probs["bin_a"] > d.probs["bin_b"]
+
+
+def test_r1_no_visible_container_is_unknown_with_support():
+    kb = KB(OBJS)
+    ev = disappear(kb, 32, (0.0, 0.0))
+    ops = r1_cover(kb, [ev], frame(32, {"bin_a": None, "bin_b": None}), RuleParams())
     d = next(o.dist for o in ops if isinstance(o, SetDist))
     vis = next(o for o in ops if isinstance(o, SetVis))
     assert d.probs == {None: 1.0} and d.support == [ev.id] and vis.state == "unknown"

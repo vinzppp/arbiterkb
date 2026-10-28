@@ -160,7 +160,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 
 | Rule | Fires when | Ops | Phase |
 |---|---|---|---|
-| R1 cover | cube visible→not visible at t, and containers visible at t with xy distance d < `r_cover` to the cube's last xy | `SetDist(Inside(cube), from_scores(d, σ_cover))`; no candidate → `{None: 1}`; `AddEvent(cover)`. Covers the teleport case: the container appears in the same frame | M0 |
+| R1 cover | cube visible→not visible at t, and containers visible at t with xy distance d < `r_cover` to the cube's last xy | `SetDist(Inside(cube), from_scores(d, σ_cover))`; no container within `r_cover` → every visible container is a candidate and "elsewhere" gets `eps_far` (0.5: the cover was not seen; M2 infra); no visible container → `{None: 1}`; `AddEvent(cover)`. Covers the teleport case: the container appears in the same frame | M0 |
 | R2 follow | each frame for hidden cubes | update display pose | M0 |
 | R3 held | gripper closed near x | `Held(x)`; pose follows the EE | after G (no current metric needs it) |
 | R4 reveal | container z > 0.15 and cube x observed at the container's former xy | `SetDist(Inside(x), {c: 1})`, `source="verified"`, plus `Retract` of contradicted hypotheses | M5 (needs the peek variant) |
