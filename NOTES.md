@@ -638,3 +638,31 @@ Reading (n = 20, synthetic, oracle observations, text only, a single step: **plu
   - **SoftHaircut ties ArbiterKB exactly** again (ΔAURC 0.0 [0.0, 0.0001], 300 / 300 same answers).
   - Accuracy is low for every system: about 0.42 of rows are wrong, and graded confidence only ranks them. R6 still uses d0 = 2 cm, tuned to the 3 cm overlap swaps, while real swaps happen at 5–9 cm.
 - **Next (M2 branch "frequent and hard to predict"):** the identity check (`identity.py`, Hungarian margin) and R6 v2, tuned on train seeds against `id_swap_measured`, with SoftHaircut given the same feature. Then a freeze and one test read. The `--vocab open` re-run (POD_RUN §6b) is still needed before claims.
+
+## Which small VLM can list the objects? (2026-10-28, user request)
+User idea: let a VLM list the "clue objects" (6–10) in a frame, and run GroundingDINO → SAM → Cutie on those phrases, instead of the simulator's object list. With thinking off, how small can that VLM be?
+- **Test** (`results/latest/vlm_list_bench/`: the 4 frames, `bench.py.txt`, `bench.log`):
+  - Four real RoboMME VideoUnmaskSwap front frames, cropped from `scene-graph-robot/notebooks/pilot/figures/02_frames.png` (episode 0):
+    - f21: red, green and blue cubes;
+    - f56: 3 containers (cubes covered);
+    - f105: 3 containers mid-swap;
+    - f325: 3 containers, one held by the robot, plus a green cube.
+  - The prompt asks for every movable object on the table (not the table, not the robot) as JSON `{name, color, count}`. Thinking off; default OpenRouter routing; one call per frame.
+- **Scoring:** a frame is right when the total count is right, the coloured cubes are exactly right, and no other kinds of object are named. Nearly every model calls the white containers "white/gray cubes" (they look like small white boxes). That is accepted, since the phrase only has to work as a GroundingDINO prompt.
+
+| model | right | s / call | $ for 4 calls | failures |
+|---|---|---|---|---|
+| qwen/qwen3-vl-8b-instruct | **4 / 4** | 0.9 | 0.00026 | — |
+| qwen/qwen3.5-9b (thinking off) | **4 / 4** | 1.1 | 0.00013 | — |
+| qwen/qwen3-vl-30b-a3b-instruct | **4 / 4** | 2.6 | 0.00018 | — |
+| qwen/qwen3.6-35b-a3b (thinking off) | 3 / 4 | 1.0 | 0.00021 | f56: 4 objects for 3 |
+| google/gemma-4-26b-a4b-it | 3 / 4 | 1.6 | 0.00018 | f325: missed the held container |
+| google/gemma-3-4b-it | 2 / 4 | 3.9 | 0.00008 | invents a "robot" and a "button" |
+| mistralai/ministral-3b-2512 | 2 / 4 | 1.3 | 0.00010 | cubes called "balls"; f325 one extra |
+| mistralai/ministral-8b-2512 | 1 / 4 | 2.9 | 0.00015 | "spheres", an extra "object" |
+| google/gemma-3-12b-it | 0 / 4 | 2.3 | 0.00012 | an extra object in every frame |
+
+Reading:
+- About 8–9B is the floor here: qwen3-vl-8b and qwen3.5-9b get all four, in about 1 s and for a fraction of a cent. Below that, models invent objects or misname the coloured cubes.
+- **This is a tiny test:** 4 frames from 1 episode, frames resampled from a figure, counting only, and no case with many or unusual objects. Before choosing, re-run on G's replays: dozens of frames with simulator truth, frames before and after covers, and while held. Also count misses and inventions separately.
+- In this test, thinking off costs about 1 s per call, against 5–40 s with thinking. That settles the keyframe VLM latency.

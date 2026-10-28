@@ -1,0 +1,57 @@
+"""Which small VLM can list the movable objects in a RoboMME front frame? (scratch benchmark)"""
+import json, sys, time
+import matplotlib.image as mpimg, numpy as np
+sys.path.insert(0, "/Users/vincentcfpun/Code/active/arbiter-kb")
+from arbiter_kb.llm import LLM
+from arbiter_kb.controller import image_part, parse_answer
+S = "/private/tmp/claude-501/-Users-vincentcfpun-Code-active-arbiter-kb/1c960d9e-24c0-4a58-a150-2f9041bad053/scratchpad/vlm/"
+TRUTH = {"f21": {("cube", "red"): 1, ("cube", "green"): 1, ("cube", "blue"): 1},
+         "f56": {("container", ""): 3}, "f105": {("container", ""): 3},
+         "f325": {("container", ""): 3, ("cube", "green"): 1}}
+PROMPT = ("This is a robot's front camera looking down at a table. List every movable object ON the table "
+          "(not the table, not the robot itself; include an object the robot is holding). Answer with JSON only: "
+          '{"objects": [{"name": "<one word, e.g. cube, container>", "color": "<one word>", "count": <int>}]}')
+SYN = {"cube": "cube", "block": "cube", "container": "container", "cup": "container", "bin": "container",
+       "box": "container", "bowl": "container", "cover": "container", "lid": "container", "mug": "container"}
+MODELS = [("qwen/qwen3.6-35b-a3b", {"enabled": False}), ("google/gemma-4-26b-a4b-it", {"enabled": False}),
+          ("qwen/qwen3-vl-30b-a3b-instruct", None), ("google/gemma-3-12b-it", None), ("qwen/qwen3-vl-8b-instruct", None),
+          ("mistralai/ministral-8b-2512", None), ("qwen/qwen3.5-9b", {"enabled": False}), ("google/gemma-3-4b-it", None),
+          ("mistralai/ministral-3b-2512", None)]
+
+
+def norm(ans):
+    out = {}
+    for o in (ans or {}).get("objects", []) if isinstance(ans, dict) else []:
+        name = SYN.get(str(o.get("name", "")).lower().rstrip("s"), str(o.get("name", "")).lower())
+        key = (name, str(o.get("color", "")).lower() if name == "cube" else "")
+        try:
+            out[key] = out.get(key, 0) + int(o.get("count", 1))
+        except (TypeError, ValueError):
+            out[key] = out.get(key, 0) + 1
+    return out
+
+
+def err(pred, truth):
+    keys = set(pred) | set(truth)
+    return sum(abs(pred.get(k, 0) - truth.get(k, 0)) for k in keys)
+
+
+for model, reasoning in MODELS:
+    m = LLM(model=model, provider=None, reasoning=reasoning, max_usd=0.5)
+    exact, total_err, rows = 0, 0, []
+    t0 = time.time()
+    for f, truth in TRUTH.items():
+        msgs = [{"role": "user", "content": [{"type": "text", "text": PROMPT},
+                                             image_part((mpimg.imread(S + f + ".png")[..., :3] * 255).astype(np.uint8))]}]
+        try:
+            text = m.chat(msgs, max_tokens=600)
+        except Exception as e:
+            text = f"ERROR {e}"[:120]
+        pred = norm(parse_answer(text))
+        e = err(pred, truth)
+        exact += e == 0
+        total_err += e
+        rows.append((f, {f"{k[0]}{'/' + k[1] if k[1] else ''}": v for k, v in pred.items()} or text[:80]))
+    u = m.usage
+    print(json.dumps({"model": model, "exact": f"{exact}/4", "count_err": total_err, "s_per_call": round(u["seconds"] / max(u["misses"], 1), 1),
+                      "usd": round(u["usd"], 5), "out_tok": u["completion_tokens"], "reasoning_tok": u["reasoning_tokens"], "answers": rows}), flush=True)
