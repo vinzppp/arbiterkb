@@ -39,6 +39,23 @@ def git_commit() -> str:
         return "no-git"
 
 
+PARAMS_FILE = ROOT / "params.json"
+
+
+def load_params() -> Params:
+    """The one parameter set evaluations may use; the test split requires it to be frozen (E5c)."""
+    if not PARAMS_FILE.exists():
+        sys.exit(f"{PARAMS_FILE.name} missing: run `python scripts/run.py --freeze` (M0) or scripts/tune.py (M1+)")
+    return Params.load(PARAMS_FILE)
+
+
+def freeze(force: bool = False) -> None:
+    if PARAMS_FILE.exists() and not force:
+        sys.exit(f"{PARAMS_FILE.name} exists; refusing to overwrite without --force")
+    Params(frozen=True, note="M0 defaults, untuned, frozen before any test read").save(PARAMS_FILE)
+    print("wrote", PARAMS_FILE)
+
+
 def systems(params: Params) -> list:
     return [TrackerSystem("frozen", params), TrackerSystem("bound", params), ArbiterKBSystem(params)]
 
@@ -52,24 +69,32 @@ def evaluate(args, params: Params) -> tuple[Path, list[dict], dict]:
         return None, [], {}
     tag = hashlib.sha256(json.dumps(vars(args), sort_keys=True).encode()).hexdigest()[:8]
     run_dir = ROOT / "results" / "runs" / f"{args.source}_{args.split}_{tag}"
-    params.save(run_dir / "params.json")  # written (frozen) before the first test read: E5c
+    params.save(run_dir / "params.json")  # copy of the parameters this run used
+    first_read = time.strftime("%Y-%m-%d %H:%M:%S")
     rows, traces, step_s, logs = [], {}, [], {}
     for cond in args.corrupt.split(","):
-        src = base if cond == "none" else CorruptedSource(base, cond, args.p)
+        src = base if cond == "none" else CorruptedSource(base, cond, args.p, v_move=params.detect.v_move)
         log = getattr(src, "log", {})
-        r, tr, st = run(systems(params), src, eps, params, cond, lambda ep: log.get(ep, {}).get("corrupted", False))
+        r, tr, st = run(systems(params), src, eps, params, cond, lambda ep, lg=log: lg.get(ep, {}).get("corrupted", False))
         rows += r
         step_s += st
         traces.update({(f"{cond}_{s}", ep): v for (s, ep), v in tr.items()})
         logs[cond] = log
     meta = {"commit": git_commit(), "args": vars(args), "params_hash": params.hash(),
-            "contract_version": CONTRACT_VERSION, "created": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "contract_version": CONTRACT_VERSION,
+            "params_file_mtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(PARAMS_FILE.stat().st_mtime))
+            if PARAMS_FILE.exists() else None, "first_data_read": first_read, "created": time.strftime("%Y-%m-%d %H:%M:%S"),
             "corruption_log": logs, "median_step_ms": 1000 * sorted(step_s)[len(step_s) // 2] if step_s else None,
             "llm_cache": {"hits": 0, "misses": 0}}
     summary = save_run(run_dir, rows, params, meta, traces)
+    keep = ROOT / "results" / "latest" / f"{args.source}_{args.split}_n{args.n}_p{args.p}"  # committed (E10)
+    keep.mkdir(parents=True, exist_ok=True)
+    for f in ("summary.csv", "meta.json"):
+        (keep / f).write_bytes((run_dir / f).read_bytes())
     print_table(summary)
     print(f"run dir: {run_dir.relative_to(ROOT)}")
-    return run_dir, summary, {"traces": traces, "logs": logs, "rows": rows, "step_s": step_s}
+    return run_dir, summary, {"traces": traces, "logs": logs, "rows": rows, "step_s": step_s,
+                              "source": args.source, "p": args.p}
 
 
 def print_table(summary: list[dict]) -> None:
@@ -94,7 +119,7 @@ def figure(run_dir: Path, info: dict, base) -> Path | None:
     title = (f"episode {ep}: the true container is labelled {a} until t={log[ep]['t']}, then {b} "
              f"(the tracker swapped the two ids)")
     marks = {"cover": COVER_T, "corruption": log[ep]["t"], "t*": gt.t_star[cube]}
-    out = ROOT / "figures" / "m0_belief_timeline.png"
+    out = ROOT / "figures" / f"m0_belief_timeline_{info['source']}_p{info['p']}.png"
     return belief_timeline(tr[("id_swap_arbiterkb", ep)], {"bound": tr[("id_swap_bound", ep)],
                            "frozen": tr[("id_swap_frozen", ep)]}, cube, a, bins, marks, out, title)
 
@@ -107,12 +132,16 @@ def main() -> None:
     ap.add_argument("--split", default="test", choices=["train", "test"])
     ap.add_argument("--n", type=int, default=30)
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--freeze", action="store_true", help="write params.json from defaults (M0 only)")
+    ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
+    if args.freeze:
+        return freeze(args.force)
     if args.selftest:
         from selftest import selftest  # scripts/selftest.py
 
         sys.exit(selftest())
-    run_dir, summary, info = evaluate(args, Params())
+    run_dir, summary, info = evaluate(args, load_params())
     if run_dir is not None and args.source == "synthetic":
         print("figure:", figure(run_dir, info, SyntheticSource()))
 

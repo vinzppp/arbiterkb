@@ -306,33 +306,6 @@ def apply_rule(
     return out, tr.events
 
 
-# copied from sg_pilot.py:814 @ e2e06f9
-def target_error(
-    graph: np.ndarray,
-    full_xyz: np.ndarray,
-    node: int | np.ndarray,
-    K: np.ndarray,
-    E: np.ndarray,
-):
-    """Per-frame error of one node against the full oracle: (pixels [T], metres [T]).
-
-    node is one node id, or a [T] array of ids (the active target per frame).
-    """
-    T = len(graph)
-    nodes = np.broadcast_to(np.asarray(node), (T,))
-    px, m = np.full(T, np.nan), np.full(T, np.nan)
-    for t in range(T):
-        node = int(nodes[t])
-        if np.all(np.isfinite(full_xyz[t, node])) and np.all(
-            np.isfinite(graph[t, node, F_X : F_Z + 1])
-        ):
-            m[t] = np.linalg.norm(graph[t, node, F_X : F_Z + 1] - full_xyz[t, node])
-            uv_true = project_points(full_xyz[t, node], K, E[t])[0]
-            if np.all(np.isfinite(graph[t, node, F_U : F_V + 1])):
-                px[t] = np.linalg.norm(graph[t, node, F_U : F_V + 1] - uv_true)
-    return px, m
-
-
 # copied from sg_pilot.py:1997 @ e2e06f9
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     if n == 0:

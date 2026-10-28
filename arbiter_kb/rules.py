@@ -29,7 +29,7 @@ def r1_cover(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
             o = frame.objects[c]
             if o.visible and (d := float(np.linalg.norm(o.xyz[:2] - last[:2]))) < p.r_cover:
                 cand[c], sup[c] = d, [ev.id, obs_id(frame.t, c)]
-        dist = Distribution.from_distances(cand, p.sigma_cover, frame.t, sup, p.eps_none)
+        dist = Distribution.from_distances(cand, p.sigma_cover, frame.t, sup, p.eps_none, [ev.id])
         best, pm = dist.argmax()
         ops.append(SetDist("Inside", cube, dist))
         ops.append(SetVis(cube, "hidden" if cand else "unknown", pm, frame.t, [ev.id]))
@@ -40,7 +40,7 @@ def r1_cover(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
 
 def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """Two containers passed close to each other: with probability w their tracks may have exchanged
-    identity, so every hidden cube with mass on either gets w of its mass moved across.
+    identity, so every HIDDEN cube with mass on either gets w of its mass moved across.
     M0: w = w_mix · (1 - closeness), closeness = min distance / threshold."""
     ops = []
     for ev in new_ev:
@@ -50,18 +50,20 @@ def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
         w = p.w_mix * max(0.0, 1.0 - ev.data["closeness"])
         ops.append(AddEvent(frame.t, "swap", (a, b), 1.0, [ev.id]))  # the motion itself is certain
         for (pred, cube), d in kb.relations.items():
-            if pred == "Inside" and (d.probs.get(a, 0) > 0 or d.probs.get(b, 0) > 0) and w > 0:
+            hidden = kb.objects[cube].visibility.value == "hidden"
+            if pred == "Inside" and hidden and (d.probs.get(a, 0) > 0 or d.probs.get(b, 0) > 0) and w > 0:
                 ops.append(MixDist("Inside", cube, a, b, w, frame.t, ev.id))
     return ops
 
 
 def r7_decay(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
-    """Unconfirmed beliefs drift toward uniform over containers: p <- λ·p + (1-λ)·u (per frame)."""
+    """Unconfirmed beliefs drift toward uniform over containers: p <- λ^Δt·p + (1-λ^Δt)·u.
+    Rules run every frame, so Δt = frames since this distribution last changed."""
     if p.lam >= 1.0:
         return []
     bins = containers(kb)
-    return [FlattenDist("Inside", cube, p.lam, bins, frame.t)
-            for (pred, cube), d in kb.relations.items() if pred == "Inside" and d.argmax()[0] is not None]
+    return [FlattenDist("Inside", cube, p.lam ** max(1, frame.t - d.t), bins, frame.t)
+            for (pred, cube), d in kb.relations.items() if pred == "Inside" and bins]
 
 
 def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:

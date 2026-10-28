@@ -10,8 +10,10 @@ KEYS = ("condition", "system")
 
 
 def brier(probs: dict, truth: str, keys: list[str]) -> float:
-    """Σ_c (p_c - 1[c = truth])² over every container and the 'elsewhere' hypothesis."""
-    return sum((probs.get(k, 0.0) - (1.0 if k == truth else 0.0)) ** 2 for k in list(keys) + ["None"])
+    """Σ_c (p_c - 1[c = truth])² over every container, 'elsewhere' (None) and, when the truth is not
+    among them (memory lost), the truth itself with p = 0."""
+    ks = list(dict.fromkeys(list(keys) + ["None", truth]))
+    return sum((probs.get(k, 0.0) - (1.0 if k == truth else 0.0)) ** 2 for k in ks)
 
 
 def ece(rows: list[dict], bins: int = 10) -> float:

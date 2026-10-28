@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.0 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history)
+Version 1.1 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -208,9 +208,11 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 
 ### 3.11 Corruption model (input side, never output side)
 
-- `id_swap` (M0): at the near-pass of a swap involving the target's container, exchange the two containers' ids for all later frames. Episodes are selected by a seeded hash at p ∈ {0.25, 0.5, 1.0}, with nested sets.
-- `id_swap_prob` (M2): realistic. At every near-pass, swap with probability sigmoid((d0 − min_px)/s), and report `track_q` dropping to `q_low` during the pass.
-- `pos_noise` (M2): Gaussian xyz noise σ ∈ {5, 15} mm on visible objects.
+A corruption must look like a real tracker error, otherwise results are true by construction (docs/GOALS.md, Known traps).
+- `id_swap` (M0, **teleport, sanity only**): at the closest approach of the target container's first swap, exchange the two ids for all later frames. The label jumps about 12 cm in one frame (0.116–0.138 m on train seeds, `results/m0_synthetic_stats.json`), which no real tracker does. Never used for tuning or claims.
+- `id_swap_overlap` (M1): swaps happen only where the two containers' 3D centres come within `d_ov` (default 0.03 m) of each other, i.e. where the tracks really overlap. The synthetic generator needs `lane_offset` ≤ about 0.03 for this. The ids are exchanged at a frame inside the overlap, so the label jump is ≤ `d_ov`. p_swap is the probability that an overlapping pass swaps (episodes chosen by seeded hash, nested). The measured jump distribution is reported with every result.
+- `id_swap_measured` (M2, after G): swap rate and signature (overlap, `track_q` drop, jump size, phase of the swap) taken from phase G's measurements of the real tracker, not chosen by us.
+- `pos_noise` (M1): Gaussian xyz noise σ ∈ {5, 15} mm on visible objects.
 - The old Q1/Q2 (`sg_pilot.corrupt`) overwrite the bound rule's output. They stay available only to reproduce old numbers for the baselines.
 
 ---
@@ -320,6 +322,8 @@ numpy, scipy, matplotlib, pytest, nbformat, nbconvert, ipykernel. Nothing else w
 
 Time estimates are for a coding agent with review. Each phase lists: **Goal · Build (how) · Params · Done when · Not in scope**.
 
+**Order (v1.1):** M0 → M1 → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code can be written while M1 runs.
+
 ### M0 — Walking skeleton (1–2 days, Mac CPU)
 
 **Goal.** The full path runs on synthetic data: Source → KB → rules (R1, R2, R6-minimal) → planner → evaluation table + figure + traces. Three systems behind one interface. The first datapoint of the research claim.
@@ -357,23 +361,55 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 
 **Not in scope.** R3–R5, R8, Hungarian matching, thresholds, LLM, yaw, IK, real perception.
 
-### M1 — Beliefs made real + tuning + calibration (2 days, CPU)
+### M1 — Realistic corruption, trivial baselines, permanence rules (2–3 days, CPU)
 
-**Goal.** Rules complete enough for permanence: R3, R5, R7, the visibility state machine. Parameters tuned on train only; calibration metrics.
+**Goal.** Answer the first honest question: on corruption that looks like a real tracker error, does the belief layer beat the two cheapest heuristics? Rules are completed for permanence; tuning uses train seeds only and never the teleport corruption.
 
 **Build.**
-1. Implement R3, R5 (`joint_exclusive`), R7 (`flatten`, pose decay), and the visibility state machine (§3.4).
-2. Add the `None` hypothesis floor ε_none (default 0.01) to every R1 distribution, so "elsewhere" is never impossible.
-3. `metrics.py`: ECE, reliability bins. `plots.py`: reliability diagram.
-4. `scripts/tune.py`: grid or random search on synthetic **train** seeds (and RoboMME train if present) over r_cover, σ_cover, d_px, w_mix, λ. The objective is the Brier score on a mix of clean and `id_swap` p = 0.5, subject to clean accuracy ≥ Bound − 1 point. Write `params.json` with `"frozen": true`.
-5. Synthetic generator: add `pos_noise` and harder knobs (swap_steps 20, lane_offset 0.03).
+1. **Synthetic generator:** `lane_offset` down to 0.0 (overlapping tracks), `swap_steps` 20–50, `pos_noise`. Record per pass the true minimum 3D centre distance (in GroundTruth extras for evaluation only).
+2. **`corrupt.py`:** `id_swap_overlap` (§3.11). Keep `id_swap` labelled "teleport (sanity)".
+3. **Mandatory baselines** (`systems/baselines.py`, same interface):
+   - `BoundHaircut(c)`: Bound, but after any near-pass involving the container that holds the cube, its answer becomes {pred: c, partner: 1 − c}. c is tuned on train.
+   - `JumpDetector(j_max)`: Bound, but when any container label moves more than j_max (default 0.03 m) in one frame, the hypotheses involving that container get confidence 0.5.
+   Under the teleport corruption JumpDetector catches everything: that is why the teleport corruption cannot be used.
+4. **Rules:** R3 held, R5 `joint_exclusive`, R7 for real, the visibility state machine (§3.4), ε_none = 0.01.
+5. **R6 v1.5:** w = w_max·exp(−d/d0), where d is the 3D centre distance at closest approach (image distance as fallback).
+6. **Metrics and plots:** ECE, reliability diagram, and a **trade-off curve**: clean ECE vs silent failure under `id_swap_overlap`, over the parameter grid.
+7. **`scripts/tune.py`:** train seeds only. Grid over w_max, d0, r_cover, σ_cover, λ (and c for BoundHaircut, j_max for JumpDetector). Objective: minimise silent failure under `id_swap_overlap` p = 0.5, subject to clean accuracy ≥ Bound − 1 point and clean ECE ≤ 0.05. Writes `params.json` (`frozen: true`) and the whole grid to `results/` for the curve.
 
 **Done when.**
 - (a) `make check`.
-- (b) On test seeds after the freeze: clean accuracy ≥ Bound − 1 point; ECE reported for every system (the baselines' ECE equals their error rate, because conf = 1).
-- (c) A reliability diagram for every condition.
-- (d) Silent failure under `id_swap` p = 0.5 is printed with Wilson intervals.
-- (e) An R5 test: two hidden cubes, one pinned → the other's mass moves.
+- (b) One table on test seeds, after the freeze, with Frozen, Bound, BoundHaircut, JumpDetector and ArbiterKB under {clean, `id_swap_overlap` p = 0.5, `pos_noise` 15 mm}, with Wilson intervals.
+- (c) The trade-off curve figure.
+- (d) NOTES states plainly whether ArbiterKB beats BoundHaircut **and** JumpDetector with non-overlapping intervals. If not, that is a finding, and the goal review decides what follows.
+- (e) The corruption's label-jump distribution is reported (median ≤ `d_ov`).
+- (f) The R5 test: two hidden cubes, one pinned → the other's mass moves.
+
+**Not in scope.** Hungarian margin (M2), LLM (M4), real data (G / M6).
+
+### G — Gate: how often and how does the real tracker swap ids? (Mac code ~1 day + one GPU pod session, about 3–5 h; needs the user's go)
+
+**Goal.** Measure, on RoboMME VideoUnmaskSwap stock and stress variants, how often the real perception pipeline (Grounding DINO → SAM → Cutie) swaps container ids, and what a swap looks like. This decides whether claim 1 can be tested with real errors, and it defines `id_swap_measured`. It is the plan report's November gate, pulled forward.
+
+**Build (Mac, no GPU).**
+1. `stress/stress_env.py` (pod-side code, outside the `arbiter_kb` package): subclass `VideoUnmaskSwap` as `VideoUnmaskSwapStress`, with knobs `swap_steps`, `lane_offset`, `n_swaps ≤ 3`, `n_bins` and a static camera shift. Override `_refresh_swap_schedule`, `configs`, `_default_sensor_configs`, and pass `lane_offset` to the swap call (l.603–614; `evidence-gaps` §7). Settings:
+   - stock (50, 0.07)
+   - fast (20, 0.07)
+   - close (50, 0.02)
+   - fast + close (20, 0.02)
+   - fast + close with 3 swaps
+   - camera shifted ±5 cm
+2. `stress/render.py`: render 20 episodes per setting into the existing `Replay` npz format (front RGB, depth, segmentation, E, obj_xyz). Print the total size first; it must stay under 8 GB on the volume.
+3. `stress/perceive.py`: run the existing `PerceptionWorker` on each replay and save small per-frame outputs (track centroids, mask areas, scores).
+4. `scripts/measure_swaps.py` (CPU, `arbiter_kb` side): match tracks to the oracle each frame. Report identity accuracy and swap events per episode, and for each swap: min 3D distance, image IoU, `track_q` / mask-area change, label-jump size, and swap phase. Outputs: `results/g_swaps.csv` plus a summary table.
+5. `stress/POD_RUN.md`: the exact commands (tmux, environment, Vulkan fix from `POD_RUNBOOK.md`), a cost estimate, and "stop the pod" as the last step. In the same session, run `scripts/copy_replays.sh` to bring the stock train/test oracle replays to the Mac.
+
+**Done when.**
+- (a) A table of identity error and swap rate per setting.
+- (b) Histograms of the swap signature.
+- (c) **The gate decision, written in NOTES:**
+  - if swaps occur in < 2% of passes in every setting, claim 1 cannot be tested with real errors on RoboMME, so switch to the plan's fallback (failure-attribution paper) or choose a harder task;
+  - otherwise, define `id_swap_measured` from the measured signature, and M2 uses it.
 
 ### M2 — Evidence layer: change detectors + Hungarian identity check (2 days, CPU)
 
@@ -383,13 +419,13 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 1. `detectors.py`: hysteresis on speed; overlap via image distance and (replays) mask IoU; `track_drop` when `track_q` falls below `q_thr`; cap of 5 evidence items per frame.
 2. `identity.py`: each frame (oracle) or every `N_id` frames (perceived), solve `linear_sum_assignment` on the cost = 3D distance between each container's predicted pose (constant velocity) and the observed tracks. Margin = (second-best total − best total) / best total. Emit `id_margin` evidence when the margin < `m_thr`.
 3. R6 v2: `w = w_max·exp(−margin/m0)`.
-4. `corrupt.py`: `id_swap_prob`, `pos_noise`, with `track_q` drops.
+4. `corrupt.py`: `id_swap_measured` from G's signature (no hand-chosen sigmoid), plus `pos_noise`.
 5. Retune (M1 script) and refreeze `params.json` (v2).
 
 **Done when.**
 - (a) `make check`.
 - (b) On synthetic, the minimum margin falls inside a swap window in ≥ 95% of episodes.
-- (c) Under `id_swap_prob`, ArbiterKB's silent-failure rate < Bound's, with non-overlapping Wilson intervals; otherwise report honestly.
+- (c) Under `id_swap_measured`, ArbiterKB's silent-failure rate < Bound's, BoundHaircut's and JumpDetector's, with non-overlapping Wilson intervals; otherwise report honestly.
 - (d) Clean accuracy holds (M1 criterion).
 
 ### M3 — Monitor and decisions (1 day, CPU)
@@ -438,26 +474,25 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 - (b) On clean oracle input the planned grasp is within 3 cm of the true container in ≥ 95% of episodes.
 - (c) Reach-check agreement with mplib on ≥ 50 sampled poses (pod only, else SKIPPED).
 
-### M6 — Real data and stress variants (3–4 days; GPU pod for rendering and perception)
+### M6 — Full evaluation on real RoboMME data (2–3 days; GPU pod only for new renders)
 
-**Goal.** Replace synthetic stand-ins with RoboMME: the oracle replays, then perceived input, then stress variants where the tracker really fails. This is the November gate.
+**Goal.** The claims are made here: every system on the RoboMME oracle replays and on perceived input (stock and G's stress settings), with the frozen parameters.
 
 **Build.**
-1. Copy the replays (`copy_replays.sh`); run every phase's evaluation on `OracleReplaySource` (train for tuning, test after the freeze).
-2. **Stress env** (pod): subclass `VideoUnmaskSwap` and register `VideoUnmaskSwapStress` with knobs `swap_steps`, `lane_offset`, `n_swaps ≤ 3`, `n_bins`, and a static camera shift (`evidence-gaps` §7: override `_refresh_swap_schedule`, `configs`, `_default_sensor_configs`; the swap call at l.603–614). Render about 20 episodes per setting with `sg_pilot.replay_episode`.
-3. Run the existing perception worker (Grounding DINO → SAM → Cutie) on the stress replays and cache the per-frame masks and centroids. Build `PerceivedSource` from the cache.
-4. Report Cutie's identity error per stress setting (`identity_accuracy`) and the full table on perceived input.
-5. **Peek variant** (optional): `failure_func=None` for the pick tasks plus R4 reveal → measure verify-then-act.
+1. Run every phase's evaluation on `OracleReplaySource` (train for tuning, test after the freeze).
+2. `PerceivedSource` from G's cached perception outputs (and new renders if more episodes are needed).
+3. The full table on perceived input, per stress setting.
+4. **Peek variant** (optional): `failure_func=None` for the pick tasks plus R4 reveal → measure verify-then-act.
 
 **Done when.**
 - (a) `make check`.
-- (b) The identity error per stress setting is in a table.
-- (c) **Gate decision written in NOTES:** if perceived identity error stays below 2% in every setting, switch to the smaller "failure attribution" paper (plan report, timeline).
+- (b) The final table (oracle, perceived × stress settings) with Wilson intervals, cost row included.
+- (c) NOTES maps each claim and falsifier in GOALS.md to the numbers that support or refute it.
 
 ---
 
 ## 7. Open questions (track in NOTES; answer by measurement)
-1. Do the pod replay caches contain segmentation and depth? (M6 step 1 prints this.)
+1. Do the pod replay caches contain segmentation and depth? (Checked in G's pod session.)
 2. Does Cutie expose a usable confidence? If not, `track_q` = mask-area change + identity margin (M2).
 3. Is the rule planner enough on RoboMME? The LLM planner is out of scope unless M4 shows the arbiter helps.
 4. ECoMEM's update parameters are unpublished: implement it as a structural baseline (log-odds + half-life + hysteresis) only if time allows after M4.

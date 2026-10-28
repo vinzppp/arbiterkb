@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .beliefs import Belief, Distribution
+from .beliefs import SOURCES, Belief, Distribution
 from .ops import (AddEvent, AddEvidence, FlattenDist, MixDist, Retract, SetDist,  # noqa: F401 (re-exported)
                   SetPose, SetVis)
 
@@ -182,8 +182,10 @@ class KB:
         for key, d in self.relations.items():
             assert abs(sum(d.probs.values()) - 1) < 1e-9, f"I1 {key} sums to {sum(d.probs.values())}"
             assert all(isinstance(k, str) for k in key), f"I2 non-string key {key}"
+            assert d.support or any(d.hyp_support.values()), f"I4 distribution {key} without support"
         items = [(o.id, o.pose) for o in self.objects.values()] + [(o.id, o.visibility) for o in self.objects.values()]
         for oid, b in items:
+            assert b.source in SOURCES, f"unknown belief source {b.source!r} for {oid}"
             if b.source in ("inferred", "arbiter") and not (b.value is None or isinstance(b.value, str)
                                                            and b.value == "unknown"):
                 assert b.support, f"I4 {oid} {b.source} belief without support"

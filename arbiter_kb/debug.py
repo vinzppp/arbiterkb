@@ -1,7 +1,8 @@
 """Debugging from traces (E2).
 
-  python -m arbiter_kb.debug explain  --run RUN_DIR --trace arbiterkb_1003 --cube cube_green [--t 213]
-  python -m arbiter_kb.debug timeline --run RUN_DIR --trace arbiterkb_1003 --cube cube_green
+  python -m arbiter_kb.debug explain  --run RUN_DIR --condition id_swap --system arbiterkb --ep 1001 --cube cube_green [--t 100]
+  python -m arbiter_kb.debug timeline --run RUN_DIR --condition id_swap --system arbiterkb --ep 1001 --cube cube_green
+(trace files are RUN_DIR/traces/<condition>_<system>_<ep>.jsonl)
 
 explain walks the support ids of the cube's Inside distribution back to the raw observations.
 """
@@ -47,11 +48,22 @@ def explain(rows: list[dict], cube: str, t: int | None = None) -> str:
             if op["target"] == f"Inside({cube})" and isinstance(op["after"], dict) and "support" in op["after"]:
                 last = (r["t"], op)
     if last is None:
-        return f"no Inside({cube}) belief up to t={t}"
+        return _explain_tracker(rows, cube, t)
     lines = [f"Inside({cube}) at t={last[0]} via {last[1]['op']} [{last[1]['rule']}]: {last[1]['after']['probs']}"]
     for ident in last[1]["after"]["support"]:
         lines += _walk(ident, ev, evt, obs, depth=1, seen=set())
     return "\n".join(lines)
+
+
+def _explain_tracker(rows: list[dict], cube: str, t: int | None) -> str:
+    """Deterministic baselines keep no beliefs: report the one-hot answer and the observation it rests on."""
+    rows = [r for r in rows if "pred" in r and (t is None or r["t"] <= t)]
+    if not rows:
+        return f"no Inside({cube}) belief up to t={t}"
+    r = rows[-1]
+    pred = r["pred"].get(cube)
+    return (f"{cube} -> {pred} with confidence 1 at t={r['t']} (deterministic tracker: nearest container to the "
+            f"tracked cube position; rests on observation o{r['t']}:{pred}, no evidence kept)")
 
 
 def _walk(ident: str, ev: dict, evt: dict, obs: dict, depth: int, seen: set) -> list[str]:
@@ -86,11 +98,13 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["explain", "timeline"])
     ap.add_argument("--run", required=True)
-    ap.add_argument("--trace", required=True, help="trace file stem, e.g. arbiterkb_1003")
+    ap.add_argument("--condition", default="none")
+    ap.add_argument("--system", default="arbiterkb")
+    ap.add_argument("--ep", type=int, required=True)
     ap.add_argument("--cube", required=True)
     ap.add_argument("--t", type=int)
     a = ap.parse_args()
-    rows = read_trace(Path(a.run) / "traces" / f"{a.trace}.jsonl")
+    rows = read_trace(Path(a.run) / "traces" / f"{a.condition}_{a.system}_{a.ep}.jsonl")
     if a.cmd == "explain":
         print(explain(rows, a.cube, a.t))
     else:

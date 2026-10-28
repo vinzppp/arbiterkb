@@ -38,7 +38,8 @@ def score(system, cube: str, gt, bins: list[str], ep: int, t: int, condition: st
     return {
         "condition": condition, "system": system.name, "episode": ep, "cube": cube, "t_star": t,
         "truth_id": gt.cube_to_bin[cube], "truth": str(truth), "pred": str(pred), "p_max": round(float(p), 6),
-        "correct": truth is not None and pred == truth, "brier": round(brier(probs, str(truth), bins), 6),
+        "correct": truth is not None and pred == truth,
+        "brier": round(brier(probs, str(truth) if truth else "LOST", bins), 6),  # lost: all mass is wrong
         "entropy": round(d.entropy(), 6), "decision": step.decision, "n_support": len(step.support),
         "grasp_err_m": round(err, 5), "moved": gt.moved[cube], "corrupted": corrupted,
     }
@@ -54,7 +55,9 @@ def run(systems: list, source, episodes: list[int], params: Params, condition: s
         meta, gt = source.meta(ep), source.ground_truth(ep)
         for s in systems:
             s.reset(meta)
-        at = {t: c for c, t in gt.t_star.items()}
+        at: dict[int, list[str]] = {}
+        for c, t in gt.t_star.items():
+            at.setdefault(t, []).append(c)
         bins = [oid for oid, cls, _ in meta.objects if cls == "container"]
         for frame in source.frames(ep):
             for s in systems:
@@ -63,7 +66,8 @@ def run(systems: list, source, episodes: list[int], params: Params, condition: s
                 if s is systems[-1]:
                     step_s.append(time.perf_counter() - t0)
             if frame.t in at:
-                rows += [score(s, at[frame.t], gt, bins, ep, frame.t, condition, corrupted_of(ep)) for s in systems]
+                rows += [score(s, c, gt, bins, ep, frame.t, condition, corrupted_of(ep))
+                         for c in at[frame.t] for s in systems]
         traces.update({(s.name, ep): s.trace_rows() for s in systems})
     return rows, traces, step_s
 

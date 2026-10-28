@@ -9,7 +9,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
-SOURCES = ("observed", "inferred", "prior", "verified", "arbiter")
+SOURCES = ("observed", "inferred", "prior", "verified", "arbiter")  # enforced by KB.check()
 
 
 @dataclass
@@ -44,11 +44,13 @@ class Distribution:
 
     @staticmethod
     def from_distances(d: dict[str, float], sigma: float, t: int, support: dict[str, list[str]],
-                       eps_none: float = 0.0) -> "Distribution":
-        """p(k) ∝ exp(-d_k² / 2σ²); no candidate -> {None: 1}. support[k]: ids behind candidate k."""
+                       eps_none: float = 0.0, none_support: list[str] | None = None) -> "Distribution":
+        """p(k) ∝ exp(-d_k² / 2σ²); no candidate -> {None: 1} backed by none_support.
+        The exponent is shifted by the smallest d² so no valid candidate underflows to 0."""
         if not d:
-            return Distribution.point(None, t, [])
-        probs: dict[str | None, float] = {k: math.exp(-(v * v) / (2 * sigma * sigma)) for k, v in d.items()}
+            return Distribution.point(None, t, list(none_support or []))
+        d2min = min(v * v for v in d.values())
+        probs: dict[str | None, float] = {k: math.exp(-(v * v - d2min) / (2 * sigma * sigma)) for k, v in d.items()}
         if eps_none > 0:
             total = sum(probs.values())
             probs = {k: (1 - eps_none) * v / total for k, v in probs.items()}
@@ -58,17 +60,23 @@ class Distribution:
 
     # ---- operations ---------------------------------------------------------------------
     def swap_mix(self, a: str, b: str, w: float, t: int, ev_id: str) -> "Distribution":
-        """With probability w the tracks a and b exchanged identity: move mass w between them."""
+        """With probability w the tracks a and b exchanged identity: move mass w between them.
+
+        Each hypothesis keeps its own evidence (a key that had none inherits the other's), so a
+        later retract removes the CURRENT mass on the hypotheses that evidence backs. This is an
+        approximation after mixing; exact per-origin mass tracking is deferred to M5 (R4 reveal)."""
         pa, pb = self.probs.get(a, 0.0), self.probs.get(b, 0.0)
         probs = dict(self.probs)
         probs[a], probs[b] = (1 - w) * pa + w * pb, (1 - w) * pb + w * pa
         hs = {k: list(v) for k, v in self.hyp_support.items()}
-        both = sorted(set(hs.get(a, [])) | set(hs.get(b, [])))  # after a possible exchange, either
-        hs[a], hs[b] = list(both), list(both)  # container's mass rests on both containers' evidence
+        sa, sb = hs.get(a, []), hs.get(b, [])
+        hs[a], hs[b] = (sa or list(sb)), (sb or list(sa))
         return Distribution(probs, t, sorted(set(self.support) | {ev_id}), hs)
 
     def flatten(self, f: float, plausible: list[str | None], t: int) -> "Distribution":
         """p <- f·p + (1-f)·uniform(plausible). f = λ^Δt for decay (R7) or 1 - w_risk for R8."""
+        if not plausible:
+            return self
         u = 1.0 / len(plausible)
         probs = {k: f * self.probs.get(k, 0.0) for k in set(self.probs) | set(plausible)}
         for k in plausible:

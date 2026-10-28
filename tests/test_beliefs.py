@@ -59,3 +59,14 @@ def test_drop_of_distribution_level_support_halves_confidence():
 def test_entropy():
     assert Distribution({"a": 1.0}, 0).entropy() == 0
     assert Distribution({"a": 0.5, "b": 0.5}, 0).entropy() == pytest.approx(math.log(2))
+
+
+def test_retract_after_mix_keeps_the_other_hypothesis():
+    """Code review: retracting one container's cover evidence after a mix must not wipe everything."""
+    d = Distribution({"a": .9, "b": .1}, 0, ["e1", "e2"], {"a": ["e1"], "b": ["e2"]}).swap_mix("a", "b", 0.1, 1, "e3")
+    assert d.drop("e1", 2).probs == pytest.approx({"b": 1.0})
+
+
+def test_mix_into_empty_hypothesis_inherits_support():
+    d = Distribution({"a": 1.0}, 0, ["e1"], {"a": ["e1"]}).swap_mix("a", "b", 0.3, 1, "e2")
+    assert d.hyp_support["b"] == ["e1"]

@@ -11,6 +11,7 @@ from dataclasses import replace
 
 import numpy as np
 
+from ..params import DetectParams
 from ..types import FrameObs
 
 
@@ -49,7 +50,7 @@ def _dist(a, b) -> float:
 class CorruptedSource:
     """Wraps another source. `log[ep]` records what was corrupted (frame, swapped ids) or why not."""
 
-    def __init__(self, inner, kind: str = "id_swap", p: float = 0.5, seed: int = 0, v_move: float = 0.001):
+    def __init__(self, inner, kind: str = "id_swap", p: float = 0.5, seed: int = 0, v_move: float = DetectParams().v_move):
         assert kind == "id_swap", "M0 implements id_swap only"
         self.inner, self.kind, self.p, self.seed, self.v_move = inner, kind, p, seed, v_move
         self.name = f"{inner.name}+{kind}@{p}"

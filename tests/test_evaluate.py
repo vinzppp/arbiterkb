@@ -47,7 +47,7 @@ def test_reproducible_summary(tmp_path):
     src = SyntheticSource()
     hashes = []
     for i in range(2):
-        rows, tr, _ = run(systems(), src, src.episodes("test", 4), Params(), "none")
+        rows, tr, _ = run(systems(), src, src.episodes("test", 4), Params(frozen=True), "none")
         save_run(tmp_path / str(i), rows, Params(), {}, tr)
         hashes.append(hashlib.sha256((tmp_path / str(i) / "summary.csv").read_bytes()).hexdigest())
     assert hashes[0] == hashes[1]

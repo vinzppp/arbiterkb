@@ -1,7 +1,9 @@
 """All tunable parameters in one place (DEVELOPMENT.md §1: one source of parameters).
 
-M0 values are untuned defaults. `frozen` marks a parameter set that may be evaluated on the test
-split (E5c); in M0 the defaults are frozen as-is because nothing was tuned.
+`frozen` marks a parameter set that may be evaluated on the test split (E5c). A Params built in
+code is NOT frozen; only the repo's params.json (written by `scripts/run.py --freeze` from defaults,
+or by M1's tune.py from train seeds) can be, and scripts/run.py records its mtime and the first
+test-read time in meta.json.
 """
 from __future__ import annotations
 
@@ -45,8 +47,8 @@ class Params:
     detect: DetectParams = field(default_factory=DetectParams)
     monitor: MonitorParams = field(default_factory=MonitorParams)
     arbiter: ArbiterParams = field(default_factory=ArbiterParams)
-    frozen: bool = True  # M0: untuned defaults, frozen before any test read
-    note: str = "M0 defaults (untuned)"
+    frozen: bool = False  # only a params.json loaded from disk may be frozen (E5c)
+    note: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)

@@ -1,6 +1,6 @@
 # ArbiterKB — Goals (the anchor for the goal reviewer)
 
-Distilled from the plan report "ArbiterKB 项目规划报告" (2026-10-28). Change this file only when the research direction changes, and record why in NOTES.md.
+Distilled from the plan report "ArbiterKB 项目规划报告" (2026-10-28). Updated after the M0 goal review (label-teleport trap; gate pulled forward). Change this file only when the research direction changes, and record why in NOTES.md.
 
 ## Research question
 When a robot's memory is wrong, does the system know? Existing robot memories store perception guesses as facts and fail silently.
@@ -23,6 +23,7 @@ Training any policy; beating 92% on the leaderboard; other RoboMME suites before
 
 ## Known traps
 - **Circularity:** corruption injected exactly where a rule mixes beliefs makes the result true by construction. M0's `id_swap` at the near-pass has this flaw by design (a skeleton). Claims need `id_swap_prob` (M2) and real tracker errors (M6).
+- **Label teleport:** a corruption that moves a label further in one frame than any object can move is trivially detectable (M0 `id_swap`: about 12 cm jump vs at most 0.6 cm true motion). Corruptions must swap ids only where tracks really overlap, or follow the signature measured on the real tracker (phase G). Always compare against BoundHaircut and JumpDetector.
 - **Synthetic ≠ RoboMME:** synthetic results guide development; claims are made on RoboMME replays.
 - **Stock VideoUnmaskSwap rarely fools the tracker** (the overlap is image-only); the November gate decides whether the main claim survives.
 - **Test leakage:** tuning or prompt iteration on test episodes invalidates claims.

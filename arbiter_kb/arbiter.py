@@ -47,6 +47,9 @@ def validate(patch: dict, kb: KB) -> list[str]:
 
     def cites_ok(item, where):
         cites = item.get("cites") or []
+        if not isinstance(cites, list):
+            errs.append(f"{where}: cites must be a list")
+            return
         if not cites:
             errs.append(f"{where}: cites is empty")
         errs.extend(f"{where}: unknown evidence id {c}" for c in cites if c not in known)
@@ -60,6 +63,11 @@ def validate(patch: dict, kb: KB) -> list[str]:
         if objs.get(h.get("cube")) is None or objs[h["cube"]].cls != "cube":
             errs.append(f"hypotheses[{i}]: unknown cube {h.get('cube')}")
         errs.extend(f"hypotheses[{i}]: {k} is not a container" for k in h.get("keep", []) if k not in bins)
+        d = kb.inside(h.get("cube", ""))
+        cited = {a for e in kb.evidence if e.id in (h.get("cites") or []) for a in e.args}
+        held = {k for k, p in d.probs.items() if p > 0} if d else set()
+        errs.extend(f"hypotheses[{i}]: {k} holds no mass and is not cited" for k in h.get("keep", [])
+                    if k in bins and k not in held | cited)
         cites_ok(h, f"hypotheses[{i}]")
     for i, r in enumerate(patch.get("risks", [])):
         if r.get("obj") not in objs or len(str(r.get("reason", ""))) > 80:

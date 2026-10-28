@@ -30,6 +30,8 @@ def test_arbiterkb_plan_has_support_and_waypoints():
 
 
 def test_rules_do_not_mutate_kb():
+    """Feed the rules evidence they act on (a disappear and a near_pass) and check the KB is untouched."""
+    from arbiter_kb.kb import AddEvidence
     from arbiter_kb.rules import RULES
     src = SyntheticSource()
     ep = src.episodes("train", 1)[0]
@@ -38,7 +40,10 @@ def test_rules_do_not_mutate_kb():
     frames = list(src.frames(ep))
     for f in frames[:40]:
         s.step(f)
+    s.kb.apply([AddEvidence(40, "disappear", ("cube_red",), {"last_xyz": [0.0, 0.0, 0.017], "obs": []}),
+                AddEvidence(40, "near_pass", ("bin_0", "bin_1"), {"closeness": 0.1, "obs": []})])
+    ev = s.kb.evidence[-2:]
     before = s.kb.snapshot()
-    for _, rule in RULES:
-        rule(s.kb, s.kb.evidence[-3:], frames[40], Params().rule)
+    produced = [op for _, rule in RULES for op in rule(s.kb, ev, frames[40], Params().rule)]
+    assert produced, "the rules should have produced ops for this evidence"
     assert s.kb.snapshot() == before

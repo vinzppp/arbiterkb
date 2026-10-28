@@ -8,10 +8,9 @@ import sys
 
 import numpy as np
 
-from run import ROOT, evaluate, figure
+from run import ROOT, evaluate, figure, load_params
 from arbiter_kb import sg_compat as sg
 from arbiter_kb.debug import explain
-from arbiter_kb.params import Params
 from arbiter_kb.sources.replay import OracleReplaySource
 from arbiter_kb.sources.synthetic import SyntheticSource
 from arbiter_kb.systems.baselines import TrackerSystem
@@ -63,7 +62,7 @@ def replay_check() -> None:
 
 
 def selftest() -> int:
-    run_dir, summary, info = evaluate(args(), Params())
+    run_dir, summary, info = evaluate(args(), load_params())
     a, b, f = row(summary, "none", "arbiterkb"), row(summary, "none", "bound"), row(summary, "none", "frozen")
     check("(b) clean accuracy ArbiterKB / Bound = 1.0", a["acc"] == 1.0 and b["acc"] == 1.0, (a["acc"], b["acc"]))
     check("(b) Frozen worse on moved than back-at-start", f["acc_moved"] < f["acc_back"], (f["acc_moved"], f["acc_back"]))
@@ -83,7 +82,7 @@ def selftest() -> int:
     check("figure written", fig is not None and fig.exists(), fig)
     hashes = []
     for _ in range(2):
-        rd, _, _ = evaluate(args(n=10), Params())
+        rd, _, _ = evaluate(args(n=10), load_params())
         hashes.append(hashlib.sha256((rd / "summary.csv").read_bytes()).hexdigest()[:12])
     check("(f) two identical runs give the same summary hash", hashes[0] == hashes[1], hashes)
     replay_check()

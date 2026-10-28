@@ -34,3 +34,15 @@ def test_trigger_budget():
     tr = Trigger(ArbiterParams(every_k=1, max_calls=2))
     fired = [tr.fires(kb, kb.evidence[:1], t) for t in range(5)]
     assert fired.count("near_pass") == 2 and fired[2:] == [None, None, None]
+
+
+def test_keep_must_hold_mass_or_be_cited():
+    from arbiter_kb.beliefs import Distribution
+    from arbiter_kb.kb import SetDist
+    kb = kb_with_evidence()
+    kb.apply([SetDist("Inside", "cube_green", Distribution({"bin_1": 1.0}, 2, ["e2"]))])
+    ok = {"hypotheses": [{"cube": "cube_green", "keep": ["bin_1"], "cites": ["e2"]}]}
+    bad = {"hypotheses": [{"cube": "cube_green", "keep": ["bin_2"], "cites": ["e2"]}]}
+    assert validate(ok, kb) == []
+    assert any("holds no mass" in e for e in validate(bad, kb))
+    assert any("must be a list" in e for e in validate({"risks": [{"obj": "bin_1", "reason": "x", "cites": "e1"}]}, kb))
