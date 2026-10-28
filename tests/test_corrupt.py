@@ -24,3 +24,14 @@ def test_id_swap_exchanges_labels_not_positions():
         assert bad[t].objects[b].id == b  # the label lies; the observation is the other container's
         return
     raise AssertionError("no corrupted episode in the first 10")
+
+
+def test_overlap_log_is_written_before_scoring():
+    """Scoring at t* (the last frame) reads log[ep]['corrupted'] while the generator is still open."""
+    from arbiter_kb.sources.realistic import OverlapSwapSource
+
+    src = OverlapSwapSource(SyntheticSource(lane_offset=0.0), 1.0)
+    ep = src.episodes("train", 1)[0]
+    it = src.frames(ep)
+    next(it)
+    assert src.log[ep]["corrupted"] is True

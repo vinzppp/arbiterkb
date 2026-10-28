@@ -2,7 +2,8 @@
 near_pass). Task-agnostic and causal: they only use frames up to t.
 
 near_pass(a, b): two containers both moving come closer than d_px in the image (d_3d metres without a
-camera); it is emitted when the pass ends, with closeness = min distance / threshold in [0, 1).
+camera); it is emitted when the pass ends, with closeness = min distance / threshold in [0, 1) and
+min_3d = the smallest 3D centre distance seen while the pass was open.
 """
 from __future__ import annotations
 
@@ -60,12 +61,14 @@ class Detectors:
                 d, thr = self._distance(frame.objects[a], frame.objects[b])
                 if d < thr:
                     cur = self.passes.get((a, b))
+                    d3 = float(np.linalg.norm(frame.objects[a].xyz - frame.objects[b].xyz))
+                    min_3d = min(d3, cur["min_3d"]) if cur else d3
                     if cur is None or d < cur["min_d"]:
-                        self.passes[(a, b)] = {"min_d": d, "thr": thr, "t_min": t,
-                                               "t_open": cur["t_open"] if cur else t}
+                        cur = {"min_d": d, "thr": thr, "t_min": t, "t_open": cur["t_open"] if cur else t}
+                    self.passes[(a, b)] = {**cur, "min_3d": min_3d}
             elif (a, b) in self.passes:
                 ps = self.passes.pop((a, b))
-                data = {"closeness": ps["min_d"] / ps["thr"], "min_d": ps["min_d"], "thr": ps["thr"],
+                data = {"closeness": ps["min_d"] / ps["thr"], "min_d": ps["min_d"], "thr": ps["thr"], "min_3d": ps["min_3d"],
                         "t_min": ps["t_min"], "t_open": ps["t_open"],
                         "obs": [obs_id(ps["t_min"], a), obs_id(ps["t_min"], b)]}
                 ops.append(AddEvidence(t, "near_pass", (a, b), data))

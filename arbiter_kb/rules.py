@@ -1,11 +1,11 @@
 """Forward rules. Each rule is a pure function (kb, new_evidence, frame, params) -> list[Op]; only
-KB.apply mutates (DEVELOPMENT.md §1, §3.5). M0 implements R1, R2, R6 (minimal) and wires R7.
+KB.apply mutates (DEVELOPMENT.md §1, §3.5). M0: R1, R2, R6, R7 (wired). M1: R5, R6 with 3D distance.
 """
 from __future__ import annotations
 
 import numpy as np
 
-from .beliefs import Distribution
+from .beliefs import Distribution, joint_exclusive
 from .kb import KB, AddEvent, FlattenDist, MixDist, SetDist, SetPose, SetVis
 from .observe import obs_id
 from .params import RuleParams
@@ -41,13 +41,17 @@ def r1_cover(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
 def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """Two containers passed close to each other: with probability w their tracks may have exchanged
     identity, so every HIDDEN cube with mass on either gets w of its mass moved across.
-    M0: w = w_mix · (1 - closeness), closeness = min distance / threshold."""
+    M1: w = w_max·exp(-d/d0), d = the pass's closest 3D centre distance; without 3D, the M0 form
+    w = w_mix·(1 - closeness in the image)."""
     ops = []
     for ev in new_ev:
         if ev.kind != "near_pass":
             continue
         a, b = ev.args
-        w = p.w_mix * max(0.0, 1.0 - ev.data["closeness"])
+        if "min_3d" in ev.data:
+            w = p.w_max * float(np.exp(-ev.data["min_3d"] / p.d0))
+        else:
+            w = p.w_mix * max(0.0, 1.0 - ev.data["closeness"])
         if w > 0:  # the motion is certain; the event marks a pass that may have exchanged identities
             ops.append(AddEvent(frame.t, "swap", (a, b), 1.0, [ev.id]))
         for (pred, cube), d in kb.relations.items():
@@ -67,6 +71,21 @@ def r7_decay(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
             for (pred, cube), d in kb.relations.items() if pred == "Inside" and bins and frame.t > d.t]
 
 
+def r5_exclusive(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
+    """At most one cube per container (joint over hidden cubes, marginals back). Runs only on frames
+    where a cube was just covered: that is when independent evidence is merged. After R6 mixes the
+    cubes' beliefs are correlated, and re-normalising their marginals would be overconfident."""
+    if not any(e.kind == "disappear" and kb.objects[e.args[0]].cls == "cube" for e in new_ev):
+        return []
+    hidden = {cube: d for (pred, cube), d in kb.relations.items()
+              if pred == "Inside" and kb.objects[cube].visibility.value == "hidden"}
+    if len(hidden) < 2:
+        return []
+    out = joint_exclusive(hidden, frame.t)
+    return [SetDist("Inside", c, out[c]) for c in hidden
+            if any(abs(out[c].probs.get(k, 0) - hidden[c].probs.get(k, 0)) > 1e-9 for k in set(out[c].probs) | set(hidden[c].probs))]
+
+
 def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """Hidden cube display pose = probability-weighted container pose (decisions use the distribution)."""
     ops = []
@@ -82,4 +101,4 @@ def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     return ops
 
 
-RULES = [("R1", r1_cover), ("R6", r6_swap), ("R7", r7_decay), ("R2", r2_follow)]
+RULES = [("R1", r1_cover), ("R6", r6_swap), ("R7", r7_decay), ("R5", r5_exclusive), ("R2", r2_follow)]

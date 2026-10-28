@@ -66,13 +66,26 @@ def swap_path(A, B, alpha, lane):
     return A + d * s + n * off, B - d * s - n * off
 
 
+LANES = (0.0, 0.01, 0.02, 0.04, 0.07)  # "mix": overlapping (<= 0.03) and clearly separated passes
+STEPS = (20, 35, 50)
+
+
 class SyntheticSource:
+    """lane_offset / swap_steps: a number, or "mix" to draw one per episode from LANES / STEPS
+    (with a separate generator, so episodes with fixed settings stay identical to M0's)."""
+
     name = "synthetic"
 
     def __init__(self, n_containers=None, n_swaps=None, swap_steps=50, lane_offset=0.07):
         self.n_containers, self.n_swaps = n_containers, n_swaps
         self.swap_steps, self.lane_offset = swap_steps, lane_offset
         self._cache: dict[int, Episode] = {}
+
+    def settings(self, ep: int) -> tuple[float, int]:
+        r = np.random.default_rng([ep, 1])
+        lane = float(r.choice(LANES)) if self.lane_offset == "mix" else float(self.lane_offset)
+        steps = int(r.choice(STEPS)) if self.swap_steps == "mix" else int(self.swap_steps)
+        return lane, steps
 
     def episodes(self, split: str, n: int = 30) -> list[int]:
         return [SPLIT_OFFSET[split] + i for i in range(n)]
@@ -103,14 +116,15 @@ class SyntheticSource:
 
     def _generate(self, ep: int) -> Episode:
         rng = np.random.default_rng(ep)
+        lane, steps = self.settings(ep)
         nb = self.n_containers or int(rng.choice([3, 4]))
         ns = self.n_swaps or int(rng.integers(1, 4))
         bins_xy = self._layout(rng, nb)
         colors = list(rng.permutation(COLORS))
-        T = SWAP_T0 + ns * self.swap_steps + HOLD
+        T = SWAP_T0 + ns * steps + HOLD
         track = np.repeat(bins_xy[None], T, axis=0)  # [T, nb, 2]
         for k in range(ns):
-            self._swap(track, rng, k, cube_bins=[0, 1, 2])
+            self._swap(track, rng, k, [0, 1, 2], lane, steps)
         bins = [f"bin_{i}" for i in range(nb)]
         cubes = [f"cube_{c}" for c in colors]
         xyz, visible = {}, {}
@@ -137,13 +151,13 @@ class SyntheticSource:
         R = np.array([[np.cos(a), -np.sin(a)], [np.sin(a), np.cos(a)]])
         return base @ R.T + rng.uniform(-0.01, 0.01, size=base.shape)
 
-    def _swap(self, track, rng, k, cube_bins):
+    def _swap(self, track, rng, k, cube_bins, lane, steps):
         """Swap k: a random cube-carrying container and its nearest neighbour, steps [t0, t1)."""
-        t0, t1 = SWAP_T0 + k * self.swap_steps, SWAP_T0 + (k + 1) * self.swap_steps
+        t0, t1 = SWAP_T0 + k * steps, SWAP_T0 + (k + 1) * steps
         pos = track[t0].copy()
         a = int(rng.choice(cube_bins))
         dist = [np.linalg.norm(pos[a] - pos[j]) if j != a else np.inf for j in range(len(pos))]
         b = int(np.argmin(dist))
         for t in range(t0, len(track)):
             alpha = (t - t0) / (t1 - t0)
-            track[t, a], track[t, b] = swap_path(pos[a], pos[b], alpha, self.lane_offset)
+            track[t, a], track[t, b] = swap_path(pos[a], pos[b], alpha, lane)

@@ -113,3 +113,41 @@ Reviews: `reviews/M0.1_code.md` (PASS-WITH-NOTES, one MAJOR), `reviews/M0.1_goal
   - Retracting a near-pass moves half the mass to None; it does not undo the mix. M4's "unlikely" verdict must restore the pre-mix distribution from the trace, not rely on Retract.
   - There is still no test that walks the support chain for every results row (5 episodes are covered).
 - **Goal review accepted:** M1 is now plumbing only. OverlapHaircut, the Bayes-optimal rule for `id_swap_overlap`, is added. Tuning, the trade-off curve, R3 and the visibility state machine wait until after G (DEVELOPMENT v1.2).
+
+## M1 — plumbing: overlap swaps, three cheap baselines, R5 (2026-10-28)
+Default parameters, nothing tuned. `params.json` re-frozen with the M1 defaults (R6 v1.5 w_max 0.5 / d0 0.02, eps_none 0.01, baseline c 0.5 / d_ov 0.03 / j_max 0.03); FREEZE line in the ledger.
+
+Table: `results/latest/m1_table/summary.csv`. Test seeds 1000–1059, lane and swap duration drawn per episode ("mix"), id_swap_overlap p_swap 0.5, pos_noise σ 15 mm. Command:
+`python scripts/run.py --systems all --corrupt none,id_swap_overlap,pos_noise --p 0.5 --lane mix --steps mix --n 60 --keep-as m1_table`
+
+| condition | system | acc | silent | brier | silent on corrupted (n=13) |
+|---|---|---|---|---|---|
+| none | Bound | 1.00 | 0.00 | 0.000 | – |
+| none | OverlapHaircut | 0.85 | 0.00 | 0.100 | – |
+| none | ArbiterKB | 1.00 | 0.00 | 0.042 | – |
+| id_swap_overlap | Bound | 0.90 | 0.10 | 0.200 | 0.46 |
+| id_swap_overlap | BoundHaircut | 0.68 | 0.00 | 0.292 | 0.00 |
+| id_swap_overlap | JumpDetector | 0.90 | 0.10 | 0.200 | 0.46 |
+| id_swap_overlap | OverlapHaircut | 0.88 | 0.00 | 0.100 | 0.00 |
+| id_swap_overlap | ArbiterKB | 0.90 | 0.03 | 0.106 | 0.15 |
+| pos_noise | Bound | 0.98 | 0.02 | 0.033 | – |
+| pos_noise | JumpDetector | 0.32 | 0.00 | 0.517 | – |
+| pos_noise | ArbiterKB | 0.98 | 0.02 | 0.042 | – |
+
+Reading:
+- **ArbiterKB − OverlapHaircut ≈ 0** (silent +0.03, Brier +0.006 under id_swap_overlap). Expected: OverlapHaircut is Bayes-optimal for a corruption we wrote. This table says the plumbing works, not that ArbiterKB helps. Only G's measured swaps can say that.
+- **ArbiterKB's two silent failures** (1046, 1058) are lane 0.01 passes with min_3d = 0.020 m: w = 0.5·e⁻¹ = 0.18, final p_max 0.808, just above τ_hi 0.8. With the default d0 this is expected. M2 tunes d0 / w_max on id_swap_measured.
+- **The haircut baselines lose accuracy on clean data** (0.65 / 0.85). A 50/50 haircut makes the argmax a coin toss. Brier, not accuracy, is the fair score for them.
+- **JumpDetector**: it never fires under id_swap_overlap (label jumps median 0.004 m, max 0.023 m < j_max 0.03), so it equals Bound. Under 15 mm position noise it fires constantly (acc 0.32). A label-jump check is the wrong tool for both.
+- **R5 (joint exclusivity) emitted 0 ops in this run.** It runs on cover frames only (after mixes the cubes are correlated, and re-normalising marginals was overconfident: 0.8 → 0.94, see test_rules). In VideoUnmaskSwap each cube is covered by a distinct, well-separated container, so the cover marginals are already exclusive. R5 is inert here, against the goal reviewer's expectation. It stays (tested) for layouts where covers are ambiguous.
+- **The teleport id_swap is now a pure sanity check.** R6 uses the 3D distance, so lane 0.07 passes (min 3D ≈ 0.12 m) barely mix, and ArbiterKB's silent rate on teleport-corrupted episodes is 1.0, the same as Bound's. The M0 selftest check (c) "ArbiterKB < Bound on teleport" is now INFO. It was a property of the teleport, not of the KB.
+- **Fixes during M1:**
+  - OverlapSwapSource wrote its log only after the last frame, but scoring at t* reads it while the generator is still open, so n_corrupted was 0. The log is now written before the first frame (with a test).
+  - After an earlier swap it swapped the wrong labels. It now swaps the labels currently tracking the two overlapping physical containers.
+  - GuardedBound ignores a stale doubt pair once its prediction leaves the pair. Its explain line shows the real confidence and the trigger, not "confidence 1".
+- **E2:** explain reaches an observation for all 1080 scored rows of the table run (all six systems), plus a pytest over all three M1 conditions.
+- **Figures** (`figures/`, written by the kept run):
+  - belief timeline of a corrupted id_swap_overlap episode;
+  - reliability diagram (bins with a few rows are noisy at n = 60);
+  - label-jump histogram.
+- **Not done in M1 (by design, v1.2):** tuning, the trade-off curve, R3, the visibility state machine. These wait for G.

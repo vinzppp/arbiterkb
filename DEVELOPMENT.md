@@ -94,7 +94,7 @@ The design follows Murphy's hybrid architecture as taught in the course: a knowl
 | Monitor, decision rule | `monitor.py` (M3) |
 | Arbiter + validator | `arbiter.py`, `llm.py` (M4) |
 | Planner + skills | `planner.py`, `skills.py`, `reach.py` (M5) |
-| Baselines (HODOR frozen, bound) | `systems/baselines.py` |
+| Baselines (HODOR frozen, bound; from M1 also BoundHaircut, OverlapHaircut, JumpDetector) | `systems/baselines.py` |
 | Evaluation, metrics | `evaluate.py`, `metrics.py` |
 | Debugging | `trace.py`, `debug.py` |
 
@@ -128,20 +128,23 @@ Inside `ArbiterKBSystem.step(frame)`, the order is fixed:
 - `relations: dict[(pred, subject), Distribution]` (L2), e.g. `("Inside", "cube_green") → {bin_1: .55, bin_2: .45, None: 0}`.
 - `evidence: list[Evidence]` (append-only, ids `e1, e2, …`); `events: list[Event]` (L3, append-only, always cite evidence).
 - `task: dict` (L4): goal, plan pointer, progress. Counts are derived by `count()` and never stored.
-- `support` is a list of ids on every Belief, Distribution hypothesis and Event. A reverse index `dependents[id] → items` makes `retract` O(affected).
+- `support` is a list of ids on every Belief, Distribution hypothesis and Event. `retract` scans all items (cheap at this size; a reverse index can come later if profiling asks for it).
 
 Invariants (`KB.check()`): (I1) every Distribution sums to 1 ± 1e-9; (I2) no position inside any key; (I3) counts only via `count()`; (I4) every `inferred` / `arbiter` item has non-empty support, and all support ids exist; (I5) no arbiter-sourced numeric pose anywhere; (I6) at most one live `Inside` distribution per cube.
 
-`retract(id)`: every item whose support contains `id` (transitively) is downgraded. A Belief gets `conf ← conf · 0.5` and `source = "inferred"`, with the support entry removed. A Distribution hypothesis loses the mass contributed under that support and is renormalised; if no mass is left → `{None: 1}`. Every step is logged as an op.
+`retract(id)` (as implemented in M0.2): every item whose support contains `id` (transitively, through events) is downgraded, and every step is logged.
+- A Belief gets `conf ← conf · 0.5` with the id removed from its support. Its source stays `inferred` while support remains, otherwise it becomes `prior` (keeps I4).
+- A Distribution hypothesis backed by `id` loses its **current** mass, and the rest is renormalised; if nothing is left → `{None: 1}`. After a `swap_mix`, each hypothesis keeps its own evidence (a key that receives mass for the first time inherits the partner's), so this is an approximation. Exact per-origin mass tracking is due in M5, where R4 first retracts.
+- Retracting an id that backs only the whole distribution (e.g. a near-pass) moves half of the mass to `None`; it does **not** undo the mix. To undo a mix (M4's `unlikely`), restore the pre-mix distribution from the trace.
 
 Views: `ask(pattern)` (course `unify` / `satisfy`; returns `[(bindings, prob)]`); `text_view()` (one line per object, ≤ 40 tokens each); `som_image(frame_rgb)` (Set-of-Mark: ids + top-2 hypotheses drawn on the image; needs RGB, so replays only).
 
 ### 3.3 Belief math
 
 `Distribution` over containers ∪ {None}. Operations (all renormalise):
-- `from_scores(d: dict[id, float], sigma)`: p ∝ exp(−d²/2σ²).
-- `swap_mix(a, b, w)`: p'(a) = (1−w)·p(a) + w·p(b), p'(b) = (1−w)·p(b) + w·p(a). This means "with probability w the tracks a and b exchanged identity".
-- `flatten(lam_dt, plausible)`: p ← λ^Δt·p + (1−λ^Δt)·uniform(plausible). This is R7; it replaces "conf × λ^Δt" for distributions.
+- `from_distances(d: dict[id, float], sigma)`: p ∝ exp(−(d² − min d²)/2σ²). The shift prevents underflow; with no candidate → `{None: 1}`, citing the evidence that triggered it.
+- `swap_mix(a, b, w)`: p'(a) = (1−w)·p(a) + w·p(b), p'(b) = (1−w)·p(b) + w·p(a). This means "with probability w the tracks a and b exchanged identity". It asserts 0 ≤ w ≤ 1.
+- `flatten(f, plausible)`: p ← f·p + (1−f)·uniform(plausible). With f = λ^Δt this is R7, which replaces "conf × λ^Δt" for distributions. Δt = 0 (the distribution changed this frame) means no decay; an empty `plausible` is a no-op.
 - `joint_exclusive(dists)`: R5. Over injective assignments π of hidden cubes → containers (N ≤ 3, enumerate ≤ 24), P(π) ∝ Π_h p_h(π(h)); return the marginals.
 - `max_prob`, `argmax`, `entropy`.
 
@@ -150,7 +153,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 ### 3.4 Observation → L0/L1
 
 - Visible object: `pose = Belief(xyz, conf=track_q, t, "observed", [obs_id])`, `t_last_seen = t`.
-- Visibility state machine (M1): visible → `hidden` if a container is within `r_cover` of the last xy at the disappear frame; → `held` if the gripper is closed (width < `g_closed`) and the EE is within `d_grip`; → `occluded_by_arm` if the EE is within `d_occ` (no container) and the object reappears within `T_occ` frames; → `out_of_view` if the last uv is within `m_edge` px of the border; else `unknown`.
+- Visibility state machine (deferred until after G; VideoUnmaskSwap metrics read only visible / hidden / unknown): visible → `hidden` if a container is within `r_cover` of the last xy at the disappear frame; → `held` if the gripper is closed (width < `g_closed`) and the EE is within `d_grip`; → `occluded_by_arm` if the EE is within `d_occ` (no container) and the object reappears within `T_occ` frames; → `out_of_view` if the last uv is within `m_edge` px of the border; else `unknown`.
 - Hidden cube display pose (R2): Σ_c p(c)·pose(c). Decisions use the distribution, never this pose.
 
 ### 3.5 Rules (exact form; parameters in `RuleParams`)
@@ -159,11 +162,11 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 |---|---|---|---|
 | R1 cover | cube visible→not visible at t, and containers visible at t with xy distance d < `r_cover` to the cube's last xy | `SetDist(Inside(cube), from_scores(d, σ_cover))`; no candidate → `{None: 1}`; `AddEvent(cover)`. Covers the teleport case: the container appears in the same frame | M0 |
 | R2 follow | each frame for hidden cubes | update display pose | M0 |
-| R3 held | gripper closed near x | `Held(x)`; pose follows the EE | M1 |
+| R3 held | gripper closed near x | `Held(x)`; pose follows the EE | after G (no current metric needs it) |
 | R4 reveal | container z > 0.15 and cube x observed at the container's former xy | `SetDist(Inside(x), {c: 1})`, `source="verified"`, plus `Retract` of contradicted hypotheses | M5 (needs the peek variant) |
 | R5 exclusive | after any change to an `Inside` | `SetDist` = marginals of `joint_exclusive` | M1 |
-| R6 swap | a `near_pass(a, b)` evidence closes (M0), or `id_margin < m_thr` (M2) | `MixDist(Inside(h), a, b, w)` for every hidden h with mass on a or b. M0: w = w_mix·clip(1 − min_px/d_px, 0, 1). M2: w = w_max·exp(−margin/m0) | M0 / M2 |
-| R7 decay | each frame for unconfirmed items | `flatten`, pose conf decay | M1 (wired in M0 with λ = 1) |
+| R6 swap | a `near_pass(a, b)` evidence closes (M0), or `id_margin < m_thr` (M2) | `MixDist(Inside(h), a, b, w)` for every **hidden** h with mass on a or b; `AddEvent(swap)` only when w > 0. M0: w = w_mix·(1 − closeness). M1: w = w_max·exp(−d/d0), with d the 3D closest-approach distance (image distance as fallback). M2: w from the identity margin and G's measured signature | M0 / M1 / M2 |
+| R7 decay | each frame for unconfirmed items (Δt > 0) | `flatten`, pose conf decay | wired since M0 (λ = 1, off); λ is tuned in M2 |
 | R8 consistency | two objects within `d_same`; a "hidden" cube observed; an expected container missing | `AddEvidence(risk)` + `MixDist` toward uniform with `w_risk` | M3 |
 
 ### 3.6 Monitor and decision
@@ -181,7 +184,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
    "risks":[{"obj":"bin_2","reason":"<=80 chars","cites":["e21"]}]}
   ```
 - **Validator:** schema; every id exists; every `cites` non-empty and existing; `keep` ⊆ containers that currently hold mass or are cited; no numeric field at all (strength is categorical). On failure: one retry with the error text, then fall back to RuleOnly for this trigger (logged).
-- **Patch → ops:** swap `clear` → `MixDist(w = 1 − ε)` (a full exchange); `ambiguous` → `w = 0.5`; `unlikely` → `w = 0`, which undoes the rule's mix by restoring the pre-mix distribution from the trace. `keep` drops the mass of the other containers (renormalised). Each risk becomes `AddEvidence(risk)`. Numbers come from this fixed table (method a) or, as an ablation, from self-consistency over k = 5 samples (method b: the agreement rate becomes w).
+- **Patch → ops:** swap `clear` → `MixDist(w = 1 − ε)` (a full exchange); `ambiguous` → `w = 0.5`; `unlikely` → `w = 0`, which undoes the rule's mix by restoring the pre-mix distribution from the trace (not via Retract, which only moves mass to None; §3.2). `keep` drops the mass of the other containers (renormalised). Each risk becomes `AddEvidence(risk)`. Numbers come from this fixed table (method a) or, as an ablation, from self-consistency over k = 5 samples (method b: the agreement rate becomes w).
 - **What the arbiter can never do:** write a pose, create an object, or edit evidence.
 
 ### 3.8 Planner and skills
@@ -195,8 +198,8 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 - `results/runs/<run_id>/traces/<system>_<source>_<ep>.jsonl`, one line per frame: `{t, obs: {id: [visible, xyz, track_q]}, evidence: [...], ops: [{op, target, before, after, rule}], arbiter: {...} | null}`. Tests use gzip off; full runs gzip on.
 - `debug explain`: walks support ids back to observations and prints a tree.
 - `debug timeline`: plots one cube's distribution over time with evidence markers.
-- `debug diff --a SYS1 --b SYS2`: shows the first frame where two systems' argmax differ.
-- `KB.snapshot()` / `KB.restore()` let you start a debug session at any frame.
+- `debug diff --a SYS1 --b SYS2` and `KB.restore()`: not built yet; add them when a debugging session needs them (YAGNI). `KB.snapshot()` exists.
+- CLI: `python -m arbiter_kb.debug explain|timeline --run RUN_DIR --condition C --system S --ep N --cube ID [--t T]`. Trace files are `RUN_DIR/traces/<condition>_<system>_<ep>.jsonl`.
 
 ### 3.10 Evaluation definitions
 
@@ -204,7 +207,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 - **Correctness is physical:** the system's label whose believed position is nearest the true container at t* (≤ 5 cm). Under id corruption labels lie, so the id alone cannot be trusted (NOTES M0 deviation 2).
 - **Per row:** `pred, p_max, correct, decision, entropy, grasp_err_m, moved, corrupted`.
 - **Metrics:** accuracy; **silent-failure rate** = P(wrong ∧ p_max ≥ τ_hi); detection rate = P(p_max < τ_hi ∨ risk | wrong); Brier = mean Σ_c (p_c − 1[c = true])²; ECE (10 equal-width bins on p_max); reliability diagram; decision outcomes; cost per episode (calls, tokens, s, $); grasp error. 95% Wilson intervals for rates. Split moved vs back-at-start.
-- **Splits:** synthetic train seeds 0–999, test seeds 1000–1999; RoboMME train episodes for tuning, the 50 test episodes only after the freeze (E5c).
+- **Splits:** synthetic train seeds 0–999, test seeds 1000–1999; RoboMME train episodes for tuning, the 50 test episodes only after the freeze. A split is read from `EpisodeMeta.split`. Every test read is checked against, and appended to, `results/test_reads.log` (E5c). **Any new or changed parameter** (e.g. M1's w_max, d0, c, j_max) means re-freezing `params.json` (a new FREEZE line) before the next test read.
 
 ### 3.11 Corruption model (input side, never output side)
 
@@ -238,7 +241,9 @@ arbiter-kb/
     observe.py  detectors.py  identity.py(M2)  rules.py  monitor.py(M3)
     arbiter.py(M4)  llm.py(M4)  planner.py  skills.py  reach.py(M5)
     evaluate.py  metrics.py  plots.py
-  scripts/  run.py  quality.py  tune.py(M1)  copy_replays.sh(M6)
+  scripts/  run.py  selftest.py  quality.py  make_notebook.py  measure_synthetic.py  copy_replays.sh(G)  measure_swaps.py(G)  tune.py(M2)
+  stress/   stress_env.py  render.py  perceive.py  POD_RUN.md   (G; runs on the pod, outside the package)
+  results/  test_reads.log (ledger)  latest/<run>/{summary.csv, meta.json} (committed, --keep only)  runs/ (git-ignored)
   tests/    one file per module + test_contracts.py test_causality.py test_repro.py
   notebooks/ m0_walkthrough.ipynb … (one per phase)   executed/
   results/  runs/<run_id>/{rows.csv, summary.csv, params.json, meta.json, traces/}  llm_cache/
@@ -288,7 +293,11 @@ make quality    # python scripts/quality.py   (E1, E9)
 make selftest   # python scripts/run.py --selftest   (phase "Done when" checks, PASS/FAIL lines)
 make check      # test + quality + selftest   ← first gate for every phase
 /review-phase M # (in Claude Code) code-reviewer + goal-reviewer   ← second gate (§1.1)
-make eval ARGS="--source synthetic --systems frozen,bound,arbiter --corrupt none,id_swap --split test"
+make eval ARGS="--source synthetic --corrupt none,id_swap --p 0.5 --split test --n 30"
+python scripts/run.py --freeze [--force]   # untuned phases (M0, M1): params.json from defaults + FREEZE ledger line
+python scripts/run.py --systems all --corrupt none,id_swap_overlap,pos_noise --lane mix --steps mix --n 60 --keep-as m1_table
+python scripts/run.py --keep[-as NAME] ...  # also copy summary/meta to results/latest and figures to figures/, from a clean tree
+make notebook   # regenerate + execute the phase walkthrough
 ```
 
 ### 5.2 OpenRouter (M4)
@@ -376,6 +385,9 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 4. **R5** `joint_exclusive`, ε_none = 0.01. R5 is the one rule that can beat any haircut (3 cubes in 3 containers: pinning one cube informs the others).
 5. **R6 v1.5:** w = w_max·exp(−d/d0) from the 3D closest-approach distance (image distance as fallback). Defaults, not tuned.
 6. **Metrics:** ECE and a reliability diagram.
+7. **Parameters (defaults, untuned; all in `params.py`):** w_max 0.5, d0 0.02 m, d_ov 0.03 m, c 0.5 for both haircuts (the Bayes-optimal value at p_swap 0.5, i.e. it copies our own choice on purpose), j_max 0.03 m, ε_none 0.01. They change `params.json`, so re-freeze with a new FREEZE line before the test table. Corruption settings (p_swap, d_ov, pos_noise σ) are source arguments recorded in meta.json, not system parameters.
+8. **Debuggability carried over from the M0.1 code review:** a test that `debug explain` reaches observation ids for **every** ArbiterKB row of a small evaluation (not just five episodes).
+9. **CLI:** `scripts/run.py --systems` to choose systems, `--corrupt id_swap_overlap`, `--pos-noise`.
 
 **Done when.**
 - (a) `make check`.
@@ -423,7 +435,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 **Done when.**
 - (a) `make check`.
 - (b) On synthetic, the minimum margin falls inside a swap window in ≥ 95% of episodes.
-- (c) Under `id_swap_measured`, ArbiterKB's silent-failure rate < Bound's, BoundHaircut's and JumpDetector's, with non-overlapping Wilson intervals; otherwise report honestly.
+- (c) Under `id_swap_measured`, ArbiterKB's silent-failure rate < that of Bound, BoundHaircut, OverlapHaircut and JumpDetector, with non-overlapping Wilson intervals; otherwise report honestly.
 - (d) Clean accuracy holds (M1 criterion).
 
 ### M3 — Monitor and decisions (1 day, CPU)

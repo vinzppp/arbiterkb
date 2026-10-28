@@ -5,6 +5,7 @@ distribution (invariant I1); operations never mutate, they return a new object.
 """
 from __future__ import annotations
 
+import itertools
 import math
 from dataclasses import dataclass, field
 from typing import Any
@@ -114,6 +115,31 @@ class Distribution:
 
     def as_dict(self) -> dict[str, float]:
         return {str(k): round(p, 6) for k, p in sorted(self.probs.items(), key=lambda kv: str(kv[0]))}
+
+
+def joint_exclusive(dists: dict[str, Distribution], t: int, max_states: int = 5000) -> dict[str, Distribution]:
+    """R5: at most one cube per container. Treats the cube marginals as INDEPENDENT evidence, forms the
+    joint over assignments with no container used twice (None may repeat), and returns the marginals.
+    Only valid when the marginals really are independent (e.g. merging a new cover); after swap_mix the
+    cubes are correlated and this would be overconfident, so R5 runs only on cover frames."""
+    cubes = list(dists)
+    keys = [list(dists[c].probs) for c in cubes]
+    if not cubes or math.prod(len(k) for k in keys) > max_states:
+        return dict(dists)
+    marg = {c: {} for c in cubes}
+    total = 0.0
+    for combo in itertools.product(*keys):
+        used = [k for k in combo if k is not None]
+        if len(used) != len(set(used)):
+            continue
+        w = math.prod(dists[c].probs[k] for c, k in zip(cubes, combo))
+        total += w
+        for c, k in zip(cubes, combo):
+            marg[c][k] = marg[c].get(k, 0.0) + w
+    if total <= 0:
+        return dict(dists)
+    sup = sorted({i for d in dists.values() for i in d.support})
+    return {c: Distribution(marg[c], t, sup, {k: list(v) for k, v in dists[c].hyp_support.items()}) for c in cubes}
 
 
 def _normalise(probs: dict) -> dict:

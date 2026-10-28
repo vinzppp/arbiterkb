@@ -16,9 +16,11 @@ from pathlib import Path
 class RuleParams:
     r_cover: float = 0.06  # m: a container within this xy distance of a vanishing cube can cover it
     sigma_cover: float = 0.02  # m: width of the distance kernel over cover candidates (R1)
-    w_mix: float = 0.5  # max probability that two passing tracks exchanged identity (R6)
+    w_mix: float = 0.5  # R6 fallback without 3D: w = w_mix·(1 - closeness in the image)
+    w_max: float = 0.5  # R6 (M1): w = w_max·exp(-d/d0), d = closest 3D centre distance of the pass
+    d0: float = 0.02  # m
     lam: float = 1.0  # per-frame decay toward uniform for unconfirmed beliefs (R7); 1 = off
-    eps_none: float = 0.0  # floor for the "elsewhere" hypothesis (M1 sets > 0)
+    eps_none: float = 0.01  # floor for the "elsewhere" hypothesis in R1
 
 
 @dataclass(frozen=True)
@@ -41,11 +43,19 @@ class ArbiterParams:
 
 
 @dataclass(frozen=True)
+class BaselineParams:
+    c: float = 0.5  # haircut confidence (= p_swap 0.5, the Bayes-optimal value under id_swap_overlap, on purpose)
+    d_ov: float = 0.03  # m: OverlapHaircut reacts only to passes closer than this in 3D
+    j_max: float = 0.03  # m: JumpDetector flags a label that moves further than this in one frame
+
+
+@dataclass(frozen=True)
 class Params:
     rule: RuleParams = field(default_factory=RuleParams)
     detect: DetectParams = field(default_factory=DetectParams)
     monitor: MonitorParams = field(default_factory=MonitorParams)
     arbiter: ArbiterParams = field(default_factory=ArbiterParams)
+    baseline: BaselineParams = field(default_factory=BaselineParams)
     frozen: bool = False  # only a params.json loaded from disk may be frozen (E5c)
     note: str = ""
     origin: str = field(default="", compare=False)  # file it was loaded from; not part of the hash
@@ -71,6 +81,7 @@ class Params:
             detect=DetectParams(**d["detect"]),
             monitor=MonitorParams(**d["monitor"]),
             arbiter=ArbiterParams(**d["arbiter"]),
+            baseline=BaselineParams(**d.get("baseline", {})),
             frozen=d["frozen"],
             note=d.get("note", ""),
             origin=str(path),

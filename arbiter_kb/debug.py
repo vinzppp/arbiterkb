@@ -61,9 +61,10 @@ def _explain_tracker(rows: list[dict], cube: str, t: int | None) -> str:
     if not rows:
         return f"no Inside({cube}) belief up to t={t}"
     r = rows[-1]
-    pred = r["pred"].get(cube)
-    return (f"{cube} -> {pred} with confidence 1 at t={r['t']} (deterministic tracker: nearest container to the "
-            f"tracked cube position; rests on observation o{r['t']}:{pred}, no evidence kept)")
+    pred, conf, doubt = r["pred"].get(cube), r.get("p_max", {}).get(cube, 1), r.get("doubt", {}).get(cube)
+    why = f"; doubt from trigger on ({doubt[0]}, {doubt[1]}) at t={doubt[2]}" if doubt else ""
+    return (f"{cube} -> {pred} with confidence {conf} at t={r['t']} (tracker: nearest container to the tracked "
+            f"cube position; rests on observation o{r['t']}:{pred}, no evidence kept{why})")
 
 
 def _walk(ident: str, ev: dict, evt: dict, obs: dict, depth: int, seen: set) -> list[str]:

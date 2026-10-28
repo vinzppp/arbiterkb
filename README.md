@@ -9,6 +9,6 @@ python3 -m venv .venv && source .venv/bin/activate && pip install -r requirement
 make check PY=python          # tests + quality + M0 self-test (PASS/FAIL lines)
 make eval PY=python ARGS="--corrupt none,id_swap --p 1.0"
 python -m arbiter_kb.debug explain --run results/runs/<run> --trace id_swap_arbiterkb_1025 --cube cube_green
-make notebook PY=python       # notebooks/m0_walkthrough.ipynb -> executed/
+make notebook PY=python       # notebooks/m{0,1}_walkthrough.ipynb -> executed/
 ```
 Reviews: one-time `mkdir -p .claude && cp -R setup/claude/agents setup/claude/commands .claude/`, then `/review-phase M0` in Claude Code.

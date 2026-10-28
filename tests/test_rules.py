@@ -29,7 +29,8 @@ def test_r1_two_candidates_closest_wins():
     ev = disappear(kb, 32, (0.0, 0.0))
     ops = r1_cover(kb, [ev], frame(32, {"bin_a": (0.01, 0), "bin_b": (0.03, 0)}), RuleParams())
     d = next(o.dist for o in ops if isinstance(o, SetDist))
-    assert d.argmax()[0] == "bin_a" and set(d.probs) == {"bin_a", "bin_b"}
+    assert d.argmax()[0] == "bin_a" and set(d.probs) == {"bin_a", "bin_b", None}
+    assert d.probs[None] == pytest.approx(RuleParams().eps_none)
     assert d.probs["bin_a"] / d.probs["bin_b"] == pytest.approx(np.exp((0.03**2 - 0.01**2) / (2 * 0.02**2)))
 
 
@@ -46,7 +47,7 @@ def test_r1_small_sigma_does_not_underflow():
     """Code-review BLOCK: d/σ = 8 must still give the candidate all the mass."""
     kb = KB(OBJS)
     ev = disappear(kb, 32, (0.0, 0.0))
-    ops = r1_cover(kb, [ev], frame(32, {"bin_a": (0.04, 0), "bin_b": None}), RuleParams(sigma_cover=0.005))
+    ops = r1_cover(kb, [ev], frame(32, {"bin_a": (0.04, 0), "bin_b": None}), RuleParams(sigma_cover=0.005, eps_none=0.0))
     assert next(o.dist for o in ops if isinstance(o, SetDist)).probs == {"bin_a": 1.0}
 
 
@@ -107,3 +108,33 @@ def test_r7_no_decay_in_the_frame_the_distribution_changed():
 def test_swap_weight_must_be_a_probability():
     with pytest.raises(AssertionError):
         Distribution({"a": 0.7, "b": 0.3}, 0).swap_mix("a", "b", 1.5, 1, "e1")
+
+
+def test_joint_exclusive_pinned_cube_frees_the_other():
+    from arbiter_kb.beliefs import joint_exclusive
+    out = joint_exclusive({"x": Distribution({"a": 0.5, "b": 0.5}, 0, ["e1"]),
+                           "y": Distribution({"b": 1.0}, 0, ["e2"])}, 1)
+    assert out["x"].probs == pytest.approx({"a": 1.0}) and out["y"].probs == pytest.approx({"b": 1.0})
+
+
+def test_joint_exclusive_would_overconfide_after_a_mix():
+    """Why R5 runs only on cover frames: after one ambiguous swap (w = 0.2) the truth is a mixture of
+    two permutations, so x: a .8. Treating the marginals as independent sharpens it to about .94."""
+    from arbiter_kb.beliefs import joint_exclusive
+    x = Distribution({"a": 1.0}, 0).swap_mix("a", "b", 0.2, 1, "e1")
+    y = Distribution({"b": 1.0}, 0).swap_mix("a", "b", 0.2, 1, "e1")
+    assert x.probs["a"] == pytest.approx(0.8)
+    assert joint_exclusive({"x": x, "y": y}, 2)["x"].probs["a"] == pytest.approx(0.64 / 0.68)
+
+
+def test_r5_runs_only_when_a_cube_was_just_covered():
+    from arbiter_kb.rules import r5_exclusive
+    kb = KB(OBJS + [("cube_r", "cube", {"color": "r"})])
+    e1 = disappear(kb, 32, (0.0, 0.0))
+    e2, = kb.apply([AddEvidence(32, "disappear", ("cube_r",), {"last_xyz": [0.1, 0, 0.017], "obs": []})])
+    kb.apply([SetDist("Inside", "cube_g", Distribution({"bin_a": 0.6, "bin_b": 0.4}, 32, [e1.id])),
+              SetDist("Inside", "cube_r", Distribution({"bin_b": 1.0}, 32, [e2])),
+              SetVis("cube_g", "hidden", 1.0, 32, [e1.id]), SetVis("cube_r", "hidden", 1.0, 32, [e2])])
+    ops = r5_exclusive(kb, [e1], frame(32, {}), RuleParams())
+    assert {o.subj: o.dist.argmax() for o in ops}["cube_g"] == ("bin_a", pytest.approx(1.0))
+    assert r5_exclusive(kb, [], frame(33, {}), RuleParams()) == []
