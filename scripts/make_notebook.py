@@ -56,8 +56,8 @@ M1 = [
              "[(ep, base.settings(ep)) for ep in base.episodes('train', 8)]"),
     ("code", "# id_swap_overlap: ids may swap only where the two tracks come within d_ov = 3 cm; the label jumps < d_ov\n"
              "bad = OverlapSwapSource(base, p_swap=1.0, d_ov=params.baseline.d_ov)\n"
-             "ep = next(e for e in base.episodes('train', 40) if base.settings(e)[0] <= 0.02)\n"
-             "frames = list(bad.frames(ep))\nbad.log[ep]"),
+             "ep = next(e for e in base.episodes('train', 40) if list(bad.frames(e)) and bad.log[e]['corrupted'])\n"
+             "base.settings(ep), bad.log[ep]"),
     ("code", "# Six systems on that episode; correctness is physical (the label nearest the true container)\n"
              "systems = [TrackerSystem('frozen', params), TrackerSystem('bound', params), GuardedBound('haircut', params),\n"
              "           GuardedBound('overlap_haircut', params), GuardedBound('jump', params), ArbiterKBSystem(params)]\n"
