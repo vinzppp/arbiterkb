@@ -126,7 +126,10 @@ def event_log(kb: KB, last: int = 30) -> list[str]:
     (cover / grasp / place events are always kept) and a first line says how many were omitted."""
     start: dict[str, tuple] = {}
     rows = []
+    covered = {s for v in kb.events if v.type == "cover" for s in v.support}  # shown in the cover line instead
     for e in kb.evidence:
+        if e.kind == "disappear" and e.id in covered:
+            continue
         if e.kind == "move_start":
             start[e.args[0]] = (e.data.get("t_at", e.t - 1), e.data.get("xyz"))
             continue
@@ -136,16 +139,23 @@ def event_log(kb: KB, last: int = 30) -> list[str]:
         if (line := _ev_line(e)) is not None:
             rows.append((e.t, 0, int(e.id[1:]), f"[{e.id}] {line}"))
     for v in kb.events:
-        rows.append((v.t, 1, int(v.id[1:]), f"[{v.id}] t={v.t} " + _event_text(v), v.type in KEEP))
+        rows.append((v.t, 1, int(v.id[1:]), f"[{v.id}] t={v.t} " + _event_text(v, kb), v.type in KEEP))
     rows = sorted(r if len(r) == 5 else (*r, False) for r in rows)
     drop = max(0, len(rows) - last)
     kept = [r for i, r in enumerate(rows) if r[4] or i >= drop]
     return ([f"({len(rows) - len(kept)} earlier lines omitted)"] if len(kept) < len(rows) else []) + [r[3] for r in kept]
 
 
-def _event_text(v) -> str:
+def _event_text(v, kb: KB) -> str:
     """R6's `swap` event marks a DETECTED close pass (the detector can be wrong: M3 truth check), and
-    whether identities were confused is the Inside mix; so the log reads it as neither certain nor a swap."""
+    whether identities were confused is the Inside mix; so the log reads it as neither certain nor a swap.
+    A cover is one line with where it happened and the containment rule spelled out (v1.7: in ep 9 a separate
+    'disappeared at' line made the model look for the cube at its old spot)."""
+    if v.type == "cover":
+        ev = next((e for e in kb.evidence if e.id in v.support and "last_xyz" in e.data), None)
+        where = f" at {_xy(ev.data['last_xyz'])}" if ev else ""
+        return (f"{v.args[1]} covered by {v.args[0]}{where} (conf {v.conf:.2f}) [{','.join(v.support)}]; "
+                f"from then on it moves with {v.args[0]}")
     if v.type == "swap":
         return f"{v.args[0]} and {v.args[1]} passed close (identity may be confused: see Inside)"
     return f"event {v.type}({', '.join(v.args)}) conf {v.conf:.2f}"
@@ -176,10 +186,21 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
     lines.append("Relations:")
     for (pred, subj), d in kb.relations.items():
         hyps = " | ".join(f"{k or 'elsewhere'} {p:.2f}" for k, p in sorted(d.probs.items(), key=lambda kv: -kv[1]))
-        lines.append(f"  {pred}({subj}): {hyps}  [{','.join(d.support[-3:])}]")
-    lines += [f"  {f[0]}({', '.join(f[1:])}) from positions [{','.join(sup)}]" for f, _, sup in geometric(kb, p)
-              if f[0] != "LeftOf"]
-    lines += [f"  {k[0]}({', '.join(k[1:])}) {b.conf:.2f} ({b.source}) [{','.join(b.support[-3:])}]"
+        lines.append(f"  [{pred}({subj})] {hyps}  [{','.join(d.support[-3:])}]")
+    lines += [f"  [{rel_id(f)}] from positions [{','.join(sup)}]" for f, _, sup in geometric(kb, p) if f[0] != "LeftOf"]
+    lines += [f"  [{rel_id(k)}] {b.conf:.2f} ({b.source}) [{','.join(b.support[-3:])}]"
               for k, b in kb.facts.items() if k[0] != "description"]
     lines.append("Event log (oldest first):")
     return "\n".join(lines + ["  " + x for x in event_log(kb)])
+
+
+def rel_id(fact: tuple) -> str:
+    """The id a relation line carries in the controller view, e.g. 'Inside(cube_red)', 'On(cube_r, bin_a)'."""
+    return f"{fact[0]}({', '.join(fact[1:])})"
+
+
+def citable_ids(kb: KB, p: RuleParams = RuleParams()) -> set[str]:
+    """Every id the controller view prints: evidence, events, objects, relation lines (observation ids
+    o<t>:<object> are accepted separately by controller.check)."""
+    rels = {rel_id((pred, subj)) for pred, subj in kb.relations} | {rel_id(k) for k in kb.facts}
+    return kb.known_ids() | set(kb.objects) | rels | {rel_id(f) for f, _, _ in geometric(kb, p)}

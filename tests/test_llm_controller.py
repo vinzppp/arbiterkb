@@ -59,6 +59,7 @@ def test_load_env_parses_without_printing(tmp_path):
 def test_system_prompts_share_the_robot_text(arm):
     s = C.system_prompt(arm)
     assert s.startswith("You control a simulated Franka Panda") and '"cites"' in s
+    assert "moves with that container" in s  # the same rule for every arm
     assert ("event log" in s) == (arm == "K")
     assert ("no depth" in s) == (arm in ("H", "S"))
 

@@ -29,7 +29,7 @@ from arbiter_kb.llm import LLM  # noqa: E402
 from arbiter_kb.sources.replay import OracleReplaySource  # noqa: E402
 from arbiter_kb.sources.synthetic import SyntheticSource  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
-from arbiter_kb.views import controller_view  # noqa: E402
+from arbiter_kb.views import citable_ids, controller_view  # noqa: E402
 
 
 def fill(src, ep, params):
@@ -82,35 +82,58 @@ def score(arm, ep, text, s, gt, cube, bins) -> dict:
         return row
     true_xy = gt.bin_xyz_at_t_star[cube][:2]
     truth_label = physical_truth(s, bins, gt.bin_xyz_at_t_star[cube])
-    row.update(problems="; ".join(C.check(act, ans, s.kb.known_ids() | set(s.kb.objects))),
+    row.update(problems="; ".join(C.check(act, ans, citable_ids(s.kb, s.params.rule))),
                xy_err_m=round(float(np.linalg.norm(act[:2] - true_xy)), 4), target=ans.get("target"),
                target_is_true_bin=ans.get("target") == truth_label)
     return row
 
 
-def run(args) -> list[dict]:
-    params = load_params()
-    src = OracleReplaySource() if args.source == "oracle" else SyntheticSource(lane_offset="mix", swap_steps="mix")
-    eps = src.episodes("train", n=args.n)
-    if not eps:
-        print(f"SKIPPED: no {args.source} train episodes (oracle: run scripts/copy_replays.sh)")
-        return []
-    llm, rows = LLM(model=args.model, max_usd=args.max_usd), []
-    for ep in eps:
+EFFORT = {"default": None, "low": {"effort": "low"}, "off": {"enabled": False}}
+USAGE = ("prompt_tokens", "completion_tokens", "reasoning_tokens", "images", "usd", "seconds")
+
+
+def jobs(args, src, params) -> list[tuple]:
+    """(ep, arm, effort, messages, system, gt, cube, bins) for every request, built before any call."""
+    out = []
+    for ep in src.episodes("train", n=args.n + args.first)[args.first:]:
         s, frames, gt, cube, t_star = fill(src, ep, params)
         bins = [o for o, c, _ in src.meta(ep).objects if c == "container"]
         for arm in args.arms.split(","):
             if arm == "H" and args.source != "oracle":
                 continue
             msgs = messages(arm, s, frames, src, ep, t_star)
-            if args.print:
-                show(msgs)
-                return []
-            before = dict(llm.usage)
-            row = score(arm, ep, llm.chat(msgs, max_tokens=args.max_tokens), s, gt, cube, bins)
-            row.update({k: round(llm.usage[k] - before[k], 6) for k in ("prompt_tokens", "completion_tokens", "images", "usd")})
+            out += [(ep, arm, eff, msgs, s, gt, cube, bins) for eff in args.effort.split(",")]
+    return out
+
+
+def ask(args, job) -> tuple[str, dict]:
+    """One request with its own client, so usage is per call (threads share nothing)."""
+    llm = LLM(model=args.model, max_usd=args.max_usd, reasoning=EFFORT[job[2]])
+    return llm.chat(job[3], max_tokens=args.max_tokens), dict(llm.usage)
+
+
+def run(args) -> list[dict]:
+    from concurrent.futures import ThreadPoolExecutor
+
+    params = load_params()
+    src = OracleReplaySource() if args.source == "oracle" else SyntheticSource(lane_offset="mix", swap_steps="mix")
+    todo = jobs(args, src, params)
+    if not todo:
+        print(f"SKIPPED: no {args.source} train episodes (oracle: run scripts/copy_replays.sh)")
+        return []
+    if args.print:
+        show(todo[0][3])
+        return []
+    rows, spent = [], 0.0
+    with ThreadPoolExecutor(args.workers) as pool:
+        for job, (text, u) in zip(todo, pool.map(lambda j: ask(args, j), todo)):
+            ep, arm, eff, _, s, gt, cube, bins = job
+            row = {**score(arm, ep, text, s, gt, cube, bins), "effort": eff, **{k: round(u[k], 6) for k in USAGE}}
             rows.append(row)
-            print(row)
+            spent += u["usd"]
+            print(row, flush=True)
+            if spent > args.max_usd:
+                raise SystemExit(f"stopped: spent ${spent:.3f} > --max-usd {args.max_usd}")
     return rows
 
 
@@ -127,6 +150,9 @@ def main() -> None:
     ap.add_argument("--source", choices=["synthetic", "oracle"], default="synthetic")
     ap.add_argument("--arms", default="K,K0,S,R")
     ap.add_argument("--n", type=int, default=5)
+    ap.add_argument("--first", type=int, default=0, help="skip the first train seeds (keep prompt-development seeds apart)")
+    ap.add_argument("--effort", default="default", help="comma list of default, low, off (controller thinking)")
+    ap.add_argument("--workers", type=int, default=1, help="parallel requests")
     ap.add_argument("--model", default="qwen/qwen3.6-35b-a3b")
     ap.add_argument("--max-usd", dest="max_usd", type=float, default=0.25)
     ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=4000)  # reasoning models think first

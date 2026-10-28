@@ -678,3 +678,28 @@ Reading:
 - **§2.1:** the status table is updated.
 - **M4 items 7–9:** the thinking-effort test, the clue-object lister and its re-benchmark on G's replays, and the batch of KB / view fixes, to be tested together.
 - **M5 item 5:** closed-loop perception.
+
+## Batch A (Mac) — the batch of fixes, and the test fixed before it runs (2026-10-28)
+**Fixes, applied together** (spec §6 M4 item 9):
+- **Cover lines:** one line per cover: "cube_red covered by bin_2 at (x, y) (conf 0.99) [e9]; from then on it moves with bin_2". The separate "disappeared at" line is gone; in ep 9 it led the model to the cube's old spot.
+- **Containment rule in every prompt:** all arms' prompts (shared `ENDING`) say: "an object covered by a container moves with that container until it is seen again; positions recorded earlier are where things were at that time". Every arm gets it, so the comparison stays fair.
+- **Relation ids:** relation lines carry an id (`[Inside(cube_red)]`, `[On(a, b)]`). `views.citable_ids` lists every printable id, and dry_run checks cites against it.
+- **Set-of-Mark labels:** greedy placement (`som.place`): above, below, right, left, then farther out with a leader line. A test checks four objects within 20 px.
+- **Clue-object lister** (`clue_objects.py`, spec §2.5):
+  - VLM prompt, per-entry checks, and a cap of 10;
+  - phrases without a repeated colour;
+  - task items from the instruction text OR the VLM's flag. Its own flags were inconsistent on the real frames.
+  - qwen3-vl-8b on the 4 real frames: all right except f325, where it listed 1 container instead of 3. Re-test on G's replays.
+- **dry_run:** `--effort default,low,off` (controller thinking), `--first` (seed offset), `--workers` (parallel). `scripts/dry_report.py` reports per (arm, effort) with Wilson CIs and a paired episode bootstrap against a reference.
+
+**The test, fixed before running:**
+- **Seeds:** train seeds 100–149 (n = 50), disjoint from the prompt-development seeds 0–19. Clean synthetic, text only, one decision at t*.
+- **Grid:** arms K, K-L3, K0, R × effort default, low, off; qwen/qwen3.6-35b-a3b via DeepInfra; cap $3.
+- **Primary metric:** the right-container rate. **Secondary:** waypoint within 3 cm, tokens, seconds and $ per call.
+- **Decision rule** (`dry_report.py`, reference K at default effort), on the paired difference with a 95% bootstrap CI:
+  - **better / worse:** the CI excludes 0;
+  - **same:** the CI lies within ±10 percentage points;
+  - **undecided:** otherwise.
+- **Questions:**
+  - Does lower thinking keep K's accuracy (time budget, spec §2.6)?
+  - Do K-L3 / R / K0 differ from K once the log and prompt fixes are in?

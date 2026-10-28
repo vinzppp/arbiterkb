@@ -1,4 +1,5 @@
 """LLM controller (DEVELOPMENT §3.8): one world-frame waypoint per call, as in arXiv 2610.17350.
+v1.7: every arm's prompt states the containment rule (ENDING), so no arm gets it for free from its memory.
 
 The system prompt, answer parsing and action checks follow that paper's harness
 (github.com/jackbjed/embodied-astra-robomme, harness/astra_waypoint_eval_v3.py, MIT licence): the robot and
@@ -65,7 +66,9 @@ MEMORY["S"] = """Memory: one sentence per hidden object saying where the robot's
 and wrist images, the TCP pose, the finger positions (0.04 m each = fully open, 0 = closed) and the elapsed
 control steps. You get no depth and no object positions."""
 
-ENDING = """Notes: time passes only while the robot executes a motion; everything else in the scene keeps moving during a
+ENDING = """Objects can be hidden: an object covered by a container moves with that container until it is seen again.
+Positions recorded earlier are where things were at that time, not necessarily where they are now.
+Notes: time passes only while the robot executes a motion; everything else in the scene keeps moving during a
 motion. The gripper opens or closes only when you command it (-1 or 1). The episode ends automatically when the
 environment judges success or failure, or after 1300 control steps. If you believe the task is complete,
 answer with "waypoint": null."""

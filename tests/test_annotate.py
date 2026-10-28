@@ -49,7 +49,7 @@ def test_text_only_answer_writes_relations_with_cites_and_no_descriptions():
     assert rep["written"] == 1 and b.conf == 0.5 and b.source == "vlm" and b.support == ["e1"]
     assert ("description", "bin_a") not in kb.facts  # needs an image
     assert ask(kb, ("inside", "cube_r", "?c"))[0] == ({"?c": "bin_a"}, 0.5)
-    assert "inside(cube_r, bin_a) 0.50 (vlm) [e1]" in controller_view(kb)
+    assert "[inside(cube_r, bin_a)] 0.50 (vlm) [e1]" in controller_view(kb)
 
 
 def test_with_an_image_beliefs_cite_the_keyframe_and_descriptions_show_in_the_view():
@@ -89,3 +89,14 @@ def test_som_draws_ids_and_hidden_cube_hypotheses_on_containers():
     u, v = frames[-1].objects["bin_0"].uv.astype(int)
     patch = out[max(v - 20, 0):v, max(u - 15, 0):u + 15]
     assert (patch != 255).any()  # a label was drawn just above bin_0
+
+
+def test_som_labels_do_not_overlap():
+    from arbiter_kb.som import place
+
+    taken = []
+    for u, v in [(100, 100), (110, 102), (105, 98), (120, 100)]:  # four objects within 20 px
+        place(u, v, "bin_0\nred? 0.92", taken, 256, 256)
+    boxes = taken
+    assert all(not (a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3])
+               for i, a in enumerate(boxes) for b in boxes[i + 1:])

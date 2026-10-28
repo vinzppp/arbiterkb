@@ -189,4 +189,22 @@ def test_event_log_keeps_covers_when_it_drops_old_lines():
         s.step(f)
     log = event_log(s.kb, last=4)
     assert log[0].endswith("earlier lines omitted)")
-    assert sum("event cover" in x for x in log) == 3
+    assert sum(" covered by " in x for x in log) == 3 and not any("disappeared" in x for x in log)
+
+
+def test_cover_is_one_line_with_the_containment_rule_and_relation_lines_are_citable():
+    from arbiter_kb.sources.synthetic import SyntheticSource
+    from arbiter_kb.views import citable_ids
+
+    src = SyntheticSource(lane_offset=0.0, swap_steps=20, n_swaps=1)
+    ep = src.episodes("train", 1)[0]
+    s = ArbiterKBSystem(Params())
+    s.reset(src.meta(ep))
+    for f in src.frames(ep):
+        s.step(f)
+    v = controller_view(s.kb)
+    covers = [x for x in v.splitlines() if " covered by " in x]
+    assert len(covers) == 3 and all("from then on it moves with bin_" in x and "at (" in x for x in covers)
+    assert "disappeared" not in v  # the cover line carries the place; no separate 'disappeared at' line
+    ids = citable_ids(s.kb)
+    assert all(f"[Inside({c})]" in v and f"Inside({c})" in ids for c in ("cube_red", "cube_green", "cube_blue"))
