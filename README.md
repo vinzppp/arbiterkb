@@ -1,6 +1,6 @@
 # ArbiterKB
 
-A robot knowledge base whose facts carry beliefs (confidence, time, evidence), used as the memory module of an LLM controller that outputs waypoints for a motion planner (spec v1.4). The goal is to match a frontier VLM that reads the whole image history (arXiv 2610.17350), with a smaller model or far fewer tokens. Build spec: `DEVELOPMENT.md`. Goals: `docs/GOALS.md`. Log: `NOTES.md`.
+A robot knowledge base whose facts carry beliefs (confidence, time, evidence), used as the memory module of an LLM controller that outputs waypoints for a motion planner (spec v1.4). The goal is to match a frontier VLM that reads the whole image history (arXiv 2610.17350), with a smaller model or far fewer tokens. Build spec: `DEVELOPMENT.md` (§2: the whole loop, step by step, and why). Goals: `docs/GOALS.md`. Log: `NOTES.md`.
 
 **Status (2026-10-28):**
 - M0–M2 infrastructure: KB, beliefs, baselines, metrics with CIs.

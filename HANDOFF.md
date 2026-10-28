@@ -1,6 +1,6 @@
 # ArbiterKB: handoff (2026-10-28, 04:20 PT)
 
-Read first: `DEVELOPMENT.md` (spec v1.4, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
+Read first: `DEVELOPMENT.md` (spec v1.5: §2 the target loop and its reasoning, §3.7 VLM annotator, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
 
 ## Direction (changed 2026-10-28, NOTES "Direction v2")
 - The KB is the memory module of an LLM controller that outputs waypoints itself, in the 2610.17350 harness.
@@ -15,6 +15,10 @@ Read first: `DEVELOPMENT.md` (spec v1.4, §3.8 controller, §6 phases), `docs/GO
   - the user approves a small dry-run budget;
   - the closed-loop harness on the pod (`stress/`);
   - motion-detector smoothing (M2 item 1; it breaks under noise).
+
+## Reminders from the v1.5 discussion
+- Tell the pod not to delete `/workspace/g/replays`: sizes need them.
+- `/review-phase G` must review `stress/` and the sg_pilot worker. DINOv2 is computed per frame and never used.
 
 ## Where things are
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.

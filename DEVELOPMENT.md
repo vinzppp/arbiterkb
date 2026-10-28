@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.4 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
+Version 1.5 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.5:** §2 rewritten as the target loop with the reasoning behind it: observation table, observe / detectors / rules, VLM annotator (arbiter merged), annotated frame, controller; task-agnostic recording; open relation table; real-time notes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -61,44 +61,143 @@ Design patterns that make E1–E3 cheap (mandatory):
 
 ---
 
-## 2. Architecture (from the plan report)
+## 2. Architecture (v1.5: the target system and why it is built this way)
 
-The design follows Murphy's hybrid architecture as taught in the course: a knowledge base at the centre, a reactive fast loop, and deliberative plan / execute / monitor. It makes two changes: every fact carries a **belief**, and a small LLM acts as an **arbiter** at key moments.
+The design follows Murphy's hybrid architecture as taught in the course: a knowledge base at the centre, a reactive fast loop, and deliberative plan / execute / monitor. Since v1.4 the KB is the **memory module of an LLM controller** that outputs the robot's waypoints itself (claims 1–2 in `docs/GOALS.md`). v1.5 (2026-10-28, user discussion) writes down the whole target loop.
 
+### 2.1 The loop
+
+```mermaid
+flowchart TB
+  CAM["Front camera<br/>RGB + depth"] --> PER["Perception (pod GPU)<br/>segment, track, mask + depth → 3D"]
+  RS["Robot state<br/>hand pose, gripper"] --> OBS
+  PER --> OBS["Per-frame observation table (FrameObs)<br/>every object: id, class, visible, 3D centroid, size, confidence; hand, gripper, time"]
+  OBS --> O["observe<br/>what is seen"]
+  OBS --> D["detectors<br/>what changed (evidence)"]
+  D --> R["rules<br/>what it means (beliefs, events)"]
+  O --> KB
+  D --> KB
+  R --> KB
+  GOAL["Task goal<br/>any instruction"] --> KB
+  KB["Knowledge base: every item is a belief with support ids<br/>L0 geometry · L1 objects · L2 relations · L3 evidence log + events · L4 task"]
+  KB <-->|"at event moments"| ANN["VLM annotator (small VLM)<br/>keyframe + KB → relations, descriptions, corrections"]
+  KB --> V1["KB text view + event log<br/>ids, probabilities, from → to"]
+  KB --> V2["Annotated current frame (Set-of-Mark)<br/>ids and top hypotheses drawn on objects"]
+  V1 --> C["LLM controller (small or frontier)<br/>one waypoint per call + target + cites"]
+  V2 --> C
+  C --> CHK["checks: schema, workspace, reach"] --> MP["RoboMME motion planner<br/>arm moves"]
+  MP -->|"new frames"| CAM
 ```
-                    ┌──────────────── every frame (cheap, deterministic) ────────────────┐
- Source ──FrameObs─►│ geometry/visibility ─► detectors ─► identity check ─► rules R1–R8  │
- (synthetic /       │          (L0/L1)        (evidence)     (evidence)       (ops)       │
-  oracle replay /   └───────────────────────────────┬────────────────────────────────────┘
-  corrupted /                                       ▼  KB.apply(ops)
-  perceived)                    ┌──────────────────────────────────────────┐
-                                │ KB: L0 geometry · L1 objects · L2 relation│◄──── monitor (R8, risk,
-                                │ distributions · L3 events · L4 task        │      decisions)
-                                │ + evidence log · beliefs · support (TMS)   │
-                                └───────┬──────────────────────▲───────────┘
-                     trigger (rare)     │ text view + keyframes │ validated patch → ops
-                                        ▼                       │
-                                 arbiter (small LLM via OpenRouter, JSON only, cites evidence)
-                                        │
- decision point ──► LLM controller (§3.8): KB text view (L0–L4 + event log) + current frame(s)
-     (each control step)    ──► one waypoint (x, r, γ) + target id + cites ──► validator (schema, workspace, reach)
-                            ──► RoboMME motion planner (closed loop, pod) ──► new frames + TCP feedback
- baseline: rule planner: KB → argmax target → 4 fixed waypoints (§3.8, M0–M2 offline evaluation)
-```
 
-| Report concept | Code |
+Status (2026-10-28):
+
+| Part | Built | Not yet |
+|---|---|---|
+| Perception | GroundingDINO → SAM → Cutie → centroid, offline on the pod (G) | class-agnostic segmentation; size / confidence in the table; DINOv2 is computed per frame but unused (drop it unless an experiment needs appearance) |
+| Observation table (`FrameObs`) | id, class, visible, centroid, pixel, track_q, hand, gripper | size / box, visible fraction, detector confidence, last-clear-frame id, timestamp (contract change, `CONTRACT_VERSION` 2) |
+| observe / detectors / rules | R1 R2 R3 R5 R6; appear, disappear, move from→to, near-pass, grip | motion smoothing under real noise (M2 item 1); press, reveal (R4); time-based thresholds |
+| KB L0–L4 | centroid; objects; Inside (stored) + Near / On / LeftOf / Held (computed); evidence log + events; goal + counts | open relation table (§2.3); size; L4 progress against a parsed goal |
+| VLM annotator | — | all of it (§3.7) |
+| Views | KB text + event log (`views.controller_view`) | annotated frame |
+| LLM controller | prompt, parsing, checks, dry run (Mac, not run) | closed loop on the pod (M5) |
+
+### 2.2 One step, in order
+
+1. **Camera → perception (pod).**
+   - GroundingDINO finds objects from words. SAM cuts out each object's mask. Cutie tracks the masks from frame to frame, so an object keeps its id.
+   - Each mask's pixels are back-projected with the depth image, and their mean is the object's 3D centroid (`sg_compat.backproject_mask`). The mask is what makes the centroid right: a box would mix in table and background depth.
+   - Perception is the only slow part (about 0.4 s per frame on an A40).
+2. **The per-frame observation table (`FrameObs`)** is the hand-over between perception and memory. It holds one row per object, plus the hand pose, the gripper width and the frame number. It is the only thing the memory side reads; the memory never touches pixels.
+   - The table exists for four reasons:
+     - perception runs once and its tables are stored, so the memory can be replayed many times without a GPU;
+     - any source can fill it: synthetic, simulator truth (the upper bound) or real perception;
+     - corruptions are injected here, on the input side, never into the KB's answers (§3.11);
+     - ground truth is not in it, so the memory cannot see the answer (E5b).
+   - In a real-time system the table stays as an in-memory interface. It is also logged (a few hundred bytes per frame), so a failure can be replayed and explained offline.
+   - What the table does not carry, the memory can never know. Widening it is planned (§2.1 status).
+3. **observe** copies what is seen into L0 / L1: pose and "visible", each with its observation id `o<t>:<object>`. Objects not seen this frame are left alone.
+4. **Detectors** compare this table with the previous one and write **evidence** (L3, ids `e1, e2, …`) only when something changed:
+   - appear;
+   - disappear, with the last position;
+   - move start / stop, with where from and where to;
+   - near-pass, with the closest 3D distance;
+   - grip close / open, with the hand position.
+
+   They read mostly perception's centroids. Robot state contributes only the gripper.
+5. **Rules** read the new evidence and the current KB and return operations; only `KB.apply` changes the KB, and it logs every change. For example:
+   - R1: a cube vanished next to a container → `Inside(cube)` gets a distribution, plus a `cover` event.
+   - R6: two containers passed close → some mass moves between them.
+   - R3: the gripper closed near an object → `grasp`; it opened → `place`, onto the object below.
+   - R2: hidden or held objects move with their container or the hand.
+   - R5: one cube per container, among the cubes covered in the same frame.
+6. **VLM annotator (at event moments only)** is a small VLM that sees one keyframe with ids drawn on it, plus the KB. It adds what geometry cannot decide:
+   - relations beyond the computed ones;
+   - object descriptions;
+   - a verdict where the rules are unsure ("did these two containers really exchange identities?").
+
+   Its output is checked (schema, ids exist, cites exist) and enters the KB like any other belief: with a source (`vlm`), support (the keyframe and the evidence it cites) and a probability from a fixed strength table. So it can be retracted and measured against truth. The v1.3 arbiter (§3.7) is this component restricted to swap verdicts.
+7. **Views** turn the KB into what the controller reads:
+   - the **KB text + event log** (`views.controller_view`): goal and progress; objects with 3D centres and their observation ids; relations with probabilities and support; the event log in time order with ids, where-from and where-to. A hidden object's position is not printed as a coordinate: its Inside distribution is.
+   - the **annotated current frame** (Set-of-Mark): the current image with each object's id and, for containers, the top hidden-cube hypotheses ("red? 55%") drawn on it. It ties the ids in the text to the objects in the picture, so the controller can aim at the right one and check the KB with its own eyes.
+8. **LLM controller** reads the views plus the current front / wrist frames and the robot state. It outputs one waypoint (x, y, z, roll, pitch, yaw, gripper), the target object id and the KB ids it relied on.
+   - The checks (schema, workspace, reach) run before the waypoint is sent. The distance from the waypoint to the cited target is logged, never enforced.
+   - The motion planner moves the arm, new frames arrive, and the loop repeats.
+   - The controller only reads the KB; it never writes it.
+
+### 2.3 Design decisions and why
+
+- **Record task-agnostically, retrieve task-specifically.** Every detectable object and every change is recorded, whatever the current goal. The next task may ask about something the current one ignored, and memory not recorded cannot be recovered. The goal is used only when building views (what to show first).
+  - Cheap things are kept for all objects every frame: id, position, visibility, events.
+  - Expensive things are computed on demand: descriptions and semantic relations, by the annotator from the "last clear frame".
+  - The opposite choice, keeping only what the current tasks need, is Clio's (arXiv 2404.13696). It can serve as a contrast arm.
+  - Two parts are still task-bound today: perception's word list (an object outside it is never seen) and the evaluation, which scores only the target cube. Fix them by moving to class-agnostic segmentation, and by scoring every cube's Inside belief.
+- **Code every frame, language models only at moments that need them.** Geometry, time and change are cheap and exact in code (0.1 ms per frame). Meaning, appearance and unclear cases need a VLM, but calling it every frame would cost what the frontier baseline costs (claim 2).
+- **Every item is a belief with support**, whoever wrote it (observe, a rule or the VLM). That makes the memory inspectable (`debug explain --item <id>` walks any id back to observations), lets it retract what turns out wrong, and lets it be measured for calibration against ground truth (claim 3).
+- **Open relation table (L2).**
+  - Today `relations` maps `(predicate, subject)` to a distribution over one object. That suits "exactly one of" relations such as Inside, but not many-to-many ones (Near).
+  - The target is a table of `(predicate, subject, object) → belief {p, support, source: rule | vlm | arbiter, t}`. A new relation then needs a registered predicate and a rule or prompt that fills it, not a new data structure. The exclusive relations (Inside, Held) keep their distributions.
+  - Relations most useful to a controller that outputs waypoints:
+    - the offset from the hand to each object;
+    - Reachable / Graspable / BlockedBy;
+    - Inside / On / Under;
+    - WasAt / OriginallyAt / StationarySince;
+    - Pressed / Touching;
+    - Target / Done / Before;
+    - Ambiguous(a, b).
+- **The observation table is the only door between pixels and memory.** That is why it must carry enough: size, confidence and a last-clear-frame id, not only centroids.
+- **Real time.**
+  - The table is an in-memory interface, logged for replay.
+  - Perception, memory and controller run at their own rates: the KB updates whenever a table arrives, and the controller reads the latest KB.
+  - Thresholds must be per second, not per frame, and the table must carry timestamps, because frames can be dropped.
+- **What is not ours** (`docs/GOALS.md`):
+  - open-vocabulary scene graphs with VLM captions and LLM edges (ConceptGraphs, arXiv 2309.16650);
+  - local updates of a changing scene graph (DovSG, arXiv 2410.11989);
+  - caption memory with time / place retrieval (ReMEmbR, arXiv 2409.13682);
+  - an LLM emitting waypoints (arXiv 2610.17350).
+
+  **Ours:**
+  - short-horizon manipulation memory, in which hidden and swapped objects carry identity uncertainty as beliefs with support;
+  - a time-ordered event log with where-from and where-to, as text the controller can cite;
+  - calibration measured against ground truth;
+  - the controlled comparison of memory content at a fixed controller and executor.
+
+### 2.4 Code map
+
+| Concept | Code |
 |---|---|
-| L0–L4 + belief layer + TMS | `arbiter_kb/kb.py`, `beliefs.py` |
-| Perception input | `sources/*` (only sources know where observations come from) |
-| Change detection, Hungarian identity check | `detectors.py`, `identity.py` (M2) |
+| Observation table and contracts | `types.py` (`FrameObs`, `ObjObs`) |
+| Sources (synthetic, oracle replay, corrupted, perceived) | `sources/*` (only sources know where observations come from) |
+| observe | `observe.py` |
+| Detectors (Hungarian identity check in M2) | `detectors.py`, `identity.py` (M2) |
 | Rules R1–R8 | `rules.py` |
-| Monitor, decision rule | `monitor.py` (M3) |
-| Arbiter + validator | `arbiter.py`, `llm.py` (M4) |
-| LLM controller (v1.4) | `controller.py`, `harness.py` (M4), `llm.py` |
+| KB L0–L4, beliefs, support, retract | `kb.py`, `beliefs.py`, `ops.py` |
+| Views: facts / ask, KB text, event log, controller view, annotated frame | `views.py` (annotated frame: planned) |
+| VLM annotator (arbiter merged) | `annotate.py` (planned), `llm.py` |
+| LLM controller | `controller.py`, `llm.py`; the closed-loop harness `stress/` or `harness.py` (M5) |
 | Rule planner + skills (baseline) | `planner.py`, `skills.py`, `reach.py` |
-| Baselines (HODOR frozen, bound; from M1 also BoundHaircut, OverlapHaircut, JumpDetector) | `systems/baselines.py` |
-| Evaluation, metrics | `evaluate.py`, `metrics.py` |
-| Debugging | `trace.py`, `debug.py` |
+| Baselines | `systems/baselines.py`, `systems/soft_haircut.py` |
+| Evaluation, metrics, comparisons | `evaluate.py`, `metrics.py`, `compare.py` |
+| Debugging | `trace.py`, `debug.py` (`explain`, `explain --item`) |
 
 ---
 
@@ -175,7 +274,28 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 
 `decide(dist) → act | act_on_argmax | verify`, with thresholds `τ_hi`, `τ_lo` (M3 tunes them on train). They maximise expected utility U = +1 (act, correct), −`c_wrong` (act, wrong), −`c_verify` (verify), with defaults c_wrong = 1, c_verify = 0.3. On stock RoboMME, "verify" cannot execute (a wrong lift is an immediate failure), so it is scored as an outcome only.
 
-### 3.7 Arbiter protocol (optional since v1.4: an ablation inside the KB arm)
+### 3.7 VLM annotator, and the arbiter protocol it contains
+
+**v1.5:** the arbiter is merged into the **VLM annotator** (§2.2 step 6, `annotate.py`, planned).
+- **When:** at event moments (cover, close pass ended, grasp, place, reappearance), not every frame.
+- **Input:**
+  - one keyframe with ids drawn on it (Set-of-Mark);
+  - the KB object table;
+  - the recent event log;
+  - the rule-computed candidate relations, to confirm, add to or correct (as ConceptGraphs refines proximity edges with an LLM).
+- **Output (strict JSON):**
+  ```json
+  {"relations": [{"subject": "id", "predicate": "inside|on|...|<new>", "object": "id",
+                  "strength": "clear|ambiguous|unlikely", "cites": ["e.."]}],
+   "objects": [{"id": "id", "description": "<= 80 chars"}], "events": [...]}
+  ```
+  `events` takes the arbiter schema below.
+- **Checks:** every id exists, every cite exists, and there is no coordinate anywhere.
+- **Written as beliefs:** `source: vlm`, support = the keyframe plus the cites, p from the fixed strength table.
+- **Measured** against simulator truth wherever a relation is checkable (M4 item 5).
+
+The arbiter protocol below is the annotator's swap-verdict part.
+
 
 - **Triggers:** a `near_pass` closes; a cube disappears with ≥ 2 candidate containers; `track_drop`; a risk evidence; and every `K` frames while something is hidden. Budget: ≤ 6 calls per episode, at least 20 frames apart.
 - **Input** (≤ 1,500 tokens): the system prompt (role: reconcile hypotheses; JSON only; cite evidence ids; never output coordinates or probabilities), `kb.text_view()`, the evidence lines since the last call, and ≤ 2 Set-of-Mark keyframes (max-overlap frame and min-margin frame; replays only).
@@ -483,8 +603,11 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 2. **L2 relations:** `Held` (R3), `On` (resting, xy overlap, height difference ≈ the lower object's height), `Near`, `LeftOf` (robot frame, RoboMME's convention). `Inside` stays as it is.
 3. **L0 / L1:** extent from the mask (replays) or the generator (synthetic); stationary intervals; visibility `held` and `occluded_by_arm`; container yaw (mask PCA on replays).
 4. **L4:** goal parsed from the task template; progress from L3 against the goal (for example 2 of 3 picks).
-5. **Event log view** (§3.8): the controller's text, deterministic, one line per event with where-from and where-to and the evidence ids. An optional VLM-written one-line summary at event moments, marked as `source: arbiter` with cites, behind a flag. It is measured, not assumed (M4 item 5).
+5. **Event log view** (§3.8): the controller's text, deterministic, one line per event with where-from and where-to and the evidence ids. VLM descriptions and relations come from the annotator (§3.7), as beliefs with cites. They are measured, not assumed (M4 item 5).
 6. R8 consistency checks → risk evidence (a cube Inside two containers, Held and Inside at once, …).
+7. **(v1.5) Wider observation table** (`FrameObs`, `CONTRACT_VERSION` 2, NOTES entry): per object, size / box, visible fraction, detector confidence and the last-clear-frame id; per frame, a timestamp. Detector thresholds become per second.
+8. **(v1.5) Open relation table** (§2.3): `(predicate, subject, object) → belief`. Exclusive relations keep distributions. The first predicates: hand offset, Reachable, Inside / On, WasAt, Held.
+9. **(v1.5) Score every cube's Inside belief, not only the target's:** does the memory hold what the current task does not need?
 
 **Done when.**
 - (a) `make check`, with a unit test per new rule on hand-made frames.
@@ -500,7 +623,8 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 2. `harness.py`: port the 2610.17350 loop (prompt skeleton, feedback, completion and failure rules) from its released code. Record what was changed and why, line by line, in NOTES.
 3. `controller.py`: the memory arms of §3.8 (H, R, K, K−L3, K+A), the prompt builder, the action schema, the validator and the reach check.
 4. A **replay-driven dry run** on the Mac: the controller answers on recorded frames without moving the arm, so prompt, parsing and validation can be debugged without a GPU. Prompt iteration happens only on train episodes. The prompt text is frozen, with its hash in `params.json`, before any test read.
-5. **Who should fill L2–L4** (cheap, before M5): on G's episodes, a small VLM labels relations and events at keyframes. Compare its labels with the rules' and with simulator truth, per type, as accuracy and confidence calibration. The result decides which layers the VLM may write.
+5. **Who should fill L2–L4** (cheap, before M5): the VLM annotator (§3.7) on G's train episodes at keyframes. Compare its labels with the rules' and with simulator truth, per type, as accuracy and confidence calibration. The result decides which layers the VLM may write.
+6. **Annotated current frame** (Set-of-Mark, `views.py`): ids and top hypotheses drawn on the current RGB at each object's pixel position. The annotator and the controller use it.
 
 **Done when.**
 - (a) `make check`: validator tests, including a waypoint outside the workspace, an unreachable one, an invented cite, a missing field and a cache replay that reproduces the run exactly.

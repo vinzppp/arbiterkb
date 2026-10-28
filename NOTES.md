@@ -500,3 +500,26 @@ M3a truth check after the fixes (train seeds 0–99, clean tree b20eff4, params 
 
 - The clean misses are true closest approaches between about 6 and 15 cm, which the detector's 30 px threshold does not flag.
 - Under noise the view is smaller because fewer events are logged: the detector breaks (M2 item 1).
+
+## Spec v1.5 — the target loop written down (2026-10-28, user discussion)
+After a long design discussion with the user, `DEVELOPMENT.md` §2 was rewritten. The user approved the picture and asked for it to be "in the spec, with the whole reasoning and how it works".
+- **§2.1:** the loop as a Mermaid diagram (it renders on GitHub), plus a built / not-yet table.
+- **§2.2:** one step in order: perception → observation table → observe / detectors / rules → KB → VLM annotator at event moments → views (KB text + event log, annotated frame) → LLM controller → checks → motion planner → new frames.
+- **§2.3:** the decisions and their reasons:
+  - record task-agnostically, retrieve task-specifically (Clio as the contrast);
+  - code every frame, language models only at moments that need them;
+  - every item is a belief with support, whoever wrote it;
+  - an open relation table, with the relations most useful to a waypoint controller;
+  - the observation table as the only door between pixels and memory;
+  - real-time notes: an in-memory interface that is logged for replay, per-second thresholds, timestamps;
+  - what is and is not ours (ConceptGraphs, DovSG, ReMEmbR, 2610.17350).
+- **§3.7:** the arbiter is merged into the VLM annotator, with its input, output schema, checks and how it writes beliefs.
+- **M3:** adds the wider observation table (contract v2), the open relation table and scoring every cube.
+- **M4:** adds the annotated frame (Set-of-Mark), and item 5 now uses the annotator.
+
+**Findings from the discussion, recorded here:**
+- **DINOv2 is wasted work in G.** sg_pilot's PerceptionWorker computes a 768-d DINOv2 feature per object per frame. `stress/perceive.py` does not save it, and nothing reads it. The containers are identical, so appearance cannot tell them apart anyway. Neither the builder nor the reviewers caught this, because the worker sits outside the reviewed code (`scene-graph-robot/notebooks/pilot/perception_worker.py`).
+  - Action: `/review-phase G` must explicitly review `stress/` and the sg_pilot worker it calls: what each model computes, saves and uses.
+  - Drop DINOv2 in future pod runs, if Cutie does not need it (unchecked).
+- **Keep `/workspace/g/replays` on the pod volume.** Object size needs masks + depth. G saves no masks, so sizes can only be recomputed from those replays, without re-running the simulator.
+- **Two task-bound parts:** the evaluation scores only the target cube, and perception sees only words in its prompt. Both are now M3 items.
