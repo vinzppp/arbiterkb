@@ -808,3 +808,14 @@ Decision with the user: test tasks where memory is about order, counts and "wher
   - the `hand_pause` detector (params re-frozen to **354e33c10d24**);
   - the progress line now counts grip and pause evidence;
   - `scripts/count_test.py`.
+
+## VideoRepick is a shell game with identical cubes (2026-10-28)
+- `tools/extract_frames.py` (system Python's PyAV; AV1 MP4) pulls the frames these tests need out of the dataset's front videos, for VideoRepick and VideoPlaceOrder: grip-close frames, the first frame, and the first execution frame. 200 episodes, 279 MB in git-ignored `data/robomme_lerobot/frames/`, in about 1 minute.
+- **What the frames show** (episode 1401, checked by eye):
+  - all three cubes are the **same red**;
+  - in the demo the robot picks the top-left cube and puts it back;
+  - then, during the "static" part of the video (frames about 220–340), **the identical cubes slide and exchange places**;
+  - at execution the "same block" is therefore at another spot (the official target is the bottom-right one).
+- So VideoRepick is a shell game: the memory must track which identical cube went where through the shuffle. Robot state cannot do that (57 / 100 ceiling), and neither can a colour label.
+- **That is the identity-through-swaps problem of claim 3, in a stock RoboMME task, with real swaps of identical objects.** It needs visual tracking of the cubes (Cutie on the pod, or a cheap classical tracker: red blobs + assignment over frames). Where cubes pass close, the KB's identity uncertainty (R6-style mixing) has a natural role.
+- VideoPlaceOrder's 58% ceiling is not yet explained (to check: does the scene also change there?).
