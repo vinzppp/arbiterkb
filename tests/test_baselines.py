@@ -77,3 +77,11 @@ def test_explain_looks_up_the_observations():
     text = explain(g.trace_rows(), "cube_g")
     assert "o23:bin_a: observation bin_a" in text and "o4:cube_g: observation cube_g" in text
     assert "NOT FOUND" in explain(g.trace_rows(), "cube_missing")
+
+
+def test_explain_reports_not_found_when_the_predicted_container_is_unseen():
+    from arbiter_kb.debug import explain
+    g = run("overlap_haircut", cover() + [frame(10, None, (0.1, 0))])  # bin_a not visible at t=10
+    rows = g.trace_rows()
+    rows[-1]["pred"]["cube_g"] = "bin_a"
+    assert "o10:bin_a: NOT FOUND" in explain(rows, "cube_g")

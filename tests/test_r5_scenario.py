@@ -49,3 +49,30 @@ def test_r5_beats_overlap_haircut_on_an_ambiguous_cover(monkeypatch):
     monkeypatch.setattr(akb, "RULES", [r for r in akb.RULES if r[0] != "R5"])
     no_r5 = answer(ArbiterKBSystem())
     assert no_r5["cube_r"][0][0] == "bin_a"  # without R5 ArbiterKB is wrong too (p ≈ 0.6): R5 is what helps
+
+
+def test_a_later_far_cover_does_not_recombine_earlier_cubes():
+    """M1.1 code-review MAJOR: at t=10 a third container covers a blue cube 30 cm away. It carries no
+    information about g or r, so their beliefs must not move (before the fix: r 0.79 -> 0.91)."""
+    objs = OBJS[:2] + [("bin_c", "container", {})] + OBJS[2:] + [("cube_b", "cube", {"color": "b"})]
+    meta = EpisodeMeta("hand", 0, "train", "pick up the container that hides the red cube", objs, None, None)
+
+    def f(t):
+        def ob(k, cls, vis, xy, z):
+            return ObjObs(k, cls, vis, np.array([*xy, z]) if vis else None, None, 1.0)
+        return FrameObs(t, {"bin_a": ob("bin_a", "container", t >= 5, (0.0, 0), 0.03),
+                            "bin_b": ob("bin_b", "container", t >= 5, (0.04, 0), 0.03),
+                            "bin_c": ob("bin_c", "container", t >= 10, (0.30, 0), 0.03),
+                            "cube_g": ob("cube_g", "cube", t < 5, (0.0, 0), 0.017),
+                            "cube_r": ob("cube_r", "cube", t < 5, (0.015, 0), 0.017),
+                            "cube_b": ob("cube_b", "cube", t < 10, (0.30, 0), 0.017)}, np.zeros(3), 0.08, True)
+
+    s = ArbiterKBSystem()
+    s.reset(meta)
+    seen = {}
+    for t in range(15):
+        s.step(f(t))
+        if t in (9, 14):
+            seen[t] = {c: dict(s.believe_inside(c).probs) for c in ("cube_g", "cube_r")}
+    assert seen[14] == seen[9]
+    assert seen[9]["cube_r"]["bin_b"] == pytest.approx(0.79, abs=0.01)

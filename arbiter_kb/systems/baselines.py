@@ -86,8 +86,8 @@ NAMES = {"haircut": "bound_haircut", "overlap_haircut": "overlap_haircut", "jump
 class GuardedBound:
     """Bound plus one cheap doubt signal (M1 baselines, DEVELOPMENT §6 M1):
     - haircut: after any near-pass involving the cube's container, answer {pred: c, partner: 1 - c};
-    - overlap_haircut: the same, only for passes whose closest 3D distance < d_ov (Bayes-optimal
-      under id_swap_overlap, which we designed: it shows what copying our own choices achieves);
+    - overlap_haircut: the same, only for passes whose closest 3D distance < d_ov (hard-label
+      optimal under id_swap_overlap, which we designed, but not optimal for ranking by confidence);
     - jump: a container label that moves > j_max in one frame -> {pred: 0.5, nearest other: 0.5}.
     The prediction is listed first, so a 50/50 haircut keeps Bound's answer (argmax ties -> first key)."""
 

@@ -12,6 +12,7 @@ When a robot's memory is wrong, does the system know? Existing robot memories st
 ## What would falsify it
 - Deterministic memory is rarely confidently wrong (a low silent-failure rate) under realistic errors.
 - RuleOnly is as good as RuleOnly + LLM arbiter (the arbiter adds nothing).
+- An LLM reading the raw tracker log does as well as the LLM reading the KB, at equal or lower cost (the KB adds nothing to the LLM; M4 arm C vs D).
 - Confidence is miscalibrated (says 90%, right 60%).
 - A one-feature threshold rule separates real swaps from clean passes almost perfectly (phase G's ROC). Then a haircut on that feature suffices for claim 1, and the belief layer can only add value through propagation (R5, retraction, the arbiter).
 
@@ -24,7 +25,7 @@ Training any policy; beating 92% on the leaderboard; other RoboMME suites before
 
 ## Known traps
 - **Circularity:** corruption injected exactly where a rule mixes beliefs makes the result true by construction. M0's `id_swap` at the near-pass has this flaw by design (a skeleton). Claims need `id_swap_prob` (M2) and real tracker errors (M6).
-- **Label teleport:** a corruption that moves a label further in one frame than any object can move is trivially detectable (M0 `id_swap`: about 12 cm jump vs at most 0.6 cm true motion). Corruptions must swap ids only where tracks really overlap, or follow the signature measured on the real tracker (phase G). Always compare against BoundHaircut, OverlapHaircut (the Bayes-optimal rule for a corruption we design) and JumpDetector.
+- **Label teleport:** a corruption that moves a label further in one frame than any object can move is trivially detectable (M0 `id_swap`: about 12 cm jump vs at most 0.6 cm true motion). Corruptions must swap ids only where tracks really overlap, or follow the signature measured on the real tracker (phase G). Always compare against BoundHaircut, OverlapHaircut (hard-label optimal for a corruption we design; not optimal for ranking), SoftHaircut (R6's formula without a KB) and JumpDetector.
 - **Our own choices leak into synthetic results:** on any synthetic corruption we design, the best possible system copies our parameters (overlap threshold, swap rate). Synthetic tables show plumbing; only G's measured signature or real RoboMME data can support a claim.
 - **Synthetic ≠ RoboMME:** synthetic results guide development; claims are made on RoboMME replays.
 - **Stock VideoUnmaskSwap rarely fools the tracker** (the overlap is image-only); the November gate decides whether the main claim survives.

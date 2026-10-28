@@ -221,3 +221,32 @@ Reading:
   - ArbiterKB answers more (clean coverage 0.90 vs 0.80) and misses 2 of the 6 wrong rows;
   - OverlapHaircut catches all 6 and answers less.
 - ArbiterKB's AURC is lower (0.011 vs 0.020). But that rests on 6 wrong rows out of 60 (n is small), and both systems use the feature we chose for the corruption. **No claim moves.** Only G's measured swaps, and MarginHaircut in M2, can change that.
+
+## M1.2 — closing M1 after the M1.1 reviews (2026-10-28)
+Reviews: `reviews/M1.1_code.md` (PASS-WITH-NOTES, 1 MAJOR), `reviews/M1.1_goal.md` (ON-TRACK-WITH-CHANGES). With the user (option A): keep the KB scaffolding, fix the real bug, write the review's points into the spec, and move to G. M1 is not re-reviewed.
+
+- **R5 double counting fixed (code MAJOR).**
+  - The bug: a later cover re-combined cubes that an earlier R5 had already combined, which counted the constraint twice. A far, unrelated cover moved red from 0.79 to 0.91.
+  - Fix: R5 now joins only the cubes covered in the same frame. Their R1 beliefs are independent, so that joint is exact. Covers on different frames are not linked (§3.5 says so).
+  - Regression test: `test_a_later_far_cover_does_not_recombine_earlier_cubes`. The mixed-cube test still holds.
+- **Weak tests closed:**
+  - a row with p_max exactly τ_hi counts as covered;
+  - the `None` hypothesis rests on the trigger;
+  - explain prints NOT FOUND when the predicted container is unseen.
+- **What ArbiterKB adds today (goal review, accepted).**
+  - On the M1.1 test rows ArbiterKB's answer equals Bound's in every row (`results/runs/synthetic_test_2f707774/rows.csv`, per the reviewer).
+  - Its AURC edge over OverlapHaircut (0.011 vs 0.020, `results/latest/m1_1_table/summary.csv`) comes from grading confidence by distance (R6's formula) against a binary haircut. A KB-free `SoftHaircut` with the same formula would very likely tie.
+  - So far the rule layer is "a calibrated distance score". That is not a verdict on claim 1: the belief layer's own contributions are propagation (R5 on ambiguous covers, retraction, containment as a defeasible default, §7 q5) and handing evidence to the LLM. Neither has been tested on real data.
+- **Spec v1.3 (amended):**
+  - M2 (c) is against SoftHaircut(margin): AURC with bootstrap CI, and silent rate at matched clean coverage (thresholds swept on train). It uses n ≥ 300 fresh seeds and drops Frozen / BoundHaircut / JumpDetector.
+  - **M4 adds arm C, an LLM reading the raw tracker log (no KB).** C vs D (KB + LLM) is the main test of whether the KB helps (user discussion). GOALS gains that falsifier.
+  - G's gate uses the best rule with ≤ 2 features (cross-validated logistic), not just single-feature AUC.
+  - "Bayes-optimal" is reworded everywhere: OverlapHaircut is hard-label optimal for our corruption, not ranking optimal.
+- **Known, not fixed (MINOR, recorded):**
+  - R5's mixed filter is on/off (moot now that R5 only joins same-frame covers);
+  - the haircut trigger is not traced to the pass's observations;
+  - coverage has no Wilson interval yet (M2 needs it);
+  - ArbiterKB's argmax tie order is implicit (insertion order);
+  - train clean accuracy is 0.983: ep 48 has two exact-contact passes, i.e. two coin flips, which is correct math (`results/runs/synthetic_train_*`);
+  - the pos_noise row of OverlapHaircut was missing from the M1.1 NOTES table (AURC 0.017, Brier 0.050, better than ArbiterKB's 0.019 / 0.042 on AURC only);
+  - the M1 haircut accuracy numbers "0.68 / 0.88" come from `results/latest/m1_table/summary.csv`.

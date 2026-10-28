@@ -67,7 +67,8 @@ M1 = [
              "cube = base.ground_truth(ep).targets[0]\nprint(explain(traces[('arbiterkb', ep)], cube))"),
     ("code", "# Baselines explain too: one-hot answer plus the doubt trigger\n"
              "print(explain(traces[('overlap_haircut', ep)], cube))"),
-    ("md", "**Reading the table.** OverlapHaircut is Bayes-optimal under id_swap_overlap because we wrote both: "
+    ("md", "**Reading the table.** OverlapHaircut gives the best hard answer under id_swap_overlap because we wrote both "
+           "(it is not optimal for ranking rows by confidence, so a graded score can beat it on AURC without any KB): "
            "ArbiterKB − OverlapHaircut ≈ 0 here is expected and says nothing about real trackers. That is why "
            "phase G measures a real tracker's swaps before M2 tunes anything. Read silent failure together with "
            "coverage (share answered with p_max ≥ 0.8): a 50/50 haircut scores 0 silent failures by never being sure. "

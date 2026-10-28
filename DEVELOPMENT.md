@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.3 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 reviews, silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes.
+Version 1.3 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -164,7 +164,7 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 | R2 follow | each frame for hidden cubes | update display pose | M0 |
 | R3 held | gripper closed near x | `Held(x)`; pose follows the EE | after G (no current metric needs it) |
 | R4 reveal | container z > 0.15 and cube x observed at the container's former xy | `SetDist(Inside(x), {c: 1})`, `source="verified"`, plus `Retract` of contradicted hypotheses | M5 (needs the peek variant) |
-| R5 exclusive | a cube was just covered (a `disappear` of a cube this frame) | `SetDist` = marginals of `joint_exclusive` over the hidden cubes whose beliefs were never mixed by R6 (after a mix they are correlated, and joint-normalising the marginals is overconfident). No consistent assignment → `AddEvidence(exclusive_conflict)` for M3's R8 | M1 |
+| R5 exclusive | two or more cubes covered in the same frame | `SetDist` = marginals of `joint_exclusive` over the cubes covered **in this frame** only (their R1 beliefs are independent, so the joint is exact). Earlier cubes are left out: their beliefs may already be R5/R6 outputs, and recombining them counts the constraint twice (M1.1 review). Covers on different frames are not linked; an exact joint table over all hidden cubes is the upgrade if a source needs it. No consistent assignment → `AddEvidence(exclusive_conflict)` for M3's R8 | M1 |
 | R6 swap | a `near_pass(a, b)` evidence closes (M0), or `id_margin < m_thr` (M2) | `MixDist(Inside(h), a, b, w)` for every **hidden** h with mass on a or b; `AddEvent(swap)` only when w > 0. M0: w = w_mix·(1 − closeness). M1: w = w_max·exp(−d/d0), with d the 3D closest-approach distance (the M0 image form was removed in M1.1: the detector always records d). M2: w from the identity margin and G's measured signature | M0 / M1 / M2 |
 | R7 decay | each frame for unconfirmed items (Δt > 0) | `flatten`, pose conf decay | wired since M0 (λ = 1, off); λ is tuned in M2 |
 | R8 consistency | two objects within `d_same`; a "hidden" cube observed; an expected container missing | `AddEvidence(risk)` + `MixDist` toward uniform with `w_risk` | M3 |
@@ -380,12 +380,12 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 2. **`corrupt.py`:** `id_swap_overlap` (§3.11), with its label-jump histogram written to results. Keep `id_swap` labelled "teleport (sanity)".
 3. **Baselines** (`systems/baselines.py`, same interface):
    - `BoundHaircut(c)`: after any near-pass involving the container that holds the cube, the answer becomes {pred: c, partner: 1 − c}.
-   - `OverlapHaircut(c)`: the same, but only after a pass whose minimum 3D centre distance < `d_ov`. This is the Bayes-optimal rule for `id_swap_overlap`.
+   - `OverlapHaircut(c)`: the same, but only after a pass whose minimum 3D centre distance < `d_ov`. For `id_swap_overlap` it is Bayes-optimal for the hard label only (which container), at c = 0.5; not optimal for ranking rows by confidence, so a graded score can beat it on AURC with no belief layer (M1.1 goal review).
    - `JumpDetector(j_max)`: a container label that moves > j_max (0.03 m) in one frame sets its hypotheses to 0.5. By construction it should be useless on `id_swap_overlap`.
 4. **R5** `joint_exclusive`, ε_none = 0.01. R5 is the one rule that can beat any haircut (3 cubes in 3 containers: pinning one cube informs the others).
 5. **R6 v1.5:** w = w_max·exp(−d/d0) from the 3D closest-approach distance (image distance as fallback). Defaults, not tuned.
 6. **Metrics:** ECE and a reliability diagram.
-7. **Parameters (defaults, untuned; all in `params.py`):** w_max 0.5, d0 0.02 m, d_ov 0.03 m, c 0.5 for both haircuts (the Bayes-optimal value at p_swap 0.5, i.e. it copies our own choice on purpose; Bound's answer is listed first, so the 50/50 tie keeps it), j_max 0.03 m, ε_none 0.01. They change `params.json`, so re-freeze with a new FREEZE line before the test table. Corruption settings (p_swap, d_ov, pos_noise σ) are source arguments recorded in meta.json, not system parameters.
+7. **Parameters (defaults, untuned; all in `params.py`):** w_max 0.5, d0 0.02 m, d_ov 0.03 m, c 0.5 for both haircuts (the hard-label-optimal value at p_swap 0.5, i.e. it copies our own choice on purpose; Bound's answer is listed first, so the 50/50 tie keeps it), j_max 0.03 m, ε_none 0.01. They change `params.json`, so re-freeze with a new FREEZE line before the test table. Corruption settings (p_swap, d_ov, pos_noise σ) are source arguments recorded in meta.json, not system parameters.
 8. **Debuggability carried over from the M0.1 code review:** a test that `debug explain` reaches observation ids for **every** ArbiterKB row of a small evaluation (not just five episodes).
 9. **CLI:** `scripts/run.py --systems` to choose systems, `--corrupt id_swap_overlap`, `--pos-noise`.
 
@@ -416,11 +416,11 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 
 **Done when.**
 - (a) A table of identity error and swap rate per setting.
-- (b) Histograms of each feature for swapped vs clean passes, and the ROC / AUC of each single feature for "this pass swapped".
+- (b) Histograms of each feature for swapped vs clean passes, and the ROC / AUC for "this pass swapped" of each single feature and of the best 2-feature logistic rule (cross-validated).
 - (c) **The gate decision, written in NOTES:**
   - if swaps occur in < 2% of passes in every setting, claim 1 cannot be tested with real errors on RoboMME, so switch to the plan's fallback (failure-attribution paper) or choose a harder task;
   - otherwise, define `id_swap_measured` from the measured signature, and M2 uses it;
-  - **and** if the best single feature separates swapped from clean passes almost perfectly (AUC ≥ 0.98), write in NOTES that a threshold rule on it solves claim 1's detection part, before M2 builds R6 v2; the belief layer must then show value through propagation (R5, retraction, arbiter), not detection.
+  - **and** if the best rule with at most 2 features separates swapped from clean passes almost perfectly (AUC ≥ 0.98), write in NOTES that a threshold rule on it solves claim 1's detection part, before M2 builds R6 v2; the belief layer must then show value through propagation (R5, retraction, arbiter), not detection.
 
 ### M2 — Evidence layer: change detectors + Hungarian identity check (2 days, CPU)
 
@@ -432,13 +432,17 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 3. R6 v2: `w = w_max·exp(−margin/m0)`.
 4. `corrupt.py`: `id_swap_measured` from G's signature (no hand-chosen sigmoid), plus `pos_noise`.
 5. `scripts/tune.py` (first tuning in the project): train seeds only, against `id_swap_measured`. Writes `params.json` and a FREEZE ledger entry. The trade-off curve (clean coverage vs silent failure) is drawn here.
-6. `MarginHaircut` baseline: the GuardedBound threshold rule on the same margin feature R6 v2 uses (threshold tuned on train). Without it a win only shows that the margin is a better feature than 3D distance, not that a belief layer helps (M1 goal review).
-7. Evaluate on fresh test seeds (synthetic ≥ 1060): seeds 1000–1059 have been read many times during M0/M1 (harmless while nothing was tuned).
+6. Baselines on the same feature R6 v2 uses (M1 and M1.1 goal reviews):
+   - `MarginHaircut`: the GuardedBound threshold rule on the margin (threshold tuned on train);
+   - `SoftHaircut(feature)`: Bound's answer, confidence 1 − w_max·exp(−feature/scale), i.e. R6's own formula with no KB. Run it on 3D distance and on the margin.
+
+   Without them a win only shows a better feature (vs OverlapHaircut) or a graded score beating a binary one (vs any haircut), not that a belief layer helps. In M1.1, ArbiterKB's answer equalled Bound's in every row, and its AURC edge over OverlapHaircut came only from grading confidence by distance.
+7. Evaluate on n ≥ 300 fresh test seeds (synthetic ≥ 1060): seeds 1000–1059 have been read many times during M0/M1 (harmless while nothing was tuned). AURC gets bootstrap CIs (Wilson does not apply). Tables drop Frozen, BoundHaircut and JumpDetector (uninformative since M1).
 
 **Done when.**
 - (a) `make check`.
 - (b) On synthetic, the minimum margin falls inside a swap window in ≥ 95% of episodes.
-- (c) Under `id_swap_measured`, **at matched clean coverage**, ArbiterKB's silent-failure rate < that of Bound, OverlapHaircut and MarginHaircut, with non-overlapping Wilson intervals, and its AURC is lower; otherwise report honestly. (A fixed-τ_hi silent rate alone is not a criterion: any haircut below τ_hi scores 0.)
+- (c) Under `id_swap_measured`, ArbiterKB beats **SoftHaircut(margin)** on AURC (bootstrap CI of the difference excludes 0) and on silent rate at matched clean coverage (the haircut thresholds swept on train to ArbiterKB's clean coverage); MarginHaircut and Bound are reported alongside. If ArbiterKB cannot beat SoftHaircut, NOTES says that the rule layer reduces to "a calibrated feature score suffices", before M3/M4 build on it. That does not decide claim 1: the belief layer's remaining value is propagation and the arbiter, tested in M4 against an LLM without the KB.
 - (d) Clean accuracy holds (M1 criterion).
 
 ### M3 — Monitor and decisions (1 day, CPU)
@@ -457,7 +461,16 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 
 ### M4 — Arbiter (3 days, CPU + OpenRouter)
 
-**Goal.** Test whether a small LLM adds value over RuleOnly, at a measured cost.
+**Goal.** Test whether a small LLM adds value over RuleOnly, at a measured cost, **and whether the KB adds value to the LLM**. Four systems, the same LLM and budget (user discussion, 2026-10-28):
+
+| | system | answers |
+|---|---|---|
+| A | Bound | no KB, no LLM |
+| B | ArbiterKB RuleOnly | KB, no LLM |
+| C | **LLM on the raw tracker log** | no KB: the LLM reads the per-frame tracked positions / visibility (compact text, same keyframes) and answers with the same JSON schema |
+| D | ArbiterKB + LLM arbiter | KB evidence and candidates, cited |
+
+D > B means the LLM helps. **D > C means the KB helps**; this is the main test of the belief layer. Without C, any gain of D could be the LLM's alone.
 
 **Build.**
 1. `llm.py`: the OpenRouter client (§5.2), `CachedBackend`, budget cap, usage accounting.
@@ -470,7 +483,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 - (b) 100% of applied patches validate; fallbacks counted.
 - (c) A cache replay reproduces the KB exactly.
 - (d) The table includes calls / tokens / s / $ per episode, next to the 2610.17350 row (9.5 calls, 18.3 s per call, $0.39 per episode; labelled "different system and setting").
-- (e) RuleOnly vs +LLM: the difference in silent failure and Brier, with paired bootstrap intervals. If there is no difference, that is a reportable finding (the plan's falsifier 2).
+- (e) RuleOnly vs +LLM (B vs D) and **raw-log LLM vs KB + LLM (C vs D)**: differences in AURC, silent failure at matched coverage and Brier, plus tokens / $ per episode, with paired bootstrap intervals. No difference in B vs D is the plan's falsifier 2; no difference in C vs D (at equal or lower cost for C) falsifies "the KB helps the LLM". Both are reportable findings.
 
 ### M5 — Planner, skills, reach check (2 days, CPU; optional GPU closed loop)
 

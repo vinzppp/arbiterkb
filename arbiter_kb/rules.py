@@ -68,24 +68,22 @@ def r7_decay(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
 
 
 def r5_exclusive(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
-    """At most one cube per container: on a frame where a cube was just covered, combine the hidden
-    cubes whose beliefs are still independent (never mixed by R6) into a joint and write back the
-    marginals. Mixed cubes are left alone: after a swap they are correlated, and treating their
-    marginals as independent would be overconfident (test_joint_exclusive_would_overconfide_after_a_mix).
+    """At most one cube per container, among the cubes covered IN THIS FRAME: their R1 beliefs are
+    independent evidence, so the joint over them is exact. Cubes covered earlier are left out: their
+    beliefs may already be R5 or R6 outputs (correlated), and recombining them would count the constraint
+    twice (M1.1 code review). Covers on different frames are therefore not linked (DEVELOPMENT §3.5).
     No consistent assignment -> an `exclusive_conflict` evidence (for M3's R8), beliefs unchanged."""
-    if not any(e.kind == "disappear" and kb.objects[e.args[0]].cls == "cube" for e in new_ev):
+    now = {e.args[0] for e in new_ev if e.kind == "disappear" and kb.objects[e.args[0]].cls == "cube"}
+    fresh = {cube: d for (pred, cube), d in kb.relations.items()
+             if pred == "Inside" and cube in now and kb.objects[cube].visibility.value == "hidden"}
+    if len(fresh) < 2:
         return []
-    passes = {e.id for e in kb.evidence if e.kind == "near_pass"}
-    hidden = {cube: d for (pred, cube), d in kb.relations.items()
-              if pred == "Inside" and kb.objects[cube].visibility.value == "hidden" and not passes & set(d.support)}
-    if len(hidden) < 2:
-        return []
-    out = joint_exclusive(hidden, frame.t)
+    out = joint_exclusive(fresh, frame.t)
     if out is None:
-        sup = sorted({i for d in hidden.values() for i in d.support})
-        return [AddEvidence(frame.t, "exclusive_conflict", tuple(sorted(hidden)), {"obs": [], "support": sup})]
-    return [SetDist("Inside", c, out[c]) for c in hidden
-            if any(abs(out[c].probs.get(k, 0) - hidden[c].probs.get(k, 0)) > 1e-9 for k in set(out[c].probs) | set(hidden[c].probs))]
+        sup = sorted({i for d in fresh.values() for i in d.support})
+        return [AddEvidence(frame.t, "exclusive_conflict", tuple(sorted(fresh)), {"obs": [], "support": sup})]
+    return [SetDist("Inside", c, out[c]) for c in fresh
+            if any(abs(out[c].probs.get(k, 0) - fresh[c].probs.get(k, 0)) > 1e-9 for k in set(out[c].probs) | set(fresh[c].probs))]
 
 
 def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:

@@ -91,3 +91,10 @@ def test_aurc_and_coverage():
              "grasp_err_m": 0.0} for p, ok in [(0.9, True), (0.7, True), (0.95, False)]]
     s = summarize(rows, 0.8)[0]
     assert s["coverage"] == pytest.approx(2 / 3, abs=1e-4) and s["silent"] == pytest.approx(1 / 3, abs=1e-4)
+
+
+def test_coverage_counts_p_exactly_tau_hi():
+    from arbiter_kb.metrics import summarize
+    rows = [{"p_max": 0.8, "correct": True, "condition": "c", "system": "s", "brier": 0, "moved": False,
+             "corrupted": False, "grasp_err_m": 0.0}]
+    assert summarize(rows, 0.8)[0]["coverage"] == 1.0

@@ -139,7 +139,7 @@ def test_r5_runs_only_when_a_cube_was_just_covered():
     kb.apply([SetDist("Inside", "cube_g", Distribution({"bin_a": 0.6, "bin_b": 0.4}, 32, [e1.id])),
               SetDist("Inside", "cube_r", Distribution({"bin_b": 1.0}, 32, [e2])),
               SetVis("cube_g", "hidden", 1.0, 32, [e1.id]), SetVis("cube_r", "hidden", 1.0, 32, [e2])])
-    ops = r5_exclusive(kb, [e1], frame(32, {}), RuleParams())
+    ops = r5_exclusive(kb, kb.evidence[:2], frame(32, {}), RuleParams())
     assert {o.subj: o.dist.argmax() for o in ops}["cube_g"] == ("bin_a", pytest.approx(1.0))
     assert r5_exclusive(kb, [], frame(33, {}), RuleParams()) == []
 
@@ -154,13 +154,13 @@ def test_joint_exclusive_infeasible_returns_none_and_r5_records_a_conflict():
     kb.apply([SetDist("Inside", "cube_g", Distribution({"bin_b": 1.0}, 32, [e1.id])),
               SetDist("Inside", "cube_r", Distribution({"bin_b": 1.0}, 32, [e2])),
               SetVis("cube_g", "hidden", 1.0, 32, [e1.id]), SetVis("cube_r", "hidden", 1.0, 32, [e2])])
-    ops = r5_exclusive(kb, [e1], frame(32, {}), RuleParams())
+    ops = r5_exclusive(kb, kb.evidence[:2], frame(32, {}), RuleParams())
     assert len(ops) == 1 and ops[0].kind == "exclusive_conflict" and set(ops[0].args) == {"cube_g", "cube_r"}
 
 
-def test_r5_skips_cubes_mixed_by_a_swap():
-    """cube_g was mixed 50/50 by a contact swap; a new cover pins cube_r to bin_b. Joint-normalising would
-    snap cube_g to bin_a with certainty (overconfident after a mix), so R5 must leave it alone."""
+def test_r5_leaves_earlier_and_mixed_cubes_alone():
+    """cube_g was covered earlier and then mixed 50/50 by a contact swap; a new cover pins cube_r to bin_b.
+    Joint-normalising would snap cube_g to bin_a with certainty (overconfident), so R5 must leave it alone."""
     from arbiter_kb.rules import r5_exclusive
     kb = KB(OBJS + [("cube_r", "cube", {"color": "r"})])
     e1 = disappear(kb, 32, (0.0, 0.0))

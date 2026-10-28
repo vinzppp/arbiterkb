@@ -70,3 +70,9 @@ def test_retract_after_mix_keeps_the_other_hypothesis():
 def test_mix_into_empty_hypothesis_inherits_support():
     d = Distribution({"a": 1.0}, 0, ["e1"], {"a": ["e1"]}).swap_mix("a", "b", 0.3, 1, "e2")
     assert d.hyp_support["b"] == ["e1"]
+
+
+def test_none_hypothesis_rests_on_the_trigger():
+    from arbiter_kb.beliefs import Distribution
+    d = Distribution.from_distances({"a": 0.0}, 0.02, 1, {"a": ["e1", "o1:a"]}, eps_none=0.01, none_support=["e1"])
+    assert d.hyp_support[None] == ["e1"]
