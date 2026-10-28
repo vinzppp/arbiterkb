@@ -144,6 +144,14 @@ class LLM:
         return resp["choices"][0]["message"].get("content") or "", u
 
 
+def vlm_client(ap, max_usd: float | None = None, **kw) -> "LLM":
+    """The small VLM for the clue-object lister and the annotator, from ArbiterParams: model, an ordered list of
+    allowed providers (no others), thinking as configured. The provider used is in each cached response."""
+    return LLM(model=ap.vlm_model, max_usd=max_usd, reasoning=None if ap.vlm_thinking else {"enabled": False},
+               provider={"order": ap.vlm_provider.split(","), "allow_fallbacks": False, "require_parameters": True},
+               **kw)
+
+
 def count_images(messages: list) -> int:
     return sum(1 for m in messages if isinstance(m.get("content"), list)
                for p in m["content"] if p.get("type") == "image_url")

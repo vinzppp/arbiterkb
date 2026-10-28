@@ -851,3 +851,20 @@ Reading:
   - "pressed the button" (hand down and up at one spot without a grasp);
   - "held above the robot's left / right side" (a hand pause with the gripper closed at height, labelled by the sign of y);
   - "put into the bin / onto the target" (needs the object positions: vision or the VLM annotator).
+
+## VLM choice for the lister and the annotator (2026-10-28, user decision)
+- **Prices are set by providers, not by model size** (OpenRouter endpoints, read 2026-10-28):
+  - qwen/qwen3-vl-8b-instruct: **one** provider, Parasail, $0.25 / $0.75 per M tokens;
+  - qwen/qwen3.5-9b (newer; image + video input): **six** providers, $0.08–0.17 / $0.13–0.25 (DeepInfra bf16 $0.10 / $0.15).
+  - An image costs about the same in tokens on both: about 160 input tokens with the prompt, at 256 px.
+- **Default:** `ArbiterParams.vlm_model = qwen/qwen3.5-9b`, `vlm_thinking = False`, `vlm_provider = "DeepInfra,Parasail"`.
+  - Only those two, in that order, both bf16, with no fallback to others.
+  - Pinning DeepInfra alone failed at once: HTTP 429, "temporarily rate-limited upstream", twice.
+  - The provider actually used is in each cached response.
+- `llm.vlm_client(params.arbiter)` builds the client. The controller's model stays separate (`qwen/qwen3.6-35b-a3b`).
+- Params re-frozen: **84d49928248d**.
+- **Check:** the lister through vlm_client on the 4 real frames (`results/latest/vlm_list_bench`).
+  - All right: f21 green / blue / red cube; f56 and f105 3 containers; **f325 3 containers + the green cube** (qwen3-vl-8b had listed 1 container there).
+  - Task items right (green cube, containers).
+  - 0 reasoning tokens, $0.0001 for 4 calls, but **about 4 s per call via Parasail** (1.1 s in the earlier benchmark): latency depends on provider load.
+- Still to do: compare the two models on many frames with truth (VideoRepick / VideoPlaceOrder keyframes) before freezing for a claim.

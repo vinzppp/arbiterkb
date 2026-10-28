@@ -4,6 +4,8 @@ becomes the detector's phrases (one tracker slot per object). Not from the simul
 The VLM lists every movable object on the table, not only the task's, so the memory stays task-agnostic; it
 flags the ones the instruction names (`task_item`). Checks drop bad entries one by one and cap the total.
 Benchmark of candidate models: results/latest/vlm_list_bench (qwen3-vl-8b / qwen3.5-9b: 4/4 at about 1 s).
+The model is ArbiterParams.vlm_model (default qwen/qwen3.5-9b, DeepInfra, thinking off): build the client with
+llm.vlm_client(params.arbiter).
 """
 from __future__ import annotations
 

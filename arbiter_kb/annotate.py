@@ -3,6 +3,7 @@ recent event log, the relations the rules already hold) and optionally one keyfr
 object descriptions that geometry cannot decide. Its answer is checked and written as beliefs with support,
 never as fact: source "vlm", p from a fixed strength table, support = the keyframe id + the evidence it cites.
 
+The model is ArbiterParams.vlm_model (llm.vlm_client); the controller's model is separate.
 The answer must not carry numbers (no coordinates, no probabilities): positions stay with perception, and
 probabilities come only from the strength table, so they can be calibrated against truth.
 """

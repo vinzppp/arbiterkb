@@ -160,3 +160,13 @@ def test_k0_table_and_s_sentence_carry_no_history():
     assert "bin_0 (container) at" in table and "cube" not in table  # cubes are hidden now: K0 cannot know them
     assert C.one_sentence({"cube_red": "bin_0", "cube_blue": None}) == "cube_red is under bin_0."
     assert C.one_sentence({}) == "No object is hidden."
+
+
+def test_vlm_client_uses_the_params_model_pinned_provider_and_no_thinking():
+    from arbiter_kb.llm import vlm_client
+    from arbiter_kb.params import ArbiterParams
+
+    c = vlm_client(ArbiterParams())
+    b = c.body([{"role": "user", "content": "x"}], None, 0.0, 0, 10)
+    assert b["model"] == "qwen/qwen3.5-9b" and b["provider"]["order"] == ["DeepInfra", "Parasail"]
+    assert b["provider"]["allow_fallbacks"] is False and b["reasoning"] == {"enabled": False}

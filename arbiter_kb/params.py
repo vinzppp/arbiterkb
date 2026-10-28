@@ -57,6 +57,9 @@ class ArbiterParams:
     p_clear: float = 0.9  # annotator verdict -> belief probability (fixed table, measured against truth in M4)
     p_ambiguous: float = 0.5
     p_unlikely: float = 0.1
+    vlm_model: str = "qwen/qwen3.5-9b"  # clue-object lister and annotator (NOTES "VLM choice": 4/4 frames, 6 providers)
+    vlm_provider: str = "DeepInfra,Parasail"  # only these, in order; both bf16 (a single provider was rate-limited)
+    vlm_thinking: bool = False  # the 9B is a thinking model; off for these labelling calls
 
 
 @dataclass(frozen=True)
