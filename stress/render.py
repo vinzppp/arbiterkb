@@ -27,6 +27,8 @@ SETTINGS = {  # name: (swap_steps, lane_offset, n_swaps, cam_shift)
     "fast": (20, 0.07, None, (0, 0, 0)),
     "close": (50, 0.02, None, (0, 0, 0)),
     "fast_close": (20, 0.02, None, (0, 0, 0)),
+    "fast_lane03": (20, 0.03, None, (0, 0, 0)),
+    "fast_lane045": (20, 0.045, None, (0, 0, 0)),
     "fast_close_3swaps": (20, 0.02, 3, (0, 0, 0)),
     "cam_left": (50, 0.07, None, (0, 0.05, 0)),
     "cam_right": (50, 0.07, None, (0, -0.05, 0)),

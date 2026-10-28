@@ -558,6 +558,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
    - fast (20, 0.07)
    - close (50, 0.02)
    - fast + close (20, 0.02)
+   - fast with lane 0.03 and 0.045 (added on the pod, to fill in the distance range)
    - fast + close with 3 swaps
    - camera shifted ±5 cm
 2. `stress/render.py`: render 20 episodes per setting into the existing `Replay` npz format (front RGB, depth, segmentation, E, obj_xyz). Print the total size first; it must stay under 8 GB on the volume.

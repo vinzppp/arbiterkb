@@ -57,10 +57,9 @@ Read first: `DEVELOPMENT.md` (spec v1.6 (M2 conditional on G, arms K0 / S); §2 
 - Gate: **swaps exist** (stock never swaps; the stress settings swap at 18–82% of passes). No threshold suffices (best AUC 0.926), so M2's "frequent and hard to predict" branch applies.
 - `id_swap_measured` is built (`MeasuredSwapSource`). First train-seed table: ArbiterKB = SoftHaircut exactly; both beat Bound on AURC (0.169 vs 0.427).
 - **Still open:**
-  1. pull the pod's `stress/` fixes back into the repo (ask the user whether the pod session changed `stress/`);
-  2. `/review-phase G`;
-  3. the stock oracle replays (`scripts/copy_replays.sh`) and the optional `--vocab open` re-run (POD_RUN §6b) need a pod again;
-  4. remind the user to STOP THE POD if it is still up.
+  1. `/review-phase G` (the pod's only code change, two settings in `stress/render.py`, is merged);
+  2. the stock oracle replays (`scripts/copy_replays.sh`) and the optional `--vocab open` re-run (POD_RUN §6b) need a pod again;
+  3. remind the user to STOP THE POD if it is still up.
 - **Next for M2:** `identity.py` (Hungarian margin) + R6 v2 (d0 re-tuned: real swaps happen at 5–9 cm, not ≤ 3 cm), tuned on train seeds against `id_swap_measured`; give SoftHaircut the same feature; freeze; one test read.
 
 ## Parallel work that does not depend on G (candidates for the new window)
