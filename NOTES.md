@@ -819,3 +819,35 @@ Decision with the user: test tasks where memory is about order, counts and "wher
 - So VideoRepick is a shell game: the memory must track which identical cube went where through the shuffle. Robot state cannot do that (57 / 100 ceiling), and neither can a colour label.
 - **That is the identity-through-swaps problem of claim 3, in a stock RoboMME task, with real swaps of identical objects.** It needs visual tracking of the cubes (Cutie on the pod, or a cheap classical tracker: red blobs + assignment over frames). Where cubes pass close, the KB's identity uncertainty (R6-style mixing) has a natural role.
 - VideoPlaceOrder's 58% ceiling is not yet explained (to check: does the scene also change there?).
+
+**Counting test results** (`results/latest/count_robot_state/`: report.json, rows.csv, meta.json; run `results/runs/count_20261028_110748`, 1,872 calls, **$1.03**, all answers valid). **Scoring correction made after the run:** SwingXtimes's instruction says "finally press the button" and never mentions putting the cube down, while the dataset puts it down first. So for that task a wrap-up decision accepts either "put the cube on the table" or "press the button", for every arm alike. Strict-scoring numbers are in rows.csv.
+
+Right-decision rate (234 decision points per arm and effort) [Wilson 95%]:
+
+| effort | N (no memory) | P (raw robot log) | K (KB on robot state) | KO (oracle step list) |
+|---|---|---|---|---|
+| off | 0.48 [0.42, 0.54] | 0.58 [0.51, 0.64] | 0.49 [0.43, 0.56] | **0.98** [0.95, 0.99] |
+| default | 0.62 [0.55, 0.68] | 0.80 [0.75, 0.85] | 0.82 [0.76, 0.86] | **0.97** [0.94, 0.99] |
+
+- Per task, at default effort:
+  - PickXtimes: P 0.98, K 0.94, KO 1.00;
+  - BinFill: P 0.96, K 0.98, KO 1.00;
+  - SwingXtimes: P 0.38, K 0.45, KO 0.89. No arm without the oracle does better than N's 0.55.
+- Against K (paired):
+  - off: P +0.085 [+0.017, +0.154], **better**; N −0.01, **same**; KO +0.49, **better**;
+  - default: P −0.01 [−0.06, +0.04], **same**; N −0.20, **worse**; KO +0.15, **better**.
+- Cost per call:
+  - KO: 244 input tokens; 0.5 s (off), 4.0 s (default);
+  - K: 694 tokens; 0.6 s / 8.3 s;
+  - P: 1,370 tokens; 0.6 s / 8.6 s.
+
+Reading:
+- **A semantic record of completed steps is what helps, and with it thinking is unnecessary.** KO, the list of completed subgoals in words, is near perfect at both efforts: 0.98 without thinking, at 0.5 s and 244 tokens per call. The best non-oracle arm needs thinking to reach 0.80, at about 8.5 s and 690–1,370 tokens.
+  - **This is claims 1–2 in miniature.** A memory that says what was done lets a fast, non-thinking model do the job, with fewer tokens than the raw log.
+  - It holds **only if the KB can produce that record**. KO comes from the dataset authors' labels.
+- **The KB as built from robot state does not produce it.** Grip and hand-pause events are low-level, the same information as the raw log in another form: K = P with thinking, and K is slightly worse without thinking, where P's regular samples are easier to read than a list of pauses. SwingXtimes's moves to the right / left targets are not grip events at all, so only the oracle gets them.
+- **Next for the KB:** recognise semantic actions as L3 events, each one checked against the dataset's subgoal labels before any arm uses it:
+  - "picked up / put down" (grip close / open with the hand low);
+  - "pressed the button" (hand down and up at one spot without a grasp);
+  - "held above the robot's left / right side" (a hand pause with the gripper closed at height, labelled by the sign of y);
+  - "put into the bin / onto the target" (needs the object positions: vision or the VLM annotator).
