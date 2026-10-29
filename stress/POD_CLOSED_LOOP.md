@@ -32,7 +32,9 @@ smoke test (step 3), and stop there with a report: per-frame perception time, mo
 the first K prompt (text part only), and any errors.
 If /workspace/envs/sg-main or sg-percep is missing, build them first exactly as stress/POD_RUN.md §0F says (Vulkan,
 both venvs, weights, the checks), with two changes: install robomme at commit 856bc3a (not 53673b3), and also install
-matplotlib and pytest into sg-main. Write what you installed to /workspace/CL_SETUP.md.
+matplotlib and pytest into sg-main. If sg-percep exists but its GroundingDINO extension was built for another GPU
+(BUILD_NOTES: sm_89 on the 4090), rebuild it with TORCH_CUDA_ARCH_LIST for THIS GPU (nvidia-smi; an A40 is 8.6).
+Write what you installed to /workspace/CL_SETUP.md.
 The code in stress/ and arbiter_kb/closed_loop.py has never run against the simulator: fix only what the smoke test
 shows is broken, say what you changed and why. Do not run the pilot (step 4) until the user says so.
 The OpenRouter key is in the environment variable OPENROUTER_API_KEY: never print it or write it to a file.
