@@ -111,6 +111,25 @@ def ask(llm, fr: list) -> dict:
     return ans if isinstance(ans, dict) else {}
 
 
+def row(w: dict, llm, h: np.ndarray, cond: str, params) -> dict:
+    ep = L.load(Path(w["path"]))
+    ans = ask(llm, frames(w, ep, h, cond))
+    r = {"key": w["key"], "t": w["t"], "truth": truth(w, ep, params), "happened": ans.get("happened"),
+         "summary": ans.get("summary"), "relations": ans.get("relations"),
+         "labels": sorted({ep["simple"][t] for t in w["frames"]})}
+    print(json.dumps(r), flush=True)
+    return r
+
+
+def report(rows: list[dict]) -> dict:
+    ok = sum(r["happened"] == r["truth"] for r in rows)
+    return {"accuracy": wilson(ok, len(rows)), "n": len(rows),
+            "cannot_tell": wilson(sum(r["happened"] == "cannot_tell" for r in rows), len(rows)),
+            "confusion": {f"{k[0]} -> {k[1]}": n for k, n in
+                          collections.Counter((r["truth"], r["happened"]) for r in rows).most_common()},
+            "truth_counts": dict(collections.Counter(r["truth"] for r in rows)), "rule": "accuracy >= 0.80"}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--show", action="store_true")
@@ -132,20 +151,8 @@ def main() -> None:
     if not a.call:
         sys.exit("pass --show (free) or --call")
     llm = LLM(model=a.model, max_usd=a.max_usd, provider=None) if a.model else vlm_client(params.arbiter, max_usd=a.max_usd)
-    rows = []
-    for w in ws:
-        ep = L.load(Path(w["path"]))
-        ans = ask(llm, frames(w, ep, h, a.cond))
-        rows.append({"key": w["key"], "t": w["t"], "truth": truth(w, ep, params), "happened": ans.get("happened"),
-                     "summary": ans.get("summary"), "relations": ans.get("relations"),
-                     "labels": sorted({ep["simple"][t] for t in w["frames"]})})
-        print(json.dumps(rows[-1]), flush=True)
-    ok = sum(r["happened"] == r["truth"] for r in rows)
-    rep = {"accuracy": wilson(ok, len(rows)), "n": len(rows),
-           "cannot_tell": wilson(sum(r["happened"] == "cannot_tell" for r in rows), len(rows)),
-           "confusion": {f"{k[0]} -> {k[1]}": n for k, n in
-                         collections.Counter((r["truth"], r["happened"]) for r in rows).most_common()},
-           "truth_counts": dict(collections.Counter(r["truth"] for r in rows)), "rule": "accuracy >= 0.80"}
+    rows = [row(w, llm, h, a.cond, params) for w in ws]
+    rep = report(rows)
     out = {"report": rep, "rows": rows, "usage": llm.usage, "meta": {"commit": commit, "dirty": dirty, "cond": a.cond,
                                                                      "model": a.model or params.arbiter.vlm_model}}
     print(json.dumps(rep, indent=1), json.dumps({k: round(v, 5) if isinstance(v, float) else v
