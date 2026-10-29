@@ -1412,3 +1412,29 @@ User idea: keep the count against the goal up to date in the KB, so the controll
   - The decisions improved even though the parse rule failed: the remaining parse errors sit on no-number SwingXtimes goals, where one cycle is short and K already does well.
   - **Caveat:** the v3 rule was written after seeing the v2 errors on these same episodes. The parse accuracy over all 300 goals (86–100) is the fresh check.
 - **I stop tuning the parser here.** A further rule written for the no-number back-and-forth case would be fitting one phrasing of one task.
+
+## Before the full rerun: code changes 1–5 (2026-10-29, user decision)
+1. **`scripts/count_report.py`:** the counting reports come from a script now, not from code typed into the shell.
+   - Inputs: run directories (rows*.csv + meta*.json).
+   - Scoring: the SwingXtimes wrap-up rule.
+   - Output: Wilson CIs per (model, arm, effort) and per task; pairs against `--ref` and any `--pair` across models (bootstrap, decisions won / lost, common errors); goal-parse accuracy when specs are in meta.
+   - Checked: it reproduces the v3 table, the v3 Sonnet pairs (+0.003 [−0.03, +0.04]; +0.11 [+0.07, +0.16]) and the counter-v3 table exactly.
+2. **The latest version is the default.**
+   - `views.controller_view` is v4: the v3 view, plus the goal counter's line when `kb.task["counter"]` holds a parsed goal, plus the joined facts when the KB holds containers. `version="v3"` gives the old view.
+   - `ArbiterKBSystem.reset(meta, counter=...)` stores the parsed goal.
+   - **Arm names now:** counting K = latest (the counter runs called it KC), K3 = the v3 view (called K there). Questions K = latest (called KH), K3 = v3 (called K).
+   - Checked: the new K prompts equal the old KC prompts on all 224 decision points of episodes 31–60, and the question test replays all 240 calls from the cache.
+3. **Frozen prompts:** `params.json` now also holds `prompts_hash`, a sha256 over controller / views / action_view / narrative / goal_counter / keyframe / review. `load_params` refuses to run when it differs, so any edit to what a model reads needs `run.py --freeze --force`.
+   - count_test's meta records its system prompt's sha and the prompts hash.
+   - Re-frozen: params **4565b592715c**, prompts **ab198bbca95d**.
+4. **`controller.parse_answer`** returns the last top-level JSON object (nested ones are skipped), fenced or not; the goal parse uses it too. Before, 5 of 2,756 recent controller answers were unreadable.
+5. **Which data each test has read.** The final run must use data that the latest version has not been tuned on.
+   - **Counting episodes, by range:**
+     - 1–60: their subgoals set the action thresholds;
+     - 1–30: v1 and v2 with the older views;
+     - 31–60: the goal counter, whose parse rules were written after its errors there;
+     - 61–100: v3, the two worded views and the first counter run;
+     - all 300 goals: the parse accuracy checks, so every parse error has been seen.
+   - **Proposed final set on the Mac: counting episodes 1–30,** where the latest view (v4 with the counter) has never run. Caveats: the thresholds came from them, and their goals were in the parse checks.
+   - **Synthetic data:** the LLM tests used train seeds only (0–19, 100–149). The final permanence runs should read **test seeds** (≥ 1000) once, recorded in the E5c ledger.
+   - **A clean set without these caveats** needs new RoboMME episodes generated on the pod.

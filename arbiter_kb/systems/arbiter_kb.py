@@ -27,9 +27,11 @@ class ArbiterKBSystem:
         self.name, self.params = name, params or Params()
         self.backend = backend or RuleOnlyBackend()
 
-    def reset(self, meta: EpisodeMeta) -> None:
+    def reset(self, meta: EpisodeMeta, counter: dict | None = None) -> None:
+        """counter: the goal parsed once by the harness (goal_counter.parse_goal), or None; the view's progress line."""
         self.kb = KB(meta.objects)
         self.kb.task["goal"] = meta.task_goal  # L4
+        self.kb.task["counter"] = counter
         self.kb.task["items"] = parse_task_items(meta.task_goal)  # phrases the task names (task_items.py)
         self.det = Detectors(self.params.detect)
         self.trigger = Trigger(self.params.arbiter)

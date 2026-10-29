@@ -122,15 +122,18 @@ def user_content(arm: str, goal: str, memory_text: str, current: list, state: di
 
 
 def parse_answer(text: str) -> dict | None:
-    """The JSON object asked for, with or without ```json fences; None if there is none (theirs)."""
-    text = text.strip()
-    if "```" in text:
-        text = text.split("```")[1].removeprefix("json").strip()
-    start, end = text.find("{"), text.rfind("}")
-    try:
-        return json.loads(text[start:end + 1])
-    except (ValueError, json.JSONDecodeError):
-        return None
+    """The LAST top-level JSON object in the text, fenced or not; None if there is none. Reasoning models sometimes
+    write a draft object before the answer, which a first-brace-to-last-brace read cannot parse (NOTES "Goal parse
+    v2"); objects nested inside a top-level one are skipped."""
+    dec, i, last = json.JSONDecoder(), 0, None
+    while (i := text.find("{", i)) != -1:
+        try:
+            obj, end = dec.raw_decode(text, i)
+        except json.JSONDecodeError:
+            i += 1
+            continue
+        last, i = (obj if isinstance(obj, dict) else last), end
+    return last
 
 
 def to_action(answer) -> tuple[np.ndarray | None, str | None]:

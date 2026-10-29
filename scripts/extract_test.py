@@ -1,6 +1,7 @@
 """Does a richer KB text make facts easier to extract? (NOTES "Does a richer KB text make the facts easier to
 extract?": the rule was fixed before the run.) Synthetic VideoUnmaskSwap, train seeds 100-129; arms R (raw tracker
-log), K (controller view), KR (narrative.py), KH (K + joined facts); 8 questions per episode in one call; truth from the generator.
+log), K3 (the v3 controller view; "K" in the first two runs), KR (narrative.py), K (the latest view, v4 = K3 + joined
+facts; "KH" in the merged-view run); 8 questions per episode in one call; truth from the generator.
 
   python scripts/extract_test.py --print          # free: one prompt per arm
   python scripts/extract_test.py --call [--keep-as extract_kb]
@@ -24,14 +25,14 @@ from run import git_state, load_params  # noqa: E402
 from review_test import wilson  # noqa: E402
 from arbiter_kb.controller import parse_answer, raw_tracker_log  # noqa: E402
 from arbiter_kb.llm import LLM  # noqa: E402
-from arbiter_kb.narrative import BASE, merged_view, narrative  # noqa: E402
+from arbiter_kb.narrative import BASE, narrative  # noqa: E402
 from arbiter_kb.sources.synthetic import COVER_T, HOLD, SWAP_T0, SyntheticSource  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
 from arbiter_kb.views import controller_view  # noqa: E402
 
 EFFORT = {"default": None, "off": {"enabled": False}}
 SEEDS = range(100, 130)
-ARMS = ("R", "K", "KR", "KH")  # KH: K + joined facts (NOTES "The merged view")
+ARMS = ("R", "K3", "KR", "K")  # K: the latest view, v4 (NOTES "The merged view", where it is called KH)
 ROBOT = "The robot's base is at (-0.615, 0) and it faces +x; the robot's left is +y."
 
 
@@ -72,8 +73,8 @@ def memory(arm: str, src: SyntheticSource, ep: int, params) -> str:
     s.reset(src.meta(ep))
     for f in frames:
         s.step(f)
-    view = controller_view(s.kb, params.rule)
-    return {"K": view, "KR": narrative(s.kb), "KH": merged_view(view, s.kb)}[arm]
+    return {"K3": lambda: controller_view(s.kb, params.rule, "v3"), "KR": lambda: narrative(s.kb),
+            "K": lambda: controller_view(s.kb, params.rule)}[arm]()
 
 
 def right(key: str, got, want) -> bool:
@@ -116,7 +117,7 @@ def report(rows: list[dict]) -> dict:
             per = {k: wilson(sum(r[k] for r in rs), len(rs)) for k in keys}
             out[f"{arm}/{eff}"] = {"all": wilson(sum(r[k] for r in rs for k in keys), len(rs) * len(keys)), **per}
     out["paired"] = {f"{a}-{b}/{eff}": paired(rows, a, b, eff, keys) for eff in EFFORT
-                     for a, b in (("KR", "R"), ("KR", "K"), ("K", "R"), ("KH", "K"), ("KH", "KR"))}
+                     for a, b in (("KR", "R"), ("KR", "K3"), ("K3", "R"), ("K", "K3"), ("K", "KR"))}
     return out
 
 

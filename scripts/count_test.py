@@ -7,19 +7,21 @@ does the controller know whether to repeat it or to wrap up? RoboMME dataset, Pi
 Arms (same prompt skeleton, same action list; only the memory differs):
   N   no memory: the goal and the current hand state;
   P   raw robot log: hand xyz and gripper every 10 frames since the start;
-  K   the KB run on the robot state (grip and hand-pause evidence, progress counts, event log; views.controller_view);
+  K   the latest KB view (views.controller_view v4): v3 plus the goal counter's line, the goal parsed once per
+      episode (goal_counter.py); called KC in the counter runs;
+  K3  the v3 view (ordinals, merged holds; called K in v3 and the counter runs);
   KO  oracle: the subgoals completed so far, from the dataset authors' labels (upper bound).
 The answer is one action from a fixed list (no object positions exist without vision, so no waypoint is scored).
 Truth = the action class of the next subgoal. Decision points = LAG frames after each "place / put into the bin /
 reach the left-side target" subgoal ends in the execution phase (v1 used the boundary itself).
-KS (v2) = K with the semantic actions (actions.py); K in v1 had only grip / pause events.
-KR = the same KB in words (narrative.robot_narrative; NOTES "Counting with the KB in words"); KT = KR trimmed; KH = K + joined facts; KC = K + a goal-progress line
-(goal_counter.py; the goal parsed once per episode).
+KR = the v3 KB in words (narrative.robot_narrative; NOTES "Counting with the KB in words"); KT = KR trimmed.
+Old arm names: KH (K3 + joined facts) is K3 word for word here (no objects); KC is now K.
 """
 from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import os
 import sys
@@ -30,12 +32,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from run import git_state, load_params  # noqa: E402
+from run import git_state, load_params, prompts_hash  # noqa: E402
 from arbiter_kb import CONTRACT_VERSION  # noqa: E402
 from arbiter_kb.controller import parse_answer  # noqa: E402
-from arbiter_kb.goal_counter import parse_goal, progress_line  # noqa: E402
+from arbiter_kb.goal_counter import parse_goal  # noqa: E402
 from arbiter_kb.llm import LLM, BudgetExceeded  # noqa: E402
-from arbiter_kb.narrative import merged_view, robot_narrative  # noqa: E402
+from arbiter_kb.narrative import robot_narrative  # noqa: E402
 from arbiter_kb.sources import lerobot as L  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
 from arbiter_kb.views import controller_view  # noqa: E402
@@ -73,18 +75,13 @@ def raw_log(ep: dict, t: int, stride: int = 10) -> str:
     return "Robot log (every 10th frame, 10 frames per second):\n" + "\n".join(rows)
 
 
-def kb_view(ep: dict, t: int, params, words: bool = False, trim: bool = False, joined: bool = False,
-            spec: dict | None = None) -> str:
+def kb_view(ep: dict, t: int, params, version: str = "v4", spec: dict | None = None, words: bool = False,
+            trim: bool = False) -> str:
     s = ArbiterKBSystem(params)
-    s.reset(L.meta(ep))
+    s.reset(L.meta(ep), counter=spec)
     for f in L.frames(ep, t):
         s.step(f)
-    if words:
-        return robot_narrative(s.kb, trim)
-    view = controller_view(s.kb, params.rule)
-    if spec is not None:
-        view = view.replace("\nProgress:", f"\n{progress_line(s.kb, spec)}\nProgress:", 1) if spec else view
-    return merged_view(view, s.kb) if joined else view
+    return robot_narrative(s.kb, trim) if words else controller_view(s.kb, params.rule, version)
 
 
 def oracle(ep: dict, t: int) -> str:
@@ -93,10 +90,9 @@ def oracle(ep: dict, t: int) -> str:
 
 
 def prompt(arm: str, ep: dict, t: int, params, spec: dict | None = None) -> list:
-    mem = {"N": lambda: "", "P": lambda: raw_log(ep, t), "K": lambda: kb_view(ep, t, params),
-           "KR": lambda: kb_view(ep, t, params, words=True), "KT": lambda: kb_view(ep, t, params, True, True),
-           "KH": lambda: kb_view(ep, t, params, joined=True), "KC": lambda: kb_view(ep, t, params, spec=spec or {}),
-           "KO": lambda: oracle(ep, t)}[arm]()
+    mem = {"N": lambda: "", "P": lambda: raw_log(ep, t), "K": lambda: kb_view(ep, t, params, spec=spec),
+           "K3": lambda: kb_view(ep, t, params, "v3"), "KR": lambda: kb_view(ep, t, params, words=True),
+           "KT": lambda: kb_view(ep, t, params, words=True, trim=True), "KO": lambda: oracle(ep, t)}[arm]()
     hand = ep["tcp"][t - 1]
     now = (f"Current state: frame {t}, hand at ({hand[0]:.3f}, {hand[1]:.3f}, {hand[2]:.3f}), gripper "
            f"{'closed' if ep['width'][t - 1] < 0.07 else 'open'}.")
@@ -119,9 +115,9 @@ def jobs(a, params, specs: dict | None = None) -> list[dict]:
 
 
 def goal_specs(a) -> dict:
-    """Arm KC: one goal parse per episode (goal_counter.parse_goal), thinking default; needs --call (cached after)."""
+    """Arm K: one goal parse per episode (goal_counter.parse_goal), thinking default; needs --call (cached after)."""
     if not a.call:
-        sys.exit("arm KC parses each goal with one model call: pass --call")
+        sys.exit("arm K parses each goal with one model call: pass --call")
     llm = LLM(model=a.model, max_usd=0.2, provider={"order": [a.provider], "allow_fallbacks": False,
                                                     "require_parameters": True})
     eps = [L.load(p) for task in a.tasks.split(",") for p in L.episode_files(task, a.first + a.n)[a.first:]]
@@ -143,7 +139,7 @@ def score(job: dict, text: str, u: dict) -> dict:
 def run(a) -> None:
     commit, dirty = git_state()
     params = load_params()
-    specs = goal_specs(a) if "KC" in a.arms.split(",") else None
+    specs = goal_specs(a) if "K" in a.arms.split(",") else None
     todo = jobs(a, params, specs)
     if a.print:
         for m in todo[0]["msgs"]:
@@ -167,7 +163,8 @@ def run(a) -> None:
             w = w or csv.DictWriter(f, fieldnames=list(row))
             w.writerow(row) if f.tell() else (w.writeheader(), w.writerow(row))
             f.flush()
-    meta = {"goal_specs": specs, "commit": commit, "dirty": dirty, "args": {k: v for k, v in vars(a).items()}, "params_hash": params.hash(),
+    meta = {"system_prompt_sha": hashlib.sha256(SYSTEM.encode()).hexdigest()[:12], "prompts_hash": prompts_hash(),
+            "goal_specs": specs, "commit": commit, "dirty": dirty, "args": {k: v for k, v in vars(a).items()}, "params_hash": params.hash(),
             "contract_version": CONTRACT_VERSION, "usage": llm.usage, "data_revision": "92796ab (lerobot/robomme)"}
     (out / "meta.json").write_text(json.dumps(meta, indent=1, default=str))
     print("wrote", out.relative_to(ROOT), "usage", {k: round(v, 4) if isinstance(v, float) else v for k, v in llm.usage.items()})

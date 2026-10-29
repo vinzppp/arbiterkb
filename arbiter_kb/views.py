@@ -12,7 +12,9 @@ from itertools import permutations
 import numpy as np
 
 from .action_view import KINDS as ACTION_KINDS, action_rows, progress
+from .goal_counter import progress_line
 from .kb import KB
+from .narrative import merged_view
 from .params import RuleParams
 from .rules import held
 from .task_items import is_task_item
@@ -187,9 +189,21 @@ def _event_text(v, kb: KB) -> str:
     return f"event {v.type}({', '.join(v.args)}) conf {v.conf:.2f}"
 
 
-def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
-    """What the LLM controller reads (DEVELOPMENT §3.8): goal and progress, objects with 3D centres,
-    relations with probabilities, then the event log. Every line names the ids it can cite."""
+VIEW_VERSION = "v4"  # part of the frozen prompt hash (run.py --freeze)
+
+
+def controller_view(kb: KB, p: RuleParams = RuleParams(), version: str = VIEW_VERSION) -> str:
+    """What the LLM controller reads (§3.8). v3: goal, progress, objects, relations, event log, with citable ids.
+    v4 (default) adds the goal counter's line (kb.task["counter"]) and the joined facts (narrative.py)."""
+    view = _view_v3(kb, p)
+    if version == "v3":
+        return view
+    if kb.task.get("counter"):
+        view = view.replace("\nProgress:", f"\n{progress_line(kb, kb.task['counter'])}\nProgress:", 1)
+    return merged_view(view, kb)
+
+
+def _view_v3(kb: KB, p: RuleParams) -> str:
     lines = [f"Goal: {kb.task.get('goal', '?')}"]
     names = {"grasp": "grasps", "place": "places", "cover": "covers", "swap": "close passes"}
     done = [f"{names[t]} {n}" for t in names if (n := sum(e.type == t for e in kb.events))]
