@@ -68,3 +68,32 @@ def test_q6_truth_uses_the_container_once_it_is_there():
         pytest.skip("no G perceived episodes in data/g_perceived")
     answers = {truth(src.load(e))["q6"] for e in src.episodes("train")[:40]}
     assert answers == {"yes", "no"}  # before the fix every episode read "no" (NaN container position at the cover)
+
+
+def test_relink_margin_small_at_a_crossing_and_inf_alone():
+    from arbiter_kb.relink import relink_margin
+    T = 40
+    p = np.zeros((T, 2, 8), np.float32)
+    p[:, :, F_U:F_U + 2] = 100.0
+    x = np.linspace(-0.1, 0.1, T)
+    p[:, 0, F_X:F_Z + 1] = np.stack([x, np.zeros(T), np.full(T, 0.05)], 1)
+    p[:, 1, F_X:F_Z + 1] = np.stack([-x, np.zeros(T), np.full(T, 0.05)], 1)
+    _, m = relink_margin(p, 2)
+    assert m[1:, 0].min() < 0.02 < m[1, 0] and np.all(m[1:] >= 0)  # near 0 where they cross, larger apart
+    q = p.copy()
+    q[:, 1, F_HIDDEN] = 1  # only one container seen: no competitor
+    assert np.isinf(relink_margin(q, 2)[1][:, 0]).all()
+
+
+def test_r6_scale_follows_the_feature():
+    from dataclasses import replace
+    from arbiter_kb.kb import KB, AddEvidence
+    from arbiter_kb.params import RuleParams
+    from arbiter_kb.rules import r6_swap
+    from arbiter_kb.types import FrameObs
+    kb = KB([("bin_0", "container", {}), ("bin_1", "container", {})])
+    kb.apply([AddEvidence(5, "near_pass", ("bin_0", "bin_1"), {"min_3d": 0.08, "min_q": 0.01, "obs": []})])
+    ev, f = kb.evidence[-1:], FrameObs(5, {}, np.zeros(3), 0.08, True)
+    tiny = replace(RuleParams(), d0=1e-9)  # min_3d 0.08 m with this d0: w = 0, so no swap event
+    assert r6_swap(kb, ev, f, tiny) == []
+    assert r6_swap(kb, ev, f, replace(tiny, r6_feature="min_q", q0=0.05))  # the same pass by min_q 0.01: w > 0

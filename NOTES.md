@@ -1838,7 +1838,7 @@ Paired over test episodes:
 1. **Main (min_q): not supported.** The AURC CI includes 0. By the rule, the KB's advantage with the margin feature is not shown on test.
 2. **With min_3d, the KB is better than SoftHaircut** (AURC CI below 0), and its AUROC is higher with either feature (CIs exclude 0). The belief layer adds calibration beyond R6's swap score: Bound's errors get lower p in the KB, through R1's cover kernel, R5 and the "elsewhere" floor (which of these does the work is not measured).
 3. **The margin does not carry swap information out of sample:** min_q was best on train and is worse than min_3d on test, for the KB. The train choice (q0 at the grid's edge) overfitted.
-- **Honest summary:** the registered main comparison fails, but the same comparison with the feature R6 already had passes, and the KB's AUROC lead holds with both. **Claim 3 is partly supported on real perception (G, simulator word list), at accuracy ≈ Bound's.** The re-linking margin, the new evidence, does not help.
+- **Summary (rewritten after the goal review, `reviews/claim3_g_goal.md`):** **the registered main test is not supported**, and the new margin evidence overfitted (min_q is worse than min_3d on test). Secondary: with min_3d, the KB's p ranks its own errors better than a swap-score haircut (AURC −0.031 [−0.074, −0.004], upper end near 0; one of two tests; d0 at the grid's edge), at Bound's accuracy. **Where that comes from is not measured**, and it is probably not swap detection: at d0 0.02, R6's weight at the 5–9 cm passes where G's real swaps happen is about 0.5·e^(−2.5) ≈ 0.04, and the KB is right on only 0.09–0.12 of the tracker-swapped cubes. The likely source is cover-time ambiguity (R1's kernel, the eps_far floor, R5), which SoftHaircut's point-mass start never has. G test is now spent for claim 3; a confirmatory claim needs fresh episodes.
 
 ## Claim 3 follow-up: the LLM rows on G test (2026-10-29; registered in "Claim 3 on G")
 - R and K on Q1, G test, re-linked, effort off and default; K's KB uses the train choice min_q, q0 0.05 (`--r6 min_q:0.05`), as registered before the read. The KB's top answer with the same setting: 0.809 (above).
@@ -1857,3 +1857,26 @@ Paired over test episodes:
   2. **K beats the raw log without thinking; with thinking the gap shrinks to +0.07, and its CI includes 0** (train: +0.15). With thinking, a 35B-A3B model reading the raw tracker log gets 0.74.
   3. **On the cubes the tracker swapped, R is better than K (0.33–0.36 vs 0.09–0.12):** reading the raw positions, the model sometimes follows the true container where the KB follows the wrong id. The KB is confidently wrong exactly where it matters, and its p does not drop enough there (the KB's AUROC lead over SoftHaircut comes from elsewhere).
   4. The model's stated confidence (0.62–0.63) is below the KB's own p (0.72), as on train.
+- **Process note (from the goal review):** the rule commit (e5b30fe) and the grid commit are 68 s apart. The grid was run after the rule commit (its grid.json records commit e5b30fe, clean tree); no train AURC was seen before the rule was written.
+- **Falsifier 3 (the raw log as good as the KB) is nearly triggered with thinking** on G test: K − R +0.067 [−0.006, +0.143]. R reads fewer prompt tokens (1.65k vs 2.5k) but spends reasoning tokens.
+
+## Claim 3 attribution: where does the KB's calibration lead come from? Fixed before running (2026-10-29, goal review)
+Post-hoc attribution of the read above, **$0, no LLM**: run on G train first; then on G test, labelled as post-hoc, with a ledger READ line. G test is spent for confirmatory claims, so nothing here is tuned on it.
+- **Systems:** the KB as read (min_3d, d0 0.02) and four ablations:
+  - (a) **R6 off** (w_max = 0);
+  - (b) **no cover kernel or floor** (sigma_cover → 0.001 m, eps_far = eps_none);
+  - (c) **R5 off**;
+  - (d) **cover only** (R6 and R5 off: R1's distribution at the cover, carried forward with the container; the equivalent of a "CoverHaircut").
+  - Plus the earlier systems: SoftHaircut min_3d, Bound, the stock / stress bit, and "any near pass since the cover → low".
+- **Scored on the same rows:** accuracy, AUROC, AURC; also **AUROC on swapped vs clean cubes** (does p drop on the cubes the tracker swapped?), which the overnight review asked for and the read did not score.
+- **Readings fixed in advance:**
+  - if (a) ≈ the KB (AURC within ±0.01) and (d) ≈ the KB, the calibration lead is the cover feature, not swap handling or the belief layer as a whole;
+  - if (b) loses most of the lead, the cover kernel is the source.
+  - No change to the claim-3 verdict above is made from this.
+
+## Claim 3 code review: the AURC was wrong (2026-10-29, `reviews/claim3_g_code.md`)
+- **BLOCKER:** `claim3_g.aurc` broke ties by row order (episode, then cube) instead of letting them enter together, as `metrics.aurc` and the spec do (DEVELOPMENT §3.10). The ties are large: Bound is all p = 1, and SoftHaircut min_q has 206 / 241 train rows at p = 1 (`round(w, 6)` makes w = 0 when min_q ≈ 1). Shuffling within ties moves SoftHaircut min_q's train AURC from 0.070 to 0.167. **Every AURC above and all paired AURC CIs are void**; accuracy and AUROC are unaffected.
+- **Fixed:** `claim3_g.py` now calls `metrics.aurc`. The reviewer checked that the train choice is the same under the spec AURC for all 16 settings. So the **test read is redone with the committed `choice.json`, as a correction** (ledger READ). The grid is re-run only to record the corrected train table; the choice must come out the same.
+- **Also fixed:** `auroc(...) or 0.5` turned a real 0.0 into 0.5. Tests added for `relink_margin` (small at a crossing, inf alone) and for R6's feature / scale. `ArbiterKBSystem(skip=...)` was added for the ablations.
+- **Not changed (MINOR):** the margin counts only competitors matched in that frame, and its minimum may come from a third container; `--split test --print` builds test prompts without a READ line; 8 of the 360 G-test LLM calls were cache hits (source not found); run meta records the replaced params hash (40e166310e73), the ledger the frozen base (a810942859b9).
+- The attribution ablation registered above now also has its code (`claim3_g.py --ablate train|test`).

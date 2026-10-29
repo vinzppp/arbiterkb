@@ -23,8 +23,8 @@ def _ev_line(e) -> str:
 
 
 class ArbiterKBSystem:
-    def __init__(self, params: Params | None = None, backend=None, name: str = "arbiterkb"):
-        self.name, self.params = name, params or Params()
+    def __init__(self, params: Params | None = None, backend=None, name: str = "arbiterkb", skip: tuple = ()):
+        self.name, self.params, self.skip = name, params or Params(), set(skip)
         self.backend = backend or RuleOnlyBackend()
 
     def reset(self, meta: EpisodeMeta, counter: dict | None = None) -> None:
@@ -45,7 +45,8 @@ class ArbiterKBSystem:
         kb.apply(self.det.step(frame), "detect")
         new_ev = kb.evidence[n0:]
         for name, rule in RULES:
-            kb.apply(rule(kb, new_ev, frame, rp), name)
+            if name not in self.skip:  # ablations only (NOTES "Claim 3 attribution")
+                kb.apply(rule(kb, new_ev, frame, rp), name)
         arb = None
         reason = self.trigger.fires(kb, new_ev, frame.t)
         if reason:
