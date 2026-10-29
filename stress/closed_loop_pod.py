@@ -80,13 +80,17 @@ class Perceive:
 
 
 def episode(task: str, ep: int, arm: str, a, llm, params) -> dict:
-    env = make_env(task, ep, a.dataset)
     memory = None
     if arm != "H":
-        info = env.reset()[1]  # the word list needs the goal, the depth back-projection K; run() resets again (VERIFY
-        p = Perceive(info["task_goal"][0], a.vocab, ep, info["front_camera_intrinsic"])  # in the smoke run)
+        # the word list needs the goal, the depth back-projection K. Only the first reset() of a fresh env gives the
+        # episode's own scene (a second reset on the same env gives another; smoke run), so probe on a throwaway env.
+        probe = make_env(task, ep, a.dataset)
+        info = probe.reset()[1]
+        probe.close()
+        p = Perceive(info["task_goal"][0], a.vocab, ep, info["front_camera_intrinsic"])
         memory = Memory(arm, ArbiterKBSystem(params) if arm != "R" else None, p)
-    row = run(env, arm, lambda m, eff: llm.call(m, max_tokens=4000, reasoning=eff), memory, EFFORT[a.effort])
+    env = make_env(task, ep, a.dataset)
+    row = run(env, arm, lambda m, eff: llm.call(m, max_tokens=a.max_tokens, reasoning=eff), memory, EFFORT[a.effort])
     env.close()
     return {**row, "task": task, "episode": ep, "dataset": a.dataset, "effort": a.effort, "vocab": a.vocab}
 
@@ -102,13 +106,17 @@ def main() -> None:
     ap.add_argument("--vocab", choices=["open", "scene"], default="open")
     ap.add_argument("--out", default="/workspace/cl/pilot")
     ap.add_argument("--max-usd", dest="max_usd", type=float, default=5.0)
+    ap.add_argument("--provider", default="Parasail",  # one for every arm; DeepInfra takes at most 30 images (H: ~150);
+                    help="OpenRouter provider, no fallbacks")  # Parasail took 160 (probe, smoke run)
+    ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=16000,  # 4000 cut H's and R's reasoning
+                    help="completion cap per call, every arm alike")  # (finish_reason length, smoke run)
     a = ap.parse_args()
     params, (commit, dirty) = load_params(), git_state()
     if a.dataset == "test":
         if not ledger.was_frozen(params.hash()):
             sys.exit("freeze params first (run.py --freeze)")
         ledger.record("READ", params.hash(), f"RoboMME test closed loop {a.tasks} {a.episodes} {a.arms}")
-    llm = LLM(model=MODEL, max_usd=a.max_usd, provider={"order": ["DeepInfra"], "allow_fallbacks": False,
+    llm = LLM(model=MODEL, max_usd=a.max_usd, provider={"order": [a.provider], "allow_fallbacks": False,
                                                          "require_parameters": True})
     for task in a.tasks.split(","):
         for ep in a.episodes:
@@ -122,11 +130,13 @@ def main() -> None:
                 except Exception as ex:  # recorded unscored, rerun on resume (theirs)
                     row = {"task": task, "episode": ep, "arm": arm, "status": "harness_error", "success": None,
                            "error": repr(ex)}
-                row.update(commit=commit, dirty=dirty, params_hash=params.hash(), model=MODEL)
+                row.update(commit=commit, dirty=dirty, params_hash=params.hash(), model=MODEL, provider=a.provider,
+                           max_tokens=a.max_tokens)
                 if row.get("status") != "harness_error":
                     (d / "result.json").write_text(json.dumps(row, indent=1, default=str))
                 print(json.dumps({k: row.get(k) for k in ("task", "episode", "arm", "status", "end_reason",
-                                                          "model_calls", "usage")}, default=str), flush=True)
+                                                          "model_calls", "usage", "error") if k in row},
+                                 default=str), flush=True)
     print("usage", llm.usage)
 
 

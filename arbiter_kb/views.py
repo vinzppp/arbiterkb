@@ -209,6 +209,8 @@ def _view_v3(kb: KB, p: RuleParams) -> str:
                          + ["  " + x for x in event_log(kb, low_level=False, coords=False)])
     lines.append("Objects (world frame, m):")
     for o in kb.objects.values():
+        if o.visibility.value == "unknown" and o.t_last_seen < 0:  # a tracker slot that never found its object
+            continue  # (the open word list has spare slots; closed-loop smoke run 2026-10-29)
         vis = "held" if o.id in held(kb) else o.visibility.value
         if vis == "hidden":  # its pose is a probability-weighted mean, possibly between two containers
             pos = ": see Inside below"

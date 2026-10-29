@@ -97,3 +97,9 @@ def test_r6_scale_follows_the_feature():
     tiny = replace(RuleParams(), d0=1e-9)  # min_3d 0.08 m with this d0: w = 0, so no swap event
     assert r6_swap(kb, ev, f, tiny) == []
     assert r6_swap(kb, ev, f, replace(tiny, r6_feature="min_q", q0=0.05))  # the same pass by min_q 0.01: w > 0
+
+
+def test_online_names_generic_cube_slots_apart():
+    from arbiter_kb.sources.online import OnlineObs
+    names = [oid for oid, _, _ in OnlineObs(["container."] * 2 + ["green cube.", "cube.", "cube."], 2).objects()]
+    assert names == ["bin_0", "bin_1", "cube_green", "cube_s3", "cube_s4"]

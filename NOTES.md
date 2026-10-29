@@ -1931,3 +1931,11 @@ Post-hoc attribution of the read above, **$0, no LLM**: run on G train first; th
   - `stress/POD_CLOSED_LOOP.md` (setup, smoke test, val pilot on VideoUnmaskSwap and VideoPlaceOrder, 10 episodes per arm; about $3–4 GPU and under $1 LLM).
   - **Not run:** the pod script cannot run on the Mac (RoboMME, the worker), so its first real run is the smoke test. The runbook lists what to verify there (observation keys, double reset, the K prompt).
 - **Model:** `qwen/qwen3.6-35b-a3b` takes images on OpenRouter (262k context), so one model serves all arms.
+
+**Smoke test on the pod (A40; 2026-10-29), first findings, merged back:**
+- **Double reset:** only the first `reset()` of a fresh RoboMME env gives the episode's own scene (169 vs 151 frames on a second reset). `closed_loop_pod.episode` now probes the goal and K on a throwaway env and runs the arm on a fresh one (the pod session's fix, merged).
+- **Image limit:** DeepInfra takes at most 30 images per request; arm H sends 58 on its first turn and about 150 by the end. Probes (under $0.10) found **Parasail** takes 160; **every arm now uses Parasail** (`--provider`, default Parasail).
+- **Token cap:** at 4,000 completion tokens, H's and R's first calls ended in reasoning (finish_reason length, empty answer → "unparseable"). **`--max-tokens` 16,000 for every arm.** K's calls did not hit the cap.
+- **Perception:** about 1.05 s per perceived frame including model load (169-frame video, 57 frames perceived).
+- **Our bug, fixed on the Mac:** with the open word list, the four generic "cube." slots were all named `cube_cube.` in `OnlineObs` and overwrote each other. They are now `cube_s<slot>` (a coloured phrase named once keeps `cube_<colour>`; test added; G unchanged). Tracker slots that never found an object are no longer listed in the controller view. Re-frozen.
+- The K prompt was checked on the pod: the memory lists the containers and the green cube, and after the first action it starts with "Since your last decision".
