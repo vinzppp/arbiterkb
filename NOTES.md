@@ -1438,3 +1438,51 @@ User idea: keep the count against the goal up to date in the KB, so the controll
    - **Proposed final set on the Mac: counting episodes 1–30,** where the latest view (v4 with the counter) has never run. Caveats: the thresholds came from them, and their goals were in the parse checks.
    - **Synthetic data:** the LLM tests used train seeds only (0–19, 100–149). The final permanence runs should read **test seeds** (≥ 1000) once, recorded in the E5c ledger.
    - **A clean set without these caveats** needs new RoboMME episodes generated on the pod.
+
+## Motion detector v2 (item 6): the test, fixed before running (2026-10-29)
+- **Real tracker jitter** (G's 180 perceived episodes, container slots, frame-to-frame xy, from t = 40):
+  - still frames: median 0.0 mm, p90 7.5 mm, p99 29.7 mm; **26% exceed the current 1 mm threshold**;
+  - frames inside a swap: median 4.7 mm; **35% are below 1 mm**.
+  - So the one-frame speed test makes false starts and stops on real data. On synthetic data with 15 mm iid noise it already broke (M3 truth check).
+- **Detector v2** (`detectors._motion`, causal):
+  - the xy position is the median of the last `m_win` frames;
+  - the speed is the smoothed displacement over `k_lag` frames, divided by `k_lag`;
+  - a move starts after `n_on` frames above `v_start` and stops after `n_off` frames below `v_stop`;
+  - while moving, a velocity turned by more than 120° from the move so far (cos < −0.5, once the move is over 2 cm) **splits** the move: back-to-back swaps.
+- **Grid, chosen on training data only:** m_win ∈ {1, 3, 5, 7}, k_lag ∈ {1, 3}, v_start ∈ {0.001, 0.002, 0.003, 0.005} m/frame, v_stop = v_start / 2, n_on = 2, n_off ∈ {2, 4}.
+  - m_win 1, k_lag 1, v_start 0.001, n_on 1 is the old detector; it is reported as the reference.
+- **Score:**
+  - G episodes: training = episodes 0–9 of each setting, test = 10–19.
+  - Truth: the swap intervals in each episode's meta (two containers move in each). Identity is not needed.
+  - A detected move segment is **matched** when it overlaps exactly one swap interval for at least half of its own length. It is **merged** when it overlaps two or more swaps, and **spurious** when it overlaps none.
+  - recall = mean over swaps of min(matched segments in it, 2) / 2; precision = matched / all segments.
+  - **Selection:** the highest F1 on G training. Synthetic clean (train seeds 0–99) must keep recall ≥ 0.95. Ties go to the smaller m_win.
+  - The chosen setting is read **once** on G test, and on synthetic clean and 15 mm noise (train seeds).
+- **Also reported, not used for selection:** near_pass recall against true passes (`swapstats.oracle_passes` on the oracle tracks, matched in time), and the old measure_kb numbers.
+- **Counting is unaffected,** since it uses robot state only. The synthetic question and permanence views change, which the full rerun will cover.
+- **Change after the first grid** (training data only; G test not read):
+  - **v1 itself fails the synthetic floor:** clean synthetic recall 0.79, with 46 merged segments, so "recall ≥ 0.95" could not be met. The floor is now min(0.95, v1's recall).
+  - **The reversal split catches few back-to-back swaps,** because a container often goes on to a third place. Every scripted swap slows almost to zero at its end, so a **speed-valley split** was added: below `valley` × the move's peak, then back above twice that.
+  - The grid adds valley ∈ {0, 0.2, 0.35, 0.5}. The selection rule is otherwise unchanged.
+
+**Results** (`results/latest/motion_v2/`: grid.json with all 256 training settings, read.json with the one test read):
+- **Chosen on training:** m_win 1 (no median), k_lag 1, v_start 0.003 m/frame (v_stop 0.0015), n_on 2, n_off 2, valley 0.35, rev_cos −0.5.
+  - The settings with a median filter scored higher on G training (F1 up to 0.86), but merged more back-to-back swaps on clean synthetic data (recall 0.45–0.66, below the floor of 0.79), because smoothing fills the speed valleys.
+  - Re-frozen: params **49a8577dc73f**.
+
+| data | detector | recall | precision | F1 | segments | merged | spurious | pass recall |
+|---|---|---|---|---|---|---|---|---|
+| G test (episodes 10–19), real tracker | v1 | 0.955 | 0.525 | 0.678 | 2,564 | 141 | 1,029 | **0.932** |
+| G test | **v2** | **0.989** | **0.687** | **0.811** | 2,691 | 194 | **590** | 0.889 |
+| synthetic clean (train 0–99) | v1 | 0.788 | 0.879 | 0.831 | 380 | 46 | 0 | 0.849 |
+| synthetic clean | v2 | 0.821 | 0.821 | 0.821 | 424 | 76 | 0 | 0.915 |
+| synthetic, 15 mm iid noise | v1 | 0.068 | 0.108 | 0.084 | 399 | 265 | 19 | 0.113 |
+| synthetic, 15 mm iid noise | v2 | 1.000 | 0.570 | 0.726 | 6,101 | 472 | 1,726 | **0.000** |
+
+- **On the real tracker (G test), v2 is clearly better:** spurious moves 1,029 → 590 (−43%), F1 0.68 → 0.81. The close-pass recall drops slightly, 0.93 → 0.89.
+- **On clean synthetic data it is about the same:** more back-to-back swaps are split, but the extra splits also cut some single swaps.
+- **Under 15 mm iid noise both fail, in opposite ways:**
+  - v1 never stops a move;
+  - v2 fragments every move into many short ones (6,101 segments), and with containers rarely "both moving" for long enough, **no close pass is detected**.
+  - iid noise of 15 mm on every frame is much harsher than G's tracker (median 0, p90 7.5 mm). It remains a known weakness; R6's near-pass evidence would need its own smoothing for such data.
+- **Still open:** 590 spurious segments on G test (about 3 per episode). They come from the tracker's position jumps (p99 30 mm), which a one-frame-lag detector cannot tell from real starts.

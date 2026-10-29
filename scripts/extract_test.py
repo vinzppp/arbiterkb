@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from run import git_state, load_params  # noqa: E402
-from review_test import wilson  # noqa: E402
+from video_windows import wilson  # noqa: E402
 from arbiter_kb.controller import parse_answer, raw_tracker_log  # noqa: E402
 from arbiter_kb.llm import LLM  # noqa: E402
 from arbiter_kb.narrative import BASE, narrative  # noqa: E402

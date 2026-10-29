@@ -15,6 +15,7 @@ import numpy as np
 
 from .kb import AddEvidence
 from .actions import Actions
+from .motion import Motion
 from .observe import obs_id
 from .params import DetectParams
 from .types import FrameObs
@@ -24,6 +25,7 @@ class Detectors:
     def __init__(self, p: DetectParams):
         self.p = p
         self.prev: dict = {}  # id -> last ObjObs
+        self.motion = Motion(p)  # move_start / move_stop (motion.py, v2)
         self.moving: dict[str, bool] = {}
         self.passes: dict[tuple, dict] = {}  # open near-passes
         self.closed = False  # gripper state, with hysteresis
@@ -39,26 +41,12 @@ class Detectors:
             if prev is not None and prev.visible and not o.visible:
                 ops.append(AddEvidence(t, "disappear", (oid,), {"last_xyz": [float(v) for v in prev.xyz],
                                                                 "obs": [obs_id(t - 1, oid)]}))
-        ops += self._motion(frame)
+        ops += self.motion.step(frame)
+        self.moving = self.motion.moving
         ops += self._near_passes(frame)
         robot = self._gripper(frame) + self._hand_pause(frame)
         ops += robot + self.actions.step(frame, self.closed, robot)
         self.prev = dict(frame.objects)
-        return ops
-
-    def _motion(self, frame: FrameObs) -> list[AddEvidence]:
-        ops = []
-        for oid, o in frame.objects.items():
-            prev = self.prev.get(oid)
-            if o.cls != "container" or prev is None or not (o.visible and prev.visible):
-                self.moving[oid] = False
-                continue
-            mv = float(np.linalg.norm(o.xyz[:2] - prev.xyz[:2])) > self.p.v_move
-            if mv != self.moving.get(oid, False):
-                kind, at, t_at = ("move_start", prev.xyz, frame.t - 1) if mv else ("move_stop", o.xyz, frame.t)
-                ops.append(AddEvidence(frame.t, kind, (oid,), {"xyz": [round(float(v), 4) for v in at], "t_at": t_at,
-                                                               "obs": [obs_id(t_at, oid)]}))
-            self.moving[oid] = mv
         return ops
 
     def _near_passes(self, frame: FrameObs) -> list[AddEvidence]:

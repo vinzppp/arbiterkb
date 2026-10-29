@@ -127,16 +127,9 @@ def _ev_line(e) -> str | None:
 
 
 def _vlm_line(e) -> str | None:
-    """The review call's evidence (review.py); a confirmation adds nothing to read, so it is not shown."""
-    d, a = e.data, ", ".join(e.args)
-    if e.kind == "vlm_summary":
-        return f"t={e.t} video summary, t={d['t0']}-{e.t} (vlm): {d['text']}"
-    if e.kind == "vlm_check" and d["verdict"] == "contradict":
-        return f"t={e.t} the video contradicts [{a}] (vlm)"
-    if e.kind == "vlm_missing":
-        return f"t={e.t} seen in the video, not recorded: {d['what']} (vlm)"
-    if e.kind == "vlm_identity" and d["now"] not in (a, "cannot_tell"):
-        return f"t={e.t} {a} now looks like {d['now']} (vlm)"
+    """The ask call's occluder answers (ask.py); descriptions show on the object lines instead."""
+    if e.kind == "vlm_occluder" and e.data["answer"] != "cannot_tell":
+        return f"t={e.t} the image shows {e.args[0]} hidden by {e.data['answer'].replace('_', ' ')} (vlm)"
     return None
 
 

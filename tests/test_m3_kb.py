@@ -157,7 +157,8 @@ def test_move_evidence_carries_where_and_when_it_started():
     for f in src.frames(ep):
         s.step(f)
     starts = [e for e in s.kb.evidence if e.kind == "move_start"]  # containers only
-    assert starts and all("xyz" in e.data and e.data["t_at"] == e.t - 1 for e in starts)
+    lag = Params().detect.n_on + Params().detect.k_lag - 1  # v2 reports a start after n_on frames (motion.py)
+    assert starts and all("xyz" in e.data and e.t - 1 - lag <= e.data["t_at"] <= e.t - 1 for e in starts)
     assert min(e.data["t_at"] for e in starts) >= SWAP_T0 - 1
     assert any(f"(t={starts[0].data['t_at']}-" in x for x in event_log(s.kb))
 
@@ -208,3 +209,21 @@ def test_cover_is_one_line_with_the_containment_rule_and_relation_lines_are_cita
     assert "disappeared" not in v  # the cover line carries the place; no separate 'disappeared at' line
     ids = citable_ids(s.kb)
     assert all(f"[Inside({c})]" in v and f"Inside({c})" in ids for c in ("cube_red", "cube_green", "cube_blue"))
+
+
+def test_back_to_back_swaps_are_two_moves_and_jitter_is_not_a_move():
+    from arbiter_kb.motion import Motion
+    from arbiter_kb.types import FrameObs, ObjObs
+
+    def path(t):  # still, then 0 -> 0.2 m over 20 frames, then on to 0.2 m in y over 20 frames, then still
+        a = np.clip((t - 10) / 20, 0, 1)
+        b = np.clip((t - 30) / 20, 0, 1)
+        s = lambda x: x * x * (3 - 2 * x)  # noqa: E731  (slows to zero at both ends, like the generator)
+        jitter = 0.0005 * ((t * 7919) % 3 - 1)  # +-0.5 mm: frame-to-frame changes stay below v_stop
+        return np.array([0.2 * s(a) + jitter, 0.2 * s(b), 0.03])
+
+    m, ev = Motion(Params().detect), []
+    for t in range(70):
+        ev += m.step(FrameObs(t, {"bin": ObjObs("bin", "container", True, path(t), None, 1.0)},
+                              np.zeros(3), 0.08, True))
+    assert [e.kind for e in ev] == ["move_start", "move_stop", "move_start", "move_stop"]

@@ -1,5 +1,5 @@
 """What can a small VLM see in a window of frames, with no memory text? (NOTES "What can a small VLM see in a
-window": the rule was fixed before the run.) The same 60 windows as review_test.py; the only overlay is a mark at
+window": the rule was fixed before the run.) The same 60 windows as review_test.py (now video_windows.py); the only overlay is a mark at
 the hand (robot state -> pixel by a homography fitted on other episodes). Condition A: full frames; B: 96-px crops
 around the hand, enlarged.
 
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from run import git_state, load_params  # noqa: E402
-from review_test import DATA, TASKS, kb_until, wilson, windows  # noqa: E402
+from video_windows import DATA, TASKS, kb_until, wilson, windows  # noqa: E402
 from arbiter_kb.controller import image_part, parse_answer, text_part  # noqa: E402
 from arbiter_kb.llm import LLM, vlm_client  # noqa: E402
 from arbiter_kb.sources import lerobot as L  # noqa: E402

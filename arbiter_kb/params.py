@@ -43,6 +43,16 @@ class DetectParams:
     press_rise: float = 0.03  # m: a press is complete when the hand rises this far above its lowest point
     y_side: float = 0.10  # m: |y| beyond this = the robot's left (+y) / right (-y) side (dataset: 0.21)
     merge_xy: float = 0.05  # m: a hold followed by a release within this xy distance is shown as one step (v3 view)
+    # container motion v2 (motion.py; NOTES "Motion detector v2"): chosen on G training episodes (F1 0.65 -> 0.80)
+    m_win: int = 1  # frames: median filter on the position (1 = none; smoothing blurred the valleys)
+    k_lag: int = 1  # frames: speed = smoothed displacement over k_lag frames / k_lag
+    v_start: float = 0.003  # m/frame: a move starts after n_on frames above this
+    v_stop: float = 0.0015  # m/frame: and stops after n_off frames below this
+    n_on: int = 2
+    n_off: int = 2
+    valley: float = 0.35  # split a move at a speed valley below this x its peak (0: never; motion.py)
+    rev_cos: float = -0.5  # split a move when its velocity turns this far from the move so far (-2: never)
+    rev_min: float = 0.02  # m: only once the move is this long
 
 
 @dataclass(frozen=True)
