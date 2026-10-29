@@ -1145,3 +1145,49 @@ Truth: 27 windows pick_up, 33 put_down (always answering pick_up scores 0.45).
   1. Naming the robot's own action from the front video is hard even for the frontier model (≤ 0.52), while robot state gives it at 0.99. **The VLM should not judge robot actions**: they come from robot state.
   2. What a VLM can add is **state at a frame**: what is held, what is on what. Sonnet's relations are mostly right here; qwen3.5-9b's are not (one stereotyped, often reversed, relation). This is judged by eye, with no object truth here.
   3. For relations, the small VLM chosen for listing is not good enough on this evidence. A relation test with truth (G's replays with ids drawn, on the pod) should compare a larger VLM, as well as qwen3.5-9b, with Sonnet.
+
+## Does a richer KB text make the facts easier to extract? The test, fixed before running (2026-10-28)
+User question: can the KB give the LLM richer, more semantic context, so that it extracts what an instruction needs more easily?
+- **Arms:** the same KB and the same episodes, different text:
+  - **R:** the raw tracker log (every 10th frame);
+  - **K:** the current controller view;
+  - **KR (new, `narrative.py`):** the same KB written in words. Per object: where it is in words (the robot's left / right, near / far, order left to right and near to far), what each container probably holds, how often it moved and with what, and a timeline with names.
+- **Data:** synthetic VideoUnmaskSwap train seeds 100–129 (30 episodes), lane and steps "mix" as in Batch A; clean, oracle observations. The robot is at (−0.615, 0); its left is +y.
+- **Questions:** 8 per episode, all in one call, answered as JSON. Truth comes from the generator (evaluation only).
+  1. Q1 (×3): which container hides the red / green / blue cube now?
+  2. Q2: how many times did container X move? (X chosen at random, seed 0)
+  3. Q3: which container is now farthest to the robot's left?
+  4. Q4: which two containers took part in the most recent exchange of places?
+  5. Q5: which cube is hidden in the container nearest the robot now? ("none" if it holds none)
+  6. Q6: has the container that hides the <target> cube moved since it covered the cube? (yes / no)
+- **Bias risk:** I wrote the KR text knowing these question types. Q5 is not stated directly in KR; it needs two facts combined.
+- **Model:** qwen/qwen3.6-35b-a3b (DeepInfra), effort off and default; cap $2.
+- **Score:** accuracy per question type and overall, Wilson CIs. Paired bootstrap over episodes of the overall per-episode accuracy (KR − R, KR − K). Rule as before: better / worse = the CI excludes 0; same = the CI within ±10 pp.
+- **Question:** is KR better than R and K, at each effort?
+
+**Results** (`results/latest/extract_kb/summary.json`; log `results/latest/logs/extract_kb.log`; 180 calls, **$0.24**, no empty answers). Accuracy over 240 answers per arm and effort (30 episodes × 8 questions):
+
+| arm | effort | all | Q1 where is each cube (×3) | Q2 move count | Q3 farthest left | Q4 last exchange | Q5 cube in nearest container | Q6 moved since covered | prompt tokens (chars / 4) |
+|---|---|---|---|---|---|---|---|---|---|
+| R raw log | off | 0.40 | 0.33–0.40 | 0.10 | 0.57 | 0.77 | 0.07 | 0.63 | ~790 |
+| R raw log | default | 0.53 | 0.43–0.50 | 0.13 | 0.80 | 0.90 | 0.17 | 0.80 | |
+| K view | off | 0.66 | 0.57–0.73 | 0.67 | 0.83 | 1.00 | 0.07 | 0.77 | ~640 |
+| K view | default | 0.86 | 0.97–1.00 | 0.77 | 0.90 | 0.97 | 0.57 | 0.73 | |
+| **KR words** | off | **0.91** | 0.93–0.97 | 0.80 | 0.87 | 1.00 | **0.93** | 0.80 | **~530** |
+| **KR words** | default | **0.93** | 0.97 | 0.80 | 1.00 | 1.00 | 0.93 | 0.80 | |
+
+- **Paired over episodes** (rule fixed before the run):
+  - KR − K: off **+0.25** [+0.18, +0.32], default **+0.07** [+0.03, +0.11]; both **better**.
+  - KR − R: off +0.51 [+0.45, +0.57], default +0.40 [+0.33, +0.49]; both better.
+  - K − R: off +0.26, default +0.34; both better.
+- **Reading:**
+  1. **Writing the same KB in words helps, most without thinking.** KR without thinking (0.91) beats K with thinking (0.86), with fewer input tokens (~530 against ~640) and no reasoning tokens. This mirrors counting v3: phrasing, not new information.
+  2. **The combined question shows it most.** Q5 (the cube in the container nearest the robot) is not stated in any text and needs two facts joined. K gets 0.07 without thinking and 0.57 with it; KR gets 0.93 at both.
+  3. **The ceilings are the KB's, not the text's:**
+     - Q2 tops out at 0.80 because the motion detector merges back-to-back exchanges of the same container into one move, so the KB undercounts.
+     - Q6 tops out at 0.80 because the truth is "ended more than 3 cm from where it covered the cube", while a container that went away and came back did move.
+     - Both are limits of what the KB knows, which no wording fixes.
+- **Caveats:**
+  - Clean synthetic data with oracle observations, one task family, one model.
+  - I wrote KR knowing the question types; only Q5 was held out by design.
+  - The next check should use questions written by someone else, or taken from RoboMME instructions, on perceived data.
