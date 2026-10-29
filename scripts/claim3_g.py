@@ -142,6 +142,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--grid", action="store_true")
     ap.add_argument("--read", action="store_true")
+    ap.add_argument("--correction", action="store_true", help="the read again after a scoring fix (ledger note)")
     ap.add_argument("--ablate", default="", help="train | test (post-hoc, ledger READ): the attribution ablations")
     ap.add_argument("--keep-as", dest="keep_as", default="claim3_g")
     a = ap.parse_args()
@@ -156,7 +157,8 @@ def main() -> None:
         choice = json.loads(CHOICE.read_text())
         if not ledger.was_frozen(params.hash()):
             sys.exit("freeze params first (run.py --freeze)")
-        ledger.record("READ", params.hash(), "G perceived test, claim 3 (claim3_g.py), " + json.dumps(choice))
+        ledger.record("READ", params.hash(), "G perceived test, claim 3 (claim3_g.py)" + (" CORRECTION: spec AURC, "
+                      "same choice" if a.correction else "") + ", " + json.dumps(choice))
         settings = {"bound": ("bound", "min_3d", 0.02)} | {n: tuple(n.split("/")[:2]) + (float(n.split("/")[2]),)
                                                            for n in choice.values()}
         rows = run("test", settings, params)
