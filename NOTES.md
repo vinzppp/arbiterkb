@@ -1880,3 +1880,34 @@ Post-hoc attribution of the read above, **$0, no LLM**: run on G train first; th
 - **Also fixed:** `auroc(...) or 0.5` turned a real 0.0 into 0.5. Tests added for `relink_margin` (small at a crossing, inf alone) and for R6's feature / scale. `ArbiterKBSystem(skip=...)` was added for the ablations.
 - **Not changed (MINOR):** the margin counts only competitors matched in that frame, and its minimum may come from a third container; `--split test --print` builds test prompts without a READ line; 8 of the 360 G-test LLM calls were cache hits (source not found); run meta records the replaced params hash (40e166310e73), the ledger the frozen base (a810942859b9).
 - The attribution ablation registered above now also has its code (`claim3_g.py --ablate train|test`).
+
+## Claim 3, corrected read and attribution (2026-10-29; these supersede every claim-3 AURC above)
+**Grid re-run with the spec AURC** (`results/latest/claim3_g/grid.json`): the same choice (checked against the saved file). Train AURC: Bound 0.166; SoftHaircut min_3d 0.121 / min_q 0.117; ArbiterKB min_3d 0.099 / min_q 0.095.
+
+**Corrected G test read** (`read.json`; ledger READ marked CORRECTION; 235 cubes):
+
+| system | accuracy | AUROC | AURC | AUROC clean vs swapped (p lower on swapped) |
+|---|---|---|---|---|
+| Bound | 0.821 | 0.50 | 0.179 | 0.50 |
+| SoftHaircut min_3d | 0.821 | 0.640 | 0.139 | 0.812 |
+| SoftHaircut min_q | 0.817 | 0.608 | 0.147 | 0.703 |
+| **ArbiterKB min_3d** | 0.817 | **0.742** | **0.104** | 0.812 |
+| ArbiterKB min_q | 0.809 | 0.723 | 0.115 | 0.763 |
+
+- KB − SoftHaircut: **min_q (main) AURC −0.033 [−0.069, +0.004]**; min_3d **−0.034 [−0.069, −0.004]**; AUROC +0.10 to +0.11 (CIs exclude 0). KB min_q − KB min_3d AURC +0.011 [+0.001, +0.022].
+- **Readings, unchanged after the correction:** main **not supported** (the CI includes 0, narrowly); min_3d: the KB is better; the margin feature is worse than distance out of sample.
+- Trivial baselines on the same rows: the stock / stress bit 0.56–0.58, "no near pass since the cover" 0.50.
+
+**Attribution** (`ablate_train.json`, `ablate_test.json`; the test run is post-hoc, with a ledger READ). AURC Δ against the KB [95% CI], train / test:
+- (a) **R6 off: +0.040 [+0.002, +0.078] / +0.053 [+0.003, +0.100]**; AUROC −0.14 / −0.16; clean-vs-swapped AUROC 0.72 / 0.81 falls to 0.50.
+- (b) **no cover kernel or floor: +0.007 [−0.010, +0.028] / +0.037 [+0.010, +0.069]**; AUROC −0.01 / −0.09.
+- (c) R5 off: −0.000 / −0.001 (nothing).
+- (d) cover only (R6 and R5 off): +0.040 / +0.052, the same as (a).
+
+**Readings, as fixed:** neither "(a) ≈ KB" nor "(d) ≈ KB" holds, so **the lead is not the cover feature alone**. R6 does most of the calibration work. The cover kernel adds the rest on test: without it, the KB's test AURC (0.141) is SoftHaircut's (0.139). R5 adds nothing on G.
+
+**What it means:**
+1. **The goal review's guess is refuted in part:** R6 does act on real swaps. With R6, p is lower on swapped cubes (clean-vs-swapped AUROC 0.81 on test), even though w ≈ 0.04 at a 5–9 cm pass. The drop is small: the median p is 0.92 on swapped cubes against 0.98 on clean ones, and 65% of the KB's wrong answers still have p ≥ 0.9. **The ranking is right but the magnitude is overconfident**, which is why a model that copies the numbers stays overconfident.
+2. **The KB's lead over SoftHaircut is R6 on a cover-time distribution instead of a point mass.** R1 starts each hidden cube with mass over the nearby containers, so R6's mixing has something to spread. A KB-free haircut that also kept the cover kernel would likely match it. That is a feature, not the belief layer's propagation (R5 is inert here; retraction is untested). By falsifier 6's logic, **claim 3's "belief layer" is not shown on G**, though the KB's p is the best-calibrated signal measured.
+3. **Next for claim 3, if pursued:** fresh episodes (G test is spent), d0 / w_max tuned for magnitude (ECE / Brier as well as AURC), and a SoftHaircut with the cover kernel as the fair baseline. Lower priority than the closed loop.
+- An extra look at p's magnitude on the test rows (the median p values above) was computed post-hoc from the same systems.
