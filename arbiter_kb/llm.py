@@ -48,22 +48,26 @@ def load_env(path: Path = ROOT / ".env") -> dict:
 
 
 def post(body: dict, key: str, timeout: float = 60.0) -> dict:
-    """One HTTPS request; 2 retries with backoff on 429 / 5xx / network errors."""
+    """One HTTPS request; up to 6 retries with backoff 5 * 2^n s on 429 / 5xx (as 2610.17350's harness; upstream rate
+    limits last minutes, smoke run), 2 retries with backoff 2 * 2^n s on network errors."""
     data = json.dumps(body).encode()
-    for attempt in range(3):
+    http_retries = net_retries = 0
+    while True:
         req = urllib.request.Request(URL, data=data, headers={"Authorization": f"Bearer {key}",
                                                               "Content-Type": "application/json"})
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
-            if e.code != 429 and e.code < 500 or attempt == 2:
+            if e.code != 429 and e.code < 500 or http_retries == 6:
                 raise RuntimeError(f"OpenRouter HTTP {e.code}: {e.read()[:300]!r}") from None
+            time.sleep(5 * 2 ** http_retries)
+            http_retries += 1
         except (urllib.error.URLError, TimeoutError):
-            if attempt == 2:
+            if net_retries == 2:
                 raise
-        time.sleep(2 * 2 ** attempt)
-    raise AssertionError("unreachable")
+            time.sleep(2 * 2 ** net_retries)
+            net_retries += 1
 
 
 class LLM:

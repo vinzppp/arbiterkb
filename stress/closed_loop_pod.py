@@ -90,7 +90,7 @@ def episode(task: str, ep: int, arm: str, a, llm, params) -> dict:
         p = Perceive(info["task_goal"][0], a.vocab, ep, info["front_camera_intrinsic"])
         memory = Memory(arm, ArbiterKBSystem(params) if arm != "R" else None, p)
     env = make_env(task, ep, a.dataset)
-    sampling = {"top_p": a.top_p, "top_k": a.top_k}
+    sampling = {"top_p": a.top_p, "top_k": a.top_k, "presence_penalty": a.presence_penalty}
     row = run(env, arm, lambda m, eff: llm.call(m, temperature=a.temperature, max_tokens=a.max_tokens, reasoning=eff,
                                                 sampling=sampling), memory, EFFORT[a.effort])
     env.close()
@@ -108,8 +108,9 @@ def main() -> None:
     ap.add_argument("--vocab", choices=["open", "scene"], default="open")
     ap.add_argument("--out", default="/workspace/cl/pilot")
     ap.add_argument("--max-usd", dest="max_usd", type=float, default=5.0)
-    ap.add_argument("--provider", default="Parasail",  # one for every arm; DeepInfra takes at most 30 images (H: ~150);
-                    help="OpenRouter provider, no fallbacks")  # Parasail took 160 (probe, smoke run)
+    ap.add_argument("--provider", default="CoreWeave",  # one for every arm; DeepInfra takes at most 30 images (H: ~150);
+                    help="OpenRouter provider, no fallbacks")  # Parasail took 160 but was rate-limited for minutes;
+    # CoreWeave took 160, answered fastest and gave no 429 in the smoke run
     ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=16000,  # 4000 cut H's and R's reasoning
                     help="completion cap per call, every arm alike")  # (finish_reason length, smoke run)
     # Qwen's recommended thinking-mode sampling, every arm alike: at temperature 0 (greedy) R's and K's reasoning looped
@@ -117,6 +118,8 @@ def main() -> None:
     ap.add_argument("--temperature", type=float, default=0.6)
     ap.add_argument("--top-p", dest="top_p", type=float, default=0.95)
     ap.add_argument("--top-k", dest="top_k", type=int, default=20)
+    ap.add_argument("--presence-penalty", dest="presence_penalty", type=float, default=1.5,  # loop probe, smoke run:
+                    help="Qwen's anti-repetition setting")  # 0 / 15 first turns looped with it, 3 / 15 without
     a = ap.parse_args()
     params, (commit, dirty) = load_params(), git_state()
     if a.dataset == "test":
@@ -138,7 +141,8 @@ def main() -> None:
                     row = {"task": task, "episode": ep, "arm": arm, "status": "harness_error", "success": None,
                            "error": repr(ex)}
                 row.update(commit=commit, dirty=dirty, params_hash=params.hash(), model=MODEL, provider=a.provider,
-                           max_tokens=a.max_tokens, temperature=a.temperature, top_p=a.top_p, top_k=a.top_k)
+                           max_tokens=a.max_tokens, temperature=a.temperature, top_p=a.top_p, top_k=a.top_k,
+                           presence_penalty=a.presence_penalty)
                 if row.get("status") != "harness_error":
                     (d / "result.json").write_text(json.dumps(row, indent=1, default=str))
                 print(json.dumps({k: row.get(k) for k in ("task", "episode", "arm", "status", "end_reason",

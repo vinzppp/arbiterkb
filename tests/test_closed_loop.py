@@ -96,3 +96,15 @@ def test_memory_arm_retry_sends_the_problem_with_a_new_request():
     row = run(FakeEnv([(5, "success")]), "K", ask, Memory("K", ArbiterKBSystem(Params()), perceive))
     assert row["success"] and len(sent) == 2 and "not executed" in json.dumps(sent[1][1]["content"])
     assert sent[0] != sent[1]  # a different request, so a cache cannot hand back the same answer
+
+
+def test_h_frames_go_into_grids_and_every_frame_is_kept():
+    from arbiter_kb.closed_loop import GRID, grid, h_content
+    f = [np.full((4, 4, 3), k, np.uint8) for k in range(1, 6)]
+    g = grid(f)
+    assert g.shape == (4 * GRID, 4 * GRID, 3) and g[0, 4, 0] == 2 and g[4, 0, 0] == 4 and g[-1, -1, 0] == 0
+    env = FakeEnv([])
+    obs, info = env.reset()
+    obs["front_rgb_list"] = [np.zeros((4, 4, 3), np.uint8)] * 1078  # VideoPlaceOrder's opening video
+    images = [p for p in h_content(obs, info, "Video so far", True) if p["type"] == "image_url"]
+    assert len(images) == 40 + 2  # 360 sampled frames in 40 grids, then the current front frame and the wrist frame

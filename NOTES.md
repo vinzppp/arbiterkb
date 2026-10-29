@@ -1957,3 +1957,14 @@ Post-hoc attribution of the read above, **$0, no LLM**: run on G train first; th
   2. a never-seen generic cube slot was listed as "visible" in the joined facts while the object list left it out; never-seen slots are now left out of both (`narrative.seen`);
   3. `check()` rejected cites written as one string ("e32,e37,o49:bin_2") or in brackets ("[o74:bin_2]"); they are now split as `shown_ids` splits them.
 - **Noted, not fixed:** a generic cube slot sat at x = −0.59 (off the table: likely a detection on the robot or the edge). A workspace filter on perceived objects is a candidate after the pilot.
+- **Smoke run on CoreWeave with retries (2026-10-29; $0.11):** VideoUnmaskSwap H and R, and VideoPlaceOrder R and K, ended at the token cap (loops); **VideoUnmaskSwap K ran 8 calls to a real outcome (`env:fail`, wrong pick)**. VideoPlaceOrder H was rejected before any call: its opening video is 1,078 frames (360 sampled front images + wrist), and OpenRouter's pre-flight counts 1,536 tokens per image (554k > 262k), while the model uses about 66 tokens per 256-px frame (5,334 prompt tokens for 58 images). Perception about 1.0 s per frame on the opening video, 0.6–0.7 s later. No 429 on CoreWeave.
+- **Loop-rate probe** (first-turn requests of H, R and K from VideoUnmaskSwap, 5 seeds each, CoreWeave, $0.33; cap hits or looping lines per 15):
+
+| setting | looped / 15 | parseable / 15 | median reasoning tokens (H, R, K) | median s (H, R, K) |
+|---|---|---|---|---|
+| S0: T 0.6, top_p 0.95, top_k 20 | 3 | 12 | 4.4k, 5.1k, 4.2k | 43, 79, 37 |
+| **S1: S0 + presence_penalty 1.5** | **0** | **15** | 9.0k, 4.6k, 1.9k | 94, 64, 19 |
+| S2: S0 + effort low | 5 | 11 | 16k, 4.4k, 2.9k | 168, 45, 25 |
+| S3: S0, thinking off | 1 | 14 | 0 | 11, 5, 7 |
+
+- **Decided (2026-10-29), every arm alike:** presence_penalty 1.5 (S1); provider CoreWeave; the pod session's 429 / 5xx retry (6 tries, 5·2^n s) merged into `llm.py`; **arm H's sampled frames go 3 × 3 into one image** in reading order (`closed_loop.GRID`, `grid`), followed by the current front frame alone. Every frame is kept; VideoPlaceOrder's first turn becomes 40 grids + 2 images. The grids are ours (2610.17350 sent single frames) and are stated in H's prompt. Caveats: n = 5 first turns; S1 is untested on whole episodes, so the next smoke run checks it.

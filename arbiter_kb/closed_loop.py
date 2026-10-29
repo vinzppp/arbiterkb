@@ -27,6 +27,9 @@ from .self_memory import record, self_view
 from .views import controller_view
 
 MAX_CALLS, MAX_NOOPS, STRIDE = 150, 3, 3
+GRID = 3  # arm H: sampled frames go GRID x GRID per image. OpenRouter's pre-flight counts 1,536 tokens per image
+# (about 158 images per request at 16k output), while the model uses ~66 per 256-px frame; VideoPlaceOrder's opening
+# video alone is 360 frames (smoke run). Ours, not 2610.17350's (they sent single frames); every frame is kept.
 NOOP_TEXT = ("The last action executed no steps: the robot did not move and no time passed, so the scene is unchanged. "
              "Choose the next action.")  # theirs, verbatim
 TERMINAL = ("success", "fail", "timeout", "error")
@@ -55,12 +58,25 @@ def state(obs: dict, info: dict, first: bool = False) -> dict:
     return s
 
 
+def grid(frames: list, g: int = GRID) -> np.ndarray:
+    """g x g frames in reading order (left to right, top to bottom) in one image; empty cells black."""
+    h, w = frames[0].shape[:2]
+    out = np.zeros((g * h, g * w, 3), np.uint8)
+    for k, f in enumerate(frames[:g * g]):
+        out[k // g * h:(k // g + 1) * h, k % g * w:(k % g + 1) * w] = f
+    return out
+
+
 def h_content(obs: dict, info: dict, label: str, first: bool = False) -> list:
-    """Arm H (theirs): the sampled front frames of the video / the motion, the current wrist frame, the state."""
+    """Arm H (theirs, with our grids): the sampled front frames of the video / the motion, GRID x GRID per image, the
+    current front frame alone, the current wrist frame, the state."""
     fr, idx = obs["front_rgb_list"], frame_indices(len(obs["front_rgb_list"]))
-    out = [text_part(f"{label}: front-camera frames {idx} of {len(fr)} (last = current):")]
-    out += [image_part(_np(fr[i]).astype(np.uint8)) for i in idx]
-    return out + [text_part("Current wrist camera:"), image_part(_np(obs["wrist_rgb_list"][-1]).astype(np.uint8)),
+    frames = [_np(fr[i]).astype(np.uint8) for i in idx]
+    out = [text_part(f"{label}: front-camera frames {idx} of {len(fr)}, {GRID} x {GRID} per image in reading order "
+                     "(left to right, top to bottom; black cells are empty), then the current front frame alone:")]
+    out += [image_part(grid(frames[k:k + GRID * GRID])) for k in range(0, len(frames), GRID * GRID)]
+    return out + [image_part(frames[-1]), text_part("Current wrist camera:"),
+                  image_part(_np(obs["wrist_rgb_list"][-1]).astype(np.uint8)),
                   text_part("Robot state and calibration: " + json.dumps(state(obs, info, first)))]
 
 

@@ -46,7 +46,8 @@ TCP pose also fails: to only open or close the gripper, move the TCP by at least
 
 MEMORY = {
     "H": """Observations: frames from the fixed front camera (256 x 256) in time order, of the video so far and of each
-motion, then the current front and wrist images; the TCP pose; the finger positions (0.04 m each = fully open,
+motion, grouped 3 x 3 into one image in reading order (left to right, top to bottom), then the current front and wrist
+images; the TCP pose; the finger positions (0.04 m each = fully open,
 0 = closed); the elapsed control steps. You get no depth and no object positions. The task may require
 remembering what happened earlier in the video.""",
     "K": """Memory: instead of the image history you get the robot's memory, rebuilt every turn from everything seen so
