@@ -13,6 +13,7 @@ import argparse
 import json
 import random
 import sys
+from dataclasses import replace
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -24,6 +25,7 @@ sys.path.insert(0, str(ROOT))
 from run import git_state, load_params  # noqa: E402
 from extract_test import EFFORT, ROBOT, questions, right  # noqa: E402
 from qa_stats import report  # noqa: E402
+from arbiter_kb import ledger  # noqa: E402
 from arbiter_kb.controller import parse_answer, raw_tracker_log  # noqa: E402
 from arbiter_kb.epistemic import epistemic_view, strip_probs  # noqa: E402
 from arbiter_kb.memtool import run_tool, working_memory  # noqa: E402
@@ -113,13 +115,13 @@ def ask(t: dict, alt: bool = False) -> str:
     return "Answer with JSON only, one key per question:\n" + json.dumps(q, indent=1)
 
 
-def jobs(params, relinked: bool = False, arms: tuple = ARMS, alt: bool = False) -> list[dict]:
+def jobs(params, relinked: bool = False, arms: tuple = ARMS, alt: bool = False, split: str = "train") -> list[dict]:
     out = []
     rows = (("relinked", PerceivedSource(**OCCLUSION, relinked=True)),) if relinked else \
         (("perceived", PerceivedSource(**OCCLUSION)), ("ref", PerceivedSource(oracle_cubes=True)))
     kbs: dict = {}
     for row, src in rows:
-        for ep in src.episodes("train"):
+        for ep in src.episodes(split):
             d = src.load(ep)
             t = truth(d)
             for arm in arms:
@@ -173,6 +175,21 @@ def _num(v) -> float | None:
         return None
 
 
+def with_r6(params, spec: str):
+    """R6's feature and scale from 'feature:scale' (claim 3's train choice), else the frozen params."""
+    if not spec:
+        return params
+    f, sc = spec.split(":")
+    return replace(params, rule=replace(params.rule, r6_feature=f, **({"q0": float(sc)} if f == "min_q" else
+                                                                       {"d0": float(sc)})))
+
+
+def log_test_read(base_hash: str, arms: tuple, r6: str) -> None:
+    if not ledger.was_frozen(base_hash):
+        sys.exit("freeze params first (run.py --freeze)")
+    ledger.record("READ", base_hash, f"G perceived test, perceived_qa.py arms {','.join(arms)} r6 {r6 or 'default'}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--print", action="store_true")
@@ -181,10 +198,12 @@ def main() -> None:
     ap.add_argument("--relinked", action="store_true", help="container tracks re-linked by motion (relink.py)")
     ap.add_argument("--arms", default="", help="default: R,K,KR (R,K with --relinked); KA = K + epistemic.py")
     ap.add_argument("--alt", action="store_true", help="also ask q1_alt (the A test)")
+    ap.add_argument("--split", default="train", help="test: one frozen read, logged in the ledger (NOTES claim 3)")
+    ap.add_argument("--r6", default="", help="feature:scale for R6, e.g. min_q:0.05 (claim 3's train choice)")
     a = ap.parse_args()
-    params, (commit, dirty) = load_params(), git_state()
+    params, base_hash, (commit, dirty) = with_r6(load_params(), a.r6), load_params().hash(), git_state()
     arms = tuple(a.arms.split(",")) if a.arms else (("R", "K") if a.relinked else ARMS)
-    todo = jobs(params, a.relinked, arms, a.alt)
+    todo = jobs(params, a.relinked, arms, a.alt, a.split)
     if a.print:
         for j in todo[:6:2]:
             print(f"===== {j['arm']}\n{j['msgs'][1]['content']}\n")
@@ -195,13 +214,16 @@ def main() -> None:
         return
     if not a.call:
         sys.exit("pass --print (free) or --call")
+    if a.split == "test":
+        log_test_read(base_hash, arms, a.r6)
     llm = LLM(model="qwen/qwen3.6-35b-a3b", max_usd=2.0,
               provider={"order": ["DeepInfra"], "allow_fallbacks": False, "require_parameters": True})
     with ThreadPoolExecutor(8) as pool:
         got = list(pool.map(lambda j: answer(llm, j), todo))
     rows = [score(j, t, u) for j, (t, u) in zip(todo, got)]
     out = {"report": report(rows), "rows": rows, "usage": llm.usage,
-           "meta": {"commit": commit, "dirty": dirty, "params_hash": params.hash(), "occlusion": OCCLUSION, "relinked": a.relinked}}
+           "meta": {"commit": commit, "dirty": dirty, "params_hash": params.hash(), "occlusion": OCCLUSION, "relinked": a.relinked,
+                    "split": a.split, "r6": a.r6}}
     print(json.dumps(out["report"], indent=1), json.dumps({k: round(v, 4) if isinstance(v, float) else v
                                                            for k, v in llm.usage.items()}))
     if a.keep_as:

@@ -1818,3 +1818,28 @@ All runs were re-scored from the cache ($0). KN was re-run as registered (**$0.2
   - ArbiterKB: min_3d best at d0 0.02, **0.0908** / 0.69; min_q best at q0 0.05, **0.0874** / 0.71; accuracy 0.846.
   - **Chosen (committed before the test read):** soft/min_3d 0.02, soft/min_q 0.05, kb/min_3d 0.02, kb/min_q 0.05. q0 = 0.05 is the grid's edge for both systems; the grid stays as registered.
   - On train, the KB is ahead of SoftHaircut with either feature, and min_q helps both.
+
+**Claim 3 — the G test read** (`results/latest/claim3_g/read.json`; 235 Q1 cubes; ledger READ a810942859b9):
+
+| system | accuracy | AUROC | AURC | AUROC stress | AURC stress |
+|---|---|---|---|---|---|
+| Bound | 0.821 | 0.50 | 0.1432 | 0.50 | 0.1372 |
+| SoftHaircut min_3d (d0 0.02) | 0.821 | 0.640 | 0.1269 | 0.644 | 0.1365 |
+| SoftHaircut min_q (q0 0.05) | 0.817 | 0.608 | 0.1218 | 0.603 | 0.1238 |
+| **ArbiterKB min_3d (d0 0.02)** | 0.817 | **0.742** | **0.0962** | 0.732 | 0.1109 |
+| ArbiterKB min_q (q0 0.05) | 0.809 | 0.723 | 0.1056 | 0.714 | 0.1206 |
+
+Paired over test episodes:
+- **KB − SoftHaircut, min_q (main): AURC −0.016 [−0.088, +0.019]; AUROC +0.115 [+0.033, +0.201].**
+- KB − SoftHaircut, min_3d: AURC **−0.031 [−0.074, −0.004]**; AUROC +0.102 [+0.032, +0.192].
+- KB min_q − KB min_3d: AURC +0.009 [+0.002, +0.020] (min_q worse).
+
+**Readings, as fixed:**
+1. **Main (min_q): not supported.** The AURC CI includes 0. By the rule, the KB's advantage with the margin feature is not shown on test.
+2. **With min_3d, the KB is better than SoftHaircut** (AURC CI below 0), and its AUROC is higher with either feature (CIs exclude 0). The belief layer adds calibration beyond R6's swap score: Bound's errors get lower p in the KB, through R1's cover kernel, R5 and the "elsewhere" floor (which of these does the work is not measured).
+3. **The margin does not carry swap information out of sample:** min_q was best on train and is worse than min_3d on test, for the KB. The train choice (q0 at the grid's edge) overfitted.
+- **Honest summary:** the registered main comparison fails, but the same comparison with the feature R6 already had passes, and the KB's AUROC lead holds with both. **Claim 3 is partly supported on real perception (G, simulator word list), at accuracy ≈ Bound's.** The re-linking margin, the new evidence, does not help.
+
+## Claim 3 follow-up: the LLM rows on G test (2026-10-29; registered in "Claim 3 on G")
+- R and K on Q1, G test, re-linked, effort off and default; K's KB uses the train choice min_q, q0 0.05 (`--r6 min_q:0.05`), as registered before the read. The KB's top answer with the same setting: 0.809 (above).
+- Ledger READ line with the base params hash. Cap $1.
