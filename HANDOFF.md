@@ -7,6 +7,12 @@ Read first: `DEVELOPMENT.md` (spec **v1.12**: counting closed as a KB test; `Per
 - Claims: (1) a smaller model, or (2) far fewer tokens and images, at matched success; (3) the KB's beliefs are calibrated (G and M2).
 
 ## Latest results (NOTES for every number and its file)
+- **Claim 3 on G, without an LLM (NOTES "Claim 3, corrected read and attribution"; G test is now spent for claim 3):**
+  - the registered main test (ArbiterKB vs SoftHaircut, both with the new re-linking margin feature) is **not supported**: AURC −0.033 [−0.069, +0.004]. The margin overfitted and is worse than distance out of sample;
+  - with the old distance feature, the KB's p is better calibrated than SoftHaircut's (AURC −0.034 [−0.069, −0.004]; AUROC 0.74 vs 0.64), at Bound's accuracy;
+  - attribution: R6 does most of the work, and the cover kernel the rest (without it the KB equals SoftHaircut); R5 adds nothing. So the lead is a feature (a cover-time distribution), not the belief layer;
+  - p ranks the swapped cubes lower (AUROC 0.81) but stays high (median 0.92): **the ranking is right, the magnitude overconfident**.
+- **G test LLM rows:** K = the KB's top answer (0.81). K − R is +0.31 without thinking and +0.07 [−0.006, +0.143] with it: **falsifier 3 is nearly triggered**. On tracker-swapped cubes the raw log beats K (0.33–0.36 vs 0.09–0.12).
 **Read NOTES "Corrected tables after the code review"** (2026-10-29): it supersedes the earlier perceived-QA numbers, because the Q6 truth and the "swapped" flag were wrong.
 - **Counting is closed as a test of the KB:** a rule with no per-decision LLM (RULE) scores 0.98–1.00 and never loses a decision to K; PC (raw log + counter) = K with thinking. The win is robot-state events + the counter.
 - **G perceived QA (train only, re-linked tracks; simulator word list):**
@@ -21,10 +27,10 @@ Read first: `DEVELOPMENT.md` (spec **v1.12**: counting closed as a KB test; `Per
 - **Earlier, still true:** synthetic permanence K = raw log with thinking; ArbiterKB ≈ SoftHaircut on AURC; motion v2 on G test F1 0.81; the VLM cannot tell a pick-up from a put-down in the front video.
 
 ## Next
-1. **Claim 3, on the Mac, without an LLM:** turn `relink.py`'s assignment cost margin into `id_margin` evidence for R6. Score the KB's p (AUROC / AURC on swapped vs clean cubes, within stress) against SoftHaircut with the same margin feature, the setting bit and the near-pass heuristic. Tune on G train; commit the rule; then **one frozen G test read**, adding R / K / the KB's top answer on Q1 (about $0.4). If the KB does not beat SoftHaircut, claim 3 is negative.
-2. **The closed loop is the only place claims 1–2 can move:** port the 2610.17350 prompt skeleton and completion rules into `harness.py` (downloading their code needs the user's go). Then one pod session: a multi-object Cutie on G's replays, `--vocab open`, perception of VideoPlaceOrder / VideoRepick, fresh RoboMME episodes, and a closed-loop pilot with arms H / R / K (K with `self_memory`'s view first).
+1. **The closed loop is now the main line** (claims 1–2 cannot move offline: K = the KB's top answer on every QA set). Port the 2610.17350 prompt skeleton and completion rules into `harness.py` (downloading their code needs the user's go). Then one pod session: a multi-object Cutie on G's replays (lost tracks), `--vocab open`, perception of VideoPlaceOrder / VideoRepick, fresh RoboMME and G-stress episodes, and a closed-loop pilot with arms H / R / K (K with `self_memory`'s view first). Consider a "K + raw positions around close passes" arm, since R beats K on swapped cubes.
+2. **Claim 3, only on fresh episodes:** tune R6's magnitude (d0 / w_max, scored with ECE / Brier as well as AURC) on train; compare against a SoftHaircut that keeps the cover kernel (the fair baseline after the attribution); one read.
 3. **M6** on the fresh episodes.
-4. **Dropped or frozen:** C (`memtool.py`), more view arms (A, KR), the LLM's stated confidence as a claim-3 measure; B frozen until M5; counting.
+4. **Dropped or frozen:** the min_q margin feature (off by default; `r6_feature` stays "min_3d"), C (`memtool.py`), more view arms (A, KR), the LLM's stated confidence as a claim-3 measure; B frozen until M5; counting.
 5. Push: the user approves each push.
 
 ## Reminders for the pod
@@ -35,9 +41,9 @@ Read first: `DEVELOPMENT.md` (spec **v1.12**: counting closed as a KB test; `Per
 
 ## Where things are
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
-- Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD on main: the 2026-10-29 work incl. the overnight A / B / C tests and both reviews (`reviews/overnight_2026-10-29_*.md`); not pushed.
+- Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD on main: the 2026-10-29 work incl. the overnight A / B / C tests, the claim-3 test on G and four reviews (`reviews/overnight_2026-10-29_*.md`, `reviews/claim3_g_*.md`); not pushed.
 - Gate per phase: `make check` (pytest + quality.py + selftest, which uses train seeds only), then the user runs `/review-phase Mx` in Claude Code (a code-reviewer and a goal-reviewer agent; reviews land in `reviews/`). Fix, record in NOTES, then tag.
-- Current frozen params: hash 49a8577dc73f, prompts 0c77893f87f4 (`params.json` holds both; `load_params` refuses a mismatch).
+- Current frozen params: hash a810942859b9, prompts 0c77893f87f4 (`params.json` holds both; `load_params` refuses a mismatch).
 - E5c: test-split reads need a frozen `params.json` with a FREEZE line in `results/test_reads.log`. Any parameter change means `python scripts/run.py --freeze --force` before the next test read.
 - Cowork session mechanics (if continuing from Claude.ai):
   - edit in the container copy, stage the changed files under `/mnt/user-data/outputs/<fresh dir>/`, then `device_commit_files` to the Mac (reuse of a staged path can serve a stale copy);
