@@ -1717,3 +1717,15 @@ User: zoom out from the tests; as a memory module, how can the KB organise more 
 - On the 85 that answered: Q1 0.81 vs K's 0.85 on the same episodes. Episodes with queries: 0.81 vs 0.83; without: 0.81 vs 0.87.
 - **Reading:** a working memory of about 220 tokens keeps most of Q1 (−4 to −8 pp) for a fifth to a half of the tokens. **Querying does not recover the rest:** with thinking, the model asks for history (75), how_known (38) and the event log (20), yet ends no better than when it does not ask. It loses the history questions outright (Q4 0.06–0.21 vs 0.80).
 - So on G's short episodes the full view is better. The token case for KT needs long episodes, where the view grows by 4.4 tokens per evidence item. The query policy would need work (the model asks the wrong things, or too much).
+
+**A2 — results** (`results/latest/perceived_qa_A2/summary.json`; 360 calls, **$0.27** new):
+
+| arm / effort | Q1 | AUROC all | AUROC swapped (not a reading) | top-2 | stated confidence ≥ 0.97 |
+|---|---|---|---|---|---|
+| K off / default | 0.842 / 0.842 | 0.675 / 0.682 | 0.50 / 0.51 | 0.921 / 0.913 | 0.75 / 0.75 |
+| KN off / default | 0.842 / 0.830 | 0.620 / 0.580 | 0.52 / 0.62 | 0.929 / 0.905 | 0.44 / 0.34 |
+
+- KN − K: AUROC −0.055 [−0.130, +0.015] off, −0.103 [−0.218, +0.012] default; Q1 0.000 / −0.011 [−0.026, 0.000].
+- **Readings, as fixed:** calibration **not better** (both point estimates lower; the CIs include 0); Q1 within ±5 pp.
+- Without the numbers the model spreads its confidence (0.9 becomes the mode), but the spread does not follow right and wrong as well as the KB's numbers did.
+- **What A and A2 say together:** the model's calibration comes from the KB's numbers. Alternatives and reasons in words neither add to it (A) nor replace it (A2). The KB's own p is the best signal on this data (AUROC 0.731). **To make the controller better calibrated, the KB's probabilities must be better** (R6's swap evidence on real passes); presentation will not do it.
