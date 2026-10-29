@@ -1007,3 +1007,18 @@ The user asked why the parts keep growing. Answer: the VLM work is two calls, no
 - **Options (user decision):**
   1. keep one keyframe moment, but two calls: a listing call that sees only the image (the 4 / 4 prompt), then the annotation call with the memory. The keyframe module stays one file.
   2. one call, with the prompt changed so the list comes from the image only. That is prompt tuning on the same 4 frames, and it needs a larger set with truth to judge.
+
+## Spec v1.10 — listing from the image alone; the review call annotates (2026-10-28, user decision)
+After the keyframe check above, the user chose to split the call again and to give the annotator's work to the reviewer: it watches the window, writes the summary, gives relations for the objects, and checks the KB.
+- **`keyframe.py`:** listing only, from the frame and the instruction, no memory text (`list_objects`, the earlier 4 / 4 prompt).
+  - Re-checked on the same 4 real frames and the same goal: **4 / 4** (`results/latest/keyframe_check_v110/summary.json`; 4 calls, $0.00014, about 1.1 s per call; run from an uncommitted tree, so `dirty` is true).
+  - The f21 container that the merged prompt invented is gone, so it came from the memory text, not the goal.
+- **`review.py` (new):** one call over a window of frames (ids drawn), with the KB's objects and the window's events.
+  - Returns checks, missing events, relations, descriptions, identity and a summary.
+  - Every item names the frames it rests on and is checked alone: ids exist, the event is in the window, the frames were shown, no numbers in the text.
+  - The prompt says to judge from the frames only, because the merged prompt copied from the text.
+  - Written as evidence (`vlm_check`, `vlm_missing`, `vlm_identity`, `vlm_summary`) and beliefs (relations, descriptions, p from the strength table), each supported by the frames named. The event log shows contradictions, missing events, identity changes and summaries (`views._vlm_line`); confirmations are not shown.
+  - Tests: `tests/test_review.py` (fake model).
+  - **Not yet:** a real call on video windows (needs frames with tracker ids drawn: G's replays on the pod, or the RoboMME videos with a tracker); retraction through the support chain on a contradiction.
+- **Risk to measure first:** the review call also has the memory text in its prompt, which is what made the merged keyframe call copy from text. Its truth check (M4 item 10) must count events it confirms that did not happen, and relations it writes that the frames do not show.
+- Spec updated to v1.10: header, §2.1, §2.2 steps 6 and 6b, §2.3, §2.5, §2.7, §3.7, M4 items 5, 8, 10.

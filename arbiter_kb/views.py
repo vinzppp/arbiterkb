@@ -121,6 +121,20 @@ def _ev_line(e) -> str | None:
         return f"t={e.t} hand stopped at {_xyz(d['ee'])}, gripper {'closed' if d['closed'] else 'open'}"
     if e.kind in ("grip_close", "grip_open"):
         return f"t={e.t} gripper {'closed' if e.kind == 'grip_close' else 'opened'} at {_xy(d['ee'])}"
+    return _vlm_line(e)
+
+
+def _vlm_line(e) -> str | None:
+    """The review call's evidence (review.py); a confirmation adds nothing to read, so it is not shown."""
+    d, a = e.data, ", ".join(e.args)
+    if e.kind == "vlm_summary":
+        return f"t={e.t} video summary, t={d['t0']}-{e.t} (vlm): {d['text']}"
+    if e.kind == "vlm_check" and d["verdict"] == "contradict":
+        return f"t={e.t} the video contradicts [{a}] (vlm)"
+    if e.kind == "vlm_missing":
+        return f"t={e.t} seen in the video, not recorded: {d['what']} (vlm)"
+    if e.kind == "vlm_identity" and d["now"] not in (a, "cannot_tell"):
+        return f"t={e.t} {a} now looks like {d['now']} (vlm)"
     return None
 
 

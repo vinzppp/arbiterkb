@@ -1,9 +1,9 @@
-"""Does the merged keyframe call (arbiter_kb/keyframe.py, spec v1.9) still list the objects right? The same 4 real
-VideoUnmaskSwap frames as the lister benchmark (results/latest/vlm_list_bench), the real VLM (ArbiterParams), two
-memories: none (the first frame) and a synthetic KB with 7 objects (a full memory in the prompt; its ids do not match
-the picture, so relations are not scored, only counted).
+"""Does the keyframe call (arbiter_kb/keyframe.py) list the objects right? The same 4 real VideoUnmaskSwap frames as
+the lister benchmark (results/latest/vlm_list_bench), the real VLM (ArbiterParams). v1.9's merged prompt (listing +
+annotation, with the memory in the prompt) was checked with an earlier version of this script
+(results/latest/keyframe_check, commit 409476c); v1.10 lists from the image alone.
 
-  python scripts/keyframe_check.py --call [--keep-as keyframe_check]
+  python scripts/keyframe_check.py --call [--keep-as keyframe_check_v110]
 
 Scoring as in NOTES "Which small VLM can list the objects?": a frame is right when the total count is right, the
 coloured cubes are exactly right, and no other kinds of object are named (white / gray containers called cubes pass).
@@ -22,11 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from run import git_state, load_params  # noqa: E402
-from arbiter_kb.kb import KB  # noqa: E402
-from arbiter_kb.keyframe import keyframe_call  # noqa: E402
+from arbiter_kb.keyframe import list_objects  # noqa: E402
 from arbiter_kb.llm import vlm_client  # noqa: E402
-from arbiter_kb.sources.synthetic import SyntheticSource  # noqa: E402
-from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
 
 FRAMES = ROOT / "results" / "latest" / "vlm_list_bench"
 TRUTH = {"f21": {"red": 1, "green": 1, "blue": 1, "plain": 0}, "f56": {"plain": 3}, "f105": {"plain": 3},
@@ -46,36 +43,21 @@ def right(objs: list[dict], truth: dict) -> bool:
     return {k: v for k, v in got.items() if v} == {k: v for k, v in truth.items() if v}
 
 
-def memories(params) -> dict:
-    empty = KB([])
-    empty.task["goal"] = GOAL
-    src = SyntheticSource(lane_offset=0.0, swap_steps=20, n_swaps=1)
-    ep = src.episodes("train", 1)[0]
-    s = ArbiterKBSystem(params)
-    s.reset(src.meta(ep))
-    for f in src.frames(ep):
-        s.step(f)
-    s.kb.task["goal"] = GOAL
-    return {"none": empty, "full": s.kb}
-
-
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--call", action="store_true", help="required to spend money (8 calls, under $0.01)")
+    ap.add_argument("--call", action="store_true", help="required to spend money (4 calls, under $0.01)")
     ap.add_argument("--keep-as", dest="keep_as", default="")
     a = ap.parse_args()
     if not a.call:
         sys.exit("pass --call")
     params, (commit, dirty) = load_params(), git_state()
     llm, rows = vlm_client(params.arbiter, max_usd=0.2), []
-    for mem, kb in memories(params).items():
-        for f, truth in TRUTH.items():
-            rgb = (mpimg.imread(FRAMES / f"{f}.png")[..., :3] * 255).astype(np.uint8)
-            rep = keyframe_call(kb, llm, t=0, rgb=rgb)
-            rows.append({"memory": mem, "frame": f, "right": right(rep["clue_objects"], truth),
-                         "objects": [f"{o['count']} {o['color']} {o['name']}" for o in rep["clue_objects"]],
-                         "written": rep["written"], "problems": rep["problems"]})
-            print(json.dumps(rows[-1]), flush=True)
+    for f, truth in TRUTH.items():
+        rgb = (mpimg.imread(FRAMES / f"{f}.png")[..., :3] * 255).astype(np.uint8)
+        rep = list_objects(llm, rgb, GOAL)
+        rows.append({"frame": f, "right": right(rep["objects"], truth), "problems": rep["problems"],
+                     "objects": [f"{o['count']} {o['color']} {o['name']}" for o in rep["objects"]]})
+        print(json.dumps(rows[-1]), flush=True)
     out = {"rows": rows, "usage": llm.usage, "meta": {"commit": commit, "dirty": dirty, "params_hash": params.hash(),
                                                      "model": params.arbiter.vlm_model, "goal": GOAL}}
     print(json.dumps({k: round(v, 5) if isinstance(v, float) else v for k, v in llm.usage.items()}))
