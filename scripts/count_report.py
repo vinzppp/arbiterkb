@@ -7,7 +7,8 @@ wrap-up truth (put the cube on the table / press the button) also accepts the ot
 Per (model, arm, effort): accuracy with a Wilson 95% interval, per task, median input tokens and seconds. Paired
 against --ref at the same model and effort: mean difference over decision points with a bootstrap 95% interval
 (2000 draws, seed 0), decisions won / lost, and the most common errors. With goal specs in meta.json (arm K), the
-parsed target is checked against the dataset's execution subgoals.
+parsed target is checked against the dataset's execution subgoals. Also split by the episode's true target count
+(the same subgoals): accuracy, n and median input tokens per (model, arm, effort) and target.
 """
 from __future__ import annotations
 
@@ -82,6 +83,27 @@ def paired(rows: list[dict], ref: str, extra: list[str]) -> dict:
     return {k: v for k, v in out.items() if v}
 
 
+def targets(tasks: set) -> dict:
+    """(task, episode) -> the true target count, from the execution subgoals."""
+    out = {}
+    for task in tasks:
+        key = COUNTED[task][0]
+        for p in L.episode_files(task):
+            ep = L.load(p)
+            out[(task, str(ep["meta"]["episode"]))] = sum(key in s[2] for s in L.segments(ep["simple"])
+                                                          if not ep["demo"][s[0]])
+    return out
+
+
+def by_target(rows: list[dict]) -> dict:
+    tgt, out = targets({r["task"] for r in rows}), {}
+    for key in sorted({(r["model"], r["arm"], r["effort"], tgt[(r["task"], str(r["episode"]))]) for r in rows}):
+        rs = [r for r in rows if (r["model"], r["arm"], r["effort"], tgt[(r["task"], str(r["episode"]))]) == key]
+        out["/".join(map(str, key))] = {"right": round(float(np.mean([right(r) for r in rs])), 3), "n": len(rs),
+                                        "tokens_in": int(np.median([float(r["prompt_tokens"]) for r in rs]))}
+    return out
+
+
 def parse_accuracy(specs: dict) -> dict:
     out = {}
     for task, (key, kinds) in COUNTED.items():
@@ -112,7 +134,8 @@ def main() -> None:
             meta = json.loads((f.parent / f.name.replace("rows", "meta").replace(".csv", ".json")).read_text())
             specs.update(meta.get("goal_specs") or {})
             rows += [{**r, "model": r.get("model") or meta["args"]["model"]} for r in csv.DictReader(open(f))]
-    rep = {"runs": a.runs, "ref": a.ref, "cells": cells(rows), "paired": paired(rows, a.ref, a.pair)}
+    rep = {"runs": a.runs, "ref": a.ref, "cells": cells(rows), "paired": paired(rows, a.ref, a.pair),
+           "by_target": by_target(rows)}
     if specs:
         rep["goal_parse"] = parse_accuracy({str(k): v for k, v in specs.items()})
     text = json.dumps(rep, indent=1)

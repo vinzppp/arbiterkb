@@ -1495,3 +1495,120 @@ User idea: keep the count against the goal up to date in the KB, so the controll
 - **The window summary**, if one is wanted, comes from the KB's event log by code, not from a VLM.
 - **DEVELOPMENT.md is now v1.11** (header, §2.1 diagram and status, §2.2 step 6b, §2.3, §2.5, §2.6, §2.7, §3.7, M3 item 4, M4 items 5, 6, 10, 11). HANDOFF.md is rewritten for the current state.
 - `prompts_hash` now covers `ask.py` instead of `review.py`; re-frozen: params **49a8577dc73f**, prompts **ba6ba13b8dbd**.
+
+## Is the counting win ArbiterKB's, or the counter's? Two controls, fixed before running (2026-10-29, goal review)
+The goal review asked: the counting win comes from `actions.py` (robot-state events) plus one counter line, while the KB's own parts (beliefs, relations, support, cites) are not used. Two controls never run before:
+- **PC = raw log + the same counter line.** The raw robot log (arm P) with the "Goal progress: … n of N" line on top, computed from the same robot-state actions and the same goal spec.
+- **RULE = no LLM per decision.** With the parsed spec:
+  - if the KB's count of the spec's action is ≥ its target, answer the wrap-up ("press the button"; for SwingXtimes either wrap-up is scored right, as for every arm);
+  - otherwise repeat: "move to the top of the right-side target" when the spec counts holds, else "pick up a cube";
+  - with no spec, repeat.
+  - The goal is still parsed once per episode by the LLM; only the per-decision call is gone.
+- **Against:** K (v4 view + counter) and K3 (v3 view), the same decisions and specs (parse v3).
+  - **Episodes 31–60:** K and K3 come from the cache.
+  - **Episodes 61–100:** K3 and P come from the v3 cache; K and PC are new.
+  - qwen3.6-35b-a3b, effort off and default; cap $1.5.
+- **Readings fixed in advance:**
+  - **PC − K "same" (CI within ±10 pp) or better:** the gain is the counter on preprocessed events, not the KB view.
+  - **RULE ≥ 0.95:** on these tasks the per-decision LLM adds nothing once the goal is parsed, and claim 1 has no content here.
+  - **Both readings are also made per task.** The overall number is reported but does not decide: a parse error in SwingXtimes can pull RULE's total below 0.95 while PickXtimes and BinFill are at ceiling. RULE ≥ 0.95 on a task means the per-decision LLM adds nothing on that task.
+  - **If RULE ≥ 0.95 on PickXtimes and BinFill:** these tasks test counting, not reasoning over memory. Claims 1–2 move to tasks that need it (VideoPlaceOrder order, permanence after swaps), which need perception, so the pod closed-loop pilot moves up.
+  - Either finding is reported as it is.
+- **Also, free:** accuracy and input tokens split by the goal's target count (from the dataset's execution subgoals), for P, K3, K, PC, RULE and KO, from existing and new rows.
+
+**Results** (`results/latest/count_controls/report_31_60.json`, `report_61_100.json`; runs `count_20261029_021320_…_70083` and `…_021321_…_70084`; qwen3.6-35b-a3b, parse v3 specs from the cache; $0.95 new, all decisions answered):
+
+| arm / effort | 31–60 | 61–100 | Pick (61–100) | Swing (61–100) | BinFill (61–100) | median input tokens |
+|---|---|---|---|---|---|---|
+| RULE (no call) | **0.996** | **0.981** | 1.00 | 0.94 | 1.00 | 0 |
+| K off / default | 0.973 / 0.964 | 0.965 / 0.952 | 1.00 / 0.98 | 0.88 / 0.88 | 1.00 / 0.98 | ~370 |
+| PC off / default | 0.902 / 0.942 | 0.855 / 0.903 | 0.99 / 1.00 | 0.57 / 0.70 | 0.96 / 0.98 | ~1,290 |
+| K3 off / default | 0.853 / 0.906 | 0.826 / 0.935 | 0.78 / 0.91 | 0.71 / 0.88 | 0.96 / 1.00 | ~350 |
+| P off / default | — | 0.610 / 0.819 | 0.72 / 0.99 | 0.42 / 0.43 | 0.67 / 0.99 | ~1,280 |
+| KO off / default | 0.951 / 0.973 | 0.965 / 0.990 | 1.00 / 1.00 | 0.92 / 0.97 | 0.97 / 1.00 | ~240 |
+
+Paired against K (bootstrap 95%, decisions won / lost):
+- RULE − K: 31–60 +0.022 [+0.004, +0.045] off, +0.031 [+0.009, +0.054] default; 61–100 +0.016 [+0.003, +0.029] off, +0.029 [+0.013, +0.048] default. **RULE never loses a decision to K** (0 lost in all four).
+- PC − K: 31–60 −0.071 [−0.112, −0.031] off, −0.022 [−0.054, +0.009] default; 61–100 −0.110 [−0.145, −0.074] off, −0.048 [−0.081, −0.019] default.
+
+**Readings, as fixed:**
+- **RULE ≥ 0.95 on PickXtimes and BinFill (1.00 on both ranges), and on SwingXtimes too (0.98, 0.94 — just under on 61–100).** Once the goal is parsed, the per-decision LLM adds nothing on these tasks; it costs 2–3 pp. Claim 1 has no content on counting. By the rule fixed in advance, claims 1–2 move to tasks that need reasoning over memory, and the pod closed-loop pilot moves up.
+- **PC − K:** "same" (CI within ±10 pp) with thinking on both ranges, although K is ahead on 61–100. Without thinking, K is better (lower bounds −11 and −14.5 pp). The gap is SwingXtimes (PC 0.57–0.79 vs K 0.88–0.92); on PickXtimes and BinFill PC = K. So most of the gain is the counter on robot-state events; the KB view adds on top only for the hold task without thinking.
+- **Where K loses to RULE:** at target 1 (K 0.71–0.80, RULE 1.00): the model reads "1 of 1 — the repetitions are done" and still repeats.
+
+**By target count** (free split): K's input stays at 315–425 tokens for targets 1–5; P / PC grow from ~880 to ~1,900. P without thinking is 0.51–0.78 at every target. With targets of only 1–5, the curve is short; a longer one needs new episodes.
+
+## Does the KB-in-words gain survive real perception? G perceived episodes (DRAFT, not yet approved, 2026-10-29)
+Goal: test whether the synthetic result (KR 0.91 vs raw log 0.40 without thinking, NOTES "Does a richer KB text …") holds on the real tracker, and whether the KB's beliefs help when the tracker swaps ids (claim 3).
+
+**Check first, $0 (G train, episodes 0–9 of each setting, 270 cubes): the perceived cube tracks do not disappear when covered.**
+- The oracle shows every cube hidden from t ≈ 31. Of the perceived cube slots, only 26 / 270 disappear after the cover; the rest stay "visible" to the end. The tracker's cube mask moves onto the container that covers it (perceived z ≈ 0.05 m, the container's top, against the cube's 0.017 m).
+- Where the ghost track ends, it sits on the true container in stock 25 / 27, cam_left 24 / 24, cam_right 20 / 20, but only in 8–19 of 24–26 in the fast / close settings: the ghost swaps with the container tracks.
+- **So on G's perception, R1 (cover on disappearance) almost never fires, and the KB thinks the cubes are on the table.** Run as designed, this test would measure the perception hand-over, not the KB.
+
+**Proposed design (to approve before anything is built):**
+1. **Occlusion step, chosen on G train only:** a cube slot counts as not visible when its centroid lies over a container (xy within r of a container track) and above the cube's height (z > z_cube + dz). r and dz from a small grid; the score is cover recall against the oracle's hide frames (±5 frames). **Gate: recall ≥ 0.90 on G train**, otherwise stop and report. This is a FrameObs-side fix (§3.11: the input side), not a KB change.
+2. **Reference row (privileged):** the same episodes with the cubes' visibility from the oracle and everything else perceived. It isolates the container tracker's errors.
+3. **Arms:** R (raw tracker log), K (v4 view), KR (words); qwen3.6-35b-a3b, effort off and default; G train only (90 episodes; G test stays unread for this question).
+4. **Questions:** Q1–Q6 as in the synthetic test. **Q1 (which container hides each cube) is the main metric**, because it is the VideoUnmaskSwap instruction itself; Q2–Q6 are mine and secondary. Q1 also asks for a confidence 0–1 per cube.
+5. **Truth:** from the oracle tracks, mapped to the perceived ids at the last frame (`swapstats.identities`: the slot sitting on the true container). A question whose true container has no slot on it at the end is dropped and counted.
+6. **Readings fixed in advance** (paired bootstrap over episodes; better / worse = CI excludes 0; same = CI within ±10 pp):
+   - KR − R and K − R on Q1, overall and split stock / stress: does the gain transfer to real perception?
+   - **Claim 3 through the LLM:** on the cubes whose container took part in a tracker swap (`swapstats.episode_passes`), the AUROC of the stated Q1 confidence for correctness, per arm. K / KR better than R by CI → the KB's probabilities reach the controller usefully.
+7. **Cost:** 90 × 3 × 2 = 540 calls plus the reference row, about $1; cap $2.
+- **Approved by the user (2026-10-29); occlusion step chosen, before any call:**
+  - grid r ∈ {0.03, 0.05, 0.08} m × dz ∈ {0.01, 0.02, 0.03} m on G train (270 cubes). A cube counts as covered right when its first hidden frame is within ±5 of the oracle's, it was visible 8 frames before, and it stays hidden in ≥ 90% of the frames from 5 after.
+  - recall: dz 0.03 fails everywhere (0.32–0.33); dz 0.01 / 0.02 give 0.87 (r 0.03), 0.90 (r 0.05), 0.90–0.91 (r 0.08).
+  - **Chosen: r 0.08, dz 0.01, recall 0.907 ≥ 0.90: the gate passes (narrowly).** `arbiter_kb/sources/perceived.py` (PerceivedSource, tests in `tests/test_perceived.py`), `scripts/perceived_qa.py`.
+  - Truth coverage: 8.3 of 9 question keys per episode kept; Q1 kept for 241 / 270 cubes. Tracker-swapped Q1 cubes (the slot on the true container changed since the cover): stock 1 / 30, cam_left 2, cam_right 9, fast 7, fast_lane045 11, close 13, fast_close_3swaps 14, fast_lane03 16, fast_close 21 (of 30 each).
+
+**Results** (`results/latest/perceived_qa/summary.json`; 1,080 calls, **$1.05** new, no empty answers, 12 / 1,446 Q1 answers without a confidence). Q1 = which container hides each cube (Wilson 95%):
+
+| row / arm | Q1 off | Q1 default | Q1 stock | Q1 stress | Q1, tracker-swapped cubes | AUROC of Q1 confidence, swapped (off / default) | Q5 joined |
+|---|---|---|---|---|---|---|---|
+| perceived / R | 0.49 | 0.61 | 0.53–0.67 | 0.48–0.60 | 0.13–0.24 | 0.48 / 0.29 | 0.21 |
+| perceived / **K** | **0.78** | **0.77** | 0.97 | 0.74–0.75 | 0.27 | 0.51 / 0.48 | 0.63–0.64 |
+| perceived / KR | 0.76 | 0.77 | 0.97 | 0.74 | 0.27 | 0.49 / 0.49 | 0.63–0.65 |
+| ref (oracle cube visibility) / R | 0.48 | 0.64 | 0.53–0.80 | 0.47–0.61 | 0.15–0.21 | 0.50 / 0.54 | 0.19–0.25 |
+| ref / K | 0.71 | 0.71 | 0.97 | 0.67 | 0.015 | (0.98 / 0.41, 1–2 right) | 0.49–0.51 |
+| ref / KR | 0.70 | 0.69 | 0.97 | 0.65–0.66 | 0.00–0.015 | — / 0.33 | 0.48–0.52 |
+
+Paired over episodes (Q1 per episode, bootstrap 95%):
+- perceived: K − R off **+0.29** [+0.22, +0.37], default **+0.16** [+0.09, +0.22]; KR − R off +0.28, default +0.15; **KR − K off −0.01 [−0.03, 0.00], default −0.004 [−0.01, 0.00]: same.**
+- stock only: K − R +0.43 [+0.17, +0.67] off, +0.30 [+0.10, +0.50] default. Stress only: +0.27 [+0.19, +0.35] off, +0.14 [+0.07, +0.21] default.
+- ref: K − R off +0.22 [+0.14, +0.30], default +0.07 [+0.00, +0.14].
+
+**Readings, as fixed:**
+1. **The KB's gain over the raw log transfers to real perception:** better at both efforts, in stock and in stress. Q1 0.77 vs 0.49–0.61; the joined question Q5 0.63 vs 0.21.
+2. **The words add nothing over the v4 view here** (KR = K). The synthetic KR − K gain was against the v3 view; v4 already carries the joined facts. Q4 (last exchange) is worse in words (0.47–0.51 vs 0.80–0.81).
+3. **Claim 3 through the LLM is not supported.** On cubes whose container's id the tracker swapped, every arm is mostly wrong (K 0.27; R 0.13–0.24), and no arm's stated confidence separates right from wrong (AUROC 0.29–0.54, at or below chance). The K view printed "0.98" for containers that had been swapped: R6 moved almost no mass, so the KB was confidently wrong and the model repeated it.
+4. **Stock is near ceiling (K 0.97), stress is not (0.74).** The loss is the tracker's swaps that the KB does not catch, not the view.
+
+**Also seen:**
+- **ref is not an upper bound.** With the cover at the exact frame, K is lower (0.71) and the swapped cubes drop to 0.015. In the perceived row, some cube tracks reappear at table height and are covered again later (the occlusion step's release), which re-runs R1 on the container there and sometimes repairs a tracker swap.
+- **Q2 (move count) 0.08–0.19 and Q6 (moved since covered) 0.03–0.18 for every arm:** the stock containers' tracks "moved" 11–14 times in one episode. The motion detector still makes spurious moves from tracker jumps (NOTES "Motion detector v2": about 3 per episode on G test), so these questions measure the detector.
+- **Caveats:** G train only (the occlusion step and motion v2 were chosen on it); one task family; Q2–Q6 are mine; the swapped subset is small (67 cubes).
+
+**What it means:** a structured memory doubles a cheap model's chance of naming the right container on real perception, as long as the tracker keeps the ids. When the tracker swaps them, the KB neither catches the swap nor lowers its confidence. So the next bottleneck for claim 3 is swap evidence (R6's pass detection and weight on real passes), not the text.
+
+## Fixing the tracker's swaps: re-linking container tracks by motion (2026-10-29, user decision)
+User: if the tracker can be fixed, fix it, and look for other places that need the KB more.
+- **`arbiter_kb/relink.py`:** each container identity keeps a position and a smoothed velocity (alpha 0.3; steps over 5 cm/frame are tracker jumps and do not update it). Every frame the visible container slots are assigned to the predicted positions (Hungarian, xy). The containers are identical, so the direction of motion is the only cue through a crossing.
+- **Chosen on G train only**, by id consistency: a container slot counts as consistent when it sits on the same true container at the end as just after the cover (`swapstats.identities`).
+  - raw tracker 0.636; re-linked 0.69–0.73 over alpha {0.3, 0.6, 1.0} × v_max {0.02, 0.05}; coasting unseen tracks and gating did not help (0.44–0.73). **Chosen: alpha 0.3, v_max 0.05, 0.728.**
+  - Per setting (of 36): fast_close 11 → 23, fast_lane03 16 → 22, fast_lane045 22 → 29, close 22 → 24, fast_close_3swaps 16 → 18; stock, cam_left, cam_right unchanged (34, 32, 25).
+  - **Why it stops near 0.73:** in 28% of frames after t = 40 some container has no slot on it; the tracker drops container tracks (26% of frames have an unseen slot). Re-linking cannot restore observations that are missing; that needs the tracker itself (one multi-object Cutie, spec §2.5, pod).
+- **Then:** the perceived-QA test again on the re-linked tracks, arms R and K, same questions, occlusion step and truth mapping (truth now in the re-linked ids). Compared with the earlier perceived row on Q1, stress, and the swapped subset. Cap $2.
+
+**Results** (`results/latest/perceived_qa_relinked/summary.json`; 360 calls, **$0.21**):
+
+| arm | Q1 off / default | Q1 stress | Q1, cubes still tracker-swapped | AUROC, swapped (off / default) | Q5 joined |
+|---|---|---|---|---|---|
+| R, raw tracker → re-linked | 0.49 → 0.54 / 0.61 → 0.68 | 0.48–0.60 → 0.55–0.68 | 0.21–0.33 | 0.47 / 0.29 | 0.27 |
+| **K, raw tracker → re-linked** | **0.78 → 0.85 / 0.77 → 0.84** | **0.74–0.75 → 0.83** | 0.35 | 0.53 / 0.48 | 0.72–0.74 |
+
+- **Re-linked − raw, paired over episodes:** K +0.07 [+0.01, +0.14] at both efforts (stress +0.08 [+0.01, +0.16]); R +0.07 to +0.08. Both better.
+- K − R on the re-linked tracks: +0.29 [+0.21, +0.38] off, +0.15 [+0.08, +0.22] default, the same margins as before.
+- Tracker-swapped Q1 cubes: 94 → 75 of 270. On those that remain, every arm is still mostly wrong and no confidence separates right from wrong (AUROC 0.29–0.53).
+- Caveats: the truth uses the re-linked ids in this row (the container physically there, named by the ids the memory saw); G train only, where relink was chosen.
+- **Reading:** the fix helps every arm by about the same, and the KB's margin over the raw log stays. The remaining loss is lost container tracks, which needs the tracker on the pod. The KB still does not know when it is wrong.

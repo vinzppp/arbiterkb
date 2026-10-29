@@ -11,6 +11,10 @@ Arms (same prompt skeleton, same action list; only the memory differs):
       episode (goal_counter.py); called KC in the counter runs;
   K3  the v3 view (ordinals, merged holds; called K in v3 and the counter runs);
   KO  oracle: the subgoals completed so far, from the dataset authors' labels (upper bound).
+  PC  control: the raw log (P) with K's goal-progress line on top (same spec, same robot-state actions);
+  RULE  control, no model call per decision: wrap up ("press the button") once the KB's count reaches the parsed
+      target, otherwise repeat ("move to the top of the right-side target" when holds are counted, else "pick up a
+      cube"); no spec -> repeat. NOTES "Is the counting win ArbiterKB's, or the counter's?".
 The answer is one action from a fixed list (no object positions exist without vision, so no waypoint is scored).
 Truth = the action class of the next subgoal. Decision points = LAG frames after each "place / put into the bin /
 reach the left-side target" subgoal ends in the execution phase (v1 used the boundary itself).
@@ -35,7 +39,7 @@ sys.path.insert(0, str(ROOT))
 from run import git_state, load_params, prompts_hash  # noqa: E402
 from arbiter_kb import CONTRACT_VERSION  # noqa: E402
 from arbiter_kb.controller import parse_answer  # noqa: E402
-from arbiter_kb.goal_counter import parse_goal  # noqa: E402
+from arbiter_kb.goal_counter import done, parse_goal, progress_line  # noqa: E402
 from arbiter_kb.llm import LLM, BudgetExceeded  # noqa: E402
 from arbiter_kb.narrative import robot_narrative  # noqa: E402
 from arbiter_kb.sources import lerobot as L  # noqa: E402
@@ -75,13 +79,32 @@ def raw_log(ep: dict, t: int, stride: int = 10) -> str:
     return "Robot log (every 10th frame, 10 frames per second):\n" + "\n".join(rows)
 
 
-def kb_view(ep: dict, t: int, params, version: str = "v4", spec: dict | None = None, words: bool = False,
-            trim: bool = False) -> str:
+def kb_at(ep: dict, t: int, params, spec: dict | None = None) -> ArbiterKBSystem:
     s = ArbiterKBSystem(params)
     s.reset(L.meta(ep), counter=spec)
     for f in L.frames(ep, t):
         s.step(f)
+    return s
+
+
+def kb_view(ep: dict, t: int, params, version: str = "v4", spec: dict | None = None, words: bool = False,
+            trim: bool = False) -> str:
+    s = kb_at(ep, t, params, spec)
     return robot_narrative(s.kb, trim) if words else controller_view(s.kb, params.rule, version)
+
+
+def raw_with_counter(ep: dict, t: int, params, spec: dict | None) -> str:
+    line = progress_line(kb_at(ep, t, params, spec).kb, spec)
+    return "\n\n".join(x for x in (line, raw_log(ep, t)) if x)
+
+
+def rule(ep: dict, t: int, params, spec: dict | None) -> str:
+    """RULE's answer, as the JSON a model would write."""
+    if spec and done(kb_at(ep, t, params, spec).kb, spec["count"]) >= spec["target"]:
+        nxt = "press the button"
+    else:
+        nxt = ACTIONS[3] if spec and spec["count"].startswith("hold_") else ACTIONS[0]
+    return json.dumps({"next": nxt})
 
 
 def oracle(ep: dict, t: int) -> str:
@@ -92,7 +115,8 @@ def oracle(ep: dict, t: int) -> str:
 def prompt(arm: str, ep: dict, t: int, params, spec: dict | None = None) -> list:
     mem = {"N": lambda: "", "P": lambda: raw_log(ep, t), "K": lambda: kb_view(ep, t, params, spec=spec),
            "K3": lambda: kb_view(ep, t, params, "v3"), "KR": lambda: kb_view(ep, t, params, words=True),
-           "KT": lambda: kb_view(ep, t, params, words=True, trim=True), "KO": lambda: oracle(ep, t)}[arm]()
+           "KT": lambda: kb_view(ep, t, params, words=True, trim=True), "KO": lambda: oracle(ep, t),
+           "PC": lambda: raw_with_counter(ep, t, params, spec)}[arm]()
     hand = ep["tcp"][t - 1]
     now = (f"Current state: frame {t}, hand at ({hand[0]:.3f}, {hand[1]:.3f}, {hand[2]:.3f}), gripper "
            f"{'closed' if ep['width'][t - 1] < 0.07 else 'open'}.")
@@ -108,14 +132,17 @@ def jobs(a, params, specs: dict | None = None) -> list[dict]:
             ep = L.load(path)
             for k, (t, truth) in enumerate(decisions(ep)):
                 for arm in a.arms.split(","):
-                    msgs = prompt(arm, ep, t, params, (specs or {}).get(ep["meta"]["episode"]))
+                    spec = (specs or {}).get(ep["meta"]["episode"])
+                    ans = rule(ep, t, params, spec) if arm == "RULE" else None
+                    msgs = [] if ans else prompt(arm, ep, t, params, spec)
                     out += [{"task": task, "episode": ep["meta"]["episode"], "k": k, "t": t, "truth": ACTIONS[truth],
-                             "arm": arm, "effort": eff, "msgs": msgs, "model": a.model} for eff in a.effort.split(",")]
+                             "arm": arm, "effort": eff, "msgs": msgs, "model": a.model, "rule": ans}
+                            for eff in a.effort.split(",")]
     return out
 
 
 def goal_specs(a) -> dict:
-    """Arm K: one goal parse per episode (goal_counter.parse_goal), thinking default; needs --call (cached after)."""
+    """Arms K, PC, RULE: one goal parse per episode (goal_counter.parse_goal), thinking default; --call (cached)."""
     if not a.call:
         sys.exit("arm K parses each goal with one model call: pass --call")
     llm = LLM(model=a.model, max_usd=0.2, provider={"order": [a.provider], "allow_fallbacks": False,
@@ -139,10 +166,10 @@ def score(job: dict, text: str, u: dict) -> dict:
 def run(a) -> None:
     commit, dirty = git_state()
     params = load_params()
-    specs = goal_specs(a) if "K" in a.arms.split(",") else None
+    specs = goal_specs(a) if {"K", "PC", "RULE"} & set(a.arms.split(",")) else None
     todo = jobs(a, params, specs)
     if a.print:
-        for m in todo[0]["msgs"]:
+        for m in next(j for j in todo if j["msgs"])["msgs"]:
             print(f"--- {m['role']}\n{m['content']}")
         print(f"\n{len(todo)} requests")
         return
@@ -151,7 +178,8 @@ def run(a) -> None:
     out.mkdir(parents=True, exist_ok=False)
     prov = None if a.provider == "auto" else {"order": [a.provider], "allow_fallbacks": False, "require_parameters": True}
     llm = LLM(model=a.model, max_usd=a.max_usd, provider=prov)
-    ask = lambda j: llm.call(j["msgs"], max_tokens=a.max_tokens, reasoning=EFFORT[j["effort"]])  # noqa: E731
+    ask = lambda j: (j["rule"], {}) if j["rule"] else llm.call(  # noqa: E731
+        j["msgs"], max_tokens=a.max_tokens, reasoning=EFFORT[j["effort"]])
     with open(out / "rows.csv", "w", newline="") as f, ThreadPoolExecutor(a.workers) as pool:
         w = None
         for job, fut in [(j, pool.submit(ask, j)) for j in todo]:
