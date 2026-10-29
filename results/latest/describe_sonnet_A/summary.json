@@ -1,0 +1,1802 @@
+{
+ "report": {
+  "accuracy": [
+   0.017,
+   0.003,
+   0.089
+  ],
+  "n": 60,
+  "cannot_tell": [
+   0.0,
+   -0.0,
+   0.06
+  ],
+  "confusion": {
+   "put_down -> moving_only": 28,
+   "pick_up -> moving_only": 24,
+   "put_down -> pick_up": 3,
+   "pick_up -> nothing": 2,
+   "pick_up -> pick_up": 1,
+   "put_down -> None": 1,
+   "put_down -> nothing": 1
+  },
+  "truth_counts": {
+   "pick_up": 27,
+   "put_down": 33
+  },
+  "rule": "accuracy >= 0.80"
+ },
+ "rows": [
+  {
+   "key": "VideoRepick_1400",
+   "t": 75,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The arm moves down toward the blue cube on the right and the gripper ends up at it, but the cube is not clearly lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "other blue cubes"
+    },
+    {
+     "subject": "white block",
+     "predicate": "near",
+     "object": "blue cubes"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoRepick_1400",
+   "t": 451,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers over a blue cube on the right, shifting slightly, with the gripper ring on the cube. No clear grasp or lift is visible, and the other blue cubes stay still.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube on right"
+    },
+    {
+     "subject": "blue cube on right",
+     "predicate": "on",
+     "object": "wooden table"
+    },
+    {
+     "subject": "two other blue cubes",
+     "predicate": "on",
+     "object": "wooden table"
+    },
+    {
+     "subject": "small white object",
+     "predicate": "on",
+     "object": "wooden table"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1400",
+   "t": 630,
+   "truth": "put_down",
+   "happened": "pick_up",
+   "summary": "The gripper descends to a blue cube on the right and closes on it. In the last frame the cube appears held in the gripper, with other blue cubes left on the table.",
+   "relations": [
+    {
+     "subject": "blue cube",
+     "predicate": "held_by",
+     "object": "gripper"
+    },
+    {
+     "subject": "other blue cubes",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "small white block",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1401",
+   "t": 484,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm stays near the same spot, rotating slightly at the end. The gripper holds nothing, and the two red cubes and the small gray object stay put on the table.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gray object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second red cube",
+     "predicate": "near",
+     "object": "gray object"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1401",
+   "t": 606,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm moves in and settles near a small red cube at the table's center; the gripper closes on nothing and no object is clearly lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gray block",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the second time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1401",
+   "t": 791,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm stays near the same spot and shifts slightly, rotating its wrist. The gripper does not visibly grasp or release anything, and the two red cubes stay on the table.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second red cube",
+     "predicate": "near",
+     "object": "small gray object"
+    },
+    {
+     "subject": "small gray object",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1402",
+   "t": 449,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The arm lowers slightly toward the table near a blue cube, but no cube is grasped or released. Both blue cubes stay in place on the table.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "small blue cube"
+    },
+    {
+     "subject": "small blue cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second blue cube",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the first time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1402",
+   "t": 504,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers near a small blue cube with the gripper at it. The gripper shifts slightly, but no cube is clearly lifted or released. Another blue cube sits on the table.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "small blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second blue cube",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1402",
+   "t": 626,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm hovers over the table with the gripper near a small blue cube at its tip; two other blue cubes stay still on the table. No clear pick-up or release.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "small blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second blue cube",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1403",
+   "t": 315,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The gripper hovers near a blue cube at the back of the cube cluster, shifting slightly across frames. No cube is clearly lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "green cubes"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the first time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1403",
+   "t": 399,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The gripper hovers near a blue cube at the back of the table among scattered red, green and blue cubes, shifting slightly without clearly lifting or releasing anything.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "green cubes",
+     "predicate": "near",
+     "object": "red cubes"
+    },
+    {
+     "subject": "gray object",
+     "predicate": "near",
+     "object": "gripper"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1403",
+   "t": 580,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers near a blue cube at the top of the cluster, shifting slightly across frames. The blue cube stays in place and does not appear lifted.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "green cubes",
+     "predicate": "near",
+     "object": "red cubes"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1404",
+   "t": 74,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The arm lowers toward blue cubes on the wooden table and the gripper ends up over one cube. Nothing is clearly lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second blue cube",
+     "predicate": "near",
+     "object": "gripper"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoRepick_1404",
+   "t": 131,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The gripper hovers over small blue cubes on the wooden table, shifting slightly. It does not visibly grasp or release anything, and the cubes stay on the table.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "wooden table"
+    },
+    {
+     "subject": "second blue cube",
+     "predicate": "on",
+     "object": "wooden table"
+    }
+   ],
+   "labels": [
+    "drop the cube on the table"
+   ]
+  },
+  {
+   "key": "VideoRepick_1404",
+   "t": 328,
+   "truth": "pick_up",
+   "happened": "pick_up",
+   "summary": "The gripper moves down onto a small blue object on the table and closes on it. In the last frames the object is held and stays with the gripper.",
+   "relations": [
+    {
+     "subject": "blue object",
+     "predicate": "held_by",
+     "object": "gripper"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "above",
+     "object": "wooden table"
+    },
+    {
+     "subject": "blue object",
+     "predicate": "near",
+     "object": "wooden table"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the first time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1405",
+   "t": 131,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm moves slightly near a small blue cube on the table. The gripper stays beside the cube and never visibly grasps or lifts it; the cube remains on the table.",
+   "relations": [
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "white object",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "drop the cube on the table"
+   ]
+  },
+  {
+   "key": "VideoRepick_1405",
+   "t": 390,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The gripper lowers toward a few small blue cubes on the wooden table and hovers near them. It does not visibly lift or release any cube.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cubes"
+    },
+    {
+     "subject": "blue cubes",
+     "predicate": "on",
+     "object": "wooden table"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the first time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1405",
+   "t": 472,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The arm shifts slightly near a small blue cube on the table, with the gripper beside the cube. The cube does not appear to be lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "white block",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the first time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1406",
+   "t": 79,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm shifts slightly while its gripper stays on a small red cube near the left of the frame. Two other red cubes and a small white block stay put.",
+   "relations": [
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "subject_note": "cube at gripper",
+     "object": "gripper"
+    },
+    {
+     "subject": "second red cube",
+     "predicate": "near",
+     "object": "third red cube"
+    },
+    {
+     "subject": "white block",
+     "predicate": "near",
+     "object": "robot arm"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoRepick_1406",
+   "t": 396,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm moves slightly and lowers its gripper onto a red cube near the left of the table. It does not clearly lift the cube, and the other cubes stay still.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "white small block"
+    },
+    {
+     "subject": "second red cube",
+     "predicate": "near",
+     "object": "third red cube"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the first time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1406",
+   "t": 451,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm stays near the left side with its gripper beside a small red cube. Two other red cubes and a small white object sit still. No clear grasp or release is visible.",
+   "relations": [
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "second red cube",
+     "predicate": "near",
+     "object": "third red cube"
+    },
+    {
+     "subject": "white object",
+     "predicate": "near",
+     "object": "gripper"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1407",
+   "t": 289,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers near the right side of the cube cluster, with the gripper close to a small red cube and green cubes. Nothing is clearly picked up or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "blue cubes",
+     "predicate": "near",
+     "object": "red cubes"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1407",
+   "t": 355,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The white robot arm moves down toward the right side of the table and hovers near a small red cube at the gripper ring; no cube is clearly lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "red cube"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the second time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1407",
+   "t": 409,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers near the right of the cube cluster with the gripper close to a red cube; no cube is clearly lifted or released, and the scene looks unchanged.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1408",
+   "t": 134,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm hovers over the wooden table near a small red object beside it. The gripper shifts slightly but does not visibly grasp or release anything.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red object"
+    },
+    {
+     "subject": "red object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "above",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "drop the cube on the table"
+   ]
+  },
+  {
+   "key": "VideoRepick_1408",
+   "t": 351,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The gripper lowers slightly toward a small red cube near it and stays there. Two other red cubes remain on the table, and nothing appears to be lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second red cube",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the first time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1408",
+   "t": 412,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The gripper stays almost still near a small red cube on the table. Two other red cubes remain on the table. In the last frame the gripper shifts slightly, and nothing is clearly grasped or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second red cube",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoRepick_1409",
+   "t": 77,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The arm moves slightly over the table near a green cube at the gripper. The cube is never clearly lifted or released, and two other green cubes stay still.",
+   "relations": [
+    {
+     "subject": "green cube",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "second green cube",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "third green cube",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "green cubes",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoRepick_1409",
+   "t": 341,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The white robot arm hovers near the table with its gripper close to a small green cube, shifting slightly. No clear grasp or release is visible; two other green cubes stay put.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "second green cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "third green cube",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the correct cube for the first time"
+   ]
+  },
+  {
+   "key": "VideoRepick_1409",
+   "t": 401,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers and shifts slightly near two green cubes on the table. The gripper ring sits near a small dark green item at the finger tip; nothing is clearly lifted.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "on",
+     "object": "wooden table"
+    },
+    {
+     "subject": "second green cube",
+     "predicate": "on",
+     "object": "wooden table"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "near",
+     "object": "second green cube"
+    }
+   ],
+   "labels": [
+    "put it down"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1300",
+   "t": 797,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm hovers over a small blue object on the table near the gripper, shifting slightly. The object does not appear lifted or released, and the grasp is unclear.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue object"
+    },
+    {
+     "subject": "blue object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "blue object",
+     "predicate": "near",
+     "object": "purple target markers"
+    }
+   ],
+   "labels": [
+    "drop the cube onto table"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1300",
+   "t": 1086,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The arm moves slightly over the table with a small blue object near the gripper. It never clearly grasps or releases anything, and the target rings and white button stay in place.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue object"
+    },
+    {
+     "subject": "blue object",
+     "predicate": "near",
+     "object": "purple target rings"
+    },
+    {
+     "subject": "white button",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "purple target rings",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1300",
+   "t": 1176,
+   "truth": "put_down",
+   "happened": null,
+   "summary": null,
+   "relations": null,
+   "labels": [
+    "place the cube onto the correct target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1301",
+   "t": 85,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm shifts slightly toward the camera and stays near the top. A green object sits at the gripper throughout, with no clear grasp or release.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "above",
+     "object": "table"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "purple target markers",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1301",
+   "t": 542,
+   "truth": "pick_up",
+   "happened": "nothing",
+   "summary": "The gripper stays near the top of the view, holding or hovering over a small green object. The arm barely moves. Targets and a gray button stay still on the table.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "held_by",
+     "object": "gripper"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "above",
+     "object": "table"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "purple target"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1301",
+   "t": 867,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm lowers slightly toward a small green object on the table and stays near it; the green object remains beneath the gripper and does not clearly get lifted.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "green object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "above",
+     "object": "green object"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1302",
+   "t": 90,
+   "truth": "pick_up",
+   "happened": "nothing",
+   "summary": "The gripper stays above a small red cube near the top of the table in every frame. No pick-up or release is visible, and the scene looks static.",
+   "relations": [
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "subject_note": "",
+     "object": "gripper"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "under",
+     "object": "green cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "purple target markers"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "purple target markers"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1302",
+   "t": 184,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers near a small red object at the gripper and shifts slightly; the red object seems to stay on the table, with no clear grasp or release.",
+   "relations": [
+    {
+     "subject": "red object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "on",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "purple target"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "purple target"
+    }
+   ],
+   "labels": [
+    "drop the cube onto target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1302",
+   "t": 1106,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The arm hovers near a red object at the gripper, shifting slightly. It does not clearly grasp or release anything; the blue and green cubes and the targets stay put.",
+   "relations": [
+    {
+     "subject": "red object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "on",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "red object"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "purple target"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1303",
+   "t": 575,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm moves over the table near a small gray object on a white base. The gripper holds nothing, and the red cube is hidden behind the arm by the end.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "gray object on white base"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "robot arm"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1303",
+   "t": 1239,
+   "truth": "put_down",
+   "happened": "pick_up",
+   "summary": "The gripper reaches down to the green cube, and in the final frames the green cube sits inside the magenta ring and appears to move with the gripper, as if grasped.",
+   "relations": [
+    {
+     "subject": "green cube",
+     "predicate": "held_by",
+     "object": "gripper"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1303",
+   "t": 1384,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm moves slightly near a small green object at the gripper; no clear grasp or release is visible. Red and blue cubes and a button stay still.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "purple target markers"
+    }
+   ],
+   "labels": [
+    "place the cube onto the correct target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1304",
+   "t": 1206,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers near a small blue cube, with the gripper lowering slightly beside it. The cube stays on the table and is not lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1304",
+   "t": 1296,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm shifts slightly near the top of the table with the gripper hovering over a small blue object; nothing is clearly grasped or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue object"
+    },
+    {
+     "subject": "white button",
+     "predicate": "near",
+     "object": "purple target discs"
+    },
+    {
+     "subject": "blue object",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1304",
+   "t": 1383,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm hovers over the table with a small blue object at the gripper; it shifts slightly and nothing is clearly picked up or released.",
+   "relations": [
+    {
+     "subject": "blue object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "above",
+     "object": "table"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "purple target"
+    },
+    {
+     "subject": "purple targets",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "place the cube onto the correct target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1305",
+   "t": 78,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm lowers toward a small green object on the table and stays near it; the gripper ring sits on the green object, but no clear grasp or lift is visible.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "green object"
+    },
+    {
+     "subject": "green object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "green object"
+    },
+    {
+     "subject": "purple targets",
+     "predicate": "near",
+     "object": "green object"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1305",
+   "t": 619,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm hovers over a small green object on the table near purple ring targets, shifting slightly. The object stays at the gripper, and no clear grasp or release is visible.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "green object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "purple ring targets",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "drop the cube onto table"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1305",
+   "t": 887,
+   "truth": "put_down",
+   "happened": "pick_up",
+   "summary": "The arm reaches down toward the green object near the magenta ring; by the last frames the green object is inside the ring and appears grasped and moving with the gripper.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "held_by",
+     "object": "gripper"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "purple target markers"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "purple target markers"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1306",
+   "t": 326,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm shifts slightly over a blue object near the gripper ring, with a green and a red cube nearby. Nothing is clearly lifted or released.",
+   "relations": [
+    {
+     "subject": "blue object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "blue object",
+     "predicate": "near",
+     "object": "white button"
+    },
+    {
+     "subject": "white button",
+     "predicate": "near",
+     "object": "purple target ring"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1306",
+   "t": 408,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers and shifts slightly near the gripper ring over a blue object on the table; nothing is clearly grasped or released. A green cube, a button and target rings stay still.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "blue object"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "near",
+     "object": "target rings"
+    },
+    {
+     "subject": "blue object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "white button",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "drop the cube onto target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1306",
+   "t": 572,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm lowers over a small blue cube between green and red cubes, then rises again; the blue cube seems to stay on the table and is not clearly lifted.",
+   "relations": [
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "subject_note": "",
+     "object": "gripper"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "above",
+     "object": "blue cube"
+    }
+   ],
+   "labels": [
+    "drop the cube onto table"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1307",
+   "t": 165,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers near a small red object at the top right, shifting slightly. The red object appears to stay in place on the table, and nothing is clearly grasped or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red object"
+    },
+    {
+     "subject": "red object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "blue cube",
+     "predicate": "near",
+     "object": "red object"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "drop the cube onto target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1307",
+   "t": 336,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm hovers over a small red object with the gripper ring on it, shifting slightly across frames. No clear grasp or release is visible.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "red object"
+    },
+    {
+     "subject": "red object",
+     "predicate": "near",
+     "object": "gray button"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "near",
+     "object": "purple target"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "near",
+     "object": "purple target"
+    }
+   ],
+   "labels": [
+    "drop the cube onto target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1307",
+   "t": 1011,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm moves slightly closer to the camera and then stays still near a red object. Nothing is visibly picked up or released.",
+   "relations": [
+    {
+     "subject": "magenta-ringed gripper",
+     "predicate": "near",
+     "object": "red cube"
+    },
+    {
+     "subject": "red cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "near",
+     "object": "purple target"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1308",
+   "t": 280,
+   "truth": "pick_up",
+   "happened": "moving_only",
+   "summary": "The robot arm shifts slightly near a small green object, with the gripper ring staying on it. No clear grasp or release is visible, and the green object stays on the table.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "green object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "above",
+     "object": "green object"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "pick up the cube"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1308",
+   "t": 371,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm hovers over a small green object on the table, shifting slightly. The gripper stays near the green object, and nothing is clearly lifted or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "green cube"
+    },
+    {
+     "subject": "green cube",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "purple target ring",
+     "predicate": "near",
+     "object": "green cube"
+    }
+   ],
+   "labels": [
+    "drop the cube onto target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1308",
+   "t": 799,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The arm hovers over a small green object on the table, shifting slightly across frames; the object stays on the table and is not clearly grasped or lifted.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "green object"
+    },
+    {
+     "subject": "green object",
+     "predicate": "near",
+     "object": "purple target ring"
+    }
+   ],
+   "labels": [
+    "drop the cube onto table"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1309",
+   "t": 165,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm shifts around near the table while the gripper stays close to a small green object. It never clearly grasps or releases anything, so no pick-up or put-down is visible.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "green object"
+    },
+    {
+     "subject": "green object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "small white block",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "small white block"
+    }
+   ],
+   "labels": [
+    "drop the cube onto target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1309",
+   "t": 514,
+   "truth": "put_down",
+   "happened": "nothing",
+   "summary": "The gripper stays near a small green object beneath the arm; the arm barely moves. No clear grasp or release is visible, and the purple targets and white button stay put.",
+   "relations": [
+    {
+     "subject": "green object",
+     "predicate": "near",
+     "object": "gripper"
+    },
+    {
+     "subject": "white button",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "purple target",
+     "predicate": "on",
+     "object": "table"
+    }
+   ],
+   "labels": [
+    "drop the cube onto target"
+   ]
+  },
+  {
+   "key": "VideoPlaceOrder_1309",
+   "t": 1139,
+   "truth": "put_down",
+   "happened": "moving_only",
+   "summary": "The robot arm shifts slightly near a small green object on the table, with the gripper hovering beside it. Nothing is clearly grasped or released.",
+   "relations": [
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "green object"
+    },
+    {
+     "subject": "green object",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gray button",
+     "predicate": "on",
+     "object": "table"
+    },
+    {
+     "subject": "gripper",
+     "predicate": "near",
+     "object": "gray button"
+    }
+   ],
+   "labels": [
+    "place the cube onto the correct target"
+   ]
+  }
+ ],
+ "usage": {
+  "calls": 60,
+  "hits": 0,
+  "misses": 60,
+  "prompt_tokens": 65229,
+  "completion_tokens": 9690,
+  "reasoning_tokens": 0,
+  "images": 420,
+  "empty": 0,
+  "usd": 0.227358,
+  "cached_usd": 0.0,
+  "seconds": 207.89521193504333
+ },
+ "meta": {
+  "commit": "8d0787f",
+  "dirty": true,
+  "cond": "A",
+  "model": "anthropic/claude-sonnet-5.5"
+ }
+}

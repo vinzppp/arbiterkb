@@ -1076,3 +1076,46 @@ After the keyframe check above, the user chose to split the call again and to gi
 - **So the frames are the problem, not only the model.** At 256 px from the front camera, the cube is small and under the gripper, so a pick-up and a release look alike.
 - **Also learned:** when the frames cannot decide, the small model agrees with the text, while the frontier model abstains. Any checker needs a "cannot tell" that is measured, not assumed.
 - **Next, to decide:** the dataset also has a **wrist camera** video (`videos/wrist_image`, not downloaded), where a held cube fills the view. The same test on wrist frames would show whether the review can work at all. Alternatives: larger crops around the gripper from the front frame; or limit the review to what the front view can show (objects moving, appearing, disappearing).
+
+## What can a small VLM see in a window, with no memory text? The test, fixed before running (2026-10-28)
+User question: the review call failed because the memory text was in the prompt and the frames were hard to read. Can a small VLM, given only frames, say what happened and give relations?
+- **Windows:** the same 60 (VideoRepick / VideoPlaceOrder episodes 1–10 of each, 7 frames from t − 12 to t + 12).
+- **No memory text.** The prompt holds only the frames, each titled with its frame number, and the question.
+- **Overlay:** no tracker runs on these videos, so object ids cannot be drawn. The only overlay is the **hand**, a mark at the gripper.
+  - Its pixel comes from the robot state (forward kinematics) through a camera homography.
+  - The homography is fitted on other episodes (11–30 of each task): hand xy at gripper closings against the grounded subgoal pixels.
+  - It is camera calibration, a constant of the setup, not information about the episode.
+  - It is exact only near table height.
+- **Answer (JSON):**
+  - `happened`: one of `pick_up`, `put_down`, `both`, `moving_only`, `nothing`, `cannot_tell`;
+  - a summary of up to 25 words;
+  - relations between objects named in words, since there are no ids (for example "red cube" `on` "table").
+- **Truth for `happened`:** the actions the robot-state detectors found in the window. Pick-up only → `pick_up`; release only → `put_down`; both → `both`.
+- **Conditions:**
+  - **A:** the 7 full frames with the hand mark;
+  - **B:** the 7 frames cropped to 96 × 96 px around the hand and enlarged to 256 px.
+  - Each with qwen3.5-9b (thinking off) and anthropic/claude-sonnet-5.5 (reference). Cap $2.
+- **Scored:** accuracy of `happened` with Wilson 95% CIs, the `cannot_tell` rate, and the confusions.
+  - **Rule:** the small model can report what happened if its accuracy is ≥ 0.80 in A or B.
+  - Relations and summaries are not scored automatically (no object truth here); 10 are read by hand.
+
+**Results** (`results/latest/describe_{qwen,sonnet}_{A,B}/summary.json`; logs `results/latest/logs/describe_*.log`; 240 calls, **$0.47** in all, qwen $0.012). The homography fit 194 points with a 0.6 px median residual. The dataset's labels turned out to be `<row, column>`; this was seen on the first overlay image and fixed before any call.
+
+Truth: 27 windows pick_up, 33 put_down (always answering pick_up scores 0.45).
+
+| model | condition | `happened` right [Wilson 95%] | most common answer |
+|---|---|---|---|
+| qwen3.5-9b | A full frames | 0.08 [0.04, 0.18] | "nothing" (45 / 60) |
+| qwen3.5-9b | B crops at the hand | 0.40 [0.29, 0.53] | "pick_up" (50 / 60) |
+| Sonnet 5.5 | A full frames | 0.02 [0.00, 0.09] | "moving_only" (52 / 60) |
+| Sonnet 5.5 | B crops at the hand | 0.12 [0.06, 0.22] | "moving_only" (35 / 60) |
+
+- **Rule: fails** in every condition, the reference included. The crops help (qwen 0.08 → 0.40, Sonnet 0.02 → 0.12), but qwen B is no better than always answering pick_up.
+- **Why, from the hand heights:** the windows end 1.2 s after the gripper closes or opens. At that moment the hand is still 1–4 cm above the table; it rises to about 15 cm only by about t + 30.
+  - So the outcome that tells the two apart (the cube rising with the gripper, or staying behind) is not in the frames.
+  - A put-down looks like a pick-up in reverse: the hand comes down holding the cube, which reads as "comes down and grasps".
+  - **The window was badly chosen (my design), not only the models.** Sonnet's summaries describe what the frames show: "moves down toward a blue ball … not clearly lifted".
+- **Summaries and relations:**
+  - Sonnet B's are accurate about what is visible: "blue object held_by gripper", "red cube on wooden table", "gripper near blue ball".
+  - qwen B's are short, and the same in every window ("gripper held_by blue object", with the relation's direction reversed; "grey object on the floor").
+- **Not yet shown:** whether a window that covers the outcome (the lift, until about t + 30) lets either model decide. That is a new test, with its rule to be fixed before it runs.
