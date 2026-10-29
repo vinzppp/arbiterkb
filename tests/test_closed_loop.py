@@ -85,3 +85,14 @@ def test_one_retry_on_check_problems_then_execute():
 
 def test_frame_indices_stride_and_last():
     assert frame_indices(8) == [0, 3, 6, 7] and frame_indices(1) == [0]
+
+
+def test_memory_arm_retry_sends_the_problem_with_a_new_request():
+    def perceive(obs):
+        return [FrameObs(0, {}, np.zeros(3), 0.08, False)]
+    perceive.objects = lambda: []
+    far = json.dumps({"description": "far", "waypoint": [2.0, 0.0, 0.2, -3.1416, 0, 0], "gripper": 0})
+    ask, sent = scripted([far, WP])
+    row = run(FakeEnv([(5, "success")]), "K", ask, Memory("K", ArbiterKBSystem(Params()), perceive))
+    assert row["success"] and len(sent) == 2 and "not executed" in json.dumps(sent[1][1]["content"])
+    assert sent[0] != sent[1]  # a different request, so a cache cannot hand back the same answer

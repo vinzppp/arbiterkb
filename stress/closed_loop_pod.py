@@ -90,7 +90,9 @@ def episode(task: str, ep: int, arm: str, a, llm, params) -> dict:
         p = Perceive(info["task_goal"][0], a.vocab, ep, info["front_camera_intrinsic"])
         memory = Memory(arm, ArbiterKBSystem(params) if arm != "R" else None, p)
     env = make_env(task, ep, a.dataset)
-    row = run(env, arm, lambda m, eff: llm.call(m, max_tokens=a.max_tokens, reasoning=eff), memory, EFFORT[a.effort])
+    sampling = {"top_p": a.top_p, "top_k": a.top_k}
+    row = run(env, arm, lambda m, eff: llm.call(m, temperature=a.temperature, max_tokens=a.max_tokens, reasoning=eff,
+                                                sampling=sampling), memory, EFFORT[a.effort])
     env.close()
     return {**row, "task": task, "episode": ep, "dataset": a.dataset, "effort": a.effort, "vocab": a.vocab}
 
@@ -110,6 +112,11 @@ def main() -> None:
                     help="OpenRouter provider, no fallbacks")  # Parasail took 160 (probe, smoke run)
     ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=16000,  # 4000 cut H's and R's reasoning
                     help="completion cap per call, every arm alike")  # (finish_reason length, smoke run)
+    # Qwen's recommended thinking-mode sampling, every arm alike: at temperature 0 (greedy) R's and K's reasoning looped
+    # until the cap (smoke run: 450 lines, 69 distinct), as Qwen warns; 2610.17350 used its API defaults (T 1, top-p 0.98)
+    ap.add_argument("--temperature", type=float, default=0.6)
+    ap.add_argument("--top-p", dest="top_p", type=float, default=0.95)
+    ap.add_argument("--top-k", dest="top_k", type=int, default=20)
     a = ap.parse_args()
     params, (commit, dirty) = load_params(), git_state()
     if a.dataset == "test":
@@ -131,7 +138,7 @@ def main() -> None:
                     row = {"task": task, "episode": ep, "arm": arm, "status": "harness_error", "success": None,
                            "error": repr(ex)}
                 row.update(commit=commit, dirty=dirty, params_hash=params.hash(), model=MODEL, provider=a.provider,
-                           max_tokens=a.max_tokens)
+                           max_tokens=a.max_tokens, temperature=a.temperature, top_p=a.top_p, top_k=a.top_k)
                 if row.get("status") != "harness_error":
                     (d / "result.json").write_text(json.dumps(row, indent=1, default=str))
                 print(json.dumps({k: row.get(k) for k in ("task", "episode", "arm", "status", "end_reason",

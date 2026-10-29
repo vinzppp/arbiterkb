@@ -170,3 +170,12 @@ def test_vlm_client_uses_the_params_model_pinned_provider_and_no_thinking():
     b = c.body([{"role": "user", "content": "x"}], None, 0.0, 0, 10)
     assert b["model"] == "qwen/qwen3.5-9b" and b["provider"]["order"] == ["Parasail", "DeepInfra"]
     assert b["provider"]["allow_fallbacks"] is False and b["reasoning"] == {"enabled": False}
+
+
+def test_cites_written_as_one_string_or_in_brackets_are_split():
+    import numpy as np
+    act = np.array([0.0, 0.0, 0.2, -3.1416, 0, 0, 0])
+    known = {"e32", "e37", "o49:bin_2", "o74:bin_2"}
+    assert C.check(act, {"cites": "e32,e37,o49:bin_2"}, known) == []
+    assert C.check(act, {"cites": ["[o74:bin_2]"]}, known) == []
+    assert C.check(act, {"cites": ["e99"]}, known) == ["unknown cite 'e99'"]

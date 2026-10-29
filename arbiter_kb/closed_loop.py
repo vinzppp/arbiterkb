@@ -92,7 +92,7 @@ def run(env, arm: str, ask: Callable, memory: Memory | None = None, effort: dict
 class Episode:
     def __init__(self, env, arm: str, ask: Callable, memory: Memory | None, effort: dict | None):
         self.env, self.arm, self.ask, self.memory, self.effort = env, arm, ask, memory, effort
-        self.steps, self.usage, self.calls, self.noops, self.retried = [], [], 0, 0, False
+        self.steps, self.usage, self.calls, self.noops, self.retried, self.note = [], [], 0, 0, False, []
         self.status, self.end = "ongoing", None
 
     def run(self) -> dict:
@@ -119,7 +119,8 @@ class Episode:
     def turn(self) -> None:
         mem = self.memory.text() if self.memory is not None else ""
         user = self.convo if self.arm == "H" else [{"role": "user", "content": _fresh(self.arm, self.goal, mem,
-                                                                                         self.obs, self.info)}]
+                                                                                         self.obs, self.info) + self.note}]
+        self.note = []
         text, u = self.ask([self.sys_msg] + user, self.effort)
         self.calls, answer = self.calls + 1, parse_answer(text)
         self.usage.append(u)
@@ -128,7 +129,8 @@ class Episode:
         if problems and not self.retried:  # one retry with the problems, for every arm alike
             self.retried = True
             self.steps.append({"answer": text[-400:], "problems": problems})
-            self.reply(text, [text_part("Your last answer was not executed: " + "; ".join(problems) + ". Answer again.")])
+            self.reply(text, [text_part("Your last answer was not executed: " + "; ".join(problems) + ". Answer again.")],
+                       retry=True)
         elif action is None:
             self.steps.append({"answer": text[-400:], "invalid_kind": kind})
             self.finish(kind, f"model_answer:{kind}")
@@ -138,10 +140,13 @@ class Episode:
         if self.status == "ongoing" and self.calls >= MAX_CALLS:
             self.finish("model_call_limit", f"limit:{MAX_CALLS}_model_calls")
 
-    def reply(self, text: str, content: list) -> None:
-        """Arm H keeps the conversation; the other arms start fresh each step."""
+    def reply(self, text: str, content: list, retry: bool = False) -> None:
+        """Arm H keeps the conversation; the other arms start fresh each step, so a retry's note (and their own last
+        answer) rides on the next fresh request (the smoke run found it was dropped and the same request resent)."""
         if self.arm == "H":
             self.convo = self.convo + [{"role": "assistant", "content": text}, {"role": "user", "content": content}]
+        elif retry:
+            self.note = [text_part("Your last answer was:\n" + text[-1500:])] + content
 
     def execute(self, action: np.ndarray, answer: dict, text: str) -> None:
         m = self.memory

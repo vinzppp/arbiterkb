@@ -173,11 +173,21 @@ def check(action: np.ndarray, answer: dict, known: set[str]) -> list[str]:
             if not lo <= action[i] <= hi]
     if (d := float(np.linalg.norm(action[:3] - SHOULDER))) > REACH:
         errs.append(f"waypoint {d:.3f} m from the shoulder > reach {REACH} m")
-    tgt, cites = answer.get("target"), answer.get("cites") or []
+    tgt, cites = answer.get("target"), _cite_list(answer.get("cites"))
     if tgt is not None and tgt not in known:
         errs.append(f"unknown target {tgt!r}")
     errs += [f"unknown cite {c!r}" for c in cites if not (isinstance(c, str) and c in known)]
     return errs
+
+
+def _cite_list(cites) -> list:
+    """Cites as the model writes them: a list, or ids joined by commas, possibly in brackets ("e32,e37,o49:bin_2",
+    "[o74:bin_2]"; closed-loop smoke run)."""
+    items = cites if isinstance(cites, list) else [cites] if isinstance(cites, str) else []
+    out = []
+    for c in items:  # split like shown_ids: "On(a, b)" keeps its comma-space; a non-string stays (and is unknown)
+        out += [x.strip(" []") for x in re.split(r",(?! )", c) if x.strip(" []")] if isinstance(c, str) else [c]
+    return out
 
 
 def shown_ids(text: str, objects) -> set[str]:

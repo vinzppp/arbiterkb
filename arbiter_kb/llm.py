@@ -79,9 +79,9 @@ class LLM:
         self._lock, self._inflight, self._price = threading.Lock(), 0, 0.0
 
     def body(self, messages: list, schema: dict | None, temperature: float, seed: int, max_tokens: int,
-             reasoning: dict | None = None) -> dict:
+             reasoning: dict | None = None, sampling: dict | None = None) -> dict:
         b = {"model": self.model, "messages": messages, "temperature": temperature, "seed": seed,
-             "max_tokens": max_tokens, "usage": {"include": True}}
+             "max_tokens": max_tokens, "usage": {"include": True}, **(sampling or {})}
         if self.provider:
             b["provider"] = self.provider
         if reasoning or self.reasoning:
@@ -96,9 +96,10 @@ class LLM:
         return self.call(messages, schema, temperature, seed, max_tokens, reasoning)[0]
 
     def call(self, messages: list, schema: dict | None = None, temperature: float = 0.0, seed: int = 0,
-             max_tokens: int = 600, reasoning: dict | None = None) -> tuple[str, dict]:
-        """(text, this call's usage). Thread-safe; `reasoning` overrides the client's for this call."""
-        body = self.body(messages, schema, temperature, seed, max_tokens, reasoning)
+             max_tokens: int = 600, reasoning: dict | None = None, sampling: dict | None = None) -> tuple[str, dict]:
+        """(text, this call's usage). Thread-safe; `reasoning` overrides the client's for this call; `sampling` adds
+        e.g. top_p / top_k (none by default, so earlier cache keys are unchanged)."""
+        body = self.body(messages, schema, temperature, seed, max_tokens, reasoning, sampling)
         key = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
         path = self.cache_dir / f"{key}.json"
         if path.exists():

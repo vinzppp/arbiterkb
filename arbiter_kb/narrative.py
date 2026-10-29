@@ -70,6 +70,12 @@ def _container(kb: KB, b: str, near: list[str], ins: dict, mv: list) -> str:
             "holds no cube as far as the memory knows") + f"; moved {n} time{'s' if n != 1 else ''}{with_}.")
 
 
+def seen(o) -> bool:
+    """False for a tracker slot that never found its object (the open word list has spare slots; closed-loop smoke run:
+    such a cube was listed as "visible" in the joined facts while the view's object list left it out)."""
+    return not (o.visibility.value == "unknown" and o.t_last_seen < 0)
+
+
 def _cube(kb: KB, c: str, ins: dict, mv: list, items: list) -> str:
     o, tag = kb.objects[c], " (task item)" if is_task_item(kb.objects[c].attributes, kb.objects[c].cls, items) else ""
     if o.visibility.value != "hidden" or c not in ins:
@@ -159,7 +165,7 @@ def joined_facts(kb: KB) -> list[str]:
     return ([f"Containers from the robot's left to its right: {', '.join(ltr)}.",
              f"Containers from nearest to farthest from the robot: {', '.join(near)}."]
             + [_container(kb, b, near, ins, mv).strip() for b in bins]
-            + [_cube(kb, c, ins, mv, items).strip() for c, o in kb.objects.items() if o.cls == "cube"])
+            + [_cube(kb, c, ins, mv, items).strip() for c, o in kb.objects.items() if o.cls == "cube" and seen(o)])
 
 
 def merged_view(view: str, kb: KB) -> str:
