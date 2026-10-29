@@ -1061,3 +1061,18 @@ After the keyframe check above, the user chose to split the call again and to gi
   - It is the prompt as written, with no tuning.
 - **Reading:** as it stands, qwen3.5-9b cannot be the KB's checker. A "confirm" from it carries no information, so writing its verdicts into the KB would add noise, not correction.
 - **Before changing the design:** run the same 60 windows with a frontier VLM (one call per window). If that model separates true from planted events, the problem is the small model. If it does not, the problem is the frames (size, occlusion), and the review needs the wrist camera or larger crops.
+
+**Reference run, fixed before it runs:** the same 60 windows, prompt, planted events, scoring and rule, with `anthropic/claude-sonnet-5.5` at its default settings (OpenRouter routing; cap $2). If it passes, the small model is the problem; if it fails as well, the frames are.
+
+**Reference results, Sonnet 5.5** (`results/latest/review_video_sonnet/summary.json`; log `results/latest/logs/review_video_sonnet.log`; 60 calls, **$0.27** in all, $0.11 of it in a first attempt that a network timeout stopped, then replayed from the cache):
+
+| events | confirm | contradict | cannot tell | not answered |
+|---|---|---|---|---|
+| true (60) | 0.05 | 0.02 | **0.67** [0.54, 0.77] | 0.27 |
+| planted false (60) | 0.15 [0.08, 0.26] (false confirmation) | 0.05 | **0.80** [0.68, 0.88] | 0.00 |
+
+- **Rule: fails as well** (true confirmation 0.05).
+- **Sonnet fails in the honest way:** it mostly answers "cannot tell", and its summaries say why, for example "the frames do not clearly show any cube being lifted or released". qwen3.5-9b confirmed both kinds of event instead.
+- **So the frames are the problem, not only the model.** At 256 px from the front camera, the cube is small and under the gripper, so a pick-up and a release look alike.
+- **Also learned:** when the frames cannot decide, the small model agrees with the text, while the frontier model abstains. Any checker needs a "cannot tell" that is measured, not assumed.
+- **Next, to decide:** the dataset also has a **wrist camera** video (`videos/wrist_image`, not downloaded), where a held cube fills the view. The same test on wrist frames would show whether the review can work at all. Alternatives: larger crops around the gripper from the front frame; or limit the review to what the front view can show (objects moving, appearing, disappearing).

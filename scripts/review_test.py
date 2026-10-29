@@ -6,6 +6,7 @@ checks the window's events against 7 frames. Scored: true events confirmed, plan
   /Library/Frameworks/Python.framework/Versions/3.12/bin/python3 -I tools/extract_frames.py \
       --windows data/robomme_lerobot/review_windows.json
   python scripts/review_test.py --call [--keep-as review_video]
+  python scripts/review_test.py --call --model anthropic/claude-sonnet-5.5 --keep-as review_video_sonnet  # reference
 """
 from __future__ import annotations
 
@@ -23,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 
 from run import git_state, load_params  # noqa: E402
 from arbiter_kb.kb import AddEvidence  # noqa: E402
-from arbiter_kb.llm import vlm_client  # noqa: E402
+from arbiter_kb.llm import LLM, vlm_client  # noqa: E402
 from arbiter_kb.review import review  # noqa: E402
 from arbiter_kb.sources import lerobot as L  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
@@ -105,6 +106,8 @@ def main() -> None:
     ap.add_argument("--plan", action="store_true")
     ap.add_argument("--call", action="store_true", help="required to spend money (about 60 calls, cap $0.50)")
     ap.add_argument("--keep-as", dest="keep_as", default="")
+    ap.add_argument("--model", default="", help="a reference VLM instead of ArbiterParams' (OpenRouter routing)")
+    ap.add_argument("--max-usd", dest="max_usd", type=float, default=0.5)
     a = ap.parse_args()
     params, (commit, dirty) = load_params(), git_state()
     ws = windows(params)
@@ -117,12 +120,13 @@ def main() -> None:
         return
     if not a.call:
         sys.exit("pass --plan (free) or --call")
-    llm = vlm_client(params.arbiter, max_usd=0.5)
+    llm = LLM(model=a.model, max_usd=a.max_usd, provider=None) if a.model else vlm_client(params.arbiter, max_usd=a.max_usd)
     rows = [one(w, llm, params) for w in ws]
     for r in rows:
         print(json.dumps(r), flush=True)
     out = {"report": report(rows), "rows": rows, "usage": llm.usage,
-           "meta": {"commit": commit, "dirty": dirty, "params_hash": params.hash(), "model": params.arbiter.vlm_model}}
+           "meta": {"commit": commit, "dirty": dirty, "params_hash": params.hash(),
+                    "model": a.model or params.arbiter.vlm_model}}
     print(json.dumps(out["report"], indent=1), json.dumps({k: round(v, 5) if isinstance(v, float) else v
                                                            for k, v in llm.usage.items()}))
     if a.keep_as:
