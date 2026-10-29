@@ -111,8 +111,8 @@ def main() -> None:
     ap.add_argument("--provider", default="CoreWeave",  # one for every arm; DeepInfra takes at most 30 images (H: ~150);
                     help="OpenRouter provider, no fallbacks")  # Parasail took 160 but was rate-limited for minutes;
     # CoreWeave took 160, answered fastest and gave no 429 in the smoke run
-    ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=16000,  # 4000 cut H's and R's reasoning
-                    help="completion cap per call, every arm alike")  # (finish_reason length, smoke run)
+    ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=32000,  # 4000 cut H's and R's reasoning;
+                    help="completion cap per call, every arm alike")  # 16000 cut R's on VideoPlaceOrder (no loop, smoke run)
     # Qwen's recommended thinking-mode sampling, every arm alike: at temperature 0 (greedy) R's and K's reasoning looped
     # until the cap (smoke run: 450 lines, 69 distinct), as Qwen warns; 2610.17350 used its API defaults (T 1, top-p 0.98)
     ap.add_argument("--temperature", type=float, default=0.6)

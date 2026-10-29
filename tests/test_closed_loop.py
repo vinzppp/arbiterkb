@@ -108,3 +108,18 @@ def test_h_frames_go_into_grids_and_every_frame_is_kept():
     obs["front_rgb_list"] = [np.zeros((4, 4, 3), np.uint8)] * 1078  # VideoPlaceOrder's opening video
     images = [p for p in h_content(obs, info, "Video so far", True) if p["type"] == "image_url"]
     assert len(images) == 40 + 2  # 360 sampled frames in 40 grids, then the current front frame and the wrist frame
+
+
+def test_r_targets_come_from_the_frames_and_never_seen_slots_are_left_out():
+    from arbiter_kb.types import ObjObs
+
+    def perceive(obs):  # closed-loop smoke run: every R target was "unknown" (the log prints bare ids)
+        return [FrameObs(0, {"bin_0": ObjObs("bin_0", "container", True, np.zeros(3), None, 1.0),
+                             "cube_s9": ObjObs("cube_s9", "cube", False, None, None, 1.0)}, np.zeros(3), 0.08, False)]
+    perceive.objects = lambda: []
+    tgt = json.dumps({"description": "go", "waypoint": [0.0, 0.0, 0.2, -3.1416, 0, 0], "gripper": 0, "target": "bin_0"})
+    ask, sent = scripted([tgt])
+    row = run(FakeEnv([(5, "success")]), "R", ask, Memory("R", None, perceive))
+    assert row["success"] and row["model_calls"] == 1
+    log = json.dumps(sent[0][1]["content"])
+    assert "bin_0" in log and "cube_s9" not in log

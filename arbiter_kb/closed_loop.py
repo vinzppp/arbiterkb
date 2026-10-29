@@ -28,7 +28,7 @@ from .views import controller_view
 
 MAX_CALLS, MAX_NOOPS, STRIDE = 150, 3, 3
 GRID = 3  # arm H: sampled frames go GRID x GRID per image. OpenRouter's pre-flight counts 1,536 tokens per image
-# (about 158 images per request at 16k output), while the model uses ~66 per 256-px frame; VideoPlaceOrder's opening
+# (about 149 images per request at 32k output), while the model uses ~66 per 256-px frame; VideoPlaceOrder's opening
 # video alone is 360 frames (smoke run). Ours, not 2610.17350's (they sent single frames); every frame is kept.
 NOOP_TEXT = ("The last action executed no steps: the robot did not move and no time passed, so the scene is unchanged. "
              "Choose the next action.")  # theirs, verbatim
@@ -93,9 +93,15 @@ class Memory:
             if self.system is not None:
                 self.system.step(f)
 
+    def ids(self) -> set[str]:
+        """The objects perception has seen at least once (R's log and its target check; never-seen slots are left out,
+        as in K's view)."""
+        return {k for f in self.frames for k, o in f.objects.items() if o.visible}
+
     def text(self) -> str:
         if self.arm == "R":
-            return "Raw tracker log (every 10th frame):\n" + raw_tracker_log(self.frames) if self.frames else ""
+            return ("Raw tracker log (every 10th frame):\n" + raw_tracker_log(self.frames, keep=self.ids())
+                    if self.frames else "")
         kb = self.system.kb
         return "\n\n".join(x for x in (self_view(kb), controller_view(kb, self.system.params.rule)) if x)
 
@@ -191,10 +197,11 @@ class Episode:
 
 
 def _problems(action, answer, mem: str, memory: Memory | None) -> list[str]:
-    """check() for every arm; target / cites are checked only against ids a memory text printed (H has none)."""
+    """check() for every arm; target / cites are checked only against ids a memory text printed (H has none). R's log
+    prints bare ids, so its objects come from the frames (smoke run: every R target was "unknown", one retry each)."""
     if action is None:
         return []
-    objs = [o for o in memory.system.kb.objects] if memory is not None and memory.system is not None else []
+    objs = [] if memory is None else memory.ids() if memory.system is None else list(memory.system.kb.objects)
     errs = check(action, answer, shown_ids(mem, objs))
     return errs if mem else [e for e in errs if not e.startswith(("unknown target", "unknown cite"))]
 

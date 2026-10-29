@@ -20,8 +20,10 @@ HOLD_P = 0.2  # a container "may hold" a cube with at least this probability
 
 
 def name(kb: KB, oid: str) -> str:
-    o = kb.objects[oid]
-    return f"the {o.attributes['color']} cube" if o.attributes.get("color") else oid
+    """A cube by its colour; anything else (a container, or "table": a put-down away from every container, rules.py)
+    by its id (closed-loop smoke run: "table" raised a KeyError)."""
+    o = kb.objects.get(oid)
+    return f"the {o.attributes['color']} cube" if o is not None and o.attributes.get("color") else oid
 
 
 def moves(kb: KB) -> list[tuple[str, int, int]]:

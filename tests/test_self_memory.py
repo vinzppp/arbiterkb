@@ -43,3 +43,12 @@ def test_memtool_working_memory_and_unknown_queries():
     assert "Working memory (now):" in w and "history:" in w and "bin_0" in w
     assert run_tool(kb, "history", "nope").startswith("unknown object")
     assert run_tool(kb, "fly", "").startswith("unknown tool")
+
+
+def test_changes_name_a_put_down_on_the_table():
+    from arbiter_kb.ops import AddEvent
+    kb = _kb()  # closed-loop smoke run: place(cube, "table") raised a KeyError in name()
+    d = record(kb, 5, [0, 0, 0.2], False, declared="move")
+    kb.apply([AddEvidence(8, "grip_open", (), {"obs": []})])
+    kb.apply([AddEvent(8, "place", ("cube_red", "table"), 1.0, [kb.evidence[-1].id])])
+    assert changes(kb, d)[0] == "t=8: place the red cube table"

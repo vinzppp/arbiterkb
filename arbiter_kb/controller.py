@@ -108,11 +108,13 @@ def text_part(text: str) -> dict:
     return {"type": "text", "text": text}
 
 
-def raw_tracker_log(frames: list, stride: int = 10) -> str:
-    """Arm R: per sampled frame, each object's observed centre or 'hidden'; no events, no beliefs."""
+def raw_tracker_log(frames: list, stride: int = 10, keep: set[str] | None = None) -> str:
+    """Arm R: per sampled frame, each object's observed centre or 'hidden'; no events, no beliefs. `keep`: only these
+    objects (the closed loop leaves out tracker slots that never found their object, as K's view does)."""
     lines = []
     for f in frames[::stride] + ([frames[-1]] if (len(frames) - 1) % stride else []):
-        objs = [f"{k} " + (", ".join(f"{v:.3f}" for v in o.xyz) if o.visible else "hidden") for k, o in f.objects.items()]
+        objs = [f"{k} " + (", ".join(f"{v:.3f}" for v in o.xyz) if o.visible else "hidden") for k, o in f.objects.items()
+                if keep is None or k in keep]
         lines.append(f"t={f.t}: " + "; ".join(objs))
     return "\n".join(lines)
 
