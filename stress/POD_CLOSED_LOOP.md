@@ -27,9 +27,15 @@ typed into the pod's shell by the user (`export OPENROUTER_API_KEY=...`), never 
   If the volume has G's `53673b3`, note both in NOTES and prefer `856bc3a` for this run.
 - Hand-off prompt for the pod Claude session:
 ```
-Set up this pod for the arbiter-kb closed-loop pilot (stress/POD_CLOSED_LOOP.md), then run its smoke test (step 3)
-and stop there with a report: per-frame perception time, model-call time, the first K prompt (text part), any errors.
-Do not run the pilot (step 4) until the user says so. Never print or write the API key.
+Set up this pod for the arbiter-kb closed-loop pilot (stress/POD_CLOSED_LOOP.md), then run its unit check (step 2) and
+smoke test (step 3), and stop there with a report: per-frame perception time, model-call time, $ per episode per arm,
+the first K prompt (text part only), and any errors.
+If /workspace/envs/sg-main or sg-percep is missing, build them first exactly as stress/POD_RUN.md §0F says (Vulkan,
+both venvs, weights, the checks), with two changes: install robomme at commit 856bc3a (not 53673b3), and also install
+matplotlib and pytest into sg-main. Write what you installed to /workspace/CL_SETUP.md.
+The code in stress/ and arbiter_kb/closed_loop.py has never run against the simulator: fix only what the smoke test
+shows is broken, say what you changed and why. Do not run the pilot (step 4) until the user says so.
+The OpenRouter key is in the environment variable OPENROUTER_API_KEY: never print it or write it to a file.
 ```
 
 ## 2. Unit check on the pod
