@@ -1843,3 +1843,17 @@ Paired over test episodes:
 ## Claim 3 follow-up: the LLM rows on G test (2026-10-29; registered in "Claim 3 on G")
 - R and K on Q1, G test, re-linked, effort off and default; K's KB uses the train choice min_q, q0 0.05 (`--r6 min_q:0.05`), as registered before the read. The KB's top answer with the same setting: 0.809 (above).
 - Ledger READ line with the base params hash. Cap $1.
+- **Results** (`results/latest/perceived_qa_test/summary.json`; 360 calls, **$0.51**, 2 empty answers; commit e91ee66, clean tree):
+
+| arm | Q1 off / default | stock | stress | Q1 on tracker-swapped cubes (33) | AUROC of stated confidence | Q5 joined |
+|---|---|---|---|---|---|---|
+| KB top answer, no LLM | 0.809 | | | | (the KB's p: 0.723) | |
+| K | 0.813 / 0.809 | 1.00 | 0.79 / 0.78 | 0.12 / 0.09 | 0.62 / 0.63 | 0.80 / 0.77 |
+| R | 0.489 / 0.736 | 0.55 / 0.83 | 0.48 / 0.72 | **0.33 / 0.36** | 0.52 / 0.57 | 0.31 / 0.30 |
+
+- K − R: off **+0.311 [+0.219, +0.404]**; default **+0.067 [−0.006, +0.143]**.
+- **Out of sample:**
+  1. **K = the KB's top answer again** (0.81 = 0.809): the LLM adds nothing on Q1.
+  2. **K beats the raw log without thinking; with thinking the gap shrinks to +0.07, and its CI includes 0** (train: +0.15). With thinking, a 35B-A3B model reading the raw tracker log gets 0.74.
+  3. **On the cubes the tracker swapped, R is better than K (0.33–0.36 vs 0.09–0.12):** reading the raw positions, the model sometimes follows the true container where the KB follows the wrong id. The KB is confidently wrong exactly where it matters, and its p does not drop enough there (the KB's AUROC lead over SoftHaircut comes from elsewhere).
+  4. The model's stated confidence (0.62–0.63) is below the KB's own p (0.72), as on train.
