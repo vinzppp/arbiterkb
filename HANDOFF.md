@@ -27,7 +27,7 @@ Read first: `DEVELOPMENT.md` (spec **v1.12**: counting closed as a KB test; `Per
 - **Earlier, still true:** synthetic permanence K = raw log with thinking; ArbiterKB ≈ SoftHaircut on AURC; motion v2 on G test F1 0.81; the VLM cannot tell a pick-up from a put-down in the front video.
 
 ## Next
-1. **The closed loop is now the main line** (claims 1–2 cannot move offline: K = the KB's top answer on every QA set). Port the 2610.17350 prompt skeleton and completion rules into `harness.py` (downloading their code needs the user's go). Then one pod session: a multi-object Cutie on G's replays (lost tracks), `--vocab open`, perception of VideoPlaceOrder / VideoRepick, fresh RoboMME and G-stress episodes, and a closed-loop pilot with arms H / R / K (K with `self_memory`'s view first). Consider a "K + raw positions around close passes" arm, since R beats K on swapped cubes.
+1. **The closed loop is now the main line** (claims 1–2 cannot move offline: K = the KB's top answer on every QA set). **Ported and ready** (NOTES "Closed loop"): `arbiter_kb/closed_loop.py` (2610.17350's loop, commit 79dcc7f), `sources/online.py` (causal perception → FrameObs, equal to the batch source on G), `stress/closed_loop_pod.py` and **`stress/POD_CLOSED_LOOP.md`**. Next: the user starts a pod; smoke test (one episode per arm); then the val pilot (VideoUnmaskSwap, VideoPlaceOrder; H / R / K; about $3–4 GPU + under $1 LLM). Consider a "K + raw positions around close passes" arm, since R beats K on swapped cubes. Later: the multi-object Cutie on G's replays.
 2. **Claim 3, only on fresh episodes:** tune R6's magnitude (d0 / w_max, scored with ECE / Brier as well as AURC) on train; compare against a SoftHaircut that keeps the cover kernel (the fair baseline after the attribution); one read.
 3. **M6** on the fresh episodes.
 4. **Dropped or frozen:** the min_q margin feature (off by default; `r6_feature` stays "min_3d"), C (`memtool.py`), more view arms (A, KR), the LLM's stated confidence as a claim-3 measure; B frozen until M5; counting.
@@ -43,7 +43,7 @@ Read first: `DEVELOPMENT.md` (spec **v1.12**: counting closed as a KB test; `Per
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
 - Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD on main: the 2026-10-29 work incl. the overnight A / B / C tests, the claim-3 test on G and four reviews (`reviews/overnight_2026-10-29_*.md`, `reviews/claim3_g_*.md`); not pushed.
 - Gate per phase: `make check` (pytest + quality.py + selftest, which uses train seeds only), then the user runs `/review-phase Mx` in Claude Code (a code-reviewer and a goal-reviewer agent; reviews land in `reviews/`). Fix, record in NOTES, then tag.
-- Current frozen params: hash a810942859b9, prompts 0c77893f87f4 (`params.json` holds both; `load_params` refuses a mismatch).
+- Current frozen params: hash a810942859b9, prompts c8d7e42cdcaa (`params.json` holds both; `load_params` refuses a mismatch).
 - E5c: test-split reads need a frozen `params.json` with a FREEZE line in `results/test_reads.log`. Any parameter change means `python scripts/run.py --freeze --force` before the next test read.
 - Cowork session mechanics (if continuing from Claude.ai):
   - edit in the container copy, stage the changed files under `/mnt/user-data/outputs/<fresh dir>/`, then `device_commit_files` to the Mac (reuse of a staged path can serve a stale copy);
