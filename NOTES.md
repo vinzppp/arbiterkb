@@ -1486,3 +1486,12 @@ User idea: keep the count against the goal up to date in the KB, so the controll
   - v2 fragments every move into many short ones (6,101 segments), and with containers rarely "both moving" for long enough, **no close pass is detected**.
   - iid noise of 15 mm on every frame is much harsher than G's tracker (median 0, p90 7.5 mm). It remains a known weakness; R6's near-pass evidence would need its own smoothing for such data.
 - **Still open:** 590 spurious segments on G test (about 3 per episode). They come from the tracker's position jumps (p99 30 mm), which a one-frame-lag detector cannot tell from real starts.
+
+## Spec v1.11 and item 7 (2026-10-29, user decision)
+- **`review.py` removed, `ask.py` added:** one closed question about one object in one marked frame, no memory text. Two questions: occluder (robot arm / container / out of view / cannot tell) and appearance (≤ 12 words + colour).
+  - Answers are checked; occluder → `vlm_occluder` evidence (shown in the event log), appearance → the description fact.
+  - Tests: `tests/test_ask.py`. Not yet measured with truth (pod, M4 item 10).
+- **Removed with it:** `tests/test_review.py`, `scripts/review_test.py`; its windows helpers moved to `scripts/video_windows.py`, which `describe_test.py` uses. Reproducing the review-call results needs commit 8d0787f.
+- **The window summary**, if one is wanted, comes from the KB's event log by code, not from a VLM.
+- **DEVELOPMENT.md is now v1.11** (header, §2.1 diagram and status, §2.2 step 6b, §2.3, §2.5, §2.6, §2.7, §3.7, M3 item 4, M4 items 5, 6, 10, 11). HANDOFF.md is rewritten for the current state.
+- `prompts_hash` now covers `ask.py` instead of `review.py`; re-frozen: params **49a8577dc73f**, prompts **ba6ba13b8dbd**.

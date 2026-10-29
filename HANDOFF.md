@@ -1,38 +1,54 @@
-# ArbiterKB: handoff (2026-10-28, 04:20 PT)
+# ArbiterKB: handoff (2026-10-29)
 
-Read first: `DEVELOPMENT.md` (spec v1.8: four roles incl. the periodic VLM reviewer (§2.2 6b, §3.7); v1.6 M2 conditional on G, arms K0 / S; §2 the target loop and its reasoning, §3.7 VLM annotator, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
+Read first: `DEVELOPMENT.md` (spec **v1.11**: robot actions from robot state; no periodic VLM review; the VLM lists objects at keyframes and answers one closed question per marked frame (`ask.py`); L4 goal counter; view v4; motion v2; §2 the loop and its reasoning, §3.7 the VLM calls, §3.8 controller, §6 phases), `docs/GOALS.md` (claims, falsifiers), `NOTES.md` (per-phase log; the newest sections are at the bottom). Answer the user in Chinese, concisely. Docs in English.
 
-## Direction (changed 2026-10-28, NOTES "Direction v2")
+## Direction (NOTES "Direction v2")
 - The KB is the memory module of an LLM controller that outputs waypoints itself, in the 2610.17350 harness.
 - Claims: (1) a smaller model, or (2) far fewer tokens and images, at matched success; (3) the KB's beliefs are calibrated (G and M2).
-- After G: M3 (complete KB) and M4 (controller harness, dry run on the Mac) may go before M2.
 
-## M3 / M4 status (NOTES "M3", "M4")
-- M3, first part: gripper events, R3 grasp/place, Near/LeftOf/On, the event log and the controller view.
-- M4, Mac side: `llm.py`, `controller.py`, `scripts/dry_run.py`. Not run: no `.env` on this Mac, no RGB replays.
-- Next:
-  - copy ~10 train RGB replays from the pod (for arm H);
-  - the user approves a small dry-run budget;
-  - the closed-loop harness on the pod (`stress/`);
-  - motion-detector smoothing (M2 item 1; it breaks under noise).
+## Latest results (NOTES for every number and its file)
+- **Counting on RoboMME robot state** (qwen3.6-35b-a3b, off / default thinking):
+  - raw log 0.61 / 0.82;
+  - KB v3 view 0.83 / 0.94, the same as Sonnet 5.5 with the raw log (0.94) at a fifth of the cost;
+  - **v4 with the goal counter 0.97 / 0.96** (episodes 31–60; the parse rules were written after errors there);
+  - oracle 0.96 / 0.99.
+- **Wording:**
+  - the KB in words helps when it joins facts (synthetic questions: 0.66 → 0.91 without thinking);
+  - "now" sentences hurt counting (0.83 → 0.70–0.74);
+  - view v4 = v3 + the counter line + joined facts.
+- **VLM:**
+  - listing from the image alone 4 / 4 (with memory text 2 / 4, 0 / 4);
+  - a periodic review confirmed 68% of planted false events;
+  - telling a pick-up from a put-down in the front video ≤ 0.52, even for Sonnet.
+  - → removed; `ask.py` asks one closed question with no memory text (not yet measured with truth).
+- **Motion v2:** real tracker (G test) F1 0.68 → 0.81, spurious moves −43%. Fragments under 15 mm iid noise.
+- **Permanence (synthetic, text):** with thinking the raw log is as good as the KB (0.96); the KB saves tokens.
+- **Claim 3:** ArbiterKB ≈ SoftHaircut (AURC 0.182 vs 0.180). Not supported yet.
 
-## Reminders from the v1.5 discussion
-- Tell the pod not to delete `/workspace/g/replays`: sizes and the open-vocabulary re-run (POD_RUN §6b) need them.
+## Next
+1. **The full rerun on final sets** (NOTES "Before the full rerun", rule first):
+   - counting episodes 1–30 with v4 vs v3 vs raw log vs oracle, plus Sonnet with v4;
+   - synthetic permanence and questions on test seeds (≥ 1000, recorded in the E5c ledger);
+   - `scripts/count_report.py` makes the tables.
+2. **Pod:**
+   - the rules' relations against simulator truth;
+   - the ask call with truth;
+   - perceived-data runs;
+   - the closed loop (M5);
+   - VideoRepick tracking.
+3. Push: the user approves each push.
+
+## Reminders for the pod
+- Tell the pod not to delete `/workspace/g/replays`: sizes, the open-vocabulary re-run (POD_RUN §6b) and the relation / ask-call truth checks need them.
 - G's perception used the simulator's object list (privileged). Claims need `perceive.py --vocab open`.
 - `/review-phase G` must review `stress/` and the sg_pilot worker. DINOv2 is computed per frame and never used.
-
-## Latest results (2026-10-28; NOTES for details)
-- Permanence (synthetic, text): K = raw log (0.96 with thinking); the KB saves 28–51% of tokens.
-- Claim 3: ArbiterKB ≈ SoftHaircut on measured swap shapes (AURC 0.182 vs 0.180).
-- **Counting tasks on RoboMME robot state, with semantic actions: K 0.85 vs raw log 0.60 without thinking, 0.91 vs 0.79 with thinking.** This is the first win for the KB; confirm it on unseen episodes.
-- VideoRepick is a shell game with identical cubes: it needs visual tracking plus the reviewer.
-- Next: the v3 view on unseen episodes plus a frontier-model reference; the reviewer (M4 item 10).
+- Stop the pod when a run is done.
 
 ## Where things are
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
 - Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD: G Mac-side code plus the POD_RUN fresh-volume path.
 - Gate per phase: `make check` (pytest + quality.py + selftest, which uses train seeds only), then the user runs `/review-phase Mx` in Claude Code (a code-reviewer and a goal-reviewer agent; reviews land in `reviews/`). Fix, record in NOTES, then tag.
-- Current frozen params: hash 40d899eba31d (v1.6: R7 removed).
+- Current frozen params: hash 49a8577dc73f, prompts ba6ba13b8dbd (`params.json` holds both; `load_params` refuses a mismatch).
 - E5c: test-split reads need a frozen `params.json` with a FREEZE line in `results/test_reads.log`. Any parameter change means `python scripts/run.py --freeze --force` before the next test read.
 - Cowork session mechanics (if continuing from Claude.ai):
   - edit in the container copy, stage the changed files under `/mnt/user-data/outputs/<fresh dir>/`, then `device_commit_files` to the Mac (reuse of a staged path can serve a stale copy);
