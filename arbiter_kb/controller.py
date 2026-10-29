@@ -69,10 +69,24 @@ control steps. You get no depth and no object positions."""
 
 ENDING = """Objects can be hidden: an object covered by a container moves with that container until it is seen again.
 Positions recorded earlier are where things were at that time, not necessarily where they are now.
-Notes: time passes only while the robot executes a motion; everything else in the scene keeps moving during a
-motion. The gripper opens or closes only when you command it (-1 or 1). The episode ends automatically when the
-environment judges success or failure, or after 1300 control steps. If you believe the task is complete,
-answer with "waypoint": null."""
+The robot state includes the camera calibration: pinhole intrinsics K and world-to-camera extrinsics [R|t] (OpenCV
+convention: camera x right, y down, z forward; pixel = K (R X_world + t), dividing by depth).
+
+Notes on the robot and this interface:
+- Time: the simulation runs at 20 control steps per second, and time passes only while the robot executes a motion.
+  A motion takes longer the farther it goes: about 0.15-0.3 s for a few millimetres, 0.4-1.1 s for 1-5 cm and
+  1-2.5 s for 10-30 cm. Everything else in the scene keeps moving during a motion, so to act at a particular moment,
+  start the motion that much earlier. A small motion (a few millimetres) is a short way to let a little time pass.
+- Gripper: it opens or closes only when you command it (-1 or 1); with 0 it keeps its current state, also after
+  touching, pushing or pressing something.
+- If an action executes no steps, the next message says so explicitly: then the robot did not move, no time passed
+  and the scene is unchanged.
+- Left and right: in task instructions, left and right are from the robot's point of view: the robot's left is +y and its right is -y. The front camera faces the robot (the robot is at the top of the front image), so the robot's right appears on the LEFT side of the front image.
+
+The episode ends automatically when the environment judges success or failure, or after 1300 control steps.
+If you believe the task is complete, answer with "waypoint": null."""
+# The notes, the left/right note and the last two sentences are 2610.17350's MODEL_NOTES, LR_NOTE (their --prompt-variant
+# lr_note, the 92.1% run) and SYSTEM ending, verbatim (harness/astra_waypoint_eval_v3.py, commit 79dcc7f, MIT).
 
 
 def system_prompt(arm: str) -> str:

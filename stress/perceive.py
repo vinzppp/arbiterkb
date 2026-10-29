@@ -44,32 +44,40 @@ def open_config(sg, goal: str) -> tuple[dict, list[dict]]:
 
 def perceive(rep, handle, episode_num: int, scale: int = 2):
     """sg_pilot.perceived_graph, also keeping each slot's bbox extents (perceived_graph drops them)."""
-    import cv2
-    import sg_pilot as sg
-
     T, S = len(rep.front_rgb), handle.num_classes
     g = np.full((T, S, 8), np.nan, np.float32)
     box = np.zeros((T, S, 4), np.float32)
     n_seed = 0
     for t in range(T):
-        rgb = rep.front_rgb[t]
-        big = cv2.resize(rgb, (rgb.shape[1] * scale, rgb.shape[0] * scale), interpolation=cv2.INTER_CUBIC)
-        out = handle.process_frame(hand_bgr_rotated=np.ascontiguousarray(cv2.cvtColor(big, cv2.COLOR_RGB2BGR)),
-                                   frame_num=t, episode_num=episode_num, depth=rep.front_depth_m[t],
-                                   hand_rgb_unrotated=rgb, intrinsics=rep.K_front,
-                                   extrinsics=sg.cam_to_world(rep.E_front[t]))
-        n_seed += len(out.seed_events)
-        for s in range(S):
-            bb = out.bboxes[s + 1]
-            visible = not np.allclose(bb[:4], 0.0)
-            g[t, s, sg.F_ID], g[t, s, sg.F_LABEL] = s, 0 if handle.classes[s].startswith("container") else 1
-            g[t, s, sg.F_HIDDEN] = 0 if visible else 1
-            if visible:
-                box[t, s] = bb[:4]
-                if np.any(bb[4:7] != 0):
-                    g[t, s, sg.F_X:sg.F_Z + 1] = bb[4:7]
-                    g[t, s, sg.F_U:sg.F_V + 1] = sg.project_points(bb[4:7], rep.K_front, rep.E_front[t])[0]
+        g[t], box[t], seeds = slot_row(handle, rep.front_rgb[t], rep.front_depth_m[t], rep.K_front, rep.E_front[t],
+                                       t, episode_num, scale)
+        n_seed += seeds
     return g, box, n_seed
+
+
+def slot_row(handle, rgb, depth_m, K, E, t: int, episode_num: int, scale: int = 2):
+    """One front frame through the worker -> (slot rows [S, 8], bbox extents [S, 4], seed events). Shared by the
+    offline run above and the closed loop (stress/closed_loop_pod.py)."""
+    import cv2
+    import sg_pilot as sg
+
+    S = handle.num_classes
+    g, box = np.full((S, 8), np.nan, np.float32), np.zeros((S, 4), np.float32)
+    big = cv2.resize(rgb, (rgb.shape[1] * scale, rgb.shape[0] * scale), interpolation=cv2.INTER_CUBIC)
+    out = handle.process_frame(hand_bgr_rotated=np.ascontiguousarray(cv2.cvtColor(big, cv2.COLOR_RGB2BGR)),
+                               frame_num=t, episode_num=episode_num, depth=depth_m, hand_rgb_unrotated=rgb,
+                               intrinsics=K, extrinsics=sg.cam_to_world(E))
+    for s in range(S):
+        bb = out.bboxes[s + 1]
+        visible = not np.allclose(bb[:4], 0.0)
+        g[s, sg.F_ID], g[s, sg.F_LABEL] = s, 0 if handle.classes[s].startswith("container") else 1
+        g[s, sg.F_HIDDEN] = 0 if visible else 1
+        if visible:
+            box[s] = bb[:4]
+            if np.any(bb[4:7] != 0):
+                g[s, sg.F_X:sg.F_Z + 1] = bb[4:7]
+                g[s, sg.F_U:sg.F_V + 1] = sg.project_points(bb[4:7], K, E)[0]
+    return g, box, len(out.seed_events)
 
 
 def main() -> None:

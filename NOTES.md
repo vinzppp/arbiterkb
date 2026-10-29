@@ -1911,3 +1911,23 @@ Post-hoc attribution of the read above, **$0, no LLM**: run on G train first; th
 2. **The KB's lead over SoftHaircut is R6 on a cover-time distribution instead of a point mass.** R1 starts each hidden cube with mass over the nearby containers, so R6's mixing has something to spread. A KB-free haircut that also kept the cover kernel would likely match it. That is a feature, not the belief layer's propagation (R5 is inert here; retraction is untested). By falsifier 6's logic, **claim 3's "belief layer" is not shown on G**, though the KB's p is the best-calibrated signal measured.
 3. **Next for claim 3, if pursued:** fresh episodes (G test is spent), d0 / w_max tuned for magnitude (ECE / Brier as well as AURC), and a SoftHaircut with the cover kernel as the fair baseline. Lower priority than the closed loop.
 - An extra look at p's magnitude on the test rows (the median p values above) was computed post-hoc from the same systems.
+
+## Closed loop: the 2610.17350 harness ported, pod runbook (2026-10-29, user go)
+- **Their code, downloaded with the user's go:** `github.com/jackbjed/embodied-astra-robomme` at commit 79dcc7f (MIT), shallow clone in the session scratchpad, read only, never run. Their loop is `harness/astra_waypoint_eval_v3.py`:
+  - memory = the whole conversation (every sampled front frame stays in context, chained with previous_response_id);
+  - endings: declared complete, unparseable / invalid answer, env error, 3 consecutive no-op actions, 150 calls;
+  - one front frame every 3 control steps plus the last; reasoning effort medium; their 92.1% run used the left/right note.
+- **`arbiter_kb/closed_loop.py`** ports that loop:
+  - arm H re-sends the whole conversation (OpenRouter has no previous_response_id; the content is the same);
+  - the memory arms (R, K, …) get a fresh request each step: memory text + the current front and wrist frames + their state text (TCP pose, fingers, elapsed steps, camera calibration);
+  - K's memory text starts with `self_memory.self_view` (B), and every decision is recorded in the KB;
+  - `check()` (workspace, reach, and for memory arms the cited ids) gives one retry, for every arm alike.
+  - Tests: `tests/test_closed_loop.py` (fake env: success, the three endings, H's chained conversation, the memory arm's fresh request with its self view, the retry).
+- **`controller.ENDING`** now carries their MODEL_NOTES and left/right note verbatim, and the calibration sentence. This changes the system prompt for every controller arm (the counting and QA tests use their own prompts and are unaffected). Re-frozen: prompts c8d7e42cdcaa.
+- **`arbiter_kb/sources/online.py`** (`OnlineObs`): perception slot rows → FrameObs one frame at a time, with the incremental `relink.Relinker` (now behind `relink_margin`, bit-identical on all 180 G files) and a causal occlusion step. **On all 180 G episodes the online FrameObs equal the batch source's: 158,427 object-frames, 0 differences.**
+- **Pod side:**
+  - `stress/perceive.slot_row` (one frame through the worker, shared with the offline run);
+  - `stress/closed_loop_pod.py` (RoboMME env with depth for perception only, the open word list, arms H / R / K, resumable results, ledger READ for `--dataset test`);
+  - `stress/POD_CLOSED_LOOP.md` (setup, smoke test, val pilot on VideoUnmaskSwap and VideoPlaceOrder, 10 episodes per arm; about $3–4 GPU and under $1 LLM).
+  - **Not run:** the pod script cannot run on the Mac (RoboMME, the worker), so its first real run is the smoke test. The runbook lists what to verify there (observation keys, double reset, the K prompt).
+- **Model:** `qwen/qwen3.6-35b-a3b` takes images on OpenRouter (262k context), so one model serves all arms.
