@@ -1612,3 +1612,62 @@ User: if the tracker can be fixed, fix it, and look for other places that need t
 - Tracker-swapped Q1 cubes: 94 → 75 of 270. On those that remain, every arm is still mostly wrong and no confidence separates right from wrong (AUROC 0.29–0.53).
 - Caveats: the truth uses the re-linked ids in this row (the container physically there, named by the ids the memory saw); G train only, where relink was chosen.
 - **Reading:** the fix helps every arm by about the same, and the KB's margin over the raw log stays. The remaining loss is lost container tracks, which needs the tracker on the pod. The KB still does not know when it is wrong.
+
+## Overnight plan (2026-10-29, user decisions before leaving)
+User: zoom out from the tests; as a memory module, how can the KB organise more information that is useful to the LLM controller? Do A, B and C from the brainstorm, step by step, and analyse. Decisions: **budget $5 in total, qwen3.6-35b-a3b only**; commit each step to main, no push; B goes into a harness skeleton with offline checks; the code-reviewer and goal-reviewer agents run at the end and their findings are fixed.
+- **A:** say how each fact is known, and give explicit alternative hypotheses instead of one number.
+- **B:** memory of the controller's own actions and their outcomes, its past decisions, and "what changed since your last decision" first.
+- **C:** memory as a tool: a short working memory plus queries the controller can make.
+
+## A — explicit alternatives and how each fact is known: the test, fixed before running (2026-10-29)
+**Free check first** (G train, re-linked tracks, 241 Q1 cubes, no model call):
+- The KB's top container is right for 0.83 of the cubes. **Its own probability already separates right from wrong: AUROC 0.731** (median p 0.986). The model's stated confidence in the perceived QA was lower (0.66–0.71). The model loses information the KB has.
+- **Alternative set** per hidden cube: start from its top container; going back in time from the end, every near pass after the cover with min_3d < d joins the partner.
+  - d = 0.10 m: the truth is in the set for 0.944 of the cubes, mean size 1.57, size 1 for 0.51; the top is right for 0.90 when the set has size 1.
+  - d = 0.06 m: 0.906, size 1.18. d = ∞: 0.949, size 1.78.
+  - **Chosen before any call: d = 0.10 m** (it keeps 0.94 coverage at about one and a half containers per cube).
+
+**Arms** (G train, re-linked, 90 episodes, effort off and default; cap $1):
+- **K:** the v4 view, as before.
+- **KA:** v4 plus a section "How the memory knows (per hidden cube)": the most likely container, how that is known (seen covered at t, followed with the container's track since; the tracker's ids can be wrong), and the alternatives with their reason ("bin_1 and bin_2 passed 4 cm apart at t = 110; the tracker may have mixed them up"), or "no close pass since the cover".
+- Same KB, same numbers; KA only adds this section. Code: `arbiter_kb/epistemic.py` (frozen in the prompts hash).
+
+**Questions:** Q1–Q6 and the Q1 confidence as before, plus **q1_alt**: "if not sure, which other container could it be? (container id or none)". Both arms get the same questions, so K is asked again.
+
+**Readings fixed in advance:**
+1. **Calibration (main):** the AUROC of the stated Q1 confidence over all Q1 cubes, KA − K, bootstrap over cubes. Better = the CI excludes 0. Reference: the KB's own p (0.731).
+2. **Top-2:** the share of cubes where the Q1 answer or q1_alt is right, KA − K (paired bootstrap over episodes).
+3. **No cost to the main answer:** Q1 accuracy KA − K within ±5 pp, or better.
+
+## C — memory as a tool: the test, fixed before running (2026-10-29)
+- **Arm KT** (`arbiter_kb/memtool.py`): a working memory whose size does not grow with the episode (the goal, the two container orders, each cube's most likely container), plus four queries the model can make, one per turn, at most 4:
+  - `history(object)`: its moves and partners;
+  - `passes(container)`: its close passes with distances;
+  - `how_known(colour)`: A's line for that cube;
+  - `events()`: the whole event log.
+- **Against K** (the full v4 view, one call), on the same data, questions and scoring as the perceived QA (G train, re-linked, Q1–Q6 + Q1 confidence; no q1_alt), effort off and default. K comes from the cache.
+- **Tokens:** the sum of input tokens over all turns of an episode, so the queries are paid for.
+- **Readings fixed in advance:**
+  1. Q1 KT − K within ±5 pp: "same"; the CI below −5 pp: worse.
+  2. Input tokens per episode, KT / K (median).
+  3. **Scaling (free):** K's view tokens against the number of KB events per episode, and KT's working memory against the same. The claim-2 argument is that KT stays flat while K grows; G's episodes are short, so this shows the slope, not a long-episode result.
+  4. Which queries the model makes, and whether Q2 / Q4 / Q6 (which need the queries) fall.
+- Cap $1.
+
+## B — the controller's actions and their outcomes: built, checked offline (2026-10-29)
+- **`arbiter_kb/self_memory.py`:** each controller decision is recorded in `kb.task["decisions"]` with its intent and a snapshot of the beliefs it was made on.
+  - The intent is the controller's own "intent" field (an explanation, like "target" and "cites", never a constraint), or is read off the waypoint (gripper closes with nothing held → pick_up; opens while holding → release; already closed, nothing held, low → press; else move).
+  - `outcome()`: "done (pick_up at t=… [e…])", "not done yet", or "not done; instead …", from the robot-state actions since the decision. No vision.
+  - `changes()`: events and belief changes since the last decision (the most likely container changed; p fell by ≥ 0.1).
+  - `self_view()`: the section that goes **first** in the prompt: the changes since the last decision, then the last three decisions with their outcomes. It suggests no action.
+- **`arbiter_kb/harness.py`:** the loop skeleton (the KB reads the frames → prompt = self view + controller view → decide → record → env.step → the KB reads the new frames), an `Env` protocol for the pod's RoboMME wrapper, and `ReplayEnv` (a recorded dataset episode; a decision at each execution subgoal's start; the actions are ignored).
+  - **Not yet the 2610.17350 port:** its prompt skeleton, feedback text and completion rules have to be copied from its released code before M5 (downloading it needs the user's go).
+- **Offline check** (`scripts/check_self_memory.py`, counting episodes 31–100, no model call): a scripted controller declares the current subgoal's action.
+  - Right intent → the outcome should say "done" (recall). Wrong intent (a different action declared) → it should not (control).
+  - This mostly re-measures `actions.py` (recall 0.97–1.0 against the labels, NOTES "Actions vs subgoal labels") through the new code path. Its value is a working loop and outcome text, not a new result.
+  - A smoke run on 5 episodes per task was looked at while building (all right intents "done" except SwingXtimes holds 13 / 16; wrong intents 0 "done").
+- **Result** (`results/latest/self_memory_check/summary.json`, 210 episodes):
+  - right intent says "done" **0.984** (1,415 / 1,438): every pick_up, release and press 1.00; SwingXtimes holds 0.927 (291 / 314), the known miss of `hold_above` on repeated holds;
+  - wrong intent says "done" **0.000** (0 / 1,618): it never reports an action that did not happen;
+  - size: the self view is a median of 229 characters against 912 for the controller view.
+- **Reading:** the outcome text is as reliable as `actions.py`, at about a quarter of the view's length. Whether it helps a controller (failure categories such as premature completion or a late press) can only be measured in the closed loop (M5).

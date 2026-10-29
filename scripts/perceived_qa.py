@@ -23,8 +23,10 @@ sys.path.insert(0, str(ROOT))
 
 from run import git_state, load_params  # noqa: E402
 from extract_test import EFFORT, ROBOT, questions, right  # noqa: E402
-from video_windows import wilson  # noqa: E402
+from qa_stats import report  # noqa: E402
 from arbiter_kb.controller import parse_answer, raw_tracker_log  # noqa: E402
+from arbiter_kb.epistemic import epistemic_view  # noqa: E402
+from arbiter_kb.memtool import run_tool, working_memory  # noqa: E402
 from arbiter_kb.llm import LLM  # noqa: E402
 from arbiter_kb.narrative import BASE, narrative  # noqa: E402
 from arbiter_kb.sg_compat import F_X  # noqa: E402
@@ -74,7 +76,7 @@ def truth(d: dict) -> dict:
     return {k: v for k, v in t.items() if v is not None}
 
 
-def memory(arm: str, src: PerceivedSource, ep: int, params) -> str:
+def memory(arm: str, src: PerceivedSource, ep: int, params, kbs: dict | None = None) -> str:
     frames = list(src.frames(ep))
     if arm == "R":
         return f"Goal: {src.meta(ep).task_goal}\nRaw tracker log (every 10th frame):\n" + raw_tracker_log(frames)
@@ -82,42 +84,72 @@ def memory(arm: str, src: PerceivedSource, ep: int, params) -> str:
     s.reset(src.meta(ep))
     for f in frames:
         s.step(f)
+    if kbs is not None:
+        kbs[ep] = s.kb
+    if arm == "KT":
+        return working_memory(s.kb)
+    if arm == "KA":
+        return epistemic_view(controller_view(s.kb, params.rule), s.kb)
     return controller_view(s.kb, params.rule) if arm == "K" else narrative(s.kb)
 
 
-def ask(t: dict) -> str:
+def ask(t: dict, alt: bool = False) -> str:
     q = json.loads(questions(t).split("\n", 1)[1])
     q = {k: v for k, v in q.items() if k in t}
     q["q1_conf"] = "for each q1 answer, how sure are you (0 to 1)? (object: colour -> number)"
+    if alt:
+        q["q1_alt"] = "for each q1 answer, if you are not sure, which other container could it be? (object: colour -> " \
+                      "container id or none)"
     return "Answer with JSON only, one key per question:\n" + json.dumps(q, indent=1)
 
 
-def jobs(params, relinked: bool = False) -> list[dict]:
+def jobs(params, relinked: bool = False, arms: tuple = ARMS, alt: bool = False) -> list[dict]:
     out = []
     rows = (("relinked", PerceivedSource(**OCCLUSION, relinked=True)),) if relinked else \
         (("perceived", PerceivedSource(**OCCLUSION)), ("ref", PerceivedSource(oracle_cubes=True)))
+    kbs: dict = {}
     for row, src in rows:
         for ep in src.episodes("train"):
             d = src.load(ep)
             t = truth(d)
-            for arm in ARMS if not relinked else ("R", "K"):
+            for arm in arms:
                 msgs = [{"role": "system", "content": "You answer questions about a robot's table-top scene from "
                                                       "its memory. " + ROBOT},
-                        {"role": "user", "content": memory(arm, src, ep, params) + "\n\n" + ask(t)}]
-                out += [{"ep": d["name"], "row": row, "arm": arm, "effort": eff, "msgs": msgs, "truth": t}
+                        {"role": "user", "content": memory(arm, src, ep, params, kbs) + "\n\n" + ask(t, alt)}]
+                out += [{"ep": d["name"], "row": row, "arm": arm, "effort": eff, "msgs": msgs, "truth": t,
+                         "kb": kbs.get(ep) if arm == "KT" else None}
                         for eff in EFFORT]
     return out
 
 
-def score(job: dict, text: str) -> dict:
+def answer(llm, job: dict, max_queries: int = 4) -> tuple[str, dict]:
+    """One answer; arm KT may first make up to `max_queries` memory queries (memtool.py), each a further call."""
+    msgs, used = list(job["msgs"]), {"prompt_tokens": 0, "turns": 0, "queries": []}
+    for turn in range(max_queries + 1):
+        text, u = llm.call(msgs, max_tokens=4000, reasoning=EFFORT[job["effort"]])
+        used["prompt_tokens"] += int(u.get("prompt_tokens", 0))
+        used["turns"] += 1
+        ans = parse_answer(text)
+        q = ans.get("query") if isinstance(ans, dict) else None
+        if job["kb"] is None or not isinstance(q, dict) or turn == max_queries:
+            return text, used
+        used["queries"].append(q)
+        msgs += [{"role": "assistant", "content": text},
+                 {"role": "user", "content": "Memory: " + run_tool(job["kb"], str(q.get("tool")), q.get("arg", ""))}]
+    return text, used
+
+
+def score(job: dict, text: str, used: dict | None = None) -> dict:
     ans, t = parse_answer(text), job["truth"]
     ans = ans if isinstance(ans, dict) else {}
     conf = ans.get("q1_conf") if isinstance(ans.get("q1_conf"), dict) else {}
+    alt = ans.get("q1_alt") if isinstance(ans.get("q1_alt"), dict) else {}
     keys = [k for k in t if k.startswith("q") and k != "q2_bin"]
     q1 = {k[3:]: {"right": right(k, ans.get(k), t[k]), "swapped": t["swapped"][k[3:]],
-                  "conf": _num(conf.get(k[3:]))} for k in keys if k.startswith("q1_")}
+                  "conf": _num(conf.get(k[3:])), "top2": right(k, ans.get(k), t[k]) or right(k, alt.get(k[3:]), t[k])}
+          for k in keys if k.startswith("q1_")}
     return {"ep": job["ep"], "row": job["row"], "arm": job["arm"], "effort": job["effort"],
-            **{k: right(k, ans.get(k), t[k]) for k in keys}, "q1": q1, "answers": ans}
+            **{k: right(k, ans.get(k), t[k]) for k in keys}, "q1": q1, "answers": ans, **(used or {})}
 
 
 def _num(v) -> float | None:
@@ -127,59 +159,18 @@ def _num(v) -> float | None:
         return None
 
 
-def auroc(conf: list[float], ok: list[bool]) -> float | None:
-    pos, neg = [c for c, y in zip(conf, ok) if y], [c for c, y in zip(conf, ok) if not y]
-    if not pos or not neg:
-        return None
-    return float(np.mean([(p > q) + 0.5 * (p == q) for p in pos for q in neg]))
-
-
-def report(rows: list[dict]) -> dict:
-    out = {}
-    for row in sorted({r["row"] for r in rows}):
-        for arm in sorted({r["arm"] for r in rows}):
-            for eff in EFFORT:
-                rs = [r for r in rows if (r["row"], r["arm"], r["effort"]) == (row, arm, eff)]
-                q1 = [v for r in rs for v in r["q1"].values()]
-                stock = [v["right"] for r in rs if r["ep"].startswith("stock") for v in r["q1"].values()]
-                stress = [v["right"] for r in rs if not r["ep"].startswith("stock") for v in r["q1"].values()]
-                sw = [v for v in q1 if v["swapped"] and v["conf"] is not None]
-                other = [k for k in rs[0] if k.startswith("q") and not k.startswith("q1")] if rs else []
-                out[f"{row}/{arm}/{eff}"] = {
-                    "q1": wilson(sum(v["right"] for v in q1), len(q1)), "q1_stock": wilson(sum(stock), len(stock)),
-                    "q1_stress": wilson(sum(stress), len(stress)),
-                    "q1_swapped": wilson(sum(v["right"] for v in q1 if v["swapped"]), sum(v["swapped"] for v in q1)),
-                    "auroc_swapped": auroc([v["conf"] for v in sw], [v["right"] for v in sw]),
-                    "auroc_all": auroc([v["conf"] for v in q1 if v["conf"] is not None],
-                                       [v["right"] for v in q1 if v["conf"] is not None]),
-                    **{k: round(float(np.mean([r[k] for r in rs if k in r])), 3) for k in other}}
-        for eff in EFFORT:
-            for a, b in [p for p in (("KR", "R"), ("K", "R"), ("KR", "K")) if {p[0], p[1]} <= {r["arm"] for r in rows}]:
-                out[f"{row}/{a}-{b}/{eff}"] = {part: paired(rows, row, a, b, eff, part)
-                                               for part in ("all", "stock", "stress")}
-    return out
-
-
-def paired(rows, row, a, b, eff, part) -> list[float] | None:
-    keep = lambda ep: part == "all" or ep.startswith("stock") == (part == "stock")  # noqa: E731
-    acc = {(r["arm"], r["ep"]): np.mean([v["right"] for v in r["q1"].values()]) for r in rows
-           if r["row"] == row and r["effort"] == eff and r["q1"] and keep(r["ep"])}
-    d = np.array([acc[(a, ep)] - acc[(b, ep)] for (arm, ep) in acc if arm == a and (b, ep) in acc])
-    if not len(d):
-        return None
-    boot = np.random.default_rng(0).choice(d, (2000, len(d))).mean(1)
-    return [round(float(d.mean()), 3), round(float(np.percentile(boot, 2.5)), 3), round(float(np.percentile(boot, 97.5)), 3)]
-
-
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--print", action="store_true")
     ap.add_argument("--call", action="store_true", help="required to spend money (1,080 calls; cap $2)")
     ap.add_argument("--keep-as", dest="keep_as", default="")
-    ap.add_argument("--relinked", action="store_true", help="container tracks re-linked by motion (relink.py); R, K")
+    ap.add_argument("--relinked", action="store_true", help="container tracks re-linked by motion (relink.py)")
+    ap.add_argument("--arms", default="", help="default: R,K,KR (R,K with --relinked); KA = K + epistemic.py")
+    ap.add_argument("--alt", action="store_true", help="also ask q1_alt (the A test)")
     a = ap.parse_args()
     params, (commit, dirty) = load_params(), git_state()
-    todo = jobs(params, a.relinked)
+    arms = tuple(a.arms.split(",")) if a.arms else (("R", "K") if a.relinked else ARMS)
+    todo = jobs(params, a.relinked, arms, a.alt)
     if a.print:
         for j in todo[:6:2]:
             print(f"===== {j['arm']}\n{j['msgs'][1]['content']}\n")
@@ -193,8 +184,8 @@ def main() -> None:
     llm = LLM(model="qwen/qwen3.6-35b-a3b", max_usd=2.0,
               provider={"order": ["DeepInfra"], "allow_fallbacks": False, "require_parameters": True})
     with ThreadPoolExecutor(8) as pool:
-        texts = list(pool.map(lambda j: llm.call(j["msgs"], max_tokens=4000, reasoning=EFFORT[j["effort"]])[0], todo))
-    rows = [score(j, t) for j, t in zip(todo, texts)]
+        got = list(pool.map(lambda j: answer(llm, j), todo))
+    rows = [score(j, t, u) for j, (t, u) in zip(todo, got)]
     out = {"report": report(rows), "rows": rows, "usage": llm.usage,
            "meta": {"commit": commit, "dirty": dirty, "params_hash": params.hash(), "occlusion": OCCLUSION, "relinked": a.relinked}}
     print(json.dumps(out["report"], indent=1), json.dumps({k: round(v, 4) if isinstance(v, float) else v
