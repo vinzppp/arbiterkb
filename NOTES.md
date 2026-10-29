@@ -1296,3 +1296,43 @@ User question: can the KB give the LLM richer, more semantic context, so that it
      - For a fast non-thinking controller, the case claims 1–2 care about, KH is the best choice we have.
      - With thinking, the plain KR words are best on object scenes, and K on counting.
 - Next options, each a new test: KH with the event log trimmed (to cut the duplicate facts and the length); or choose the format by whether the KB holds objects (KR words for object scenes, K for robot-only).
+
+## A goal counter kept by the KB: the test, fixed before running (2026-10-28)
+User idea: keep the count against the goal up to date in the KB, so the controller reads a ready number instead of working it out.
+- **Goal parse (`goal_counter.py`):** once per episode, the controller's model reads only the instruction and returns
+  `{"count": "pick_up|release|press|hold_left|hold_right", "target": <int>, "then": "<what comes after>"}`.
+  - The spec is checked; a bad spec means no counter line.
+  - qwen/qwen3.6-35b-a3b on DeepInfra, thinking default (one call per episode).
+- **Counter:** every frame, the KB counts its own robot-state actions of that kind (`actions.py` evidence; holds by side).
+- **Arm KC:** the v3 view (K) plus one line, `Goal progress: <kind> <n> of <target>`, with "— the repetitions are done" once n ≥ target. No "now" sentences.
+- **Data and scoring:** RoboMME counting episodes 61–100 (no demo phase in them), as in v3; K from the cache. Effort off and default; cap $1.
+- **Parse accuracy:** against the dataset's execution subgoals. The truth kind is release for PickXtimes / BinFill and hold_left for SwingXtimes; the truth target is the number of such subgoals. Reported per task.
+- **Rule:** KC − K paired, as before. KO (0.96 / 0.99) is the ceiling.
+- **Caveat:** if the parse is right, the counter does most of the decision's work. The score then measures parse + counter + reading, and the parse errors are reported apart.
+
+**Results** (`results/latest/count_robot_state_counter/`: report.json with the parse breakdown, rows.csv, meta.json with every goal spec; log `results/latest/logs/count_counter.log`; K from the cache, identical to v3; **$0.17** new, goal parses included):
+
+| arm | effort | right [Wilson 95%] | PickXtimes | SwingXtimes | BinFill |
+|---|---|---|---|---|---|
+| K (v3 view) | off | 0.83 [0.78, 0.86] | 0.78 | 0.71 | 0.96 |
+| **KC (K + goal counter)** | off | **0.94** [0.91, 0.96] | 0.98 | 0.82 | 1.00 |
+| K (v3 view) | default | 0.94 [0.90, 0.96] | 0.91 | 0.88 | 1.00 |
+| KC (K + goal counter) | default | 0.95 [0.92, 0.97] | 0.97 | 0.87 | 0.99 |
+| KO (oracle, v3) | off / default | 0.96 / 0.99 | | | |
+
+- **Paired:**
+  - KC − K: off **+0.11** [+0.08, +0.15], **better** (39 decisions won, 4 lost);
+  - default +0.01 [−0.01, +0.04], **same** (10 won, 6 lost).
+- **The counter gives the non-thinking controller what thinking gave it.** KC without thinking (0.94, about 0.5 s and no reasoning tokens) equals K with thinking (0.94, about 6 s), and is 2 pp under the oracle step list.
+- **Goal parse accuracy:**
+  - **By the pre-registered rule** (kind and target both exact): PickXtimes 5 / 40, SwingXtimes 8 / 40, BinFill 5 / 40. Low, mostly because the parser counted pick-ups where the rule expected releases.
+  - **In practice,** at these decision points (just after a put-down) pick-ups and releases are equal, so the number is what matters:
+    - PickXtimes: target right 39 / 40 (1 parse failed);
+    - BinFill: target right 35 / 40 (5 failed);
+    - **SwingXtimes: 21 / 40, with 16 failed parses** and kinds spread over hold_left / hold_right / pick_up / release / press.
+  - The back-and-forth instruction is the hard one to parse. SwingXtimes is also where KC still loses most: "move right" instead of "put down", 13 times without thinking.
+- **Reading:**
+  1. **Pre-computing the count against the goal works.** It is the user's idea, and it is L4 of the spec: the largest gain of any view change without thinking (+11 pp), at no cost per decision beyond one parse per episode.
+  2. What remains is **the parse**, not the counter or the reader. A wrong or missing spec falls back to K.
+  3. The parser prompt should name the back-and-forth case, or count pairs, before the next run. That is a new test with its rule fixed first, and it should use other episodes than 61–100, which have now been read three times.
+- **Caveat:** the counter only counts the robot's own actions (no colours, no objects), so it cannot count "two red, then three green" separately; it counts five put-downs.

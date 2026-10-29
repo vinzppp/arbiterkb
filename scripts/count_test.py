@@ -13,7 +13,8 @@ The answer is one action from a fixed list (no object positions exist without vi
 Truth = the action class of the next subgoal. Decision points = LAG frames after each "place / put into the bin /
 reach the left-side target" subgoal ends in the execution phase (v1 used the boundary itself).
 KS (v2) = K with the semantic actions (actions.py); K in v1 had only grip / pause events.
-KR = the same KB in words (narrative.robot_narrative; NOTES "Counting with the KB in words"); KT = KR trimmed; KH = K + joined facts.
+KR = the same KB in words (narrative.robot_narrative; NOTES "Counting with the KB in words"); KT = KR trimmed; KH = K + joined facts; KC = K + a goal-progress line
+(goal_counter.py; the goal parsed once per episode).
 """
 from __future__ import annotations
 
@@ -32,6 +33,7 @@ sys.path.insert(0, str(ROOT))
 from run import git_state, load_params  # noqa: E402
 from arbiter_kb import CONTRACT_VERSION  # noqa: E402
 from arbiter_kb.controller import parse_answer  # noqa: E402
+from arbiter_kb.goal_counter import parse_goal, progress_line  # noqa: E402
 from arbiter_kb.llm import LLM, BudgetExceeded  # noqa: E402
 from arbiter_kb.narrative import merged_view, robot_narrative  # noqa: E402
 from arbiter_kb.sources import lerobot as L  # noqa: E402
@@ -71,7 +73,8 @@ def raw_log(ep: dict, t: int, stride: int = 10) -> str:
     return "Robot log (every 10th frame, 10 frames per second):\n" + "\n".join(rows)
 
 
-def kb_view(ep: dict, t: int, params, words: bool = False, trim: bool = False, joined: bool = False) -> str:
+def kb_view(ep: dict, t: int, params, words: bool = False, trim: bool = False, joined: bool = False,
+            spec: dict | None = None) -> str:
     s = ArbiterKBSystem(params)
     s.reset(L.meta(ep))
     for f in L.frames(ep, t):
@@ -79,6 +82,8 @@ def kb_view(ep: dict, t: int, params, words: bool = False, trim: bool = False, j
     if words:
         return robot_narrative(s.kb, trim)
     view = controller_view(s.kb, params.rule)
+    if spec is not None:
+        view = view.replace("\nProgress:", f"\n{progress_line(s.kb, spec)}\nProgress:", 1) if spec else view
     return merged_view(view, s.kb) if joined else view
 
 
@@ -87,10 +92,10 @@ def oracle(ep: dict, t: int) -> str:
     return "Completed so far:\n" + ("\n".join(f"{i + 1}. {x[2]}" for i, x in enumerate(done)) or "nothing")
 
 
-def prompt(arm: str, ep: dict, t: int, params) -> list:
+def prompt(arm: str, ep: dict, t: int, params, spec: dict | None = None) -> list:
     mem = {"N": lambda: "", "P": lambda: raw_log(ep, t), "K": lambda: kb_view(ep, t, params),
            "KR": lambda: kb_view(ep, t, params, words=True), "KT": lambda: kb_view(ep, t, params, True, True),
-           "KH": lambda: kb_view(ep, t, params, joined=True),
+           "KH": lambda: kb_view(ep, t, params, joined=True), "KC": lambda: kb_view(ep, t, params, spec=spec or {}),
            "KO": lambda: oracle(ep, t)}[arm]()
     hand = ep["tcp"][t - 1]
     now = (f"Current state: frame {t}, hand at ({hand[0]:.3f}, {hand[1]:.3f}, {hand[2]:.3f}), gripper "
@@ -100,17 +105,29 @@ def prompt(arm: str, ep: dict, t: int, params) -> list:
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
 
-def jobs(a, params) -> list[dict]:
+def jobs(a, params, specs: dict | None = None) -> list[dict]:
     out = []
     for task in a.tasks.split(","):
         for path in L.episode_files(task, a.first + a.n)[a.first:]:
             ep = L.load(path)
             for k, (t, truth) in enumerate(decisions(ep)):
                 for arm in a.arms.split(","):
-                    msgs = prompt(arm, ep, t, params)
+                    msgs = prompt(arm, ep, t, params, (specs or {}).get(ep["meta"]["episode"]))
                     out += [{"task": task, "episode": ep["meta"]["episode"], "k": k, "t": t, "truth": ACTIONS[truth],
                              "arm": arm, "effort": eff, "msgs": msgs, "model": a.model} for eff in a.effort.split(",")]
     return out
+
+
+def goal_specs(a) -> dict:
+    """Arm KC: one goal parse per episode (goal_counter.parse_goal), thinking default; needs --call (cached after)."""
+    if not a.call:
+        sys.exit("arm KC parses each goal with one model call: pass --call")
+    llm = LLM(model=a.model, max_usd=0.2, provider={"order": [a.provider], "allow_fallbacks": False,
+                                                    "require_parameters": True})
+    eps = [L.load(p) for task in a.tasks.split(",") for p in L.episode_files(task, a.first + a.n)[a.first:]]
+    with ThreadPoolExecutor(a.workers) as pool:
+        got = list(pool.map(lambda e: parse_goal(llm, e["meta"]["task"]), eps))
+    return {e["meta"]["episode"]: g for e, g in zip(eps, got)}
 
 
 def score(job: dict, text: str, u: dict) -> dict:
@@ -126,7 +143,8 @@ def score(job: dict, text: str, u: dict) -> dict:
 def run(a) -> None:
     commit, dirty = git_state()
     params = load_params()
-    todo = jobs(a, params)
+    specs = goal_specs(a) if "KC" in a.arms.split(",") else None
+    todo = jobs(a, params, specs)
     if a.print:
         for m in todo[0]["msgs"]:
             print(f"--- {m['role']}\n{m['content']}")
@@ -149,7 +167,7 @@ def run(a) -> None:
             w = w or csv.DictWriter(f, fieldnames=list(row))
             w.writerow(row) if f.tell() else (w.writeheader(), w.writerow(row))
             f.flush()
-    meta = {"commit": commit, "dirty": dirty, "args": {k: v for k, v in vars(a).items()}, "params_hash": params.hash(),
+    meta = {"goal_specs": specs, "commit": commit, "dirty": dirty, "args": {k: v for k, v in vars(a).items()}, "params_hash": params.hash(),
             "contract_version": CONTRACT_VERSION, "usage": llm.usage, "data_revision": "92796ab (lerobot/robomme)"}
     (out / "meta.json").write_text(json.dumps(meta, indent=1, default=str))
     print("wrote", out.relative_to(ROOT), "usage", {k: round(v, 4) if isinstance(v, float) else v for k, v in llm.usage.items()})
