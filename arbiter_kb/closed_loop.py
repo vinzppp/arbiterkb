@@ -203,6 +203,8 @@ def _problems(action, answer, mem: str, memory: Memory | None) -> list[str]:
         return []
     objs = [] if memory is None else memory.ids() if memory.system is None else list(memory.system.kb.objects)
     errs = check(action, answer, shown_ids(mem, objs))
+    if memory is not None and memory.system is None:  # R's log lines have no ids to cite (smoke run: R cited whole
+        errs = [e for e in errs if not e.startswith("unknown cite")]  # lines, and half its calls were retries)
     return errs if mem else [e for e in errs if not e.startswith(("unknown target", "unknown cite"))]
 
 

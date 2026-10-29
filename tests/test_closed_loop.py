@@ -117,7 +117,8 @@ def test_r_targets_come_from_the_frames_and_never_seen_slots_are_left_out():
         return [FrameObs(0, {"bin_0": ObjObs("bin_0", "container", True, np.zeros(3), None, 1.0),
                              "cube_s9": ObjObs("cube_s9", "cube", False, None, None, 1.0)}, np.zeros(3), 0.08, False)]
     perceive.objects = lambda: []
-    tgt = json.dumps({"description": "go", "waypoint": [0.0, 0.0, 0.2, -3.1416, 0, 0], "gripper": 0, "target": "bin_0"})
+    tgt = json.dumps({"description": "go", "waypoint": [0.0, 0.0, 0.2, -3.1416, 0, 0], "gripper": 0, "target": "bin_0",
+                      "cites": ["t=20: bin_0 0.008, 0.018, 0.020"]})  # a whole log line: R has no ids to cite
     ask, sent = scripted([tgt])
     row = run(FakeEnv([(5, "success")]), "R", ask, Memory("R", None, perceive))
     assert row["success"] and row["model_calls"] == 1
