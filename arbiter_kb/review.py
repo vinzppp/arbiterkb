@@ -51,9 +51,11 @@ def system_prompt() -> str:
 
 
 def window_lines(kb: KB, t0: int, t1: int) -> list[str]:
-    """The event log's lines whose time lies in [t0, t1] (evidence, events and semantic actions, with ids)."""
+    """The event log's lines whose time lies in [t0, t1] (evidence, events and semantic actions, with ids). Grip and
+    pause lines are left out where the semantic actions explain them, and hand coordinates when no objects are
+    tracked, as in the controller view: the check should rest on the frames, not on numbers in the text."""
     out = []
-    for line in event_log(kb, last=10_000):
+    for line in event_log(kb, last=10_000, low_level=False, coords=bool(kb.objects)):
         m = re.search(r"\bt=(\d+)", line)
         if m and t0 <= int(m.group(1)) <= t1:
             out.append(line)

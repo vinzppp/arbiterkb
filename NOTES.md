@@ -1022,3 +1022,42 @@ After the keyframe check above, the user chose to split the call again and to gi
   - **Not yet:** a real call on video windows (needs frames with tracker ids drawn: G's replays on the pod, or the RoboMME videos with a tracker); retraction through the support chain on a contradiction.
 - **Risk to measure first:** the review call also has the memory text in its prompt, which is what made the merged keyframe call copy from text. Its truth check (M4 item 10) must count events it confirms that did not happen, and relations it writes that the frames do not show.
 - Spec updated to v1.10: header, §2.1, §2.2 steps 6 and 6b, §2.3, §2.5, §2.7, §3.7, M4 items 5, 8, 10.
+
+## Review call on real video: the test, fixed before running (2026-10-28)
+- **Question:** does the review call check the KB's events from the frames, or does it confirm whatever the memory text says? This is the risk the v1.9 keyframe check exposed.
+- **Data:** the RoboMME front videos already on disk (files 018–023): VideoRepick and VideoPlaceOrder, the first 10 episodes of each that have video.
+- **KB:** built from robot state only (`ArbiterKBSystem` on `sources/lerobot`), so its events are the semantic actions: pick-ups and releases. No tracker runs, so no ids are drawn, and **relations and descriptions are not tested here**.
+- **Windows:** up to 3 actions per episode (chosen with seed 0). Each window holds 7 frames, at t − 12 … t + 12 in steps of 4 (2.4 s at 10 fps).
+- **One planted false event per window**, written into that window's copy of the KB:
+  - a release while the true event is a pick-up, or a pick-up while it is a release;
+  - at t + 8, so the frames after the true event show whether it happened.
+- **Model:** qwen3.5-9b via `vlm_client`, thinking off; one call per window; cap $0.50.
+- **Scored with Wilson 95% CIs:**
+  - **true events:** confirm / contradict / cannot tell / not answered;
+  - **planted events:** the same; a "confirm" here is a **false confirmation**.
+- **Decision rule:** usable as a checker if the planted false-confirmation rate is ≤ 0.10 **and** the true-event confirmation rate is ≥ 0.80. Otherwise not usable as it stands.
+- **Also reported, not scored:**
+  - the number of "missing" items and of dropped items (problems);
+  - ten summaries, read by hand against the dataset's subgoal labels.
+- **Caveats:**
+  - the true events come from the action detectors, which were checked against labels on the counting tasks only (precision 0.99 for pick-up and release), not on these two tasks;
+  - one planted kind per window.
+
+**Results** (`results/latest/review_video/summary.json`; log `results/latest/logs/review_video.log`; 60 windows in 20 episodes, 420 images, **$0.012**, about 5.9 s per call).
+- **Setup detail fixed before the run** (in `review.window_lines`): the window lists semantic actions only, without grip / pause lines or hand coordinates when no objects are tracked, as in the controller view. Otherwise the planted event could be refuted from the text alone.
+
+| events | confirm [Wilson 95%] | contradict | cannot tell | not answered |
+|---|---|---|---|---|
+| true (60) | **0.58** [0.46, 0.70] | 0.07 | 0.05 | 0.30 |
+| planted false (60) | **0.68** [0.56, 0.79] (false confirmation) | 0.18 | 0.05 | 0.08 |
+
+- **Rule: fails** (false confirmation 0.68, against ≤ 0.10; true confirmation 0.58, against ≥ 0.80).
+- **The model does not tell true events from false ones:** it confirms the planted events at least as often as the true ones. It mostly agrees with the memory text, as the merged keyframe prompt did.
+- **The summaries echo the text.** Example: "The robot picked up a red cube and then placed it back down" for a window whose release was planted.
+- **Dropped items: 221.** Mostly relations and descriptions about invented ids ("blue block", "red_cube_1"), since no objects are tracked. The checks dropped them all, as designed.
+- **Caveats:**
+  - 256-px frames, with the cube small and often under the gripper. A pick-up and a release can look alike at this size, so the task may be hard for any model; there is no reference model yet.
+  - The true events are the detectors', unchecked on these two tasks.
+  - It is the prompt as written, with no tuning.
+- **Reading:** as it stands, qwen3.5-9b cannot be the KB's checker. A "confirm" from it carries no information, so writing its verdicts into the KB would add noise, not correction.
+- **Before changing the design:** run the same 60 windows with a frontier VLM (one call per window). If that model separates true from planted events, the problem is the small model. If it does not, the problem is the frames (size, occlusion), and the review needs the wrist camera or larger crops.
