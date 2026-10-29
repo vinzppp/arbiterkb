@@ -1812,3 +1812,9 @@ All runs were re-scored from the cache ($0). KN was re-run as registered (**$0.2
 4. Reported with each: accuracy (R6 can change the answer) and AUROC; Bound as the floor.
 
 **Then the LLM rows on G test** (Q1, as in the perceived QA, re-linked, with the chosen KB setting): R, K and the KB's top answer, effort off and default, about $0.4. They show whether the train results (K = the KB's top answer, K − R +0.15 to +0.29) hold out of sample.
+- **Grid on G train** (`results/latest/claim3_g/grid.json`, 241 Q1 cubes), AURC (lower is better) / AUROC / accuracy:
+  - Bound 0.1295 / 0.50 / 0.834;
+  - SoftHaircut: min_3d best at d0 0.02, **0.1127** / 0.66; min_q best at q0 0.05, **0.0950** / 0.67; accuracy 0.834 (0.809 at d0 0.2);
+  - ArbiterKB: min_3d best at d0 0.02, **0.0908** / 0.69; min_q best at q0 0.05, **0.0874** / 0.71; accuracy 0.846.
+  - **Chosen (committed before the test read):** soft/min_3d 0.02, soft/min_q 0.05, kb/min_3d 0.02, kb/min_q 0.05. q0 = 0.05 is the grid's edge for both systems; the grid stays as registered.
+  - On train, the KB is ahead of SoftHaircut with either feature, and min_q helps both.
