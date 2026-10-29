@@ -118,9 +118,11 @@ def goal_numbers(goal: str) -> list[str]:
     return [w if w.isdigit() else f"{w} ({NUMBERS[w]})" for w in words if w.isdigit() or w in NUMBERS]
 
 
-def robot_narrative(kb: KB) -> str:
+def robot_narrative(kb: KB, trim: bool = False) -> str:
     """The robot-state KB (no objects) in words: what the gripper holds, the last action, counts per kind, the
-    numbers in the goal, then the same action timeline as the controller view (action_view.action_rows)."""
+    numbers in the goal, then the same action timeline as the controller view (action_view.action_rows).
+    trim (arm KT): no goal-numbers line, and only the kinds that happened, without the put-down breakdown; KR lost
+    to K at wrap-ups with both in (NOTES "Counting with the KB in words")."""
     acts = [e for e in kb.evidence if e.kind in KINDS]
     held = bool(acts) and next((e.kind for e in reversed(acts) if e.kind in ("pick_up", "release")), "") == "pick_up"
     last = action_rows(kb, coords=False)[-1][2].split("] ", 1)[1] if acts else "nothing yet"
@@ -128,12 +130,17 @@ def robot_narrative(kb: KB) -> str:
     rel = [f"{sum(e.data.get('how') == h for e in acts if e.kind == 'release')} {w}" for h, w in HOW.items()]
     sides = [e.data["side"] for e in acts if e.kind == "hold_above"]
     nums = goal_numbers(kb.task.get("goal", ""))
-    lines = [f"Goal: {kb.task.get('goal', '?')}",
-             f"Numbers the goal mentions: {', '.join(nums) if nums else 'none'}.",
-             f"Right now the gripper is {'holding the object it last picked up' if held else 'empty'}.",
-             f"Last thing the robot did: {last}.",
-             f"So far: picked up an object {n['pick_up']} time(s); put an object down {n['release']} time(s) "
-             f"({', '.join(rel)}); pressed the button {n['press']} time(s); held an object up on the left "
-             f"{sides.count('left')} time(s) and on the right {sides.count('right')} time(s).",
-             "Everything the robot has done (oldest first):"]
+    so_far = (f"picked up an object {n['pick_up']} time(s); put an object down {n['release']} time(s) "
+              f"({', '.join(rel)}); pressed the button {n['press']} time(s); held an object up on the left "
+              f"{sides.count('left')} time(s) and on the right {sides.count('right')} time(s)")
+    if trim:
+        parts = [(n["pick_up"], "picked up an object"), (n["release"], "put an object down"),
+                 (n["press"], "pressed the button"), (sides.count("left"), "held an object up on the left"),
+                 (sides.count("right"), "held an object up on the right")]
+        so_far = "; ".join(f"{w} {c} time{'s' if c != 1 else ''}" for c, w in parts if c) or "nothing yet"
+    lines = [f"Goal: {kb.task.get('goal', '?')}"]
+    lines += [] if trim else [f"Numbers the goal mentions: {', '.join(nums) if nums else 'none'}."]
+    lines += [f"Right now the gripper is {'holding the object it last picked up' if held else 'empty'}.",
+              f"Last thing the robot did: {last}.", f"So far: {so_far}.",
+              "Everything the robot has done (oldest first):"]
     return "\n".join(lines + ["  " + r[2] for r in action_rows(kb, coords=False)])

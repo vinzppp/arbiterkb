@@ -13,7 +13,7 @@ The answer is one action from a fixed list (no object positions exist without vi
 Truth = the action class of the next subgoal. Decision points = LAG frames after each "place / put into the bin /
 reach the left-side target" subgoal ends in the execution phase (v1 used the boundary itself).
 KS (v2) = K with the semantic actions (actions.py); K in v1 had only grip / pause events.
-KR = the same KB in words (narrative.robot_narrative; NOTES "Counting with the KB in words").
+KR = the same KB in words (narrative.robot_narrative; NOTES "Counting with the KB in words"); KT = KR trimmed.
 """
 from __future__ import annotations
 
@@ -71,12 +71,12 @@ def raw_log(ep: dict, t: int, stride: int = 10) -> str:
     return "Robot log (every 10th frame, 10 frames per second):\n" + "\n".join(rows)
 
 
-def kb_view(ep: dict, t: int, params, words: bool = False) -> str:
+def kb_view(ep: dict, t: int, params, words: bool = False, trim: bool = False) -> str:
     s = ArbiterKBSystem(params)
     s.reset(L.meta(ep))
     for f in L.frames(ep, t):
         s.step(f)
-    return robot_narrative(s.kb) if words else controller_view(s.kb, params.rule)
+    return robot_narrative(s.kb, trim) if words else controller_view(s.kb, params.rule)
 
 
 def oracle(ep: dict, t: int) -> str:
@@ -86,7 +86,8 @@ def oracle(ep: dict, t: int) -> str:
 
 def prompt(arm: str, ep: dict, t: int, params) -> list:
     mem = {"N": lambda: "", "P": lambda: raw_log(ep, t), "K": lambda: kb_view(ep, t, params),
-           "KR": lambda: kb_view(ep, t, params, words=True), "KO": lambda: oracle(ep, t)}[arm]()
+           "KR": lambda: kb_view(ep, t, params, words=True), "KT": lambda: kb_view(ep, t, params, True, True),
+           "KO": lambda: oracle(ep, t)}[arm]()
     hand = ep["tcp"][t - 1]
     now = (f"Current state: frame {t}, hand at ({hand[0]:.3f}, {hand[1]:.3f}, {hand[2]:.3f}), gripper "
            f"{'closed' if ep['width'][t - 1] < 0.07 else 'open'}.")

@@ -1227,3 +1227,35 @@ User question: can the KB give the LLM richer, more semantic context, so that it
   1. **Words are not better by themselves.** In the synthetic questions, KR won by stating joined facts (places, contents, exchanges) that K left to the reader. Here, K already gave what the decision needs (ordinal action lines and a progress line), and KR added counts and numbers that are irrelevant or misleading. A non-thinking model followed them.
   2. **What to keep:** facts the reader would otherwise have to join, written once and only when they bear on a decision. Not every count in words.
   3. **Not tuned after the result:** the wording stays as run. Any change (drop the numbers line, drop zero counts) is a new test, with its rule fixed first.
+
+**Trimmed words (arm KT): the test, fixed before running.**
+- **KT** = KR without the "Numbers the goal mentions" line, with the "So far" sentence listing only the kinds that happened (no zeros, no put-down breakdown by how); everything else as KR.
+- **Same** episodes (61–100), decision points, model, efforts and scoring; K from the cache. Cap $1.
+- **Rule:** KT − K paired, as before. The question is whether the two removed parts caused KR's loss: if KT ≈ K or better, they did.
+
+**Trimmed results** (`results/latest/count_robot_state_words_trim/`: report.json, rows.csv, meta.json; log `results/latest/logs/count_words_trim.log`; 620 new calls, **$0.25**; K again from the cache, identical to v3):
+
+| arm | effort | right [Wilson 95%] | PickXtimes | SwingXtimes | BinFill | input tokens |
+|---|---|---|---|---|---|---|
+| K (v3 view) | off | **0.83** [0.78, 0.86] | 0.78 | 0.71 | 0.96 | 354 |
+| KR (words) | off | 0.74 | 0.70 | 0.57 | 0.91 | 449 |
+| KT (trimmed) | off | 0.70 [0.64, 0.75] | 0.67 | 0.57 | 0.83 | 398 |
+| K (v3 view) | default | **0.94** [0.90, 0.96] | 0.91 | 0.88 | 1.00 | 352 |
+| KR (words) | default | 0.91 | 0.86 | 0.86 | 1.00 | 447 |
+| KT (trimmed) | default | 0.91 [0.88, 0.94] | 0.87 | 0.86 | 1.00 | 396 |
+
+- **Paired:** KT − K: off **−0.13** [−0.17, −0.09], **worse**; default −0.02 [−0.04, −0.01], **worse** (within ±10 pp).
+- **The losses are again all wrap-ups:** without thinking, 43 decisions lost against 3 won.
+  - BinFill "pick up" instead of "press", 18;
+  - SwingXtimes "move right" instead of "put down", 13;
+  - PickXtimes "pick up" instead of "press", 12.
+- **So the goal-numbers line and the zero counts were not the cause:** removing them did not help, and without thinking it got slightly worse.
+- **What is left in KR / KT and not in K:**
+  - the sentences "Right now the gripper is empty" and "Last thing the robot did: placed it down …";
+  - the absence of K's "Task items" line.
+  - **Hypothesis, not tested:** the two "now" sentences prime the locally natural next step (empty gripper after a put-down → pick up again), and a non-thinking model follows that instead of checking the total against the goal.
+- **Reading (combining the three wording tests):**
+  1. **Writing facts out in words helps when it joins facts the reader would otherwise have to combine** (synthetic questions: KR 0.91 vs K 0.66 without thinking, and the held-out joined question 0.93 vs 0.07).
+  2. **It hurts when it adds "current situation" sentences to a counting decision:** the model acts on the most recent state rather than the count. For counting, K's ordinal action lines plus one progress line remain the best format we have.
+  3. **Rule of thumb for the view:** state the joined facts a decision needs (contents, places, counts against the goal when the goal is parsed); do not narrate the present moment.
+- I stop varying the wording here. Any further variant (for example K plus the joined facts only) needs its rule fixed first.
