@@ -5,7 +5,9 @@ counting. No "now" sentences: those cost the counting decisions (NOTES "Trimmed 
 """
 from __future__ import annotations
 
-from .controller import parse_answer
+import json
+import re
+
 from .kb import KB
 
 KINDS = ("pick_up", "release", "press", "hold_left", "hold_right")
@@ -16,17 +18,29 @@ The robot's memory counts these actions of its own: pick_up (it grasps an object
 on a target, on the table or into a container), press (it presses a button), hold_left / hold_right (it holds an
 object up over the left / right target). It cannot tell objects apart.
 Which ONE of these actions shows how far the repetitions in the instruction have got, and how many of it does the
-instruction ask for in total? Answer with JSON only:
+instruction ask for in total? If the instruction gives no number, the target is 1. A motion repeated back and forth
+N times means N holds on each side. Answer with JSON only:
 {{"count": "pick_up|release|press|hold_left|hold_right", "target": <int>, "then": "<what to do after the repetitions>"}}"""
 
 
 def parse_goal(llm, goal: str, reasoning: dict | None = None) -> dict | None:
     """One call; the checked spec, or None (then the view carries no counter line)."""
     text = llm.call([{"role": "user", "content": PROMPT.format(goal=goal)}], max_tokens=4000, reasoning=reasoning)[0]
-    spec = parse_answer(text)
+    spec = last_json(text)
     ok = isinstance(spec, dict) and spec.get("count") in KINDS and isinstance(spec.get("target"), int) \
         and not isinstance(spec.get("target"), bool) and 1 <= spec["target"] <= 20
     return {"count": spec["count"], "target": spec["target"], "then": str(spec.get("then", ""))[:80]} if ok else None
+
+
+def last_json(text: str) -> dict | None:
+    """The last flat JSON object in the text: reasoning models sometimes write a draft before the answer (v1 lost
+    16 of 40 SwingXtimes parses to a first-brace-to-last-brace read; NOTES "Goal parse v2")."""
+    for m in reversed(re.findall(r"\{[^{}]*\}", text)):
+        try:
+            return json.loads(m)
+        except json.JSONDecodeError:
+            continue
+    return None
 
 
 def done(kb: KB, kind: str) -> int:

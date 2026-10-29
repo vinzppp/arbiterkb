@@ -31,3 +31,8 @@ def test_progress_counts_the_kbs_own_actions():
     assert progress_line(kb, {"count": "release", "target": 2}).endswith("2 of 2 — the repetitions are done.")
     assert progress_line(kb, {"count": "hold_left", "target": 3}) == "Goal progress: holds on the left 1 of 3."
     assert progress_line(kb, None) == ""
+
+
+def test_the_last_object_wins_over_a_draft():
+    text = 'I think `{"count": "pick_up", "target": 2}` ... no, final:\n{"count": "hold_left", "target": 3, "then": "x"}'
+    assert parse_goal(FakeLLM(text), "x")["count"] == "hold_left"

@@ -1336,3 +1336,41 @@ User idea: keep the count against the goal up to date in the KB, so the controll
   2. What remains is **the parse**, not the counter or the reader. A wrong or missing spec falls back to K.
   3. The parser prompt should name the back-and-forth case, or count pairs, before the next run. That is a new test with its rule fixed first, and it should use other episodes than 61–100, which have now been read three times.
 - **Caveat:** the counter only counts the robot's own actions (no colours, no objects), so it cannot count "two red, then three green" separately; it counts five put-downs.
+
+## Goal parse v2: the test, fixed before running (2026-10-28)
+- **Why the SwingXtimes parses failed:** the model wrote its reasoning, with a draft JSON, into the answer. `parse_answer` takes everything from the first `{` to the last `}`, which then spans two objects and fails. The parser itself was mostly right ("hold_right, 3").
+- **Changes, all together:**
+  1. the goal parse reads the **last** JSON object in the answer;
+  2. the prompt adds two general rules: "if the instruction gives no number, the target is 1", and "a motion repeated back and forth N times means N holds on each side".
+- **Parse accuracy, old against new parser:** all 100 episodes of each counting task. Scored on the target number (the kind may be any action whose count equals the target's at the decision points: pick_up or release in PickXtimes / BinFill, hold_left or hold_right in SwingXtimes); a missing spec is wrong.
+- **Decisions:** episodes **31–60** of each task. They were not used in any model test, but were among those whose subgoals set the action thresholds. K and KC, effort off and default, qwen on DeepInfra; cap $1.5.
+- **Rule:** KC − K paired, as before; and new-parser target accuracy ≥ 0.95 on each task.
+
+**Results.**
+
+**Goal parse accuracy** (`results/latest/goal_parse/summary.json`; log `results/latest/logs/goal_parse.log`; 600 parses, v1 for episodes 61–100 from the cache; **$0.25** new):
+
+| task | v1 (first run) | v2 (last JSON + two rules) |
+|---|---|---|
+| PickXtimes | 97 / 100 | **100 / 100** |
+| BinFill | 83 / 100 | **100 / 100** |
+| SwingXtimes | 35 / 100 | **77 / 100** |
+
+- **Rule (≥ 0.95 on each task):** met for PickXtimes and BinFill, **not met for SwingXtimes**.
+- **All 23 SwingXtimes errors are on goals with no number** ("… repeating this back and forth motion, finally press the button": once).
+  - The target 1 is right, but the kind is wrong: pick_up 15, press 8.
+  - With pick_up 1, the counter says "done" right after the first pick-up, which is misleading. With press 1, it never helps.
+
+**Decisions with the counter** (`results/latest/count_robot_state_counter_v2/`: report.json, rows.csv, meta.json with the 90 specs, none missing; log `results/latest/logs/count_counter_v2.log`; episodes 31–60, 224 decision points per arm; 896 calls, **$0.29**):
+
+| arm | effort | right [Wilson 95%] | PickXtimes | SwingXtimes | BinFill |
+|---|---|---|---|---|---|
+| K | off | 0.85 [0.80, 0.89] | 0.81 | 0.73 | 0.99 |
+| **KC** | off | **0.95** [0.91, 0.97] | 0.99 | 0.84 | 1.00 |
+| K | default | 0.91 [0.86, 0.94] | 0.87 | 0.83 | 1.00 |
+| **KC** | default | **0.94** [0.90, 0.97] | 0.94 | 0.87 | 1.00 |
+
+- **Paired:** KC − K: off **+0.10** [+0.06, +0.14], **better** (22 decisions won, 0 lost); default **+0.04** [+0.01, +0.07], **better** (10 won, 2 lost).
+- **The counter result holds on episodes no model test had used,** now at both efforts. Without thinking, KC (0.95) beats K with thinking (0.91).
+- **What is left is SwingXtimes:** without thinking, 10 decisions answer "move right" where the truth is "put the cube down" after the last cycle. These are mostly the no-number goals, where the spec's kind is wrong.
+- **Next fix (a new test):** the parse rule "a back-and-forth with no number means one cycle: count the holds on the side it ends on". Or let the parser return the cycle as two kinds. It must be checked on goals with and without numbers.
