@@ -1,7 +1,7 @@
 """Does the keyframe call (arbiter_kb/keyframe.py) list the objects right? The same 4 real VideoUnmaskSwap frames as
 the lister benchmark (results/latest/vlm_list_bench), the real VLM (ArbiterParams). v1.9's merged prompt (listing +
 annotation, with the memory in the prompt) was checked with an earlier version of this script
-(results/latest/keyframe_check, commit 409476c); v1.10 lists from the image alone.
+(archive/results/keyframe_check, commit 409476c); v1.10 lists from the image alone.
 
   python scripts/keyframe_check.py --call [--keep-as keyframe_check_v110]
 

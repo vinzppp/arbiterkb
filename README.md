@@ -1,20 +1,51 @@
 # ArbiterKB
 
-A robot knowledge base whose facts carry beliefs (confidence, time, evidence), used as the memory module of an LLM controller that outputs waypoints for a motion planner (spec v1.4). The goal is to match a frontier VLM that reads the whole image history (arXiv 2610.17350), with a smaller model or far fewer tokens. Build spec: `DEVELOPMENT.md` (§2: the whole loop, step by step, and why). Goals: `docs/GOALS.md`. Log: `NOTES.md`.
+A robot memory module for an LLM controller. A knowledge base (KB) whose facts carry beliefs (probability, time,
+evidence) is built from perception and robot state, and a controller LLM reads it to output end-effector waypoints for
+RoboMME's motion planner, in the harness of arXiv 2610.17350. The question: can a structured memory let a **smaller
+model**, or the same model with **far fewer tokens and images**, match a VLM that reads the whole image history; and
+are the KB's beliefs **calibrated** (`docs/GOALS.md`).
 
-**Status (2026-10-28):**
-- M0–M2 infrastructure: KB, beliefs, baselines, metrics with CIs.
-- G: running on a pod.
-- M3, first part: events, relations, event log, controller view.
-- M4, Mac side: OpenRouter client, controller, dry run. Not run yet.
+## Where things stand (2026-10-29)
+- **Offline (done):** on every question-answering set the KB beats the raw log for a cheap model (G perceived episodes,
+  Q1 0.85 vs 0.55–0.69), but the KB's own top answer is as good as the LLM reading it, and a rule with no LLM matches it
+  on counting. Claims 1–2 can only move in the closed loop.
+- **Claim 3 (no LLM, G test):** the registered main test is not supported; with the distance feature the KB's p ranks
+  its errors better than SoftHaircut, and the lead comes from R6 on a cover-time distribution, not the belief layer.
+- **Closed loop (in progress):** 2610.17350's loop is ported (`arbiter_kb/closed_loop.py`) and the smoke test is
+  running on a RunPod A40 (`stress/POD_CLOSED_LOOP.md`). Next: a val pilot with arms H / R / K.
+- Details and every number: `HANDOFF.md` (the short version), `NOTES.md` (the log, newest at the bottom).
 
-It runs on synthetic RoboMME-like data on CPU. Real replays need `scripts/copy_replays.sh`. See `HANDOFF.md` and `NOTES.md` for details.
+## Read in this order
+| File | What it is |
+|---|---|
+| `HANDOFF.md` | the current state, latest results, next steps, where things are |
+| `docs/GOALS.md` | claims, falsifiers, what is ours and what is not |
+| `DEVELOPMENT.md` | the build spec (v1.12): the loop (§2), how it works (§3), contracts (§4), phases (§6) |
+| `NOTES.md` | the per-phase log: every test, its rule fixed before running, its results and readings |
+| `reviews/` | the independent code and goal reviews per phase |
+| `stress/POD_CLOSED_LOOP.md`, `stress/POD_RUN.md` | the pod runbooks (closed-loop pilot; G) |
+| `archive/` | superseded docs, notebooks and results (`archive/README.md`) |
 
+## Layout
+```
+arbiter_kb/   the package: KB, beliefs, observe / detectors / rules, views, controller, closed_loop, sources/, systems/
+scripts/      experiments and reports (each test's script; run.py, selftest.py, quality.py)
+stress/       pod-side code and runbooks (rendering, perception, the closed-loop runner)
+tests/        pytest, one file per module
+results/      latest/<test>/ (committed results), test_reads.log (the E5c ledger); runs/ and llm_cache/ git-ignored
+data/         git-ignored: G's perceived episodes, the RoboMME LeRobot dataset tables
+figures/      committed figures   tools/   dataset conversion and frame extraction
+setup/claude/ the review agents and /review-phase command, to copy into .claude/
+```
+
+## Quick start (Mac, CPU)
 ```
 python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
-make check PY=python          # tests + quality + M0 self-test (PASS/FAIL lines)
-make eval PY=python ARGS="--corrupt none,id_swap --p 1.0"
-python -m arbiter_kb.debug explain --run results/runs/<run> --trace id_swap_arbiterkb_1025 --cube cube_green
-make notebook PY=python       # notebooks/m{0,1}_walkthrough.ipynb -> executed/
+make check           # pytest + quality.py + the self-test (PASS / FAIL lines)
+make eval ARGS="--corrupt none,id_swap --p 1.0"
+python -m arbiter_kb.debug explain --run results/runs/<run> --trace <trace> --cube cube_green
 ```
-Reviews: one-time `mkdir -p .claude && cp -R setup/claude/agents setup/claude/commands .claude/`, then `/review-phase M0` in Claude Code.
+LLM tests need `OPENROUTER_API_KEY` in the git-ignored `.env`. Test-split reads need a frozen `params.json`
+(`python scripts/run.py --freeze --force`) and are logged in `results/test_reads.log`.
+Reviews: one-time `mkdir -p .claude && cp -R setup/claude/agents setup/claude/commands .claude/`, then `/review-phase <phase>`.

@@ -1,5 +1,16 @@
 # NOTES — engineering log
 
+**How to read this log (2026-10-29).** One section per phase or test, in time order; the newest is at the bottom. A
+test's section has its rule (fixed and committed before the run), then its results and readings. Later sections
+correct earlier ones; when they do, they say so. The ones that supersede others:
+- "Corrected tables after the code review" supersedes every perceived-QA number before it (Q6 truth, "swapped" flag).
+- "Claim 3, corrected read and attribution" supersedes every claim-3 AURC before it (tie handling).
+- "Is the counting win ArbiterKB's, or the counter's?" closes counting as a test of the KB (RULE = K).
+- "Closed loop: the 2610.17350 harness ported, pod runbook" and its smoke-test notes are the current work.
+
+A `results/latest/<name>` cited here that is no longer there is in `archive/results/<name>` (superseded; see
+`archive/README.md`). The short current state is in `HANDOFF.md`.
+
 ## M0 — walking skeleton (2026-10-28)
 
 ### Verified while building
