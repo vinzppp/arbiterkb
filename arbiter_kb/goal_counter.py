@@ -19,7 +19,8 @@ on a target, on the table or into a container), press (it presses a button), hol
 object up over the left / right target). It cannot tell objects apart.
 Which ONE of these actions shows how far the repetitions in the instruction have got, and how many of it does the
 instruction ask for in total? If the instruction gives no number, the target is 1. A motion repeated back and forth
-N times means N holds on each side. Answer with JSON only:
+N times means N holds on each side. When the instruction moves an object back and forth between two places, count
+the holds, whether or not it gives a number. Answer with JSON only:
 {{"count": "pick_up|release|press|hold_left|hold_right", "target": <int>, "then": "<what to do after the repetitions>"}}"""
 
 

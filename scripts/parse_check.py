@@ -1,5 +1,5 @@
-"""Goal-parse accuracy, v1 (goal_counter as first run: first-to-last brace, no extra rules) against v2 (last JSON
-object, two general rules), on all 100 episodes of each counting task (NOTES "Goal parse v2"). Scored on the target
+"""Goal-parse accuracy, v1 (goal_counter as first run: first-to-last brace, no extra rules) against the current
+goal_counter (v2: last JSON object, two general rules; v3: + the back-and-forth rule), on all 100 episodes of each counting task (NOTES "Goal parse v2"). Scored on the target
 number; the kind may be any action whose count equals the target's at the decision points.
 
   python scripts/parse_check.py --call [--keep-as goal_parse]
@@ -24,7 +24,8 @@ from arbiter_kb.sources import lerobot as L  # noqa: E402
 KEY = {"PickXtimes": ("onto the target", {"pick_up", "release"}), "BinFill": ("into the bin", {"pick_up", "release"}),
        "SwingXtimes": ("left-side target", {"hold_left", "hold_right"})}
 V1_RULES = (" If the instruction gives no number, the target is 1. A motion repeated back and forth\nN times means N "
-            "holds on each side.")
+            "holds on each side. When the instruction moves an object back and forth between two places, count\nthe "
+            "holds, whether or not it gives a number.")
 
 
 def v1(llm, goal: str) -> dict | None:

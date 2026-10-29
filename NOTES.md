@@ -1374,3 +1374,41 @@ User idea: keep the count against the goal up to date in the KB, so the controll
 - **The counter result holds on episodes no model test had used,** now at both efforts. Without thinking, KC (0.95) beats K with thinking (0.91).
 - **What is left is SwingXtimes:** without thinking, 10 decisions answer "move right" where the truth is "put the cube down" after the last cycle. These are mostly the no-number goals, where the spec's kind is wrong.
 - **Next fix (a new test):** the parse rule "a back-and-forth with no number means one cycle: count the holds on the side it ends on". Or let the parser return the cycle as two kinds. It must be checked on goals with and without numbers.
+
+## Goal parse v3: the test, fixed before running (2026-10-28)
+- **One more general rule in the prompt:** "When the instruction moves an object back and forth between two places, count the holds, whether or not it gives a number." Nothing else changes.
+- **Parse accuracy:** all 100 episodes of each task, v2 (from the cache) against v3, scored as in v2. **Rule:** v3 ≥ 0.95 on every task, with no task below v2.
+- **Decisions:** episodes 31–60 again, arm KC with the v3 specs against K (both K and the KC prompts whose spec did not change come from the cache). Same scoring and paired rule.
+- **Caveat:** episodes 31–60 have now been read once for the counter; the change targets the error seen there. Only the parse accuracy over all 300 goals is a fresh check.
+
+**Results.**
+
+**Goal parse v3** (`results/latest/goal_parse_v3/summary.json`; there the column "v2" is the current parser, i.e. v3; log `results/latest/logs/goal_parse_v3.log`; 94 new parses):
+
+| task | v1 | v2 | v3 |
+|---|---|---|---|
+| PickXtimes | 97 | 100 | 99 |
+| BinFill | 83 | 100 | 100 |
+| SwingXtimes | 35 | 77 | **86** |
+
+- **Rule: fails.** SwingXtimes 86 < 95, and PickXtimes is 1 below v2. That one episode's spec is now "press 1".
+- **The remaining SwingXtimes errors (14) are all no-number goals:**
+  - "press 1", 10: the model reads "no repetition" and counts the final press;
+  - "pick_up 1", 4.
+
+**Decisions with the v3 specs** (`results/latest/count_robot_state_counter_v3/`; log `results/latest/logs/count_counter_v3.log`; episodes 31–60; K and unchanged KC prompts from the cache; 154 new calls):
+
+| arm | effort | right [Wilson 95%] | PickXtimes | SwingXtimes | BinFill |
+|---|---|---|---|---|---|
+| K | off | 0.85 [0.80, 0.89] | 0.81 | 0.73 | 0.99 |
+| KC (v2 specs) | off | 0.95 | 0.99 | 0.84 | 1.00 |
+| **KC (v3 specs)** | off | **0.97** [0.94, 0.99] | 0.99 | 0.92 | 1.00 |
+| K | default | 0.91 [0.86, 0.94] | 0.87 | 0.83 | 1.00 |
+| **KC (v3 specs)** | default | **0.96** [0.93, 0.98] | 0.96 | 0.92 | 1.00 |
+
+- **Paired:** KC − K: off **+0.12** [+0.08, +0.17], **better** (28 won, 1 lost); default **+0.06** [+0.02, +0.09], **better** (15 won, 2 lost).
+- **Reading:**
+  - The fast non-thinking controller with the counter is at **0.97**, against the oracle step list's 0.96 / 0.98 on episodes 61–100 (KO was not run on 31–60). The counter closes most of the remaining gap.
+  - The decisions improved even though the parse rule failed: the remaining parse errors sit on no-number SwingXtimes goals, where one cycle is short and K already does well.
+  - **Caveat:** the v3 rule was written after seeing the v2 errors on these same episodes. The parse accuracy over all 300 goals (86–100) is the fresh check.
+- **I stop tuning the parser here.** A further rule written for the no-number back-and-forth case would be fitting one phrasing of one task.
