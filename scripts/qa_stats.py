@@ -1,5 +1,5 @@
 """Statistics for perceived_qa.py: Wilson CIs per row / arm / effort, AUROC of the stated Q1 confidence, paired
-bootstrap over episodes (accuracy, top-2) and over cubes (AUROC differences)."""
+bootstrap over episodes (accuracy, top-2, AUROC differences). "Swapped" cubes exclude unknowns (swapped = None)."""
 from __future__ import annotations
 
 import re
@@ -32,7 +32,7 @@ def report(rows: list[dict]) -> dict:
                 out[f"{row}/{arm}/{eff}"] = {
                     "q1": wilson(sum(v["right"] for v in q1), len(q1)), "q1_stock": wilson(sum(stock), len(stock)),
                     "q1_stress": wilson(sum(stress), len(stress)),
-                    "q1_swapped": wilson(sum(v["right"] for v in q1 if v["swapped"]), sum(v["swapped"] for v in q1)),
+                    "q1_swapped": wilson(sum(v["right"] for v in q1 if v["swapped"]), sum(bool(v["swapped"]) for v in q1)),
                     "auroc_swapped": auroc([v["conf"] for v in sw], [v["right"] for v in sw]),
                     "auroc_all": auroc([v["conf"] for v in q1 if v["conf"] is not None],
                                        [v["right"] for v in q1 if v["conf"] is not None]),
@@ -74,9 +74,11 @@ def auroc_pair(rows, row, a, b, eff) -> list[float] | None:
     keys = sorted(k for k in x if k in y)
     if not keys:
         return None
+    eps = sorted({k[0] for k in keys})  # resample episodes, not cubes: an episode's cubes are correlated (code review)
+    by_ep = {e: [k for k in keys if k[0] == e] for e in eps}
     rng, diffs = np.random.default_rng(0), []
     for _ in range(1000):
-        ks = [keys[i] for i in rng.integers(0, len(keys), len(keys))]
+        ks = [k for i in rng.integers(0, len(eps), len(eps)) for k in by_ep[eps[i]]]
         da, db = auroc([x[k]["conf"] for k in ks], [x[k]["right"] for k in ks]), \
             auroc([y[k]["conf"] for k in ks], [y[k]["right"] for k in ks])
         if da is not None and db is not None:

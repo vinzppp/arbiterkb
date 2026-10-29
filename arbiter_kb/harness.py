@@ -61,7 +61,7 @@ def run_episode(env: Env, system, decide: Decide, view: Callable[[object], str],
         prompt = "\n\n".join(x for x in (self_view(system.kb), view(system.kb)) if x)
         ans = decide(system, prompt)
         d = record(system.kb, t, ans.get("waypoint"), bool(ans.get("gripper_closed")), ans.get("target"),
-                   ans.get("cites", ()), ans.get("intent"))
+                   ans.get("cites", ()), ans.get("intent"), ans.get("detail"))
         frames, done = env.step(ans.get("waypoint"), bool(ans.get("gripper_closed")))
         for f in frames:
             system.step(f)

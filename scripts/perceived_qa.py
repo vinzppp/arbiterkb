@@ -39,13 +39,19 @@ ARMS = ("R", "K", "KR")
 OCCLUSION = {"r": 0.08, "dz": 0.01}  # chosen on G train by cover recall (0.907 >= the 0.90 gate), NOTES
 
 
-def slot_on(ids: np.ndarray, node: int, look: int = 5) -> int | None:
-    """The container slot sitting on oracle container `node` at the end (the last `look` frames)."""
-    for t in range(len(ids) - 1, len(ids) - 1 - look, -1):
+def slots_on(ids: np.ndarray, node: int, look: int = 5) -> list[int]:
+    """The container slots sitting on oracle container `node` at the end (the latest of the last `look` frames
+    that has any; two slots can sit on one container, code review 2026-10-29)."""
+    for t in range(len(ids) - 1, max(-1, len(ids) - 1 - look), -1):
         hit = [s for s in range(ids.shape[1]) if ids[t, s] == node]
         if hit:
-            return hit[0]
-    return None
+            return hit
+    return []
+
+
+def slot_on(ids: np.ndarray, node: int, look: int = 5) -> int | None:
+    hit = slots_on(ids, node, look)
+    return hit[0] if hit else None
 
 
 def truth(d: dict) -> dict:
@@ -59,20 +65,23 @@ def truth(d: dict) -> dict:
     xy = ora[:, :, F_X:F_X + 2]
     cubes = {int(c): int(b) for c, b in m["cube_to_bin"].items()}
     colour = {c: m["classes"][c].split()[0] for c in cubes}
-    t = {f"q1_{colour[c]}": name(b) for c, b in cubes.items()}
+    t = {f"q1_{colour[c]}": [f"bin_{s}" for s in slots_on(ids, b)] or None for c, b in cubes.items()}
     moved = [[n for n in bins if np.linalg.norm(xy[min(t1, T - 1), n] - xy[t0, n]) > 0.01] for t0, t1 in m["schedule"]]
     x = random.Random(d["name"]).choice([n for n in bins if end[n] is not None])
     nearest = min(bins, key=lambda n: np.linalg.norm(xy[-1, n] - BASE))
     target = min(cubes)
     t_cover = max(k for k in range(T) if _seen(ora, k, target))
+    b6 = cubes[target]  # its container's position at the first frame it is seen at or after the cover (code review:
+    t_b = next(k for k in range(t_cover, T) if np.all(np.isfinite(xy[k, b6])))  # containers are absent before it)
     t.update(q2=sum(x in s for s in moved), q2_bin=f"bin_{end[x]}", q3=name(max(bins, key=lambda n: xy[-1, n, 1])),
              q4=sorted(name(n) for n in moved[-1]) if all(end[n] is not None for n in moved[-1]) else None,
              q5=next((colour[c] for c, b in cubes.items() if b == nearest), "none") if end[nearest] is not None else None,
-             q6="yes" if np.linalg.norm(xy[-1, cubes[target]] - xy[t_cover, cubes[target]]) > 0.03 else "no",
+             q6="yes" if np.linalg.norm(xy[-1, b6] - xy[t_b, b6]) > 0.03 else "no",
              target=colour[target])
     covered_at = {c: max(k for k in range(T) if _seen(ora, k, c)) + 1 for c in cubes}
     then = {c: slot_on(ids[:covered_at[c] + 6], b) for c, b in cubes.items()}  # the slot on it just after the cover
-    t["swapped"] = {colour[c]: then[c] != end[b] for c, b in cubes.items()}  # the tracker moved its id since
+    t["swapped"] = {colour[c]: None if then[c] is None or end[b] is None else then[c] != end[b]  # None: a track was
+                    for c, b in cubes.items()}  # missing, not evidence of a swap (code review 2026-10-29)
     return {k: v for k, v in t.items() if v is not None}
 
 
@@ -149,11 +158,12 @@ def score(job: dict, text: str, used: dict | None = None) -> dict:
     conf = ans.get("q1_conf") if isinstance(ans.get("q1_conf"), dict) else {}
     alt = ans.get("q1_alt") if isinstance(ans.get("q1_alt"), dict) else {}
     keys = [k for k in t if k.startswith("q") and k != "q2_bin"]
-    q1 = {k[3:]: {"right": right(k, ans.get(k), t[k]), "swapped": t["swapped"][k[3:]],
-                  "conf": _num(conf.get(k[3:])), "top2": right(k, ans.get(k), t[k]) or right(k, alt.get(k[3:]), t[k])}
+    ok = lambda k, got: any(right(k, got, w) for w in t[k]) if k.startswith("q1_") else right(k, got, t[k])  # noqa: E731
+    q1 = {k[3:]: {"right": ok(k, ans.get(k)), "swapped": t["swapped"][k[3:]],
+                  "conf": _num(conf.get(k[3:])), "top2": ok(k, ans.get(k)) or ok(k, alt.get(k[3:]))}
           for k in keys if k.startswith("q1_")}
     return {"ep": job["ep"], "row": job["row"], "arm": job["arm"], "effort": job["effort"],
-            **{k: right(k, ans.get(k), t[k]) for k in keys}, "q1": q1, "answers": ans, **(used or {})}
+            **{k: ok(k, ans.get(k)) for k in keys}, "q1": q1, "answers": ans, **(used or {})}
 
 
 def _num(v) -> float | None:
@@ -180,7 +190,7 @@ def main() -> None:
             print(f"===== {j['arm']}\n{j['msgs'][1]['content']}\n")
         ts = list({j["ep"] + j["row"]: j["truth"] for j in todo}.values())
         print(len(todo), "requests; questions kept per episode:", np.mean([sum(k.startswith("q") for k in t) for t in ts]),
-              "; q1 cubes swapped:", sum(v for t in ts for v in t["swapped"].values()), "of",
+              "; q1 cubes swapped:", sum(bool(v) for t in ts for v in t["swapped"].values()), "of",
               sum(len(t["swapped"]) for t in ts))
         return
     if not a.call:

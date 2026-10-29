@@ -1538,7 +1538,7 @@ Paired against K (bootstrap 95%, decisions won / lost):
 
 **By target count** (free split): K's input stays at 315–425 tokens for targets 1–5; P / PC grow from ~880 to ~1,900. P without thinking is 0.51–0.78 at every target. With targets of only 1–5, the curve is short; a longer one needs new episodes.
 
-## Does the KB-in-words gain survive real perception? G perceived episodes (DRAFT, not yet approved, 2026-10-29)
+## Does the KB-in-words gain survive real perception? G perceived episodes (2026-10-29; approved by the user before any call)
 Goal: test whether the synthetic result (KR 0.91 vs raw log 0.40 without thinking, NOTES "Does a richer KB text …") holds on the real tracker, and whether the KB's beliefs help when the tracker swaps ids (claim 3).
 
 **Check first, $0 (G train, episodes 0–9 of each setting, 270 cubes): the perceived cube tracks do not disappear when covered.**
@@ -1729,3 +1729,60 @@ User: zoom out from the tests; as a memory module, how can the KB organise more 
 - **Readings, as fixed:** calibration **not better** (both point estimates lower; the CIs include 0); Q1 within ±5 pp.
 - Without the numbers the model spreads its confidence (0.9 becomes the mode), but the spread does not follow right and wrong as well as the KB's numbers did.
 - **What A and A2 say together:** the model's calibration comes from the KB's numbers. Alternatives and reasons in words neither add to it (A) nor replace it (A2). The KB's own p is the best signal on this data (AUROC 0.731). **To make the controller better calibrated, the KB's probabilities must be better** (R6's swap evidence on real passes); presentation will not do it.
+
+## Overnight goal review: what it changed (2026-10-29, `reviews/overnight_2026-10-29_goal.md`)
+Verdict: on track with changes. Checked and acted on:
+1. **The LLM adds nothing on Q1 over the KB's own top answer.** Checked (free, `results/latest/perceived_qa_A/baselines.json`): the KB's most likely container, with no model, is right for **0.842** of the 241 Q1 cubes (stress 0.825), the same as K with the LLM (0.842–0.846). **So "K beats the raw log on real perception" means: the KB's cover-and-follow rules beat an LLM reading the raw tracker log.** It is the counting result again (RULE = K), not evidence that the KB helps an LLM decide. Claims 1–2 need the closed loop, where the controller has to act on it.
+2. **Calibration baselines.** The KB's own p (best container): AUROC **0.701** overall and 0.704 within the stress settings. A one-bit "stock vs stress" feature: 0.558 (the review computed 0.641 from other rows; mine is on the KB's 241 cubes). "Any near pass since the cover → low": 0.52.
+   - **Correction:** A's free check reported 0.731. It scored the 7 cubes whose top hypothesis is "elsewhere" at p = 0, while the model is asked for a container. With the best container's p, it is 0.701. The conclusion is the same: the model's stated confidence (0.68) is a little below the KB's p.
+   - **Claim 3 is about the KB's p, which a controller can read directly.** The LLM's stated confidence is the wrong metric for it and is dropped as a claim-3 measure.
+3. **C is true by construction for Q1:** the working memory states each cube's most likely container, so KT's 0.81 restates the KB's 0.84. "A fifth of the tokens" compares against K, not against claim 2's reference (the image history, 16.5k tokens and 148 images in 2610.17350). **C is stopped**; `memtool.py` stays for a closed-loop arm only if that is needed.
+4. **A / A2:** null results, so the leak of d = 0.10 into A does no harm. "Calibration comes from the KB's numbers" is a hypothesis consistent with A2, not a measurement (the KN CIs include 0, and ties dominate: 75% of confidences ≥ 0.97). **No further view arms.**
+5. **B's control was too easy.** Added a **premature** control (the next subgoal's action declared early):
+   - at first it read "done" for 0.83 of the SwingXtimes holds, because the outcome matched the action type, not its side;
+   - **fixed:** a decision may carry a `detail` (side or how), and the outcome must match it. Premature now says "done" 0.019 overall (holds 0.073); right intent is still 0.984, wrong intent 0.000 (`results/latest/self_memory_check`).
+   - B is frozen until M5.
+6. **In-sample:** G train chose the occlusion step, the relink setting and A's d, and all the QA rows are scored on it. Relink had no reading fixed in advance, so its +0.07 is weak evidence. One frozen G test read is the remedy (next step).
+7. **Rules and results in the same commit:** today's counting controls (9001dd4) committed the rule together with its results. From now on, each rule gets its own commit before its run.
+8. **Next (replaces HANDOFF Next 1):**
+   - turn the relink cost margin into `id_margin` evidence for R6;
+   - score the KB's p with no LLM (AUROC / AURC on swapped vs clean cubes, within stress) against SoftHaircut with the same margin feature, the setting bit and the near-pass heuristic;
+   - tune on G train, commit the rule, then one frozen G test read, adding R / K / the KB's top answer on Q1 (about $0.4);
+   - if the KB does not beat SoftHaircut, claim 3 is negative;
+   - after that, only the closed loop (H / R / K) can move claims 1–2.
+
+## Overnight code review: fixes, before rescoring (2026-10-29)
+The reviewer recomputed every stored perceived-QA report from its rows and got the same numbers. Found and fixed:
+1. **BLOCKER, Q6 truth was "no" in all 90 episodes:** the container's position was taken at the cube's last visible frame, where the oracle container is still NaN (containers are absent before t ≈ 32). It now uses the container's first finite position at or after the cover, with a test. **Every Q6 number above is void**, and so are the readings built on it: "Q6 measures the detector", and C's "KT answers yes" (KT-off answered "no" 81 / 90 and was scored right only because the truth was always "no").
+2. **MAJOR, "tracker-swapped" counted missing tracks as swaps** (17 of 67 raw, 17 of 48 re-linked). Now None (unknown) when no slot sat on the true container just after the cover or at the end; unknowns are left out of the swapped subset. Every "Q1 swapped" and "AUROC swapped" figure above changes (the reviewer's recomputation: K's Q1 on swapped cubes 0.27 → 0.08 raw, 0.35 → 0.10 re-linked). The reading "mostly wrong on swapped cubes" gets stronger.
+3. **MAJOR, A2's KN arm still showed the cover confidences** ("(conf 0.99)" in the event log, 303 times over 90 views). So KN was not the registered arm. `strip_probs` now removes them too (test added); **KN is run again as registered** (new calls), and the first KN numbers are void.
+4. **MINOR, two slots on one true container:** Q1 now accepts any slot sitting on the true container at the end (about 0.4 pp).
+5. **MINOR, the AUROC-difference bootstrap** now resamples episodes, not cubes.
+6. **Not changed (MINOR):** A's alternatives propagate back from the end, not forward in time (sets differ for 11 / 225 cubes; truth-in-set 0.960 vs 0.956); the harness decides 8 frames into a subgoal, which may explain some of B's SwingXtimes hold misses.
+- **Then:** every perceived-QA run is re-scored from the cache (no new calls), and KN is re-run. The corrected tables follow.
+
+## Corrected tables after the code review (2026-10-29; these supersede the perceived-QA numbers above)
+All runs were re-scored from the cache ($0). KN was re-run as registered (**$0.27**). Q1 truth now accepts any slot on the true container, Q6 truth is fixed, and "swapped" leaves out unknown tracks (re-linked: 31 swapped, 17 unknown of 241 Q1 cubes). Files: `results/latest/perceived_qa*/summary.json`, `perceived_qa_A/baselines.json`.
+
+**Q1 (which container hides each cube), off / default:**
+
+| row | KB top answer, no LLM | K | KR | R | KA | KN | KT2 |
+|---|---|---|---|---|---|---|---|
+| raw tracker | — | 0.784 / 0.780 | 0.772 / 0.776 | 0.490 / 0.614 | | | |
+| re-linked | **0.846** | 0.851 / 0.846 | | 0.548 / 0.685 | 0.846 / 0.830 | 0.846 / 0.838 | 0.817 / 0.776 |
+| ref (oracle cube visibility) | — | 0.710 / 0.714 | 0.705 / 0.697 | 0.477 / 0.639 | | | |
+
+- **Swapped cubes (re-linked):** the KB's top 0.129; K 0.129 / 0.129; R 0.129 / 0.065. On the raw tracker: K 0.10, R 0.04. Every arm is mostly wrong there.
+- **Q6 (moved since covered), now valid:** K 0.73 / 0.72, R 0.86 / 0.76, KA 0.68, KT 0.19 / 0.26. The raw log is as good as or better than K here; K's view has many spurious moves.
+- **Calibration (re-linked, AUROC of the stated Q1 confidence over all cubes):** K 0.67–0.68, KA 0.67–0.68, KN 0.60 / 0.57; **the KB's own p 0.694** (0.698 within stress); the stock / stress bit 0.558.
+- **Paired, unchanged in sign and decision:**
+  - K − R: +0.29 / +0.15 (re-linked), +0.30 / +0.16 (raw);
+  - KA − K: AUROC 0.000 / +0.001 [−0.059, +0.054];
+  - **KN − K (as registered): AUROC −0.073 [−0.169, +0.017] off, −0.105 [−0.233, +0.010] default**;
+  - KT2 − K: Q1 −0.043 / −0.081.
+
+**Readings after the corrections:**
+1. **On Q1 the LLM adds nothing over the KB's own answer** (0.846 = 0.846). "K beats the raw log" is the KB's rules beating an LLM that reads the raw log. The controller is not yet doing anything the KB could not.
+2. **A and A2 unchanged:** alternatives in words add nothing, and removing the numbers (now all of them) lowers the stated confidence's AUROC (not significant). The stated confidence stays at or below the KB's own p (0.69).
+3. **C unchanged** for Q1. KT's Q6 drops to 0.19–0.37 (it has no history), so the earlier "KT answers yes" note was wrong.
+4. **Claim 3's measure is the KB's p** (AUROC 0.69 overall, 0.70 within stress), against the trivial baselines: the setting bit 0.56, near pass since the cover 0.52. The next step compares it with SoftHaircut using the same margin feature.

@@ -55,7 +55,9 @@ def epistemic_view(view: str, kb: KB) -> str:
 PROB = re.compile(r" \([01]\.\d{2}\)"            # "may hold the red cube (0.98)"
                   r"|(?<= \()[01]\.\d{2}; "           # "under bin_1 (0.98; bin_1 has moved ...)"
                   r"|(?<=\w) [01]\.\d{2}(?= \| |  \[)"  # Relations: "[Inside(cube_red)] bin_1 0.98 | bin_0 0.02  [e3]"
-                  r"|(?<=\]) [01]\.\d{2}(?= \()")       # other relations: "[Near(a,b)] 0.90 (rule)"
+                  r"|(?<=\]) [01]\.\d{2}(?= \()"       # other relations: "[Near(a,b)] 0.90 (rule)"
+                  r"| \(conf [01]\.\d{2}\)"            # events: "covered by bin_0 at (...) (conf 0.99)" (code review)
+                  r"| conf [01]\.\d{2}\b")               # "event swap(bin_0, bin_1) conf 0.50"
 
 
 def strip_probs(text: str) -> str:

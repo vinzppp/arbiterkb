@@ -7,26 +7,25 @@ Read first: `DEVELOPMENT.md` (spec **v1.12**: counting closed as a KB test; `Per
 - Claims: (1) a smaller model, or (2) far fewer tokens and images, at matched success; (3) the KB's beliefs are calibrated (G and M2).
 
 ## Latest results (NOTES for every number and its file)
-- **Counting is closed as a test of the KB** (NOTES "Is the counting win ArbiterKB's, or the counter's?", qwen3.6-35b-a3b, off / default):
-  - RULE (goal parsed once, no LLM per decision) 0.996 / 0.981; it never loses a decision to K;
-  - K (v4 view + counter) 0.97 / 0.96 (31–60), 0.965 / 0.952 (61–100);
-  - PC (raw log + the same counter line) = K with thinking, worse without (SwingXtimes 0.57–0.79 vs 0.88–0.92);
-  - raw log 0.61 / 0.82. The win is robot-state events + the counter, not the KB's beliefs; claim 1 has no content on counting.
-- **Real perception (G train, 90 perceived episodes; NOTES "Does the KB-in-words gain survive real perception?")**:
-  - the tracker's cube masks climb onto the covering container instead of vanishing (244 / 270); the occlusion step in `sources/perceived.py` fixes that (recall 0.907);
-  - Q1 (which container hides each cube): **K 0.78 / 0.77 vs raw log 0.49 / 0.61**, better at both efforts, stock 0.97, stress 0.74; the joined question 0.63 vs 0.21;
-  - the worded view (KR) = K (v4 already joins the facts);
-  - **claim 3 not supported:** on tracker-swapped cubes every arm is mostly wrong and the stated confidence does not separate right from wrong (AUROC 0.29–0.54); the KB printed 0.98 for swapped containers.
-- **Re-linking by motion (`relink.py`, NOTES "Fixing the tracker's swaps")**: container id consistency 0.64 → 0.73; K's Q1 0.85 / 0.84 (+0.07), K − R unchanged. The rest is lost container tracks (28% of frames), which needs the tracker.
-- **Earlier, still true:** synthetic permanence K = raw log with thinking (0.96), the KB saves tokens; ArbiterKB ≈ SoftHaircut on AURC (0.182 vs 0.180); motion v2 on G test F1 0.68 → 0.81; the VLM cannot tell a pick-up from a put-down in the front video (≤ 0.52), so robot actions come from robot state and `ask.py` asks one closed question (not yet measured with truth).
+**Read NOTES "Corrected tables after the code review"** (2026-10-29): it supersedes the earlier perceived-QA numbers, because the Q6 truth and the "swapped" flag were wrong.
+- **Counting is closed as a test of the KB:** a rule with no per-decision LLM (RULE) scores 0.98–1.00 and never loses a decision to K; PC (raw log + counter) = K with thinking. The win is robot-state events + the counter.
+- **G perceived QA (train only, re-linked tracks; simulator word list):**
+  - Q1 (which container hides each cube): K 0.85, raw log 0.55 / 0.69 (off / default). **The KB's own top answer with no LLM is also 0.846.** So the LLM adds nothing on Q1; "K beats the raw log" is the KB's rules beating an LLM reading the raw log.
+  - On tracker-swapped cubes every arm is mostly wrong (K 0.13).
+  - Calibration: the KB's own p has AUROC 0.69; the model's stated confidence 0.67–0.68; the stock / stress bit 0.56.
+- **Overnight A / B / C (memory organisation for the controller):**
+  - **A** (how each fact is known + alternatives in words): no gain (AUROC KA − K 0.00). **A2** (numbers removed): the stated confidence spreads out but its AUROC falls (−0.07 / −0.11, n.s.). Better calibration needs better KB probabilities, not presentation.
+  - **B** (the controller's decisions and outcomes, changes since the last decision, `self_memory.py`, `harness.py` skeleton): offline, outcomes are right for 0.984 of right intents; 0.000 "done" for wrong intents and 0.019 for premature ones (after a side / how fix). Its value can only be measured in the closed loop.
+  - **C** (memory as a tool, `memtool.py`): a 220-token working memory keeps Q1 at 0.82 (it states the KB's answer, so this is by construction); queries do not recover the history questions. Stopped.
+- **Fixes on G's perception (Mac side):** occlusion step for covered cubes (recall 0.907); `relink.py` (container id consistency 0.64 → 0.73). Lost container tracks (28% of frames) need the tracker itself.
+- **Earlier, still true:** synthetic permanence K = raw log with thinking; ArbiterKB ≈ SoftHaircut on AURC; motion v2 on G test F1 0.81; the VLM cannot tell a pick-up from a put-down in the front video.
 
 ## Next
-1. **Claim 3 on the Mac:** turn the re-linking's assignment ambiguity (cost margin) into `id_margin` evidence for R6; give SoftHaircut the same feature; measure the KB's own Q1 probability (AUROC on swapped cubes) and then the perceived QA again. Rule first in NOTES. If the KB does not beat SoftHaircut, report claim 3 as negative.
-2. **Freeze** the occlusion and re-linking settings in `params.json` (`run.py --freeze --force`); `/review-phase` for the 2026-10-29 work (counting controls, `PerceivedSource`, `relink.py`).
-3. **`harness.py`** (the 2610.17350 loop) and a dry run on the Mac; a cost estimate for the closed loop, shown to the user before any spend.
-4. **One pod session (the user's go):** one multi-object Cutie on G's replays (lost tracks); `--vocab open`; perception of VideoPlaceOrder / VideoRepick; fresh RoboMME episodes as the final set; a closed-loop pilot with arms H / R / K on permanence and VideoPlaceOrder.
-5. **M6** on the fresh episodes. Paused: task-progress compiler, DINOv2 re-ID, event-triggered calls, counting length curves and arm H on counting.
-6. Push: the user approves each push.
+1. **Claim 3, on the Mac, without an LLM:** turn `relink.py`'s assignment cost margin into `id_margin` evidence for R6. Score the KB's p (AUROC / AURC on swapped vs clean cubes, within stress) against SoftHaircut with the same margin feature, the setting bit and the near-pass heuristic. Tune on G train; commit the rule; then **one frozen G test read**, adding R / K / the KB's top answer on Q1 (about $0.4). If the KB does not beat SoftHaircut, claim 3 is negative.
+2. **The closed loop is the only place claims 1–2 can move:** port the 2610.17350 prompt skeleton and completion rules into `harness.py` (downloading their code needs the user's go). Then one pod session: a multi-object Cutie on G's replays, `--vocab open`, perception of VideoPlaceOrder / VideoRepick, fresh RoboMME episodes, and a closed-loop pilot with arms H / R / K (K with `self_memory`'s view first).
+3. **M6** on the fresh episodes.
+4. **Dropped or frozen:** C (`memtool.py`), more view arms (A, KR), the LLM's stated confidence as a claim-3 measure; B frozen until M5; counting.
+5. Push: the user approves each push.
 
 ## Reminders for the pod
 - Tell the pod not to delete `/workspace/g/replays`: sizes, the open-vocabulary re-run (POD_RUN §6b) and the relation / ask-call truth checks need them.
@@ -36,9 +35,9 @@ Read first: `DEVELOPMENT.md` (spec **v1.12**: counting closed as a KB test; `Per
 
 ## Where things are
 - Repo: `~/Code/active/arbiter-kb` (GitHub `vinzppp/arbiter-kb`, private). Do not modify `~/Code/active/scene-graph-robot`; copy pure functions verbatim into `arbiter_kb/sg_compat.py` instead.
-- Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD on main: the 2026-10-29 tests (counting controls, perceived QA, re-linking) and spec v1.12; not pushed.
+- Tags: `phase-M0-done`, `phase-M1-done` (bb50365). HEAD on main: the 2026-10-29 work incl. the overnight A / B / C tests and both reviews (`reviews/overnight_2026-10-29_*.md`); not pushed.
 - Gate per phase: `make check` (pytest + quality.py + selftest, which uses train seeds only), then the user runs `/review-phase Mx` in Claude Code (a code-reviewer and a goal-reviewer agent; reviews land in `reviews/`). Fix, record in NOTES, then tag.
-- Current frozen params: hash 49a8577dc73f, prompts ba6ba13b8dbd (`params.json` holds both; `load_params` refuses a mismatch).
+- Current frozen params: hash 49a8577dc73f, prompts 0c77893f87f4 (`params.json` holds both; `load_params` refuses a mismatch).
 - E5c: test-split reads need a frozen `params.json` with a FREEZE line in `results/test_reads.log`. Any parameter change means `python scripts/run.py --freeze --force` before the next test read.
 - Cowork session mechanics (if continuing from Claude.ai):
   - edit in the container copy, stage the changed files under `/mnt/user-data/outputs/<fresh dir>/`, then `device_commit_files` to the Mac (reuse of a staged path can serve a stale copy);
@@ -60,7 +59,7 @@ Read first: `DEVELOPMENT.md` (spec **v1.12**: counting closed as a KB test; `Per
   - A KB-free `SoftHaircut` with the same formula would very likely tie. Nothing shows yet that the KB helps.
   - The KB's own contributions are propagation (R5 on ambiguous covers, retraction, containment as a defeasible default, §7 q5) and evidence for the LLM controller (memory arms K vs R / H, spec v1.4 §3.8).
   - **2026-10-29:** as evidence for the controller, the KB beats the raw log on real perception (G Q1 0.77–0.85 vs 0.49–0.68). Its probabilities do not yet track the tracker's swaps (AUROC ≈ 0.5); propagation and retraction remain untested on real data.
-- **2026-10-29:** `sources/perceived.py` (PerceivedSource + occlusion step), `relink.py`, `scripts/perceived_qa.py`, PC / RULE arms in `scripts/count_test.py`, the target-count split in `scripts/count_report.py`.
+- **2026-10-29:** `sources/perceived.py` (PerceivedSource + occlusion step), `relink.py`, `epistemic.py`, `memtool.py`, `self_memory.py`, `harness.py` (skeleton + ReplayEnv), `scripts/perceived_qa.py` + `qa_stats.py`, `scripts/check_self_memory.py`, PC / RULE arms in `scripts/count_test.py`, the target-count split in `scripts/count_report.py`.
 - **G (Mac side, done; pod side in progress):**
   - `stress/stress_env.py`: `VideoUnmaskSwapStress`.
   - `stress/render.py`, `stress/perceive.py`.

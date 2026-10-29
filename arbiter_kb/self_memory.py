@@ -37,13 +37,14 @@ def _was_closed(kb: KB) -> bool:
 
 
 def record(kb: KB, t: int, waypoint, gripper_closed: bool, target: str | None = None, cites=(),
-           declared: str | None = None) -> dict:
-    """Store one decision with a snapshot of the beliefs it was made on (for the changes since)."""
+           declared: str | None = None, detail: str | None = None) -> dict:
+    """`detail`: what the action's evidence must also say, e.g. "left" for hold_above or "dropped" for a release
+    (goal review: a hold on the wrong side read as done)."""
     snap = {c: (h[0][0], round(h[0][1], 2)) for c, h in inside(kb).items() if h}
     said = declared if declared in ACTION_KINDS + ("move",) else None
     d = {"t": t, "intent": said or intent(kb, waypoint, gripper_closed), "gripper_closed": bool(gripper_closed),
          "waypoint": None if waypoint is None else [round(float(v), 3) for v in waypoint[:3]], "target": target,
-         "cites": list(cites), "beliefs": snap, "n_evidence": len(kb.evidence)}
+         "cites": list(cites), "beliefs": snap, "n_evidence": len(kb.evidence), "detail": detail}
     kb.task.setdefault("decisions", []).append(d)
     return d
 
@@ -53,7 +54,8 @@ def outcome(kb: KB, d: dict, until: int | None = None) -> str:
     acts = [e for e in kb.evidence[d["n_evidence"]:] if e.kind in ACTION_KINDS and (until is None or e.t <= until)]
     if d["intent"] == "move":
         return "moved" if not acts else "moved; also " + ", ".join(f"{e.kind} at t={e.t}" for e in acts)
-    hit = next((e for e in acts if e.kind == d["intent"]), None)
+    hit = next((e for e in acts if e.kind == d["intent"] and (not d.get("detail") or d["detail"] in
+                                                               (e.data.get("side"), e.data.get("how")))), None)
     if hit:
         return f"done ({hit.kind} at t={hit.t} [{hit.id}])"
     if acts:

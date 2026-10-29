@@ -44,3 +44,27 @@ def test_relink_follows_motion_through_a_label_swap():
     p[20:, [0, 1]] = p[20:, [1, 0]]  # the tracker swaps the two labels at the crossing
     out = relink(p, 2)
     assert np.all(np.diff(out[:, 0, F_X]) > 0) and np.all(np.diff(out[:, 1, F_X]) < 0)
+
+
+def test_strip_probs_removes_probabilities_only():
+    from arbiter_kb.epistemic import strip_probs
+    text = ("  [Inside(cube_red)] bin_1 0.98 | bin_0 0.02  [e3]\n  [e7] t=32 cube_red covered by bin_0 at (0.01, 0.13) "
+            "(conf 0.99) [e5]\n  event swap(bin_0, bin_1) conf 0.50\n  under bin_1 (0.98; bin_1 has moved 3 times since)"
+            "\n  may hold the red cube (0.97); moved\n  [e9] t=40 bin_0 moved (0.02, 0.05) -> (0.03, 0.06)")
+    out = strip_probs(text)
+    assert "0.98" not in out and "0.99" not in out and "0.50" not in out and "0.97" not in out
+    assert "(0.01, 0.13)" in out and "(0.02, 0.05) -> (0.03, 0.06)" in out and "under bin_1 (bin_1 has moved" in out
+
+
+def test_q6_truth_uses_the_container_once_it_is_there():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from perceived_qa import truth
+    import pytest
+    from arbiter_kb.sources.perceived import PerceivedSource
+    src = PerceivedSource()
+    if not src.files:
+        pytest.skip("no G perceived episodes in data/g_perceived")
+    answers = {truth(src.load(e))["q6"] for e in src.episodes("train")[:40]}
+    assert answers == {"yes", "no"}  # before the fix every episode read "no" (NaN container position at the cover)

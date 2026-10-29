@@ -6,6 +6,8 @@ scripted controller whose declared intent is the current subgoal's action (label
 
 - right intent: the outcome should say "done" (recall per intent);
 - wrong intent (control): the declared intent is replaced by a different action; the outcome should NOT say "done";
+- premature (control, goal review): the declared intent is the NEXT subgoal's action, as when a controller acts
+  ahead of the robot; the outcome should NOT say "done" unless that action also happens in this window;
 - prompt size: the self view's characters against the controller view's.
 No model call; episodes 31-100 only (1-30 are kept for the final run, NOTES "Before the full rerun").
 """
@@ -33,22 +35,27 @@ TASKS = ("PickXtimes", "SwingXtimes", "BinFill")
 OTHER = {"pick_up": "press", "release": "pick_up", "press": "release", "hold_above": "release"}
 
 
-def scripted(env: ReplayEnv, wrong: bool):
+def scripted(env: ReplayEnv, mode: str):
     def decide(system, prompt: str) -> dict:
-        e = expected(env.subgoal())
+        if mode == "premature":  # the last subgoal has no next one: not a premature decision, so not counted
+            label = env.segs[env.k + 1][2] if env.k + 1 < len(env.segs) else ""
+        else:
+            label = env.subgoal()
+        e = expected(label)
         kind = e[0] if e else "move"
-        if wrong and kind in OTHER:
+        if mode == "wrong" and kind in OTHER:
             kind = OTHER[kind]
         return {"waypoint": None, "gripper_closed": kind in ("pick_up", "press"), "intent": kind,
+                "detail": e[1] if e and mode != "wrong" and kind == e[0] else None,
                 "label": env.subgoal()}
     return decide
 
 
-def episode(path, params, wrong: bool) -> list[dict]:
+def episode(path, params, mode: str) -> list[dict]:
     ep = L.load(path)
     env, s = ReplayEnv(ep), ArbiterKBSystem(params)
     labels = []
-    dec = scripted(env, wrong)
+    dec = scripted(env, mode)
 
     def decide(system, prompt):
         a = dec(system, prompt)
@@ -66,21 +73,21 @@ def main() -> None:
     ap.add_argument("--keep-as", dest="keep_as", default="")
     a = ap.parse_args()
     params, rep = load_params(), {}
-    for wrong in (False, True):
+    for mode in ("right", "wrong", "premature"):
         c = collections.defaultdict(lambda: [0, 0])
         sizes = []
         for task in TASKS:
             for path in L.episode_files(task, a.first + a.n)[a.first:]:
-                for r in episode(path, params, wrong):
+                for r in episode(path, params, mode):
                     if r["declared"] == "move":
                         continue
                     c[f"{task}/{r['declared']}"][0] += r["outcome"].startswith("done")
                     c[f"{task}/{r['declared']}"][1] += 1
                     sizes.append((r["self_chars"], r["view_chars"]))
-        key = "wrong_intent_says_done" if wrong else "right_intent_says_done"
+        key = f"{mode}_intent_says_done"
         rep[key] = {k: [v[0], v[1], round(v[0] / v[1], 3)] for k, v in sorted(c.items())}
         rep[key + "_all"] = round(sum(v[0] for v in c.values()) / max(1, sum(v[1] for v in c.values())), 3)
-        if not wrong:
+        if mode == "right":
             rep["self_chars_median"] = int(np.median([x for x, _ in sizes]))
             rep["view_chars_median"] = int(np.median([y for _, y in sizes]))
     print(json.dumps(rep, indent=1))
