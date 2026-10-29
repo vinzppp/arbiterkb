@@ -6,8 +6,11 @@ exchange. Nothing here is new information: every phrase is computed from the KB 
 """
 from __future__ import annotations
 
+import re
+
 import numpy as np
 
+from .action_view import KINDS, action_rows
 from .kb import KB
 from .task_items import is_task_item
 
@@ -102,3 +105,35 @@ def narrative(kb: KB) -> str:
     lines.append("Cubes:")
     lines += [_cube(kb, c, ins, mv, items) for c, o in kb.objects.items() if o.cls == "cube"]
     return "\n".join(lines + ["What happened (oldest first):"] + ["  " + r for r in _timeline(kb)])
+
+
+NUMBERS = {"once": 1, "twice": 2, "thrice": 3, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+           "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+HOW = {"placed": "at table level", "set_down": "from a small height", "dropped": "from above (as into a container)"}
+
+
+def goal_numbers(goal: str) -> list[str]:
+    """The numbers the goal mentions, as written: 'two times' -> 'two (2)'. No reading of what they count."""
+    words = re.findall(r"[a-z]+|\d+", goal.lower())
+    return [w if w.isdigit() else f"{w} ({NUMBERS[w]})" for w in words if w.isdigit() or w in NUMBERS]
+
+
+def robot_narrative(kb: KB) -> str:
+    """The robot-state KB (no objects) in words: what the gripper holds, the last action, counts per kind, the
+    numbers in the goal, then the same action timeline as the controller view (action_view.action_rows)."""
+    acts = [e for e in kb.evidence if e.kind in KINDS]
+    held = bool(acts) and next((e.kind for e in reversed(acts) if e.kind in ("pick_up", "release")), "") == "pick_up"
+    last = action_rows(kb, coords=False)[-1][2].split("] ", 1)[1] if acts else "nothing yet"
+    n = {k: sum(e.kind == k for e in acts) for k in KINDS}
+    rel = [f"{sum(e.data.get('how') == h for e in acts if e.kind == 'release')} {w}" for h, w in HOW.items()]
+    sides = [e.data["side"] for e in acts if e.kind == "hold_above"]
+    nums = goal_numbers(kb.task.get("goal", ""))
+    lines = [f"Goal: {kb.task.get('goal', '?')}",
+             f"Numbers the goal mentions: {', '.join(nums) if nums else 'none'}.",
+             f"Right now the gripper is {'holding the object it last picked up' if held else 'empty'}.",
+             f"Last thing the robot did: {last}.",
+             f"So far: picked up an object {n['pick_up']} time(s); put an object down {n['release']} time(s) "
+             f"({', '.join(rel)}); pressed the button {n['press']} time(s); held an object up on the left "
+             f"{sides.count('left')} time(s) and on the right {sides.count('right')} time(s).",
+             "Everything the robot has done (oldest first):"]
+    return "\n".join(lines + ["  " + r[2] for r in action_rows(kb, coords=False)])

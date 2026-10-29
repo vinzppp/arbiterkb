@@ -1191,3 +1191,39 @@ User question: can the KB give the LLM richer, more semantic context, so that it
   - Clean synthetic data with oracle observations, one task family, one model.
   - I wrote KR knowing the question types; only Q5 was held out by design.
   - The next check should use questions written by someone else, or taken from RoboMME instructions, on perceived data.
+
+## Counting with the KB in words: the test, fixed before running (2026-10-28)
+- **Arm KR:** the counting KB (robot state only) written in words (`narrative.robot_narrative`). It holds:
+  - what the gripper holds now;
+  - the last action;
+  - the counts so far per kind (pick-ups, put-downs by how, presses, holds per side);
+  - the numbers the goal mentions, as written ("two times" → 2), with no task-specific reading of them;
+  - the same action timeline as K (ordinals, merged holds).
+- **Against K:** the v3 view, the same prompt skeleton, the same decision points.
+- **Data:** RoboMME PickXtimes / SwingXtimes / BinFill, episodes 61–100 (as v3; 310 decision points). The v3 K rows come from the cache, so only KR costs anything.
+- **Model:** qwen/qwen3.6-35b-a3b on DeepInfra, effort off and default; cap $2.
+- **Rule** (as in v1–v3): right-decision rate with Wilson CIs; KR − K paired over decision points. Better / worse = the CI excludes 0; same = the CI within ±10 pp.
+- **Caveat:** episodes 61–100 were read in v3 (results only, not used for tuning), and the wording is mine. KO (0.96 off / 0.99 default) remains the ceiling.
+
+**Results** (`results/latest/count_robot_state_words/`: report.json, rows.csv, meta.json; log `results/latest/logs/count_words.log`; 1,240 calls, 620 of them K from the v3 cache, which reproduced v3's K exactly; **$0.25** new). Scored as in v1–v3 (SwingXtimes wrap-up accepts put-down or press).
+
+| arm | effort | right [Wilson 95%] | PickXtimes | SwingXtimes | BinFill | input tokens | median s |
+|---|---|---|---|---|---|---|---|
+| K (v3 view) | off | **0.83** [0.78, 0.86] | 0.78 | 0.71 | 0.96 | 354 | 0.5 |
+| KR (words) | off | 0.74 [0.68, 0.78] | 0.70 | 0.57 | 0.91 | 449 | 0.7 |
+| K (v3 view) | default | **0.94** [0.90, 0.96] | 0.91 | 0.88 | 1.00 | 352 | 6.4 |
+| KR (words) | default | 0.91 [0.87, 0.94] | 0.86 | 0.86 | 1.00 | 447 | 6.6 |
+
+- **Paired:** KR − K: off **−0.09** [−0.13, −0.06], **worse**; default −0.03 [−0.05, −0.003], **worse** (the CI excludes 0 but lies within ±10 pp).
+- **Where KR loses** (KR wrong, K right, no thinking): 31 decisions, all at a **wrap-up**.
+  - SwingXtimes: "move right" instead of "put down", 13;
+  - PickXtimes: "pick up" instead of "press", 9;
+  - BinFill: "pick up" instead of "press", 9.
+  - The model continues when it should stop, even when the counts line says, for example, "picked up an object 4 time(s)" and the goal says four.
+- **A likely cause, from reading the prompts:** the "Numbers the goal mentions" line.
+  - In BinFill "two red cubes and three green cubes" becomes "two (2), three (3)", which can anchor on 3 rather than 5.
+  - The long "So far" sentence with zeros and transit holds ("held an object up on the left 4 times" in PickXtimes) adds counts that do not matter. This was not tested separately.
+- **Reading:**
+  1. **Words are not better by themselves.** In the synthetic questions, KR won by stating joined facts (places, contents, exchanges) that K left to the reader. Here, K already gave what the decision needs (ordinal action lines and a progress line), and KR added counts and numbers that are irrelevant or misleading. A non-thinking model followed them.
+  2. **What to keep:** facts the reader would otherwise have to join, written once and only when they bear on a decision. Not every count in words.
+  3. **Not tuned after the result:** the wording stays as run. Any change (drop the numbers line, drop zero counts) is a new test, with its rule fixed first.
