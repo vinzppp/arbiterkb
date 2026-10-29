@@ -55,9 +55,10 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tasks", default="VideoRepick,VideoPlaceOrder")
     ap.add_argument("--windows", default="")
+    ap.add_argument("--out", default="review_frames", help="folder under data/robomme_lerobot for --windows")
     a = ap.parse_args()
     windows = json.load(open(a.windows)) if a.windows else None
-    meta, out = episodes_meta(), os.path.join(ROOT, "review_frames" if windows else "frames")
+    meta, out = episodes_meta(), os.path.join(ROOT, a.out if windows else "frames")
     os.makedirs(out, exist_ok=True)
     for task in a.tasks.split(","):
         n = 0

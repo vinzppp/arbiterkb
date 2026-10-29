@@ -1119,3 +1119,29 @@ Truth: 27 windows pick_up, 33 put_down (always answering pick_up scores 0.45).
   - Sonnet B's are accurate about what is visible: "blue object held_by gripper", "red cube on wooden table", "gripper near blue ball".
   - qwen B's are short, and the same in every window ("gripper held_by blue object", with the relation's direction reversed; "grey object on the floor").
 - **Not yet shown:** whether a window that covers the outcome (the lift, until about t + 30) lets either model decide. That is a new test, with its rule to be fixed before it runs.
+
+**Longer windows (v2): the test, fixed before running.** Everything is as above except:
+- **Window:** 9 frames from t − 10 to t + 30 in steps of 5 (4 s), so the frames include the lift after a pick-up or a put-down.
+- **Windows:** the same events; any whose t + 30 runs past the episode is left out, and n is reported.
+- **Frames** go to `data/robomme_lerobot/review_frames_long/`; the v1 frames stay as they were.
+- **Truth:** the robot-state actions inside the longer window, so `both` can now occur.
+- **Prompt:** the same, except "about 4 seconds".
+- **Conditions:** A and B, each with qwen3.5-9b and Sonnet 5.5. Cap $2.
+- **Rule:** the same; accuracy ≥ 0.80.
+
+**v2 results** (`results/latest/describe_long_{qwen,sonnet}_{A,B}/summary.json`; logs `results/latest/logs/describe_long_*.log`; 56 windows; truth 27 pick_up, 29 put_down, no `both`; 224 calls, **$0.54**, qwen $0.012):
+
+| model | condition | `happened` right [Wilson 95%] | v1 (2.4 s) | pattern |
+|---|---|---|---|---|
+| qwen3.5-9b | A full frames | 0.43 [0.31, 0.56] | 0.08 | pick_up on 34 / 56 |
+| qwen3.5-9b | B crops | 0.46 [0.34, 0.59] | 0.40 | pick_up on 46 / 56; put-downs called pick_up 20 / 29 |
+| Sonnet 5.5 | A full frames | 0.46 [0.34, 0.59] | 0.02 | put-downs called moving_only 13 / 29 |
+| Sonnet 5.5 | B crops | 0.52 [0.39, 0.64] | 0.12 | put-downs called moving_only 11 / 29 |
+
+- **Rule: fails** in every condition. Always answering put_down would score 0.52.
+- **qwen still answers "pick_up" almost regardless.** Its summary is the same sentence each time ("closes around a blue object and lifts it"), and its relation is often reversed ("gripper held_by red object").
+- **Sonnet now sees what happens, but does not name it as the event.** For put-downs it writes "the white gripper … pulls back and up. The ball stays on the wooden table and is not lifted", which is a correct description of a release, yet it answers "moving_only". Its last-frame relations are mostly right: "blue cube held_by gripper" after pick-ups, "blue ball on wooden table" after put-downs.
+- **Reading:**
+  1. Naming the robot's own action from the front video is hard even for the frontier model (≤ 0.52), while robot state gives it at 0.99. **The VLM should not judge robot actions**: they come from robot state.
+  2. What a VLM can add is **state at a frame**: what is held, what is on what. Sonnet's relations are mostly right here; qwen3.5-9b's are not (one stereotyped, often reversed, relation). This is judged by eye, with no object truth here.
+  3. For relations, the small VLM chosen for listing is not good enough on this evidence. A relation test with truth (G's replays with ids drawn, on the pod) should compare a larger VLM, as well as qwen3.5-9b, with Sonnet.

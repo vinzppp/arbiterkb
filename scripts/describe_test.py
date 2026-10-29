@@ -4,6 +4,8 @@ the hand (robot state -> pixel by a homography fitted on other episodes). Condit
 around the hand, enlarged.
 
   python scripts/describe_test.py --show                                   # free: saves one window per condition
+  python scripts/describe_test.py --long --plan   # v2 windows (t-10 .. t+30); then tools/extract_frames.py --windows
+                                                  # data/robomme_lerobot/review_windows_long.json --out review_frames_long
   python scripts/describe_test.py --call --cond A [--model anthropic/claude-sonnet-5.5] [--keep-as NAME]
 """
 from __future__ import annotations
@@ -29,7 +31,8 @@ from arbiter_kb.sources import lerobot as L  # noqa: E402
 
 CHOICES = ("pick_up", "put_down", "both", "moving_only", "nothing", "cannot_tell")
 CROP = 96
-PROMPT = """These are frames from a robot's front camera over about 2.4 seconds, oldest first, each titled with its
+LONG = (10, 30, 5)  # v2 windows: t - 10 .. t + 30, every 5th frame (NOTES "Longer windows")
+PROMPT = """These are frames from a robot's front camera over about SECONDS seconds, oldest first, each titled with its
 frame number. A small magenta ring marks the robot's gripper. Say what you SEE; if the frames do not show it, say
 cannot_tell.
 Answer with JSON only:
@@ -86,8 +89,19 @@ def crop(rgb: np.ndarray, uv: np.ndarray) -> np.ndarray:
     return rgb[r0:r0 + CROP, c0:c0 + CROP][idx][:, idx]
 
 
+def long_windows(ws: list[dict]) -> list[dict]:
+    """The same events with v2 windows; those running past the episode are left out."""
+    out = []
+    for w in ws:
+        n = len(L.load(Path(w["path"]))["tcp"])
+        fr = list(range(w["t"] - LONG[0], w["t"] + LONG[1] + 1, LONG[2]))
+        if fr[0] >= 0 and fr[-1] < n:
+            out.append({**w, "frames": fr, "dir": "review_frames_long"})
+    return out
+
+
 def frames(w: dict, ep: dict, h: np.ndarray, cond: str) -> list:
-    d = np.load(DATA / "review_frames" / f"{w['key']}.npz")
+    d = np.load(DATA / w.get("dir", "review_frames") / f"{w['key']}.npz")
     rgb = dict(zip(d["idx"].tolist(), d["rgb"]))
     out = []
     for t in w["frames"]:
@@ -104,11 +118,19 @@ def truth(w: dict, ep: dict, params) -> str:
 
 
 def ask(llm, fr: list) -> dict:
-    content = [text_part(PROMPT)]
+    content = [text_part(PROMPT.replace("SECONDS", f"{(fr[-1][0] - fr[0][0]) / 10:.1f}"))]
     for t, img in fr:
         content += [text_part(f"Frame {t}:"), image_part(img)]
     ans = parse_answer(llm.chat([{"role": "user", "content": content}], max_tokens=1500))
     return ans if isinstance(ans, dict) else {}
+
+
+def plan(ws: list[dict]) -> None:
+    frames_by: dict = {}
+    for w in ws:
+        frames_by.setdefault(w["key"], set()).update(w["frames"])
+    (DATA / "review_windows_long.json").write_text(json.dumps({k: sorted(v) for k, v in frames_by.items()}))
+    print(len(ws), "windows ->", DATA / "review_windows_long.json")
 
 
 def row(w: dict, llm, h: np.ndarray, cond: str, params) -> dict:
@@ -138,9 +160,14 @@ def main() -> None:
     ap.add_argument("--model", default="")
     ap.add_argument("--max-usd", dest="max_usd", type=float, default=1.0)
     ap.add_argument("--keep-as", dest="keep_as", default="")
+    ap.add_argument("--long", action="store_true", help="v2 windows (t - 10 .. t + 30)")
+    ap.add_argument("--plan", action="store_true", help="with --long: write the frame list for tools/extract_frames.py")
     a = ap.parse_args()
     params, (commit, dirty), h = load_params(), git_state(), homography()
-    ws = windows(params)
+    ws = long_windows(windows(params)) if a.long else windows(params)
+    if a.plan:
+        plan(ws)
+        return
     if a.show:
         for cond in "AB":
             w = ws[0]
@@ -153,7 +180,7 @@ def main() -> None:
     llm = LLM(model=a.model, max_usd=a.max_usd, provider=None) if a.model else vlm_client(params.arbiter, max_usd=a.max_usd)
     rows = [row(w, llm, h, a.cond, params) for w in ws]
     rep = report(rows)
-    out = {"report": rep, "rows": rows, "usage": llm.usage, "meta": {"commit": commit, "dirty": dirty, "cond": a.cond,
+    out = {"report": rep, "rows": rows, "usage": llm.usage, "meta": {"commit": commit, "dirty": dirty, "cond": a.cond, "long": a.long,
                                                                      "model": a.model or params.arbiter.vlm_model}}
     print(json.dumps(rep, indent=1), json.dumps({k: round(v, 5) if isinstance(v, float) else v
                                                  for k, v in llm.usage.items()}))
