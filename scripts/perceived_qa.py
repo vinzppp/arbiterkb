@@ -25,7 +25,7 @@ from run import git_state, load_params  # noqa: E402
 from extract_test import EFFORT, ROBOT, questions, right  # noqa: E402
 from qa_stats import report  # noqa: E402
 from arbiter_kb.controller import parse_answer, raw_tracker_log  # noqa: E402
-from arbiter_kb.epistemic import epistemic_view  # noqa: E402
+from arbiter_kb.epistemic import epistemic_view, strip_probs  # noqa: E402
 from arbiter_kb.memtool import run_tool, working_memory  # noqa: E402
 from arbiter_kb.llm import LLM  # noqa: E402
 from arbiter_kb.narrative import BASE, narrative  # noqa: E402
@@ -86,10 +86,11 @@ def memory(arm: str, src: PerceivedSource, ep: int, params, kbs: dict | None = N
         s.step(f)
     if kbs is not None:
         kbs[ep] = s.kb
-    if arm == "KT":
+    if arm in ("KT", "KT2"):
         return working_memory(s.kb)
-    if arm == "KA":
-        return epistemic_view(controller_view(s.kb, params.rule), s.kb)
+    if arm in ("KA", "KN"):
+        v = epistemic_view(controller_view(s.kb, params.rule), s.kb)
+        return strip_probs(v) if arm == "KN" else v
     return controller_view(s.kb, params.rule) if arm == "K" else narrative(s.kb)
 
 
@@ -117,7 +118,7 @@ def jobs(params, relinked: bool = False, arms: tuple = ARMS, alt: bool = False) 
                                                       "its memory. " + ROBOT},
                         {"role": "user", "content": memory(arm, src, ep, params, kbs) + "\n\n" + ask(t, alt)}]
                 out += [{"ep": d["name"], "row": row, "arm": arm, "effort": eff, "msgs": msgs, "truth": t,
-                         "kb": kbs.get(ep) if arm == "KT" else None}
+                         "kb": kbs.get(ep) if arm in ("KT", "KT2") else None, "fixed": arm == "KT2"}
                         for eff in EFFORT]
     return out
 
@@ -131,11 +132,14 @@ def answer(llm, job: dict, max_queries: int = 4) -> tuple[str, dict]:
         used["turns"] += 1
         ans = parse_answer(text)
         q = ans.get("query") if isinstance(ans, dict) else None
+        if job["fixed"] and q is None and isinstance(ans, dict) and "tool" in ans:  # C2: a bare query counts
+            q = ans
         if job["kb"] is None or not isinstance(q, dict) or turn == max_queries:
             return text, used
         used["queries"].append(q)
+        last = "\nNo more queries: answer the questions now." if job["fixed"] and turn == max_queries - 1 else ""
         msgs += [{"role": "assistant", "content": text},
-                 {"role": "user", "content": "Memory: " + run_tool(job["kb"], str(q.get("tool")), q.get("arg", ""))}]
+                 {"role": "user", "content": "Memory: " + run_tool(job["kb"], str(q.get("tool")), q.get("arg", "")) + last}]
     return text, used
 
 

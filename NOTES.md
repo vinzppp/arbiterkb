@@ -1671,3 +1671,49 @@ User: zoom out from the tests; as a memory module, how can the KB organise more 
   - wrong intent says "done" **0.000** (0 / 1,618): it never reports an action that did not happen;
   - size: the self view is a median of 229 characters against 912 for the controller view.
 - **Reading:** the outcome text is as reliable as `actions.py`, at about a quarter of the view's length. Whether it helps a controller (failure categories such as premature completion or a late press) can only be measured in the closed loop (M5).
+
+**A — results** (`results/latest/perceived_qa_A/summary.json`; 360 calls, **$0.55**, no empty answers):
+
+| arm / effort | Q1 | Q1 swapped | AUROC of Q1 confidence, all cubes | top-2 (Q1 or q1_alt right) |
+|---|---|---|---|---|
+| K off / default | 0.842 / 0.842 | 0.354 / 0.354 | 0.675 / 0.682 | 0.921 / 0.913 |
+| KA off / default | 0.842 / 0.826 | 0.354 / 0.333 | 0.675 / 0.687 | 0.921 / 0.905 |
+
+- KA − K: AUROC 0.000 [0.000, 0.000] off, 0.000 [−0.053, +0.049] default; top-2 0.000 / −0.007 [−0.037, +0.015]; Q1 0.000 / −0.015 [−0.041, 0.000].
+- **Readings, as fixed:** calibration **same** (no gain); top-2 same; no cost to Q1 (within ±5 pp). **A, as built, adds nothing.**
+- **Why** (looked at after the readings): 57 / 90 KA answers without thinking are identical to K's, word for word. The stated confidences are the KB's own numbers copied: 0.99 (242 of 723), 0.98, 0.97. The K arm already names the same alternatives in q1_alt, read from the "passed close" lines of the event log, so top-2 is 0.92 in both arms.
+  - So the model's calibration is the KB's calibration: it copies p. The KB's p has AUROC 0.731 here, and the model's 0.68.
+  - **Hypothesis:** the numbers anchor the answer, so the reasons and alternatives are not used to set the confidence.
+
+## A2 — the same alternatives without the numbers: the test, fixed before running (2026-10-29)
+- **Arm KN:** KA with every probability removed from the text (the numbers 0.00–1.00 in the view and the joined facts), so only the reasons and alternatives remain. Code: `epistemic.strip_probs`.
+- Against K and KA from the A run (cache), same questions (with q1_alt), G train, re-linked, effort off and default. Cap $0.6.
+- **Readings fixed in advance:**
+  - AUROC KN − K over all cubes: better if the CI excludes 0. Better = the reasons can carry calibration when the numbers do not anchor it.
+  - Q1 KN − K within ±5 pp, or worse (the numbers were doing work).
+  - Also reported: the spread of stated confidences (share at ≥ 0.97).
+
+**C — results** (`results/latest/perceived_qa_C/summary.json`; 494 calls, the first run about $0.6; the report was replayed from the cache after a report bug, the `queries` field being read as a question):
+
+| arm / effort | Q1 | Q1 swapped | AUROC all | Q4 last exchange | Q6 | input tokens per episode (median, all turns) | turns (mean) |
+|---|---|---|---|---|---|---|---|
+| K off / default | 0.846 / 0.842 | 0.354 / 0.354 | 0.69 / 0.66 | 0.80 / 0.81 | 0.12 / 0.13 | 2,486 / 2,484 | 1 / 1 |
+| KT off / default | 0.813 / 0.672 | 0.312 / 0.25 | 0.63 / 0.64 | 0.06 / 0.13 | 0.90 / 0.28 | **523** / 1,151 | 1 / 2.49 |
+
+- KT − K on Q1: off −0.043 [−0.074, −0.015]; default **−0.183 [−0.256, −0.115]**.
+- **Readings, as fixed:** without thinking **undecided** (the CI is neither within ±5 pp nor below it), at **0.21× the input tokens**; with thinking **worse**.
+- **Without thinking the model never queried** (90 / 90 answered at once). So the off row measures the working memory alone: it keeps 0.81 of K's 0.85 on Q1 for a fifth of the tokens, and loses the questions that need history (Q4 0.06). Q6 jumps to 0.90, likely because "yes" is the majority answer and KT answers yes without history (not checked).
+- **With thinking it queried** (history 73, how_known 38, events 20, passes 3), but **18 / 90 episodes never answered**. 15 ran out of the 4 queries, and in others the model wrote a bare {"tool": …} without the "query" wrapper, which the loop took as the final answer. On the 72 that answered, Q1 is 0.83 against K's 0.87 on the same episodes. So most of the loss is the protocol, not the memory.
+
+## C2 — the same, with the query protocol fixed: the test, fixed before running (2026-10-29)
+- **Fixes:** a bare {"tool": …, "arg": …} counts as a query; on the last allowed turn the tool result ends with "No more queries: answer the questions now." Nothing else changes (working memory, tools, questions, limit of 4).
+- **Arm KT2** against K (cache), effort off and default, G train, re-linked. Cap $0.8.
+- **Readings fixed in advance:** the same as C (Q1 KT2 − K within ±5 pp = same; CI below −5 pp = worse; tokens KT2 / K), plus the share of episodes without an answer, which should be 0.
+- **C scaling (free, reading 3; `results/latest/perceived_qa_C/scaling.json`):** over the 90 episodes (14–172 KB evidence items, median 72), K's view grows by **4.4 tokens per evidence item** (523–1,308 tokens, chars / 4). KT's working memory stays at 205–225 tokens (0.05 per item). The gap widens with episode length. G's episodes are short, so this is the slope, not a long-episode result.
+
+**C2 — results** (`results/latest/perceived_qa_C2/summary.json`; **$0.06** new, since the calls up to the first query are cached):
+- **Without thinking:** unchanged (it never queries): Q1 0.813, −0.043 [−0.074, −0.015] against K, at 523 vs 2,486 input tokens.
+- **With thinking:** episodes without an answer fall from 18 to 5 (all five used up the 4 queries and asked again). Q1 0.772, **−0.081 [−0.137, −0.031]: undecided** (the CI neither within ±5 pp nor wholly below). Tokens 1,151 vs 2,484.
+- On the 85 that answered: Q1 0.81 vs K's 0.85 on the same episodes. Episodes with queries: 0.81 vs 0.83; without: 0.81 vs 0.87.
+- **Reading:** a working memory of about 220 tokens keeps most of Q1 (−4 to −8 pp) for a fifth to a half of the tokens. **Querying does not recover the rest:** with thinking, the model asks for history (75), how_known (38) and the event log (20), yet ends no better than when it does not ask. It loses the history questions outright (Q4 0.06–0.21 vs 0.80).
+- So on G's short episodes the full view is better. The token case for KT needs long episodes, where the view grows by 4.4 tokens per evidence item. The query policy would need work (the model asks the wrong things, or too much).

@@ -6,6 +6,8 @@ It reports what the memory holds; it suggests no action.
 """
 from __future__ import annotations
 
+import re
+
 from .kb import KB
 from .narrative import inside, name
 
@@ -48,3 +50,14 @@ def epistemic_view(view: str, kb: KB) -> str:
     """The controller view plus the section (arm KA); the view alone when no cube is hidden."""
     lines = epistemic_lines(kb)
     return view + ("\nHow the memory knows (per hidden cube):\n" + "\n".join("  " + x for x in lines) if lines else "")
+
+
+PROB = re.compile(r" \([01]\.\d{2}\)"            # "may hold the red cube (0.98)"
+                  r"|(?<= \()[01]\.\d{2}; "           # "under bin_1 (0.98; bin_1 has moved ...)"
+                  r"|(?<=\w) [01]\.\d{2}(?= \| |  \[)"  # Relations: "[Inside(cube_red)] bin_1 0.98 | bin_0 0.02  [e3]"
+                  r"|(?<=\]) [01]\.\d{2}(?= \()")       # other relations: "[Near(a,b)] 0.90 (rule)"
+
+
+def strip_probs(text: str) -> str:
+    """The view with every probability (0.00-1.00) removed (arm KN, NOTES "A2"); times and distances stay."""
+    return PROB.sub("", text)

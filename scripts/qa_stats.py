@@ -2,6 +2,8 @@
 bootstrap over episodes (accuracy, top-2) and over cubes (AUROC differences)."""
 from __future__ import annotations
 
+import re
+
 import numpy as np
 
 from video_windows import wilson
@@ -26,7 +28,7 @@ def report(rows: list[dict]) -> dict:
                 stock = [v["right"] for r in rs if r["ep"].startswith("stock") for v in r["q1"].values()]
                 stress = [v["right"] for r in rs if not r["ep"].startswith("stock") for v in r["q1"].values()]
                 sw = [v for v in q1 if v["swapped"] and v["conf"] is not None]
-                other = [k for k in rs[0] if k.startswith("q") and not k.startswith("q1")] if rs else []
+                other = [k for k in rs[0] if re.fullmatch(r"q[2-9]", k)] if rs else []
                 out[f"{row}/{arm}/{eff}"] = {
                     "q1": wilson(sum(v["right"] for v in q1), len(q1)), "q1_stock": wilson(sum(stock), len(stock)),
                     "q1_stress": wilson(sum(stress), len(stress)),
@@ -39,12 +41,14 @@ def report(rows: list[dict]) -> dict:
                     "turns_mean": round(float(np.mean([r.get("turns", 1) for r in rs])), 2) if rs else None,
                     **{k: round(float(np.mean([r[k] for r in rs if k in r])), 3) for k in other}}
         for eff in EFFORT:
-            if {"K", "KT"} <= {r["arm"] for r in rows if r["row"] == row}:
-                out[f"{row}/KT-K/{eff}"] = {"q1": paired(rows, row, "KT", "K", eff, "all")}
-            if {"K", "KA"} <= {r["arm"] for r in rows if r["row"] == row}:
-                out[f"{row}/KA-K/{eff}"] = {"auroc_all": auroc_pair(rows, row, "KA", "K", eff),
-                                            "top2": paired(rows, row, "KA", "K", eff, "all", "top2"),
-                                            "q1": paired(rows, row, "KA", "K", eff, "all")}
+            for a in ("KT", "KT2"):
+                if {"K", a} <= {r["arm"] for r in rows if r["row"] == row}:
+                    out[f"{row}/{a}-K/{eff}"] = {"q1": paired(rows, row, a, "K", eff, "all")}
+            for a in ("KA", "KN"):
+                if {"K", a} <= {r["arm"] for r in rows if r["row"] == row}:
+                    out[f"{row}/{a}-K/{eff}"] = {"auroc_all": auroc_pair(rows, row, a, "K", eff),
+                                                 "top2": paired(rows, row, a, "K", eff, "all", "top2"),
+                                                 "q1": paired(rows, row, a, "K", eff, "all")}
             for a, b in [p for p in (("KR", "R"), ("K", "R"), ("KR", "K")) if {p[0], p[1]} <= {r["arm"] for r in rows}]:
                 out[f"{row}/{a}-{b}/{eff}"] = {part: paired(rows, row, a, b, eff, part)
                                                for part in ("all", "stock", "stress")}
