@@ -18,6 +18,8 @@ class RuleParams:
     sigma_cover: float = 0.02  # m: width of the distance kernel over cover candidates (R1)
     w_max: float = 0.5  # R6 (M1): w = w_max·exp(-d/d0), d = closest 3D centre distance of the pass
     d0: float = 0.02  # m
+    r6_feature: str = "min_3d"  # R6's pass feature: "min_3d" (scale d0, m) or "min_q" (scale q0; claim 3 on G, NOTES)
+    q0: float = 0.2  # R6 with min_q: w = w_max·exp(-min_q/q0), min_q = the pass's lowest track_q (0..1)
     eps_none: float = 0.01  # floor for the "elsewhere" hypothesis in R1
     r_grasp: float = 0.05  # m: R3, an object within this 3D distance of the end effector when the gripper closes is held
     r_on: float = 0.04  # m: On(x, y) / place target: xy distance at most this, and x above y

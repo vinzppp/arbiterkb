@@ -93,13 +93,15 @@ def below(kb: KB, obj: str, xyz: np.ndarray, p: RuleParams) -> str | None:
 def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """Two containers passed close to each other: with probability w their tracks may have exchanged
     identity, so every HIDDEN cube with mass on either gets w of its mass moved across.
-    M1: w = w_max·exp(-d/d0), d = the pass's closest 3D centre distance (the detector always records it)."""
+    M1: w = w_max·exp(-d/d0), d = the pass's closest 3D centre distance (the detector always records it).
+    With r6_feature = "min_q": the pass's lowest track_q (the re-linking's margin), scale q0."""
     ops = []
     for ev in new_ev:
         if ev.kind != "near_pass":
             continue
         a, b = ev.args
-        w = p.w_max * float(np.exp(-ev.data["min_3d"] / p.d0))
+        scale = p.q0 if p.r6_feature == "min_q" else p.d0
+        w = p.w_max * float(np.exp(-ev.data[p.r6_feature] / scale))
         if w > 0:  # the motion is certain; the event marks a pass that may have exchanged identities
             ops.append(AddEvent(frame.t, "swap", (a, b), 1.0, [ev.id]))
         for (pred, cube), d in kb.relations.items():

@@ -1786,3 +1786,29 @@ All runs were re-scored from the cache ($0). KN was re-run as registered (**$0.2
 2. **A and A2 unchanged:** alternatives in words add nothing, and removing the numbers (now all of them) lowers the stated confidence's AUROC (not significant). The stated confidence stays at or below the KB's own p (0.69).
 3. **C unchanged** for Q1. KT's Q6 drops to 0.19–0.37 (it has no history), so the earlier "KT answers yes" note was wrong.
 4. **Claim 3's measure is the KB's p** (AUROC 0.69 overall, 0.70 within stress), against the trivial baselines: the setting bit 0.56, near pass since the cover 0.52. The next step compares it with SoftHaircut using the same margin feature.
+
+## Claim 3 on G: the KB's own probabilities, with the re-linking margin as swap evidence. The test, fixed before running (2026-10-29, user go)
+**Question:** does the KB's belief layer give better-calibrated answers than the same swap score without a KB (SoftHaircut), on real perception? No LLM is involved: claim 3 is about the KB's p, which a controller can read directly (overnight goal review).
+
+**New evidence:**
+- `relink.relink_margin`: per identity and frame, how much worse (m) the assignment would be if it exchanged slots with its closest competitor. Near 0 = the motion cannot tell the two apart.
+- `PerceivedSource(relinked=True)` puts it in each container's `track_q` = min(1, margin / 0.10 m). The near-pass detector records the pass's lowest track_q as `min_q`.
+- R6 and SoftHaircut take the feature `min_3d` (scale d0, as before) or `min_q` (scale q0): w = w_max·exp(−feature/scale), w_max 0.5 for both.
+
+**Systems:** Bound (a point mass); SoftHaircut(feature); ArbiterKB (R6 inside the KB, plus R1's cover kernel, R5, the "elsewhere" floor), each with min_3d or min_q. Same perceived frames: G, re-linked tracks, the occlusion step.
+
+**Per Q1 cube:** the system's answer (its most likely container) and that answer's p; truth from `perceived_qa.truth` (any slot on the true container at the end).
+
+**Metrics:** accuracy; AUROC of p for right / wrong; AURC (the mean risk over coverage, answers sorted by p; lower is better). Overall and within the stress settings.
+
+**Tuning on G train only** (`scripts/claim3_g.py --grid`): d0 ∈ {0.02, 0.05, 0.10, 0.20} m; q0 ∈ {0.05, 0.10, 0.20, 0.50}. The choice per (system, feature) is the lowest train AURC, ties to the smaller scale. It is saved to `results/latest/claim3_g/choice.json` and frozen.
+
+**One read on G test** (episodes 10–19 of each setting; never read for this question; motion v2 read it once for motion segments only), with a ledger READ line.
+
+**Readings fixed in advance** (paired bootstrap over test episodes, 1,000 draws):
+1. **Main: ArbiterKB(min_q) − SoftHaircut(min_q), AURC.** KB better if the CI is below 0. Otherwise claim 3 is **not supported on real perception**: the gain is the feature, not the belief layer.
+2. The same for min_3d.
+3. ArbiterKB(min_q) − ArbiterKB(min_3d), AURC: does the margin carry swap information that distance does not?
+4. Reported with each: accuracy (R6 can change the answer) and AUROC; Bound as the floor.
+
+**Then the LLM rows on G test** (Q1, as in the perceived QA, re-linked, with the chosen KB setting): R, K and the KB's top answer, effort off and default, about $0.4. They show whether the train results (K = the KB's top answer, K − R +0.15 to +0.29) hold out of sample.

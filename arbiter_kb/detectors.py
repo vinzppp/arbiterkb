@@ -5,7 +5,8 @@ grip_close / grip_open carry the end-effector xyz and the gripper width (hystere
 
 near_pass(a, b): two containers both moving come closer than d_px in the image (d_3d metres without a
 camera); it is emitted when the pass ends, with closeness = min distance / threshold in [0, 1) and
-min_3d = the smallest 3D centre distance seen while the pass was open.
+min_3d = the smallest 3D centre distance seen while the pass was open; min_q = the lowest track_q of the two while it
+was open (with re-linked perception, track_q carries the re-linking's assignment margin: claim 3, NOTES).
 """
 from __future__ import annotations
 
@@ -60,13 +61,15 @@ class Detectors:
                     cur = self.passes.get((a, b))
                     d3 = float(np.linalg.norm(frame.objects[a].xyz - frame.objects[b].xyz))
                     min_3d = min(d3, cur["min_3d"]) if cur else d3
+                    q = min(frame.objects[a].track_q, frame.objects[b].track_q)
+                    min_q = min(q, cur["min_q"]) if cur else q
                     if cur is None or d < cur["min_d"]:
                         cur = {"min_d": d, "thr": thr, "t_min": t, "t_open": cur["t_open"] if cur else t}
-                    self.passes[(a, b)] = {**cur, "min_3d": min_3d}
+                    self.passes[(a, b)] = {**cur, "min_3d": min_3d, "min_q": min_q}
             elif (a, b) in self.passes:
                 ps = self.passes.pop((a, b))
                 data = {"closeness": ps["min_d"] / ps["thr"], "min_d": ps["min_d"], "thr": ps["thr"], "min_3d": ps["min_3d"],
-                        "t_min": ps["t_min"], "t_open": ps["t_open"],
+                        "min_q": ps["min_q"], "t_min": ps["t_min"], "t_open": ps["t_open"],
                         "obs": [obs_id(ps["t_min"], a), obs_id(ps["t_min"], b)]}
                 ops.append(AddEvidence(t, "near_pass", (a, b), data))
         return ops

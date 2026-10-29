@@ -40,7 +40,7 @@ class SoftHaircut:
                 self.passes[cube] = []
                 continue
             for e in evs:
-                w = rp.w_max * math.exp(-e.data[self.feature] / rp.d0)
+                w = rp.w_max * math.exp(-e.data[self.feature] / (rp.q0 if self.feature == "min_q" else rp.d0))
                 self.passes.setdefault(cube, []).append((*e.args, round(w, 6), frame.t))
         ans = {c: self.believe_inside(c).argmax() for c in self.cubes}
         last = {c: [p[-1][0], p[-1][1], p[-1][3], p[-1][2]] for c, p in self.passes.items() if p}  # a, b, t, w

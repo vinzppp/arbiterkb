@@ -16,11 +16,12 @@ from pathlib import Path
 
 import numpy as np
 
-from ..relink import relink
+from ..relink import relink_margin
 from ..sg_compat import F_HIDDEN, F_U, F_V, F_X, F_Z
 from ..types import EpisodeMeta, FrameObs, ObjObs
 
 G_DIR = Path(__file__).resolve().parents[2] / "data" / "g_perceived"
+MARGIN_CAP = 0.10  # m: with relinked=True a container's track_q = min(1, re-linking margin / MARGIN_CAP) (claim 3)
 
 
 def _seen(rows: np.ndarray, t: int, s: int) -> bool:
@@ -62,8 +63,8 @@ class PerceivedSource:
     def load(self, ep: int) -> dict:
         z = np.load(self.files[ep], allow_pickle=True)
         meta = json.loads(str(z["meta"]))
-        per = relink(z["perceived"], meta["n_bins"]) if self.relinked else z["perceived"]
-        return {"name": self.files[ep].stem, "meta": meta, "perceived": per, "oracle": z["oracle"]}
+        per, margin = relink_margin(z["perceived"], meta["n_bins"]) if self.relinked else (z["perceived"], None)
+        return {"name": self.files[ep].stem, "meta": meta, "perceived": per, "oracle": z["oracle"], "margin": margin}
 
     def ids(self, d: dict) -> list[tuple[str, str, dict]]:
         nb, cls = d["meta"]["n_bins"], d["meta"]["classes"]
@@ -88,6 +89,7 @@ class PerceivedSource:
                 covered = not _seen(ora, t, s) if self.oracle_cubes and cls == "cube" else occ[t, s]
                 vis = _seen(per, t, s) and not covered
                 row = per[t, s]
+                q = 1.0 if d["margin"] is None or cls != "container" else min(1.0, d["margin"][t, s] / MARGIN_CAP)
                 objs[oid] = ObjObs(oid, cls, vis, row[F_X:F_Z + 1].astype(float) if vis else None,
-                                   row[F_U:F_V + 1].astype(float) if vis else None, 1.0)
+                                   row[F_U:F_V + 1].astype(float) if vis else None, q)
             yield FrameObs(t, objs, np.array([0.0, 0.0, 0.45]), 0.08, t < len(per) - 1)
