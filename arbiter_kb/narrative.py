@@ -144,3 +144,26 @@ def robot_narrative(kb: KB, trim: bool = False) -> str:
               f"Last thing the robot did: {last}.", f"So far: {so_far}.",
               "Everything the robot has done (oldest first):"]
     return "\n".join(lines + ["  " + r[2] for r in action_rows(kb, coords=False)])
+
+
+def joined_facts(kb: KB) -> list[str]:
+    """Facts the reader would otherwise join from several lines of the controller view (arm KH): orders of the
+    containers, what each may hold and its moves, and each hidden cube's containers. No "now" sentences (they cost
+    the counting decisions; NOTES "Trimmed results"). Empty when the KB has no containers."""
+    bins = [o.id for o in kb.objects.values() if o.cls == "container" and o.pose.value is not None]
+    if not bins:
+        return []
+    near = sorted(bins, key=lambda b: float(np.linalg.norm(np.asarray(kb.objects[b].pose.value[:2]) - BASE)))
+    ltr = sorted(bins, key=lambda b: -kb.objects[b].pose.value[1])
+    ins, mv, items = inside(kb), moves(kb), kb.task.get("items", [])
+    return ([f"Containers from the robot's left to its right: {', '.join(ltr)}.",
+             f"Containers from nearest to farthest from the robot: {', '.join(near)}."]
+            + [_container(kb, b, near, ins, mv).strip() for b in bins]
+            + [_cube(kb, c, ins, mv, items).strip() for c, o in kb.objects.items() if o.cls == "cube"])
+
+
+def merged_view(view: str, kb: KB) -> str:
+    """The controller view plus the joined facts (arm KH); the view alone when there is nothing to join."""
+    facts = joined_facts(kb)
+    return view + ("\nJoined facts (computed from the memory above):\n" + "\n".join("  " + f for f in facts)
+                   if facts else "")

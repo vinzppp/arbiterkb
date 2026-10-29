@@ -1,6 +1,6 @@
 """Does a richer KB text make facts easier to extract? (NOTES "Does a richer KB text make the facts easier to
 extract?": the rule was fixed before the run.) Synthetic VideoUnmaskSwap, train seeds 100-129; arms R (raw tracker
-log), K (controller view), KR (narrative.py); 8 questions per episode in one call; truth from the generator.
+log), K (controller view), KR (narrative.py), KH (K + joined facts); 8 questions per episode in one call; truth from the generator.
 
   python scripts/extract_test.py --print          # free: one prompt per arm
   python scripts/extract_test.py --call [--keep-as extract_kb]
@@ -24,13 +24,14 @@ from run import git_state, load_params  # noqa: E402
 from review_test import wilson  # noqa: E402
 from arbiter_kb.controller import parse_answer, raw_tracker_log  # noqa: E402
 from arbiter_kb.llm import LLM  # noqa: E402
-from arbiter_kb.narrative import BASE, narrative  # noqa: E402
+from arbiter_kb.narrative import BASE, merged_view, narrative  # noqa: E402
 from arbiter_kb.sources.synthetic import COVER_T, HOLD, SWAP_T0, SyntheticSource  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
 from arbiter_kb.views import controller_view  # noqa: E402
 
 EFFORT = {"default": None, "off": {"enabled": False}}
 SEEDS = range(100, 130)
+ARMS = ("R", "K", "KR", "KH")  # KH: K + joined facts (NOTES "The merged view")
 ROBOT = "The robot's base is at (-0.615, 0) and it faces +x; the robot's left is +y."
 
 
@@ -71,7 +72,8 @@ def memory(arm: str, src: SyntheticSource, ep: int, params) -> str:
     s.reset(src.meta(ep))
     for f in frames:
         s.step(f)
-    return controller_view(s.kb, params.rule) if arm == "K" else narrative(s.kb)
+    view = controller_view(s.kb, params.rule)
+    return {"K": view, "KR": narrative(s.kb), "KH": merged_view(view, s.kb)}[arm]
 
 
 def right(key: str, got, want) -> bool:
@@ -89,7 +91,7 @@ def jobs(params) -> list[dict]:
     src, out = SyntheticSource(lane_offset="mix", swap_steps="mix"), []
     for ep in SEEDS:
         t = truth(src, ep)
-        for arm in ("R", "K", "KR"):
+        for arm in ARMS:
             msgs = [{"role": "system", "content": "You answer questions about a robot's table-top scene from its "
                                                   "memory. " + ROBOT},
                     {"role": "user", "content": memory(arm, src, ep, params) + "\n\n" + questions(t)}]
@@ -108,13 +110,13 @@ def score(job: dict, text: str) -> dict:
 def report(rows: list[dict]) -> dict:
     keys = [k for k in rows[0] if k.startswith("q")]
     out = {}
-    for arm in ("R", "K", "KR"):
+    for arm in ARMS:
         for eff in EFFORT:
             rs = [r for r in rows if r["arm"] == arm and r["effort"] == eff]
             per = {k: wilson(sum(r[k] for r in rs), len(rs)) for k in keys}
             out[f"{arm}/{eff}"] = {"all": wilson(sum(r[k] for r in rs for k in keys), len(rs) * len(keys)), **per}
     out["paired"] = {f"{a}-{b}/{eff}": paired(rows, a, b, eff, keys) for eff in EFFORT
-                     for a, b in (("KR", "R"), ("KR", "K"), ("K", "R"))}
+                     for a, b in (("KR", "R"), ("KR", "K"), ("K", "R"), ("KH", "K"), ("KH", "KR"))}
     return out
 
 
@@ -129,7 +131,7 @@ def paired(rows, a, b, eff, keys) -> list[float]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--print", action="store_true")
-    ap.add_argument("--call", action="store_true", help="required to spend money (180 calls, cap $2)")
+    ap.add_argument("--call", action="store_true", help="required to spend money (240 calls, R/K/KR cached; cap $2)")
     ap.add_argument("--keep-as", dest="keep_as", default="")
     a = ap.parse_args()
     params, (commit, dirty) = load_params(), git_state()

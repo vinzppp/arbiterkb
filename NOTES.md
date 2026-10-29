@@ -1259,3 +1259,40 @@ User question: can the KB give the LLM richer, more semantic context, so that it
   2. **It hurts when it adds "current situation" sentences to a counting decision:** the model acts on the most recent state rather than the count. For counting, K's ordinal action lines plus one progress line remain the best format we have.
   3. **Rule of thumb for the view:** state the joined facts a decision needs (contents, places, counts against the goal when the goal is parsed); do not narrate the present moment.
 - I stop varying the wording here. Any further variant (for example K plus the joined facts only) needs its rule fixed first.
+
+## The merged view (K + joined facts): the test, fixed before running (2026-10-28)
+- **Arm KH:** the v3 controller view (K) unchanged, plus a section "Joined facts (computed from the memory above)". It holds, from `narrative.py`:
+  - the containers from the robot's left to its right, and from nearest to farthest;
+  - per container: what it may hold, and how often it moved, with which container;
+  - per hidden cube: its container(s) and how often each moved since the cover.
+  - **No "now" sentences**, no goal numbers. With no objects in the KB (robot state only), the section is empty, so KH is K word for word.
+- **Tests:**
+  1. the synthetic questions (seeds 100–129, 8 questions; R, K, KR from the cache, KH new);
+  2. counting on episodes 61–100. KH must equal K there; this is checked by comparing the prompts, and the run is then a cache replay.
+- **Rule:** KH − K and KH − KR paired, as before.
+- **Expectation, written before the run:** KH ≈ KR on the questions, and KH = K on counting.
+
+**Results** (synthetic questions: `results/latest/extract_kb_merged/summary.json`, log `results/latest/logs/extract_kb_merged.log`; 240 calls, 180 of them R / K / KR from the cache, reproducing the earlier table; **$0.08** new):
+
+| arm | effort | all | Q1 (×3) | Q2 | Q3 | Q4 | Q5 joined | Q6 | prompt tokens (chars / 4) |
+|---|---|---|---|---|---|---|---|---|---|
+| K | off | 0.66 | 0.57–0.73 | 0.67 | 0.83 | 1.00 | 0.07 | 0.77 | ~640 |
+| KR | off | 0.91 | 0.93–0.97 | 0.80 | 0.87 | 1.00 | 0.93 | 0.80 | ~530 |
+| **KH** | off | **0.91** | 0.90–0.97 | 0.80 | 0.93 | 1.00 | **0.97** | 0.80 | ~920 |
+| K | default | 0.86 | 0.97–1.00 | 0.77 | 0.90 | 0.97 | 0.57 | 0.73 | |
+| KR | default | **0.93** | 0.97 | 0.80 | 1.00 | 1.00 | 0.93 | 0.80 | |
+| KH | default | 0.87 | 0.90–0.93 | 0.77 | 0.93 | 0.90 | 0.90 | 0.73 | |
+
+- **Paired:**
+  - KH − K: off **+0.25** [+0.19, +0.32], **better**; default +0.01 [−0.08, +0.08], **same**.
+  - KH − KR: off 0.00 [−0.03, +0.04], **same**; default −0.06 [−0.14, +0.00], **undecided**.
+- **Counting:** KH's prompts are identical to K's on all 310 decision points (checked), so KH = K = 0.83 / 0.94 there.
+- **Reading:**
+  1. **Without thinking, the merged view keeps both gains:** the same as KR on the questions (0.91, the joined question 0.97) and the same as K on counting (0.83).
+  2. **With thinking, it gains nothing over K on the questions** (0.87 vs 0.86), and may trail KR (0.93). Q1 drops from 0.97–1.00 to 0.90–0.93.
+     - A guess: the longer prompt with two descriptions of the same facts lets the thinking model second-guess one with the other.
+     - KH is also the longest text (~920 tokens against ~640 / ~530).
+  3. **No single format wins everywhere.**
+     - For a fast non-thinking controller, the case claims 1–2 care about, KH is the best choice we have.
+     - With thinking, the plain KR words are best on object scenes, and K on counting.
+- Next options, each a new test: KH with the event log trimmed (to cut the duplicate facts and the length); or choose the format by whether the KB holds objects (KR words for object scenes, K for robot-only).
