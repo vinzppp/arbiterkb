@@ -2436,3 +2436,14 @@ Astra pilot K sent 38% of H's prompt tokens and paid as much ("Why K's fewer tok
   starting. Run from `/workspace/score` at dec1e03 (no re-upload; the episode guard of e75ff1f does not affect these
   20). The pod upload archive is not rebuilt until this test's result is in NOTES (the cache-optimisation session
   works in parallel).
+
+## Bug: "keep" (gripper 0) recorded as open in K's self-memory (found 2026-10-30 by the cache session; checked here)
+- `closed_loop.py` passed `action[6] < 0` to `self_memory.record` as `gripper_closed`, so gripper 0 ("keep") while
+  holding was recorded as **open**; `self_memory.intent` then reads open-while-held as a "release", which never
+  happens, and K's view shows "release -> not done yet". Astra's K had 21 such steps in the pilot. It corrupts exactly
+  the progress record the two-pick test is about. The offline harness (`harness.py`) passes real booleans and is not
+  affected; neither are H and R (no self-memory).
+- **Consequences, fixed now:** the pilot's K rows and the dec1e03 two-pick K run (started 2026-10-30 07:51 on the pod)
+  measure K **with this bug**. That run is still read and reported by its rule, labelled "dec1e03, with the gripper-0
+  bug", but **the decision on option 4 is taken on the fixed version**, run K-only on the same 20 episodes (with the
+  user's go), and go-backs are compared per episode, bug vs fixed. The two versions' results are never pooled.
