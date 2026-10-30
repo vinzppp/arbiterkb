@@ -4,7 +4,7 @@ import json
 
 import numpy as np
 
-from arbiter_kb.closed_loop import NOOP_TEXT, Memory, frame_indices, run
+from arbiter_kb.closed_loop import NOOP_TEXT, Memory, fingers_closed, frame_indices, gripper_closed, run
 from arbiter_kb.params import Params
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
 from arbiter_kb.types import FrameObs
@@ -149,3 +149,21 @@ def test_fixed_first_layout_reaches_the_fresh_arms_only():
     ask, sent = scripted([WP])
     run(FakeEnv([(5, "success")]), "H", ask, layout="fixed_first", breakpoint=True)
     assert "prompt_cache_breakpoint" not in json.dumps(sent)
+
+
+def test_gripper_keep_holds_the_state_before_it():
+    """NOTES "Bug: keep recorded as open": gripper 0 while holding was recorded as open, read as a release."""
+    assert [gripper_closed(c, b) for c, b in ((-1, False), (1, True), (0, True), (0, False))] == [True, False, True,
+                                                                                                    False]
+    assert not fingers_closed({"gripper_state_list": [[0.04, 0.04]]})
+    assert fingers_closed({"gripper_state_list": [[0.002, 0.002]]})
+
+    def perceive(obs):
+        return [FrameObs(0, {}, np.zeros(3), 0.08, False)]
+    perceive.objects = lambda: []
+    mem = Memory("K", ArbiterKBSystem(Params()), perceive)
+    wp = lambda g: json.dumps({"description": "x", "waypoint": [0.0, 0.0, 0.2, -3.1416, 0, 0], "gripper": g})  # noqa
+    ask, _ = scripted([wp(-1), wp(0), wp(0), wp(1), wp(0)])
+    run(FakeEnv([(5, "ongoing")] * 4 + [(5, "success")]), "K", ask, mem)
+    closed = [d["gripper_closed"] for d in mem.system.kb.task["decisions"]]
+    assert closed == [True, True, True, False, False]  # with the bug: [True, False, False, False, False]

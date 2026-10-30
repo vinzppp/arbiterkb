@@ -33,6 +33,18 @@ GRID = 3  # arm H: sampled frames go GRID x GRID per image. OpenRouter's pre-fli
 NOOP_TEXT = ("The last action executed no steps: the robot did not move and no time passed, so the scene is unchanged. "
              "Choose the next action.")  # theirs, verbatim
 TERMINAL = ("success", "fail", "timeout", "error")
+CLOSED_WIDTH = 0.01  # m: total finger opening below this reads as a closed gripper (Panda: ~0.08 open, ~0 closed)
+
+
+def gripper_closed(command: float, before: bool) -> bool:
+    """The gripper state a waypoint leaves: -1 closes, +1 opens, 0 keeps the state before it. Reading 0 as open
+    recorded every "keep" while holding as a release in K's self-memory (NOTES "Bug: keep recorded as open")."""
+    return True if command < 0 else False if command > 0 else before
+
+
+def fingers_closed(obs: dict) -> bool:
+    """The robot's own gripper state, from the finger positions (before the first open / close command)."""
+    return float(np.sum(np.reshape(_np(obs["gripper_state_list"][-1]), -1)[:2])) < CLOSED_WIDTH
 
 
 class Limit(Exception):
@@ -127,6 +139,7 @@ class Episode:
 
     def run(self) -> dict:
         self.obs, self.info = self.env.reset()
+        self.closed = fingers_closed(self.obs)
         self.goal, t0, m = self.info["task_goal"][0], time.time(), self.memory
         if m is not None:
             if m.system is not None:
@@ -184,8 +197,9 @@ class Episode:
     def execute(self, action: np.ndarray, answer: dict, text: str) -> None:
         m = self.memory
         if m is not None and m.system is not None:
-            record(m.system.kb, m.frames[-1].t if m.frames else 0, action[:6], action[6] < 0, answer.get("target"),
-                   answer.get("cites") or ())
+            record(m.system.kb, m.frames[-1].t if m.frames else 0, action[:6], gripper_closed(action[6], self.closed),
+                   answer.get("target"), answer.get("cites") or ())
+        self.closed = gripper_closed(action[6], self.closed)
         # what the model said it was doing, for reading failures later (the Astra reading had only retries' text)
         said = {k: answer[k] for k in ("description", "target") if answer.get(k) is not None}
         new_obs, _, term, trunc, new_info = self.env.step(action)

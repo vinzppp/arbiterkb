@@ -2447,3 +2447,13 @@ Astra pilot K sent 38% of H's prompt tokens and paid as much ("Why K's fewer tok
   measure K **with this bug**. That run is still read and reported by its rule, labelled "dec1e03, with the gripper-0
   bug", but **the decision on option 4 is taken on the fixed version**, run K-only on the same 20 episodes (with the
   user's go), and go-backs are compared per episode, bug vs fixed. The two versions' results are never pooled.
+- **Fixed (2026-10-30):** `closed_loop.gripper_closed(command, before)`: −1 closes, +1 opens, **0 keeps the state
+  before it**; the state starts from the robot's finger positions (`fingers_closed`: total opening < 1 cm) and then
+  follows the commands. K's self-memory now records a keep while holding as holding. Test: a close, two keeps, an open
+  and a keep record closed = [T, T, T, F, F] (the bug gave [T, F, F, F, F]). **This changes K's text: new prompt
+  version, re-frozen (params a810942859b9, prompts 4750fdef3d00; includes the cache session's eff65c8, whose layout
+  defaults are unchanged).** Results under 4750fdef3d00 are never pooled with dec1e03's (82d83ed1f52d) or the pilot's.
+- **Fixed-version run, not yet approved:** K only, `openai/gpt-6-astra`, the same 20 episodes, same cap ($15), same
+  rule and decision rule as the dec1e03 run; extracted into its own directory (`/workspace/score_fix`), started only
+  after the dec1e03 run has finished (extracting over `/workspace/score` would change the running job's code).
+  Compared per episode with the dec1e03 run: success, `went_back`, and the confirmed "loses track" episodes.
