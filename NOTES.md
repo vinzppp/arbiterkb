@@ -2866,3 +2866,26 @@ Background (model screen, bdd8afe): `actions.py` records a `pick_up` only when t
 - **Fixed K (updates "Fixed K is not only the gripper fix" above):** = the gripper-0 fix (038ddf1) + R4 reveal
   (f6fad9a) + the move threshold (a229e35) + these three (grasp from the fingers, record what executed, pick_up only
   on open→closed), re-frozen together. Differences between the fixed-K run and dec1e03 cannot be put on any one part.
+- **Implemented (2026-10-30; re-frozen: params fe4e94112a74, prompts 4612ab9e1390).**
+  - `actions.py`: a `grip_close` starts a pending grasp; it becomes a `pick_up` when the opening has settled (< 1 mm
+    change between observed frames, `DetectParams.w_settle`) above `w_empty` = 0.005 m; an open before settling or a
+    settled opening ≤ w_empty is an empty close. The pick_up's position is the hand's at the close.
+  - `closed_loop.execute`: steps first, then records the decision (before the step's frames reach the KB) with the
+    gripper state after what executed; `self.closed` changes only when n > 0; `record(..., executed=n > 0)`.
+  - `self_memory`: `outcome` of a non-executed decision = "not executed: the robot did not move"; `intent` gives
+    "pick_up" only on a change from open to closed (a keep while closed and empty: "press" low, "move" otherwise);
+    `gripper_closed` moved here from closed_loop (closed_loop is at the 250-line limit; still importable from it).
+  - **`scripts/two_pick.py` (shared with K2 / the model screen):** the scripted gripper now acts over 6 control steps
+    (2 observed frames, hand still) after its command instead of in one frame, as RoboMME's does (~8 dataset frames
+    from open to 0.000). With an instant close no frame after it showed the opening settled, so the screen's KB saw
+    the grasp only during the lift (test_model_screen caught it). No paid run used two_pick before this change; the
+    K vs K2 offline test and the model screen run under this freeze.
+  - **Dataset check, all 100 episodes each of PickXtimes, SwingXtimes, BinFill, VideoPlaceOrder, VideoRepick
+    (`check_actions` with the code defaults; HEAD before the change in a separate worktree):** recall unchanged for
+    every kind (pick_up 1446 / 1446, press 500 / 500, releases 745 / 745, hold_above 439 / 446); pick_up precision
+    1.000 both, with 1448 pick_ups instead of 1459 (the 11 dropped were empty closes the height rule counted); **press
+    precision 0.996 → 0.973** (514 presses instead of 502): after an empty close the closed, empty gripper's lift now
+    reads as a press, as it physically resembles one. Accepted as is; to look at if a button task is run.
+  - Tests: `tests/test_gripper_record.py` (a container grasped at 0.062 is a pick_up; an empty close at 0.02 or
+    0.059 is not; a cube settling over frames; open→closed intent; a non-executed step recorded and keeping the
+    gripper). `make check`: 253 passed, quality clean, selftest 16 pass / 1 skip.

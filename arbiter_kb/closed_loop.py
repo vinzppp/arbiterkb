@@ -22,7 +22,7 @@ import numpy as np
 
 from .controller import (check, image_part, parse_answer, raw_tracker_log, shown_ids, system_prompt, text_part,
                          to_action, user_content)
-from .self_memory import record, self_view
+from .self_memory import gripper_closed, record, self_view
 from .view_k2 import K2View, request as k2_request
 from .views import controller_view
 
@@ -34,12 +34,6 @@ NOOP_TEXT = ("The last action executed no steps: the robot did not move and no t
              "Choose the next action.")  # theirs, verbatim
 TERMINAL = ("success", "fail", "timeout", "error")
 CLOSED_WIDTH = 0.01  # m: total finger opening below this reads as a closed gripper (Panda: ~0.08 open, ~0 closed)
-
-
-def gripper_closed(command: float, before: bool) -> bool:
-    """The gripper state a waypoint leaves: -1 closes, +1 opens, 0 keeps the state before it. Reading 0 as open
-    recorded every "keep" while holding as a release in K's self-memory (NOTES "Bug: keep recorded as open")."""
-    return True if command < 0 else False if command > 0 else before
 
 
 def fingers_closed(obs: dict) -> bool:
@@ -200,17 +194,19 @@ class Episode:
 
     def execute(self, action: np.ndarray, answer: dict, text: str) -> None:
         m = self.memory
-        if m is not None and m.system is not None:
-            record(m.system.kb, m.frames[-1].t if m.frames else 0, action[:6], gripper_closed(action[6], self.closed),
-                   answer.get("target"), answer.get("cites") or ())
-        self.closed = gripper_closed(action[6], self.closed)
         # what the model said it was doing, for reading failures later (the Astra reading had only retries' text)
         said = {k: answer[k] for k in ("description", "target") if answer.get(k) is not None}
         new_obs, _, term, trunc, new_info = self.env.step(action)
-        if new_obs is None or (new_info or {}).get("status") == "error":
+        err = new_obs is None or (new_info or {}).get("status") == "error"
+        n = 0 if err else len(new_obs.get("front_rgb_list") or [])
+        if n:  # the gripper state changes only when the step executed (NOTES "Grasps above z_low")
+            self.closed = gripper_closed(action[6], self.closed)
+        if m is not None and m.system is not None:  # recorded before this step's frames reach the KB
+            record(m.system.kb, m.frames[-1].t if m.frames else 0, action[:6], self.closed, answer.get("target"),
+                   answer.get("cites") or (), executed=n > 0)
+        if err:
             self.steps.append({"action": action.tolist(), "error": (new_info or {}).get("error_message"), **said})
             return self.finish("error", "env_error")
-        n = len(new_obs.get("front_rgb_list") or [])
         self.noops = self.noops + 1 if n == 0 else 0
         if n:
             self.obs, self.info = new_obs, new_info

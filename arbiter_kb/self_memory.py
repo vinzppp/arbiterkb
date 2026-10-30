@@ -4,9 +4,10 @@ decided at each call, whether the robot did it, and what changed since its last 
 robot-state actions (actions.py), so they need no vision. It reports; it suggests no action.
 
 Intent of a decision: the controller's own "intent" field when it gives one (like "target" and "cites", it explains
-an action and never constrains it); otherwise read off the waypoint: "pick_up" (gripper closes, nothing held),
-"release" (gripper opens while holding), "press" (gripper already closed, nothing held, hand low: RoboMME presses
-with a closed gripper), else "move".
+an action and never constrains it); otherwise read off the waypoint: "pick_up" (gripper goes from open to closed,
+nothing held), "release" (gripper opens while holding), "press" (gripper already closed, nothing held, hand low:
+RoboMME presses with a closed gripper), else "move" (a keep while closed and empty is not a new pick_up). A decision
+the robot did not execute (no frames, or an env error) is recorded as such (NOTES "Grasps above z_low").
 """
 from __future__ import annotations
 
@@ -17,6 +18,12 @@ ACTION_KINDS = ("pick_up", "release", "press", "hold_above")
 Z_LOW = 0.05  # m: a waypoint this low with a closed gripper and nothing held reads as a press
 
 
+def gripper_closed(command: float, before: bool) -> bool:
+    """The gripper state a waypoint leaves: -1 closes, +1 opens, 0 keeps the state before it. Reading 0 as open
+    recorded every "keep" while holding as a release in K's self-memory (NOTES "Bug: keep recorded as open")."""
+    return True if command < 0 else False if command > 0 else before
+
+
 def holding(kb: KB) -> bool:
     acts = [e.kind for e in kb.evidence if e.kind in ("pick_up", "release")]
     return bool(acts) and acts[-1] == "pick_up"
@@ -25,7 +32,9 @@ def holding(kb: KB) -> bool:
 def intent(kb: KB, waypoint, gripper_closed: bool) -> str:
     held = holding(kb)
     if gripper_closed and not held:
-        return "press" if waypoint is not None and float(waypoint[2]) < Z_LOW and _was_closed(kb) else "pick_up"
+        if not _was_closed(kb):
+            return "pick_up"
+        return "press" if waypoint is not None and float(waypoint[2]) < Z_LOW else "move"
     if not gripper_closed and held:
         return "release"
     return "move"
@@ -37,20 +46,22 @@ def _was_closed(kb: KB) -> bool:
 
 
 def record(kb: KB, t: int, waypoint, gripper_closed: bool, target: str | None = None, cites=(),
-           declared: str | None = None, detail: str | None = None) -> dict:
+           declared: str | None = None, detail: str | None = None, executed: bool = True) -> dict:
     """`detail`: what the action's evidence must also say, e.g. "left" for hold_above or "dropped" for a release
     (goal review: a hold on the wrong side read as done)."""
     snap = {c: (h[0][0], round(h[0][1], 2)) for c, h in inside(kb).items() if h}
     said = declared if declared in ACTION_KINDS + ("move",) else None
     d = {"t": t, "intent": said or intent(kb, waypoint, gripper_closed), "gripper_closed": bool(gripper_closed),
          "waypoint": None if waypoint is None else [round(float(v), 3) for v in waypoint[:3]], "target": target,
-         "cites": list(cites), "beliefs": snap, "n_evidence": len(kb.evidence), "detail": detail}
+         "cites": list(cites), "beliefs": snap, "n_evidence": len(kb.evidence), "detail": detail, "executed": executed}
     kb.task.setdefault("decisions", []).append(d)
     return d
 
 
 def outcome(kb: KB, d: dict, until: int | None = None) -> str:
     """'done', 'not done yet', or what happened instead, from the actions since the decision."""
+    if not d.get("executed", True):
+        return "not executed: the robot did not move"
     acts = [e for e in kb.evidence[d["n_evidence"]:] if e.kind in ACTION_KINDS and (until is None or e.t <= until)]
     if d["intent"] == "move":
         return "moved" if not acts else "moved; also " + ", ".join(f"{e.kind} at t={e.t}" for e in acts)

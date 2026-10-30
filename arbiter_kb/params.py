@@ -43,6 +43,8 @@ class DetectParams:
     z_drop: float = 0.12  # m: a release above this is a drop from above (dataset: into the bin at 0.20)
     z_hold: float = 0.07  # m: a pause while holding above this = holding something up (dataset: 0.10)
     press_rise: float = 0.03  # m: a press is complete when the hand rises this far above its lowest point
+    w_empty: float = 0.005  # m: a close that settles with the fingers apart by more holds something (closed = 0.000)
+    w_settle: float = 0.001  # m: the finger opening has settled when it changes less than this between frames
     y_side: float = 0.10  # m: |y| beyond this = the robot's left (+y) / right (-y) side (dataset: 0.21)
     merge_xy: float = 0.05  # m: a hold followed by a release within this xy distance is shown as one step (v3 view)
     # container motion v2 (motion.py; NOTES "Motion detector v2"): chosen on G training episodes (F1 0.65 -> 0.80)

@@ -61,10 +61,16 @@ class Robot:
                     self.pos[c] = p
             self.t += 1
             if k % 3 == 0 or k == n:
-                objs = {oid: ObjObs(oid, o.cls, self.pos[oid] is not None, None if self.pos[oid] is None else
-                                    self.pos[oid].copy(), None, 1.0) for oid, o in self.objs.items()}
-                out.append(noisy(FrameObs(self.t, objs, self.ee.copy(), self.width, False), self.rng, self.resid))
+                out.append(self._frame())
+        for _ in range(2 if gripper else 0):  # the fingers take time to act: the hand waits 2 observed frames (6 steps;
+            self.t += 3  # RoboMME's gripper settles in ~8 dataset frames), so a grasp is seen settled (actions.py)
+            out.append(self._frame())
         return out
+
+    def _frame(self) -> FrameObs:
+        objs = {oid: ObjObs(oid, o.cls, self.pos[oid] is not None, None if self.pos[oid] is None else
+                            self.pos[oid].copy(), None, 1.0) for oid, o in self.objs.items()}
+        return noisy(FrameObs(self.t, objs, self.ee.copy(), self.width, False), self.rng, self.resid)
 
     def state(self) -> dict:
         """The state text the closed loop sends (closed_loop.state), from the scripted robot."""
