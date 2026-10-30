@@ -2524,6 +2524,7 @@ cache" above). The user's design, a new arm K2 (`arbiter_kb/view_k2.py`), with K
   `results/runs/k2_offline_<time>/` (rows.csv, summary.json, meta.json with commit and params hash).
 - **Re-frozen:** params a810942859b9, prompts 946e17f79534 (K2's memory text, `view_k2.py`, now in the prompts hash, and the runner flags); K's
   own text is unchanged by this commit.
+## The dec1e03 two-pick K run, read by the rule (2026-10-30; with the gripper-0 bug; belongs to "Does K lose track")
 - **Reading the dec1e03 run by the rule: one change, fixed before looking at its data (2026-10-30).** The pod is
   stopped and object positions after reset exist on the Mac only for episodes 0–9 (`vus_objects.json`); `went_back`
   needs the second right object's reset position. A positions-free variant (`callout.went_back_free`):
