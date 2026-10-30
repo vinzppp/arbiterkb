@@ -55,6 +55,10 @@ class DetectParams:
     valley: float = 0.35  # split a move at a speed valley below this x its peak (0: never; motion.py)
     rev_cos: float = -0.5  # split a move when its velocity turns this far from the move so far (-2: never)
     rev_min: float = 0.02  # m: only once the move is this long
+    # m: a move whose start-to-stop xy displacement is below this is not reported (K's log, narrative, K2's log); the
+    # 99th percentile of still containers' perceived displacement on G train (scripts/still_noise.py; NOTES "Move
+    # threshold from real perception noise"). The evidence stays in the KB.
+    move_min: float = 0.0416
 
 
 @dataclass(frozen=True)

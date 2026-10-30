@@ -21,6 +21,13 @@ from .params import DetectParams
 from .types import FrameObs
 
 
+def reported(xyz0, xyz1, p: DetectParams = DetectParams()) -> bool:
+    """Whether a move from xyz0 to xyz1 is reported to a reader: its xy displacement reaches p.move_min (below it,
+    still containers move that much by perception noise alone; NOTES "Move threshold from real perception noise")."""
+    return xyz0 is not None and xyz1 is not None and \
+        float(np.linalg.norm(np.subtract(xyz1[:2], xyz0[:2]))) >= p.move_min
+
+
 class Motion:
     def __init__(self, p: DetectParams):
         self.p = p

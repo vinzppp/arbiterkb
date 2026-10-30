@@ -22,6 +22,7 @@ import numpy as np
 
 from .action_view import KINDS
 from .kb import KB
+from .motion import reported
 from .narrative import inside, seen
 from .rules import held
 from .task_items import is_task_item
@@ -86,9 +87,9 @@ class K2View:
 
     def _changes(self, kb: KB, rows: list) -> list[str]:
         covered = {s for v in kb.events if v.type == "cover" for s in v.support}
-        out = [(e.t, f"[{e.id}] t={e.t} {x}") for e in kb.evidence[self.n_ev:]
-               if (x := self._line(e, rows, covered)) is not None]
         hs = holds(kb, rows)
+        out = [(e.t, f"[{e.id}] t={e.t} {x}") for e in kb.evidence[self.n_ev:]
+               if (x := self._line(e, rows, covered, hs)) is not None]
         out += [(v.t, f"[{v.id}] t={v.t} " + _event(v, kb, hs)) for v in kb.events[self.n_events:]]
         ds = kb.task.get("decisions", [])
         out += [(d["t"], f"[d{i}] t={d['t']} you: waypoint {_f(d['waypoint'])}, gripper "
@@ -102,25 +103,28 @@ class K2View:
         """A belief line when it first appears, and again (naming the line it replaces) when its most likely
         container changes, its top probability falls by >= 0.1 (self_memory.changes' rule), or its set of
         candidate containers changes."""
-        out = []
+        changed = []
         for c, hyps in inside(kb).items():
-            was = self.beliefs.get(c)
-            keys = {k for k, _ in hyps}
-            if was and hyps[0][0] == was[1] and was[2] - hyps[0][1] < 0.1 and keys == was[3]:
-                continue
+            was, keys = self.beliefs.get(c), {k for k, _ in hyps}
+            if not (was and hyps[0][0] == was[1] and was[2] - hyps[0][1] < 0.1 and keys == was[3]):
+                changed.append((kb.relations[("Inside", c)].t, c, hyps, keys, was))  # t: when it last changed
+        out = []
+        for t, c, hyps, keys, was in sorted(changed, key=lambda r: r[0]):  # ids in time order
             self.n_b += 1
-            t = kb.relations[("Inside", c)].t  # when the belief last changed
             rep = f"; replaces [{was[0]}]" if was else ""
             out.append((t, f"[b{self.n_b}] t={t} Inside({c}): {_hyps(hyps)}{rep}"))
             self.beliefs[c] = (f"b{self.n_b}", hyps[0][0], hyps[0][1], keys)
         return out
 
-    def _line(self, e, rows: list, covered: set) -> str | None:
+    def _line(self, e, rows: list, covered: set, hs: dict) -> str | None:
         d, a = e.data, ", ".join(e.args)
         if e.kind == "move_start":
             self.start[e.args[0]] = (d.get("t_at", e.t - 1), d.get("xyz"))
         elif e.kind == "move_stop" and e.args[0] in self.start and self.start[e.args[0]][1] is not None:
             t0, xyz0 = self.start.pop(e.args[0])
+            held_then = any(h["t"] <= e.t and t0 <= (h["t_off"] or e.t) for h in hs.get(e.args[0], []))
+            if held_then or not reported(xyz0, d["xyz"]):  # the grasp / release lines say it; or perception noise
+                return None
             return f"{a} moved by {_f(np.subtract(d['xyz'], xyz0))} to {_f(d['xyz'])} (t={t0}-{e.t})"
         elif e.kind == "appear" and e.t != rows[0]["t"]:  # the first frame's objects are the initial state
             row = next((r for r in rows if r["t"] == e.t), None)
@@ -151,12 +155,15 @@ def _event(v, kb: KB, hs: dict) -> str:
 
 
 def initial(kb: KB, rows: list) -> str:
-    """Every object as observed in the first frame; the rest 'not seen yet'."""
+    """The objects seen in the first frame. Objects first seen later enter through the log; tracker slots that never
+    find an object (the open word list has spare slots) never appear."""
     first = rows[0]["obs"] if rows else {}
-    lines = [f"Initial state (t={rows[0]['t'] if rows else 0}, the first frame; later lines may supersede it):"]
+    lines = [f"Initial state (t={rows[0]['t'] if rows else 0}, the objects seen in the first frame; others appear in "
+             "the log when first seen; later lines may supersede this):"]
     for o in kb.objects.values():
         ob = first.get(o.id)
-        lines.append(f"  [{o.id}] {o.description}, " + (f"seen at {_f(ob[1])}" if ob and ob[0] else "not seen yet"))
+        if ob and ob[0]:
+            lines.append(f"  [{o.id}] {o.description}, seen at {_f(ob[1])}")
     return "\n".join(lines)
 
 

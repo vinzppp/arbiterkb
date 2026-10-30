@@ -212,7 +212,7 @@ def test_each_request_starts_with_the_previous_one_and_ends_with_the_current_sta
     assert "bin_0 moved by (0.15" in log and log.count("cube_red seen at") == 1
 
 
-def test_initial_lists_unseen_objects_and_current_lists_the_goal_items():
+def test_initial_lists_only_first_frame_objects_and_current_lists_the_goal_items():
     from arbiter_kb.view_k2 import K2View
     s = ArbiterKBSystem(Params())
     s.reset(EpisodeMeta("t", 0, "train", "pick up the container that hides the red cube",
@@ -220,7 +220,7 @@ def test_initial_lists_unseen_objects_and_current_lists_the_goal_items():
     for f in _frames(0, 6, 0.0, 0.0):
         s.step(f)
     a, logs, c = K2View().update(s)
-    assert "[cube_red] red cube, not seen yet" in a and "[bin_0] container, seen at (0.000, 0.100, 0.030)" in a
+    assert "cube_red" not in a and "[bin_0] container, seen at (0.000, 0.100, 0.030)" in a  # red: first seen at t=2
     assert "1. red cube [cube_red]: visible" in c and "hand at (0.000, 0.000, 0.450), finger opening 0.080 m, holding nothing" in c
 
 
@@ -266,3 +266,8 @@ def test_k2_logs_the_hold_numbers_decisions_and_belief_ids_and_r4_clears_the_lif
     assert "Inside(cube_blue): bin_1" in log and "replaces [b" in log
     assert "highest hand z while held 0.250" in log and "t=12 [bin_0] released, hand at (0.200, 0.200, 0.040)" in log
     assert "1. red cube [cube_red]: seen under [bin_0]; [bin_0]: grasped t=" in c
+
+
+def test_moves_below_the_noise_threshold_are_not_reported():
+    from arbiter_kb.motion import reported
+    assert not reported([0, 0, 0], [0.03, 0.02, 0.0]) and reported([0, 0, 0], [0.04, 0.02, 0.0])

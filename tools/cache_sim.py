@@ -73,7 +73,8 @@ def episode(src: PerceivedSource, ep: int, rng) -> list[dict]:
     last = frames[-1]
     ora = d["oracle"][-1]
     bins = {b: ora[slot[b], 4:7].astype(float) for b in set(c2b.values())}
-    robot = Robot(last, rng, {b: (c, np.array([*bins[b][:2], 0.017])) for c, b in c2b.items()})
+    robot = Robot(last, rng, {b: (c, np.array([*bins[b][:2], 0.017])) for c, b in c2b.items()},
+                  np.load(ROOT / "data" / "g_perceived_still_residuals.npy"))  # real still-container noise
     A, B = c2b[f"cube_{colors[0]}"], c2b[f"cube_{colors[1]}"]
     pa, pb = bins[A], bins[B]
     steps = two_pick_plan(A, B, pa, pb) + [(None, None, 0)]

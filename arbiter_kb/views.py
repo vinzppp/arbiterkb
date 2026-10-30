@@ -14,6 +14,7 @@ import numpy as np
 from .action_view import KINDS as ACTION_KINDS, action_rows, progress
 from .goal_counter import progress_line
 from .kb import KB
+from .motion import reported
 from .narrative import merged_view
 from .params import RuleParams
 from .rules import held
@@ -155,6 +156,8 @@ def event_log(kb: KB, last: int = 30, low_level: bool = True, coords: bool = Tru
             continue
         if e.kind == "move_stop" and e.args[0] in start and start[e.args[0]][1] is not None:
             t0, xyz0 = start.pop(e.args[0])
+            if not reported(xyz0, e.data.get("xyz")):  # perception noise on a still container (motion.reported)
+                continue
             e = type(e)(e.id, e.t, e.kind, e.args, {**e.data, "from": xyz0, "t_from": t0})
         if (line := _ev_line(e)) is not None:
             rows.append((e.t, 0, int(e.id[1:]), f"[{e.id}] {line}"))

@@ -2495,6 +2495,7 @@ cache" above). The user's design, a new arm K2 (`arbiter_kb/view_k2.py`), with K
 - **Free simulation (`tools/cache_sim.py`, the rebuilt G episodes above, 10 × 8 calls):** K2 sends 1.56× K's tokens
   (the log is never truncated: the opening video's first message is ~2,400 tokens, cached after the first call), 0.67
   of them cache reads; cost vs K now **0.53** (66 image tokens) / **0.55** (255), against `fixed_first` 0.61 / 0.63.
+  (Corrected below: these are against K with its implicit cache; against K in explicit mode, 0.66 / 0.69.)
   C is median 778 tokens (max 1,132). The opening log is mostly moves of a few millimetres (perception noise in the
   rebuilt episodes; the pilot's real logs are on the pod and not yet read).
 - The scripted continuation moved to `scripts/two_pick.py` (shared by `tools/cache_sim.py` and the test below); it now
@@ -2594,7 +2595,87 @@ A review of the K2 sketch, checked against K2's real output (synthetic episode 1
   breakpoint is always among the latest 50, so the limit does not bind.
 - **Not fixed:** millimetre moves are still logged (the motion detector's own output); dropping them needs a noise
   threshold, to be set from train-data perception noise if at all, not from any pilot.
-- Simulation after the fixes (`tools/cache_sim.py`, 10 × 8 calls): K2 costs **0.51 / 0.54** of K now (66 / 255 image
+- Simulation after the fixes (`tools/cache_sim.py`, 10 × 8 calls; against K implicit, see the correction below): K2 costs **0.51 / 0.54** of K now (66 / 255 image
   tokens), Now median 650 tokens (max 882).
 - Re-frozen: params a810942859b9, prompts 08c6cb1474ce. `make check`: tests pass; quality fails only on
   `arbiter_kb/callout.py` (253 lines > 250), changed in ada07a5 by the other session, not touched here.
+
+## Move threshold from real perception noise, and a noisy condition for K vs K2: rules fixed before measuring (2026-10-30, user decision)
+Why: the motion detector (motion.py v2, speed-based) reports moves of a few millimetres while a container stands
+still; K's event log and K2's log carry them as "moved". The user's rule: below a threshold measured on real
+perception noise, no move is reported (K and K2 alike).
+- **Data:** G's perceived train episodes (`PerceivedSource().episodes("train")`, episodes 0–9 of each setting),
+  container slots only (moves are reported for containers only). Never the synthetic 3 mm, never any pilot.
+- **Still frames, from the simulator (G's oracle rows; ground truth, train only, used to set a parameter):** a
+  container is still at frame t when its oracle xy differs from frame t−1 by less than 0.1 mm; a still segment is a
+  maximal run of still frames of one container in which the perceived track is seen in every frame.
+- **Measure:** within each still segment, the perceived xy displacement |p(t) − p(s)| for every pair of frames
+  s < t (what a "move" between those frames would report while nothing moved). Reported: segments, pairs, the 50th,
+  95th, 99th percentiles and the maximum.
+- **Threshold (the rule): T = the 99th percentile of those pair displacements.** A move whose start-to-stop xy
+  displacement is below T is not reported in K's event log, in narrative's move counts and exchanges (K's joined
+  facts), or in K2's log. The evidence stays in the KB (traceability); the motion detector itself is unchanged.
+- **Noise model for the offline test, from the same frames:** residual = perceived xyz − the segment's median
+  perceived xyz, pooled over all still frames. The noisy condition adds to every visible object in every frame (the
+  synthetic video and the scripted continuation) one residual drawn at random from that pool (seeded per episode).
+  An empirical draw, not a Gaussian, because real tracks jump (motion.py's docstring). The clean condition adds none
+  (the continuation's synthetic 3 mm is removed).
+- **K vs K2 offline test, amended (supersedes its rule above):** the same 30 episodes run in both conditions, clean
+  and noisy (30 × 7 × 2 arms × 2 conditions = 840 Qwen calls, ~$2, cap $3). **K2 passes only if, in each condition
+  separately, the 95% paired bootstrap CI of K2 − K has its lower bound above −0.05.** Otherwise K2 is not run in the
+  closed loop. Reported per condition as before.
+- Both changes alter what K and K2 read: new prompt version, re-frozen, never mixed with earlier results.
+
+### K vs K2 offline, redesigned so that every scored call depends on memory (2026-10-30, goal review; supersedes the scoring above)
+The goal review found that of the six scored calls only two (where to go first, where to go after the put-down)
+needed memory; the other four had the hand already above the right container. Redesign, fixed before running:
+- **Script (`scripts/two_pick.py`, open loop):** after the opening video the hand is at home (0, 0, 0.45). Asked at
+  five states, each with the hand **not** above the container the goal needs:
+  1. home, nothing done — right: A (the container hiding the goal's first cube);
+  2. hand above D1 (the container nearest A in xy, other than A and B), open — right: A;
+  then, unasked: above A, down and close, lift to 0.22, put A down to one side, back home;
+  3. home, A put down — right: B (the container hiding the second cube);
+  4. hand above where A was put down — right: B (going back to A here is the "lost progress" failure);
+  5. hand above D2 (the container nearest B, other than A and B) — right: B.
+  Moves to home and to D1 / D2 / A's spot are recorded as decisions with no target (they are the script's, not
+  the model's); the pick of A is recorded with target A.
+- **Score per asked call:** `both` = `target` names the right container (brackets and spaces stripped, so `[bin_1]`
+  = `bin_1`) and the waypoint's xy is within 3 cm of its true centre. An answer that does not parse into a valid
+  action scores 0 (it is recorded, never crashes the run; a replay from the cache gives the same rows).
+- **Pairing:** the comparison uses only (condition, episode, call) triples where both arms have an answer; triples
+  lost to an API error or the budget are counted and reported, never silently dropped.
+- **Primary, per condition (clean, noisy):** per episode the mean of `both` over its paired calls; K2 − K with a 95%
+  paired bootstrap CI over episodes (10,000 resamples, seed 0). **K2 passes only if the lower bound is above −0.05 in
+  both conditions.** Also reported: calls 3–5 alone (after the first pick), the share of call-4 answers naming A,
+  mean prompt tokens per arm, spend.
+- Calls: 30 episodes × 5 asks × 2 arms × 2 conditions = 600 (cap $3). Needs the user's go.
+
+### Move threshold: measured, applied; K2 and test fixes (2026-10-30)
+- **Measurement (`scripts/still_noise.py`, rule above):** the first run paired perceived and oracle containers by
+  slot index; the slots are numbered differently (perceived slot 0 = oracle slot 1 in episode 0), so "still" was
+  wrong and its numbers (p99 0.178 m) are **discarded**. The track's object is now the oracle container nearest it in
+  xy at that frame, a segment keeps one object (the rule's meaning: the displacement a still container shows).
+  Result: 90 train episodes, 723 still segments, 417,957 pairs; xy displacement p50 0.0020 m, p95 0.0279, **p99
+  0.0416 = T**, max 0.112. Residual std (x, y, z) 0.0065, 0.0056, 0.0057 m over 17,428 still frames; the pool is
+  `data/g_perceived_still_residuals.npy` (git-ignored, rebuilt by the script).
+- **Applied:** `DetectParams.move_min = 0.0416`; `motion.reported(xyz0, xyz1)`; moves below it are left out of K's
+  event log, `narrative.moves` (so K's joined facts' move counts and exchanges) and K2's log. The detector and the
+  evidence are unchanged.
+- **"Fixed K" is not only the gripper fix.** Against dec1e03's K, the fixed K differs by: (1) the gripper-0 fix
+  (038ddf1), (2) R4 reveal, which changes K's beliefs and adds a log sentence (f6fad9a), (3) the move threshold, which
+  removes move lines and changes move counts in K's text (this commit). A difference between the fixed-version run and
+  dec1e03 cannot be put on the gripper fix alone.
+- **K2:** belief ids are numbered in time order; a held container's moves between its grasp and its release are not
+  logged (the grasp and release lines give them); the initial state lists only the first frame's objects (spare
+  tracker slots that never find an object are never listed; objects first seen later enter through the log).
+- **Offline test script (eval review):** a malformed answer scores 0 and never raises (also on a cache replay);
+  `[bin_1]` = `bin_1`; API errors and budget stops are recorded as rows with an error, and the comparison pairs only
+  calls both arms answered (counts reported); the redesigned probe script and the two conditions as fixed above.
+  Tests: `tests/test_k2_offline.py`.
+- **Cost, corrected (user):** the earlier "K2 = 0.53–0.55 of K" compared K2 in explicit mode with K in its implicit
+  cache mode (K now). Against K in explicit mode (−20% for K with no content change) the same simulation gave
+  **0.66–0.69**. After the review fixes: 0.51–0.54 vs K implicit = 0.64–0.68 vs K explicit. **Now, with the move
+  threshold (in both K and K2) and real-noise residuals in the scripted continuation instead of the synthetic 3 mm:**
+  K's prompt fell to 235k tokens (from 269k), K2 sends 1.21× K's tokens; **K2 explicit = 0.45 / 0.49 of K implicit
+  and 0.56 / 0.61 of K explicit** (66 / 255 image tokens).
+- **Re-frozen:** params b4caad02074a (move_min added), prompts 9eefe9411062.

@@ -12,6 +12,7 @@ import numpy as np
 
 from .action_view import KINDS, action_rows
 from .kb import KB
+from .motion import reported
 from .task_items import is_task_item
 
 BASE = np.array([-0.615, 0.0])  # the robot's base in the world frame (RoboMME)
@@ -27,13 +28,16 @@ def name(kb: KB, oid: str) -> str:
 
 
 def moves(kb: KB) -> list[tuple[str, int, int]]:
-    """[(object, t_start, t_end)] from move_start / move_stop evidence, in time order."""
+    """[(object, t_start, t_end)] from move_start / move_stop evidence, in time order; moves below the reporting
+    threshold (motion.reported) are left out."""
     start, out = {}, []
     for e in kb.evidence:
         if e.kind == "move_start":
-            start[e.args[0]] = e.data.get("t_at", e.t - 1)
+            start[e.args[0]] = (e.data.get("t_at", e.t - 1), e.data.get("xyz"))
         elif e.kind == "move_stop" and e.args[0] in start:
-            out.append((e.args[0], start.pop(e.args[0]), e.t))
+            t0, xyz0 = start.pop(e.args[0])
+            if xyz0 is None or reported(xyz0, e.data.get("xyz")):
+                out.append((e.args[0], t0, e.t))
     return out
 
 
