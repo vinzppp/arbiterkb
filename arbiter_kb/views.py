@@ -179,6 +179,8 @@ def _event_text(v, kb: KB) -> str:
                 f"from then on it moves with {v.args[0]}")
     if v.type == "swap":
         return f"{v.args[0]} and {v.args[1]} passed close (identity may be confused: see Inside)"
+    if v.type == "reveal":  # R4
+        return f"{v.args[1]} seen where {v.args[0]} was grasped: {v.args[0]} hid it"
     return f"event {v.type}({', '.join(v.args)}) conf {v.conf:.2f}"
 
 

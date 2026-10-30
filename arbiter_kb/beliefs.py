@@ -105,6 +105,15 @@ class Distribution:
             return flat
         return self
 
+    def without(self, key: str, t: int, ev_id: str) -> "Distribution":
+        """Evidence that `key` is not the answer (R4: that container was seen to hide another cube): its mass goes,
+        the rest is renormalised; nothing left -> {None: 1}."""
+        probs = {k: p for k, p in self.probs.items() if k != key}
+        if sum(probs.values()) <= 0:
+            return Distribution.point(None, t, sorted(set(self.support) | {ev_id}))
+        hs = {k: list(v) for k, v in self.hyp_support.items() if k != key}
+        return Distribution(probs, t, sorted(set(self.support) | {ev_id}), hs)
+
     # ---- reads --------------------------------------------------------------------------
     def argmax(self) -> tuple[str | None, float]:
         k = max(self.probs, key=self.probs.__getitem__)  # ties -> the first key (callers order keys)

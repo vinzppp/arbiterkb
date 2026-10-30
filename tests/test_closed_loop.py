@@ -205,7 +205,7 @@ def test_each_request_starts_with_the_previous_one_and_ends_with_the_current_sta
     last = users[-1]
     assert last[0]["content"][0]["text"] == "Task goal: pick up the red cube"
     assert last[0]["content"][2]["text"].startswith("Initial state (t=0")
-    assert last[-1]["content"][0]["text"].startswith("Current state at t=")
+    assert last[-1]["content"][0]["text"].startswith("Now, t=")
     assert all(m["content"][-1].get("prompt_cache_breakpoint") for m in last[:-1])
     assert "prompt_cache_breakpoint" not in json.dumps(last[-1])
     log = "\n".join(m["content"][0]["text"] for m in last[1:-1])
@@ -221,4 +221,48 @@ def test_initial_lists_unseen_objects_and_current_lists_the_goal_items():
         s.step(f)
     a, logs, c = K2View().update(s)
     assert "[cube_red] red cube, not seen yet" in a and "[bin_0] container, seen at (0.000, 0.100, 0.030)" in a
-    assert "1. red cube [cube_red]: visible" in c and "Robot: hand at (0.000, 0.000, 0.450); holding nothing." in c
+    assert "1. red cube [cube_red]: visible" in c and "hand at (0.000, 0.000, 0.450), finger opening 0.080 m, holding nothing" in c
+
+
+def test_k2_logs_the_hold_numbers_decisions_and_belief_ids_and_r4_clears_the_lifted_bin():
+    """A cube covered under bin_0, another under bin_1 with some mass on bin_0; bin_0 is grasped, lifted, the first
+    cube is seen at bin_0's spot (R4: the second cube loses its bin_0 mass), then bin_0 is released."""
+    from arbiter_kb.self_memory import record
+    from arbiter_kb.view_k2 import K2View
+    s = ArbiterKBSystem(Params())
+    s.reset(EpisodeMeta("t", 0, "train", "pick up the container that hides the red cube",
+                        [("bin_0", "container", {}), ("bin_1", "container", {}), ("cube_red", "cube", {"color": "red"}),
+                         ("cube_blue", "cube", {"color": "blue"})], None, None))
+    b0, b1, red, blue = np.array([0.0, 0.1, 0.03]), np.array([0.0, -0.1, 0.03]), np.array([0.0, 0.1, 0.017]), \
+        np.array([0.0, -0.1, 0.017])
+
+    def frame(t, ee, width, bin0, cubes_seen, red_seen=False):
+        o = {"bin_0": ObjObs("bin_0", "container", t >= 3, bin0 if t >= 3 else None, None, 1.0),
+             "bin_1": ObjObs("bin_1", "container", t >= 3, b1 if t >= 3 else None, None, 1.0),
+             "cube_red": ObjObs("cube_red", "cube", cubes_seen or red_seen, red if cubes_seen or red_seen else None,
+                                None, 1.0),
+             "cube_blue": ObjObs("cube_blue", "cube", cubes_seen, blue if cubes_seen else None, None, 1.0)}
+        return FrameObs(t, o, np.asarray(ee, float), width, False)
+    view = K2View()
+    for t in range(6):
+        s.step(frame(t, [0, 0, 0.45], 0.08, b0, t < 3))
+    from arbiter_kb.beliefs import Distribution
+    from arbiter_kb.kb import SetDist
+    d = s.kb.relations[("Inside", "cube_blue")]
+    s.kb.apply([SetDist("Inside", "cube_blue", Distribution({"bin_1": 0.8, "bin_0": 0.2}, 5, d.support,
+                                                           {"bin_1": d.support, "bin_0": d.support}))], "test")
+    view.update(s)
+    record(s.kb, 5, np.array([0.0, 0.1, 0.03, -3.1416, 0, 0]), True, "bin_0", ())
+    path = [([0, 0.1, 0.03], 0.01, b0), ([0, 0.1, 0.03], 0.01, b0)] + \
+        [([0, 0.1, z], 0.01, np.array([0, 0.1, z])) for z in (0.1, 0.2, 0.25)] + \
+        [([0.2, 0.2, 0.04], 0.01, np.array([0.2, 0.2, 0.04])), ([0.2, 0.2, 0.04], 0.08, np.array([0.2, 0.2, 0.04]))]
+    for k, (ee, w, bpos) in enumerate(path, 6):
+        s.step(frame(k, ee, w, bpos, False, red_seen=k >= 9))
+    a, logs, c = view.update(s)
+    log = logs[-1]
+    assert "[d1] t=5 you: waypoint (0.000, 0.100, 0.030), gripper closed after it, target bin_0" in log
+    assert any(v.type == "reveal" and v.args == ("bin_0", "cube_red") for v in s.kb.events)
+    assert "bin_0" not in s.kb.relations[("Inside", "cube_blue")].probs  # R4: bin_0 hid the red cube
+    assert "Inside(cube_blue): bin_1" in log and "replaces [b" in log
+    assert "highest hand z while held 0.250" in log and "t=12 [bin_0] released, hand at (0.200, 0.200, 0.040)" in log
+    assert "1. red cube [cube_red]: seen under [bin_0]; [bin_0]: grasped t=" in c

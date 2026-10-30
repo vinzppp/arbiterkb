@@ -62,15 +62,16 @@ tracked object's 3D centre (world frame, m; from depth) or "hidden". Nothing els
 current front and wrist images, the TCP pose, the finger positions and the elapsed control steps.""",
 }
 MEMORY["K2"] = """Memory: instead of the image history you get the robot's memory in three parts. (1) Initial state:
-every object as first seen, with its 3D centre (world frame, m; from depth). (2) Change log, oldest first, only ever
-appended: what changed at each time (moves with their displacement and end point, objects seen or no longer seen,
-covers, close passes, the robot's pick-ups and put-downs, new beliefs and corrections that supersede earlier ones).
-(3) Current state, rewritten every turn and authoritative where it differs from anything above: the hand and what it
-holds, every object (visible with its position and when it was seen, or hidden with which container probably hides
-it, as probabilities), relative positions, the goal's items with what the robot has done to each, and a summary of
-what has happened. Ids are in brackets; cite the ids you rely on. A probability below 1 means the memory is unsure:
-decide whether to act on the most likely answer or to look first. Then the current front and wrist images, the TCP
-pose, the finger positions (0.04 m each = fully open, 0 = closed) and the elapsed control steps."""
+every object as first seen, with its 3D centre (world frame, m; from depth). (2) Log, oldest first, only ever appended:
+what changed at each time (moves with their displacement and end point, objects seen or no longer seen, covers, close
+passes, grasps and releases with the hand's position and the highest it rose while holding, a cube seen under a lifted
+container, your own earlier decisions, and beliefs about hidden objects, each with its own id; a later belief names
+the one it replaces). (3) Now, rewritten every turn and authoritative where it differs from anything above: the hand
+and what it holds, the goal's items with what has been done to each, every object (position and when it was seen, or
+which container probably hides it, as probabilities), relative positions, and the main events so far. Ids are in
+brackets; cite the ids you rely on. A probability below 1 means the memory is unsure: decide whether to act on the most
+likely answer or to look first. Then the current front and wrist images, the TCP pose, the finger positions (0.04 m
+each = fully open, 0 = closed) and the elapsed control steps."""
 MEMORY["K-L3"] = MEMORY["K"].replace(", and an event log with times and where-from / where-to", "")
 MEMORY["K0"] = """Memory: none. You get a table of the objects visible in the current frame with their 3D centres (world
 frame, m; from depth), then the current front and wrist images, the TCP pose, the finger positions (0.04 m each

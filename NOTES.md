@@ -2564,3 +2564,37 @@ cache" above). The user's design, a new arm K2 (`arbiter_kb/view_k2.py`), with K
     K's main failure is the memory's wrong container (7 / 11), not progress**; and one new failure kind, the KB
     re-identifying a bin after the robot moved one (ep 45). The fixed-version package (K fixed + H, maybe K2) answers
     the progress question; H on the same 20 episodes says whether 9 / 20 is K's or the task's.
+
+## K2 fixes after the review (2026-10-30, user go; before the K vs K2 offline test, which is unchanged)
+A review of the K2 sketch, checked against K2's real output (synthetic episode 100, call 5) and OpenAI's docs:
+- **Fixed in the KB (all arms, K included): rule R4 reveal** (`rules.r4_reveal`, the "R4 reveal" the spec had
+  deferred). Before: after bin_1 was lifted and cube_blue was seen at its spot, cube_green still read
+  `bin_2 0.92 | bin_1 0.07`. Now: a covered cube seen again while a container is held, within `r_cover` (existing) of
+  where that container was grasped, gives an event `reveal(container, cube)`, and every other hidden cube loses its
+  mass on that container (`Distribution.without`, renormalised; R5's at-most-one-cube-per-container assumption; no new
+  parameter). A lifted container that shows nothing changes nothing (an unseen spot is not an empty one). K's event
+  log gets one sentence for it. The opening videos have no grasps, so no earlier offline result changes.
+- **Fixed in K2's view (`view_k2.py`):**
+  - grasp and release lines give numbers, not labels: where the hand closed, where it opened, and the highest hand z
+    while holding (the "lifted how high" of option 4's constraint); "put down at table level" (actions.py's label from
+    z_low) is gone; a release onto an object names it;
+  - every decision of the controller is logged (`[d<n>] you: waypoint …, gripper … after it, target …`), not one;
+  - each belief line has its own id (`[b<n>]`), stamped with the time the belief changed; a later line says which it
+    replaces; a line is written when the top container changes, the top falls by ≥ 0.1, or the set of candidates
+    changes (the last clause is new, so R4's removals are logged);
+  - "nearest to the robot" now says "the robot's base (-0.615, 0)", as `narrative.py` computes it;
+  - the summary in Now lists only semantic events (covers, close passes, grasps, releases, reveals). The old one came
+    from `narrative._timeline`, which joined millimetre noise moves into a false "bin_0 and bin_1 and bin_2 and bin_3
+    exchanged places (t=133-247)";
+  - Now starts with time, hand, finger opening and what is held, then the goal's items, then an object table.
+- **Already true in the real output, sketch errors only:** move lines carry ids and displacements; distributions
+  print `elsewhere`; "moved back" was the sketch's wording.
+- **Breakpoints (OpenAI docs, read 2026-10-30):** at most 4 cache writes per request; in explicit mode lookups at the
+  first 2 and the latest 50 breakpoints. K2 writes one new log message per call and the previous call's last
+  breakpoint is always among the latest 50, so the limit does not bind.
+- **Not fixed:** millimetre moves are still logged (the motion detector's own output); dropping them needs a noise
+  threshold, to be set from train-data perception noise if at all, not from any pilot.
+- Simulation after the fixes (`tools/cache_sim.py`, 10 × 8 calls): K2 costs **0.51 / 0.54** of K now (66 / 255 image
+  tokens), Now median 650 tokens (max 882).
+- Re-frozen: params a810942859b9, prompts 08c6cb1474ce. `make check`: tests pass; quality fails only on
+  `arbiter_kb/callout.py` (253 lines > 250), changed in ada07a5 by the other session, not touched here.
