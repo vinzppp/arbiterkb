@@ -2337,3 +2337,98 @@ First measure whether K itself loses track, on new episodes.
     pod session's summary said 16 / 24, its own lists say 18 / 22.
   - **Chosen by the rule (the first 20 two-cube episodes from 10): 11, 15, 16, 17, 19, 23, 24, 25, 27, 29, 31, 32,
     35, 37, 39, 40, 41, 43, 44, 45.** Not yet run.
+
+## K's request layout and the provider's prompt cache (2026-10-30, user request; free, no LLM call)
+Question: make K's requests cheap under the provider's prompt cache without lowering accuracy. Background: in the
+Astra pilot K sent 38% of H's prompt tokens and paid as much ("Why K's fewer tokens did not cost less" above).
+- **K's request now (`closed_loop._fresh`, `controller.user_content`, `Memory.text`):** one system message
+  (`system_prompt("K")`: robot text, K's memory section, the notes; the same at every call), then **one** user message:
+  `Task goal: …` (left out at the first call, where the view starts with `Goal:`), the memory text
+  (`self_view`: changes since the last decision and the last three decisions; then `controller_view`: goal, progress,
+  task items, objects with positions and `last seen`, relations, event log of the last 30 lines, joined facts), the
+  current front and wrist frames, and `Robot state:` JSON (TCP pose, fingers, elapsed steps, wrist extrinsic, and the
+  camera calibration, which is the same at every call). Tokens (o200k_base, a proxy for the model's tokenizer):
+  system 865, goal 21, calibration 187, the rest of the state ~130, memory text median 2,089 (of which the event
+  log ~1,270) on the rebuilt episodes below; the pilot's K averaged 3,710 prompt tokens per call (244,858 / 66).
+- **The provider's rules** (OpenAI GPT-5.6 and later: developers.openai.com/api/docs/guides/prompt-caching;
+  openrouter.ai/docs/features/prompt-caching; both read 2026-10-30):
+  - shortest cacheable prefix 1,024 tokens; reuse needs the whole rendered prefix up to a breakpoint to match;
+    images are part of the prefix (text, images, documents are cached);
+  - breakpoints: implicit mode puts them at message ends (the last developer message of the first block, the end of
+    each user message); explicit mode (`prompt_cache_options: {"mode": "explicit"}`, top level) only at text blocks
+    carrying `prompt_cache_breakpoint: {"mode": "explicit"}`; explicit with no marked block disables caching;
+  - price: a cached read 0.1× the input rate, a write 1.25× (30-minute TTL; 2.5× for 12 h), anything else 1×;
+    OpenRouter: sticky routing is skipped with a manual `provider.order` (ours names one provider, OpenAI, so all
+    calls go there anyway).
+- **Why K hit 0%, explained by these rules:** its system prompt (865) is under 1,024, and the next breakpoint is the
+  end of the one user message, whose content changes at every call. So every call writes its whole prompt at 1.25×
+  and never reads. Two checks against the pilot: 0 cached tokens for K and R (observed), and ~$12.50 / M = 1.25 ×
+  Astra's $10 / M input (observed). H's growing conversation ends each turn on a user message, so its history is
+  re-read at 0.1×.
+- **Free simulation (`scripts/cache_sim.py`):** requests rebuilt on the Mac: G's perceived opening videos (train
+  episodes 0–9 of the listing, real perception) through `ArbiterKBSystem`, then a scripted two-pick continuation (8
+  calls: above bin A, close, lift, put down, above bin B, close, lift, done; 3 mm noise on visible objects per frame;
+  the cube under a lifted bin becomes visible); the memory text built as `Memory.text()` builds it and each decision
+  recorded as `Episode.execute` does. Rebuilt per-call size 3,370–3,750 tokens (pilot 3,710). The cache model is the
+  rules above plus two assumptions (a request reads the longest earlier breakpoint prefix it starts with; an
+  episode's calls reach a machine holding its earlier writes). Image tokens per 256-px frame are not known for
+  Astra: 66 and 255 both run.
+
+  | layout | mode | read share | cost vs now (66 / 255 image tok) | text the model reads |
+  |---|---|---|---|---|
+  | now (`v1`) | implicit | 0 | 1.00 / 1.00 | — |
+  | now (`v1`) | explicit, no breakpoint | 0 | **0.80 / 0.80** | byte-identical |
+  | (a) reorder only: goal first | either | 0 | 1.00 or 0.80 | same text, goal moved |
+  | `fixed_first`: goal + calibration first, breakpoint after them | explicit | 0.28 / 0.25 | **0.61 / 0.63** | same keys and values; see below |
+  | (b) append-only log + rewritten current state | explicit | 0.63 / 0.57 | **0.45 / 0.49** | changed (tokens +22%) |
+  | (c) one growing conversation, full K content each turn | implicit | 0.78 / 0.78 | **1.03 / 1.06** | changed (tokens 3.7×) |
+
+  - **(a) as asked, a pure reorder, saves nothing:** the only parts that are the same at every call are the system
+    prompt and the goal, 886 tokens, under the 1,024 minimum. Only explicit mode's billing (no write premium on the
+    changing part) helps: −20%, with the text byte-identical.
+  - **`fixed_first` needs the calibration moved too:** 865 + 21 + 187 = 1,073 tokens by o200k, **49 over the minimum**;
+    the model's own tokenizer may count differently, so this is to be checked on the first paid call
+    (`cached_tokens` ≈ 1,070 from the second call of an episode; if 0, the fixed block is under 1,024 and the result
+    is explicit mode's −20% only).
+  - **(c) is out:** 78% of its tokens are cache reads, but it sends 3.7× the tokens (each turn's full view stays in the
+    history), so it costs more than now. A negative result; not built.
+  - **(b) saves the most but changes what the model reads** (and its log grows with the episode, so its share
+    depends on episode length); it needs the offline test below before any closed-loop use.
+  - In dollars on the pilot's K input ($3.06): explicit ~$2.45, `fixed_first` ~$1.9, (b) ~$1.4–1.5 (scaled by the
+    ratios; not measured). Output ($0.46) is unchanged by any layout.
+- **Built (defaults unchanged, so a run without the new flags sends what it sent before):**
+  `controller.user_content(..., layout="fixed_first", breakpoint=)`: `Task goal: …` at every call, then
+  `Robot state, fixed part (camera calibration): {wrist_camera_K, front_camera_K, front_camera_extrinsic…}` (marked
+  when `breakpoint`), the memory text unchanged, the frames, `Robot state: {the other keys}`. Differences from `v1`
+  in what the model reads: the goal line also at the first call (where the view already has `Goal:`); the state's
+  keys split into two JSON objects with that heading. Tests: the same keys, values, memory text and images as `v1`;
+  the fixed block byte-identical across calls. Pod runner: `--layout v1|fixed_first`, `--prompt-cache
+  implicit|explicit` (OpenAI only; fresh arms only, H keeps its implicit cache), both recorded in result.json.
+  `closed_loop.py` and `controller.py` are in the prompts hash, so params are re-frozen (below); **any run with
+  `--layout fixed_first` is a new prompt version, never mixed with the pilot's or the two-pick test's results.**
+- **(b), designed, not built; its offline test, fixed before running (needs the user's go: Qwen, paid):**
+  - Layout (explicit mode): the fixed block as in `fixed_first` (breakpoint); then one appended message per call,
+    never edited afterwards (breakpoint at its end): `Memory log, t=a–b (append-only):` the new event-log lines
+    (the whole log, never truncated), the decision just taken, and each belief change since the last decision written
+    as `Correction at t=…: Inside(cube_x) now bin_k p; supersedes the belief stated at t=…`; last, rewritten every
+    call: `Current state (authoritative; it overrides anything above):` the view without its event log
+    (`self_view`, goal, progress, task items, objects, relations, joined facts), the frames, the rest of the state.
+    The current state is always stated in full, because R (a log the model must reduce itself) did worst in the
+    pilot (6 / 10, median 16 calls).
+  - Data: synthetic VideoUnmaskSwap train seeds 100–129 (as Batch A: clean, text only) with two-cube goals and
+    `cache_sim`'s scripted two-pick continuation; the robot follows the script whatever the model answers (open
+    loop), and the model is asked at each of the 7 calls before "done".
+  - Arms: K `v1` (now) and K (b), Qwen 3.6-35B-A3B, the closed loop's Qwen settings; the same frames (none: text only).
+  - Score per call: `target` names the container the script acts on at that call (bin A for calls 1–4, bin B for
+    5–7), and the waypoint's xy is within 3 cm of that container's true centre (as M4). Primary: the paired
+    difference (b − v1) in the share of calls with both right, 95% paired bootstrap CI over episodes.
+  - Rule: (b) may replace `v1` for a closed-loop run only if the CI's lower bound is above −0.05 (a margin chosen
+    now as a design choice, not read off any data); otherwise (b) is dropped and the result is recorded as it is.
+    Also reported, not decided on: calls 5–7 alone (after the put-down, where losing track would show).
+- **Not touched:** the two-pick test's section above and the pod upload package.
+- **Approved by the user (2026-10-30), one change before the run: `--max-usd 15`, not 8.** All 20 are two-pick
+  episodes, which take more steps than the pilot's mix (K averaged ~$0.35 per episode over one- and two-pick goals);
+  hitting the cap only stops the run and costs a resume, and the cap is not spend. OpenRouter balance ≥ $20 before
+  starting. Run from `/workspace/score` at dec1e03 (no re-upload; the episode guard of e75ff1f does not affect these
+  20). The pod upload archive is not rebuilt until this test's result is in NOTES (the cache-optimisation session
+  works in parallel).
