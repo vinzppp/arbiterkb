@@ -73,6 +73,9 @@ named below), `docs/HANDOFF_EXECUTION.md` (the execution gap: IK layers, options
   (every model-facing change = new prompts hash, `python scripts/run.py --freeze --force`).
 - Code-reviewer + goal-reviewer agents at the end of a phase; fix findings. Zoom out: what should memory give a
   controller, not only how to pass the next test.
-- Commit to main, never push without the user. Never print or store the OpenRouter key. Stop the pod when idle;
+- Commit to main, never push without the user. **No push for now (user, 2026-10-30):** finish the core work first
+  (the model choice for the controller, the fixed K + H package); `paper/` stays untracked and the paper's focus is
+  decided after that. The pre-push reviews are in `reviews/push_2026-10-30_*.md`.
+- Never print or store the OpenRouter key. Stop the pod when idle;
   backups before stopping. Do not modify `~/Code/active/scene-graph-robot`. Upstream issues are filed by the user.
 - Budget is not the constraint; stability first, speed second.
