@@ -2165,7 +2165,7 @@ Read from the pod session's report (pasted by the user); the files stay on the p
   - **Do not use the env's `target_cube` as the right object:** in ep 9 it is the red cube (`target_cube_color` 'red')
     while the goal asks for green, then blue. The goal's colour is the reference, as the rule says.
 - **Stage 2 results (pod, 2026-10-30 06:39; `/workspace/cl/callout/callout_rows.csv`, `callout_summary.csv`,
-  raw lines `/workspace/cl/callout_score.txt`; not yet copied to the Mac). No unknown or no_objects rows.**
+  raw lines `/workspace/cl/callout_score.txt`, not copied). No unknown or no_objects rows.**
 
 | task | arm | model | n | right | uncertain | wrong | no action | d1 median / max (m) | d_right median / max | \|close dz\| median / max |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -2179,10 +2179,11 @@ Read from the pod session's report (pasted by the user); the files stay on the p
 | VideoPlaceOrder | R | qwen | 4 | 3 | 0 | 0 | 1 | 0.0079 / 0.0094 | 0.0079 / 0.0094 | 0.02 / 0.08 |
 | VideoPlaceOrder | K | qwen | 3 | 3 | 0 | 0 | 0 | 0.0072 / 0.0079 | 0.0072 / 0.0079 | 0.03 / 0.03 |
 
-  (Qwen's n are the pilot's episodes before it was stopped; VideoPlaceOrder has no Astra rows beyond the probe.)
+  (Qwen's n are the pilot's episodes before it was stopped; there are no Astra VideoPlaceOrder rows: the probe's
+  VideoPlaceOrder episode is not under `/workspace/cl/astra_pilot`.)
 - **Reading (about 70 episodes over 9 cells; a direction, not a conclusion):**
-  - **With memory (R, K) the first call-out is right in most episodes for both models:** Astra 19 / 20, Qwen 12 / 16
-    of the episodes that acted. The memory arms' xy errors repeat to 0.1 mm across arms and across models (VideoUnmaskSwap
+  - **With memory (R, K) the first call-out is right in most episodes for both models:** Astra 19 / 20, Qwen 12 / 15
+    of the episodes that acted (corrected from 12 / 16 when the CSVs were checked). The memory arms' xy errors repeat to 0.1 mm across arms and across models (VideoUnmaskSwap
     ep 1: 0.0098 for Qwen K, Qwen R, Astra K, Astra R; ep 2: 0.0113; ep 4: 0.0149), so **their waypoint copies the
     perceived position, and their 0.3–2.9 cm error is perception's, not the model's.** Two of those rows sit near the
     3 cm line (Astra K / R ep 9: 2.94 cm).
@@ -2200,3 +2201,22 @@ Read from the pod session's report (pasted by the user); the files stay on the p
     (VideoUnmaskSwap ep 2) above the object's centre (in the air). On VideoPlaceOrder the memory arms closed 1–8 cm
     above the 4 cm cube's centre (K: 1, 3, 3 cm; R up to 8 cm), i.e. at or above its top face for most, where a grasp
     likely fails. Astra's closes on bins are consistently 1–3 cm below the bin's centre.
+- **The CSVs on the Mac (2026-10-30):** `data/cl_pod/callout/callout_rows.csv` (55 rows: Qwen 25, Astra 30; sha256
+  394fc61a…) and `callout_summary.csv` (9 rows; c0fea8e2…), downloaded from the pod's Jupyter; `data/` is git-ignored.
+  Rerunning `callout.summarize` on the rows reproduces the summary exactly (0 differences). Columns: `first_xyz` /
+  `nearest` / `d1` / `d2` / `d_right` / `category` for the first waypoint; `close_xyz` / `close_object` / `close_dz` for
+  the first close (dz = waypoint z − that object's centre z); `status` / `end_reason` the episode's ending; `how` the
+  right-object derivation. `callout_score.txt` (the raw lines) stays on the pod.
+- **Read from the rows, beyond the summary:**
+  - **First call-out against the episode's outcome:** Astra's 23 successes all began with a right call-out, and 6 of its
+    7 failures did too (the 7th is K ep 0, the wrong bin); Qwen began right in 13 episodes and succeeded in 1. So for
+    both models most failures happen after a right first move, in layers 2–5.
+  - **The target can change between the first move and the first close:** Qwen K and R on VideoUnmaskSwap ep 3 moved
+    first above bin_1 (wrong) and closed at bin_2 (right); Qwen R ep 1 moved above bin_1 (right) and closed at bin_0
+    (wrong). The first waypoint alone does not settle which object the model meant.
+  - **Qwen H on VideoPlaceOrder ep 0 closed on its first action**, at z = 0.30 above the cube (the "closed in the air"
+    case of the smoke run), then declared completion.
+  - **Astra's failures with a right call-out:** H ep 1 and R ep 3 / ep 7 close within the successes' range (−0.6 to
+    −2.8 cm); K ep 8 closed 2.2 cm above bin_1's centre, and R ep 8 / ep 9 at +0.1 cm, the highest of R's closes
+    (R's successes: −0.6 to −2.4 cm). A weak hint that closing high goes with failing; n is far too small, and the
+    cause may be later. To be read in those episodes' later steps.
