@@ -2524,3 +2524,42 @@ cache" above). The user's design, a new arm K2 (`arbiter_kb/view_k2.py`), with K
   `results/runs/k2_offline_<time>/` (rows.csv, summary.json, meta.json with commit and params hash).
 - **Re-frozen:** params a810942859b9, prompts 946e17f79534 (K2's memory text, `view_k2.py`, now in the prompts hash, and the runner flags); K's
   own text is unchanged by this commit.
+- **Reading the dec1e03 run by the rule: one change, fixed before looking at its data (2026-10-30).** The pod is
+  stopped and object positions after reset exist on the Mac only for episodes 0–9 (`vus_objects.json`); `went_back`
+  needs the second right object's reset position. A positions-free variant (`callout.went_back_free`):
+  - first pick = the first hold lifted ≥ 5 cm after which the env stays "ongoing" (lifting a wrong bin ends the
+    episode `env:fail` on that step in this task: pilot K ep 0, K ep 8);
+  - P = the first open after it (the put-down);
+  - "yes" = a later hold lifted ≥ 5 cm whose close is within **5 cm** of P (container centres never come closer than
+    5.1 cm in RoboMME VideoUnmaskSwap, G measurement above), else "no"; "n/a" without a first pick or a put-down.
+  - **Checked first on the pilot's 30 episodes against `went_back`** (both computable there); the agreement is
+    reported, and if it disagrees on any two-pick K episode the variant is not used.
+  - Then, as fixed: every failure with "yes" is confirmed or not from K's logged descriptions after the put-down,
+    quoted here. The result is reported as "dec1e03, with the gripper-0 bug"; it does not decide option 4 (the user's
+    verdict above), it describes what K did under the bug.
+- **dec1e03 run, read by the rule (2026-10-30; `data/cl_pod/astra_k2pick/`, free). WITH THE GRIPPER-0 BUG.**
+  - **Variant check on the pilot:** `went_back_free` agrees with `went_back` on all 5 two-pick K episodes and on 13 of
+    15 two-pick episodes overall; the 2 disagreements are not K's (H ep 1: "ambiguous" is invisible without poses;
+    R ep 1: the dropped bin landed 6.3 cm from the put-down). So the variant is used, as fixed.
+  - K 9 / 20 success. `went_back_free` "yes" in 5 episodes: 16, 31, 32, 45 (failed) and 41 (succeeded; a missed grasp
+    re-tried before any put-down was read as one, a behaviour only).
+  - **Confirmed "loses track" from K's descriptions after the put-down: 2 (ep 16, ep 32).**
+    - ep 16 (red, then green): lifted bin_0, lowered it with "keep" and never opened, then for 25 calls: "I will lift
+      bin_0 to complete the first pickup before approaching bin_2", "bin_0 has not yet been confirmed picked up",
+      finally re-grasped bin_0 → fail (33 calls, $2.02).
+    - ep 32 (green, then red): the same pattern: lowered bin_0 with "keep", "I will lift it higher to complete the first
+      pickup", released at 7.5 cm, then "I will lower onto bin_0 and close the gripper to grasp it first" → fail.
+    - **Both follow exactly the bug's footprint:** a held bin lowered with gripper 0, which the self-memory recorded as
+      an unexecuted "release", and K then said the first pickup was not complete. So these 2 are most likely the bug's.
+  - **Not losing track (descriptions name the second container):** ep 31: released bin_0 at 0.21 m directly above
+    bin_3 (the second), grasped there, declared complete (a put-down error and a premature "done"); ep 45: K's memory
+    said "bin_1 ... has moved" to where K had just put bin_2 down, K lifted there → fail (a tracking error caused by
+    the robot's own put-down).
+  - **All 11 failures, one label each:** wrong container from K's memory **7** (first pick: 15, 29, 39; second pick:
+    11, 19, 37, 45); loses track **2** (16, 32; the bug's footprint); premature "done" **2** (23, 31). (Wrong-container
+    reads use the env: a wrong lift ends `env:fail` on that step; poses after reset are not on the Mac for 11–45.)
+  - **Reading:** by the rule's count (≥ 2) this would say "design option 4", but both cases carry the bug's footprint,
+    and the user's verdict stands: this run does not decide option 4. What it adds: **on two-pick val episodes 11–45
+    K's main failure is the memory's wrong container (7 / 11), not progress**; and one new failure kind, the KB
+    re-identifying a bin after the robot moved one (ep 45). The fixed-version package (K fixed + H, maybe K2) answers
+    the progress question; H on the same 20 episodes says whether 9 / 20 is K's or the task's.

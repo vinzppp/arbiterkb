@@ -223,3 +223,31 @@ def went_back(steps: list, objs: dict, sequence: list[str]) -> tuple[str, str]:
         if h["rise"] >= LIFTED and np.hypot(*np.subtract(a[:2], put)) < np.hypot(*np.subtract(a[:2], s)):
             return "yes", f"lifted at {np.round(a[:2], 3).tolist()} near the put-down {np.round(put, 3).tolist()}"
     return "no", f"no later lifted hold nearer the put-down than {sequence[1]}"
+
+
+GO_BACK_XY = 0.05  # m: below RoboMME VideoUnmaskSwap's 5.1 cm closest container spacing (NOTES, G measurement)
+
+
+def went_back_free(steps: list) -> tuple[str, str]:
+    """`went_back` without object poses (NOTES "Reading the dec1e03 run"): the first pick is the first hold lifted
+    >= 5 cm after which the env stays "ongoing" (a wrong lift ends the episode env:fail in this task); P is the first
+    open after it; "yes" when a later hold lifted >= 5 cm closes within GO_BACK_XY of P."""
+    rows = [s for s in steps if s.get("action") is not None]
+    acts = [np.asarray(s["action"], float) for s in rows]
+    hs = holds([{"action": a.tolist()} for a in acts], {"_": [9.0, 9.0, 0.0]})  # positions only; no objects needed
+    end = lambda h: next((j for j in range(h["step"] + 1, len(acts)) if acts[j][6] > 0), len(acts))  # noqa: E731
+    first = next((h for h in hs if h["rise"] >= LIFTED and all(r.get("status") == "ongoing"
+                                                               for r in rows[h["step"]:end(h)])), None)
+    if first is None:
+        return "n/a", "no lifted first pick that the env accepted"
+    k = end(first)
+    if k >= len(acts):
+        return "n/a", "first pick never put down"
+    put = acts[k][:2]
+    rest = acts[k + 1:]
+    for h in holds([{"action": a.tolist()} for a in rest], {"_": [9.0, 9.0, 0.0]}):
+        a = rest[h["step"]]
+        if h["rise"] >= LIFTED and np.hypot(*np.subtract(a[:2], put)) < GO_BACK_XY:
+            return "yes", f"step {k + 1 + h['step']}: lifted at {np.round(a[:2], 3).tolist()}, put-down " \
+                          f"{np.round(put, 3).tolist()}"
+    return "no", f"no later lifted hold within {GO_BACK_XY} m of the put-down {np.round(put, 3).tolist()}"

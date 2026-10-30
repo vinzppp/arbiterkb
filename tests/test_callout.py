@@ -112,3 +112,13 @@ def test_went_back_after_the_put_down():
     assert went_back(onward, o, seq)[0] == "no"  # the re-close inside pick 1 is not a go-back
     assert went_back(pick1[:3] + [act(0.0, -0.14, 0.06, 1.0)], o, seq)[0] == "ambiguous"  # put down on bin_2
     assert went_back(back, o, ["bin_1"])[0] == "n/a"
+
+
+def test_went_back_free_needs_no_object_poses():
+    from arbiter_kb.callout import went_back_free
+    st = lambda x, y, z, g, s="ongoing": {"action": [x, y, z, 3.14, 0, 0, g], "status": s}  # noqa: E731
+    pick1 = [st(0.0, 0.15, 0.04, -1), st(0.0, 0.15, 0.25, 0), st(0.2, 0.15, 0.06, 1)]
+    assert went_back_free(pick1 + [st(0.21, 0.15, 0.04, -1), st(0.21, 0.15, 0.25, 0, "fail")])[0] == "yes"
+    assert went_back_free(pick1 + [st(0.0, -0.15, 0.04, -1), st(0.0, -0.15, 0.25, 0, "success")])[0] == "no"
+    wrong_first = [st(0.0, 0.15, 0.04, -1), st(0.0, 0.15, 0.25, 0, "fail")]  # the env rejected the first lift
+    assert went_back_free(wrong_first)[0] == "n/a"
