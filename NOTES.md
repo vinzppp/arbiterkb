@@ -1992,3 +1992,37 @@ Post-hoc attribution of the read above, **$0, no LLM**: run on G train first; th
 - **Decided (user, 2026-10-30): both at once.** (1) The VideoUnmaskSwap val pilot with `openai/gpt-6-astra` for every arm (H / R / K, episodes 0–9; its perception was validated on G). (2) VideoPlaceOrder's target phrase, chosen on val before any VideoPlaceOrder pilot.
 - **Robot-base filter (tests added; re-frozen, prompts 7aade10cec0b):** `online.not_objects` marks hidden any detection within 10 cm (xy) of the robot base or more than 2 cm below the table, before re-linking. The detector's phrase per place word is now `task_items.PLACE_PHRASE`, apart from the slot names.
 - **Rule for the target phrase, fixed before the measurement:** candidates "target.", "container.", "circle.", "disc.", "ring." (generic shape words; no colour, which the goal does not give). On VideoPlaceOrder val episodes 0–4, opening video, with the robot-base filter, against the simulator's target positions: **found** = targets with a place slot within 3 cm in xy (z < 0.03) at frame 0; **coverage** = mean over perceived frames of the share of targets so matched; **hijack** = place slots within 3 cm of a cube at frame 0; and the goal's named cube must still be found at frame 0. Choose the highest mean found, then coverage; a phrase with any hijack or a lost named cube is out. If no phrase finds at least 3 of 4 targets on average, VideoPlaceOrder's K arm is not run, and NOTES says so.
+
+## Layer 1 on real scenes: how accurate is the model's first call-out? The test, fixed before running (2026-10-29, user request)
+Question: on the real RoboMME scenes the closed loop already ran, does the model's first waypoint point at the right
+object, and does its first close happen at the object's height? Layer 1 of docs/HANDOFF_EXECUTION.md; the evidence so
+far (M4, Batch A) is synthetic text with oracle positions only. No LLM call: it scores answers already paid for.
+- **Data:** every `<task>_ep<e>_<arm>/result.json` under `/workspace/cl/pilot` (qwen/qwen3.6-35b-a3b) and
+  `/workspace/cl/astra_pilot` (openai/gpt-6-astra, the probe included). A row's own `model` field wins; the run
+  directory gives it otherwise.
+- **Truth:** per (task, episode, dataset) a fresh env (`closed_loop_pod.make_env`), **one reset** (only the first reset
+  gives the episode's scene; RoboMME's reset returns after the opening video, so this is the scene of the first
+  decision), poses read from `env.unwrapped` (`pod_checks.truth`). Objects: actors within the table box
+  (|x|, |y| ≤ 0.6 m, −0.01 ≤ z ≤ 0.30 m), not within 10 cm (xy) of the robot base, not named table / ground / floor /
+  camera / wall / goal_site / robot; actors at the same position (≤ 1 mm) are one object. **Covered objects** (within
+  3 cm in xy of an object at least 1 cm higher: VideoUnmaskSwap's cube under its container) decide the right object
+  but are left out of the nearest / second-nearest distances (added while writing the code, before any run: otherwise
+  every pick of the hiding container is "uncertain").
+- **The right object, from the goal and the simulator:** the goal's first coloured cube (`task_items.parse_task_items`);
+  if the goal also names a container, the right object is the container nearest that cube in xy (the one hiding it;
+  VideoUnmaskSwap), else the cube itself (VideoPlaceOrder). The cube is the object whose actor name contains the colour;
+  if none or several do, the right object is **unknown** and the episode is reported, not scored. A `--list` pass
+  prints every episode's objects and right object before scoring, to be read first.
+- **First waypoint:** the first step with an executed-or-attempted action (retries without an action skipped). d1, d2 =
+  xy distance to the nearest and second-nearest object.
+  - **right:** nearest = the right object and d1 < 3 cm;
+  - **uncertain:** d2 − d1 < 2 cm (checked first; never counted right; reported apart);
+  - **wrong:** otherwise; **no action:** the episode ended before any action; **unknown:** no right object.
+  - Also logged: the xy distance to the right object.
+- **First close:** the first action with gripper −1: dz = waypoint z − the centre z of the object nearest it in xy, and
+  that object's name. A waypoint is the TCP pose, so dz ≈ 0 is a centre grasp.
+- **Report:** one CSV row per episode; per task × arm × model: n, right / uncertain / wrong / no action / unknown,
+  median and max d1, median and max distance to the right object, median and max |dz| at the first close.
+- **Limits, fixed now:** only the first waypoint and the first close (later steps need replays whose determinism is
+  unverified); about 30 episodes, so a direction, not a conclusion; the first waypoint can be a pre-grasp above the
+  object, so only its xy is scored. Run on the pod after the target-phrase test, with the user's go.
