@@ -16,9 +16,8 @@ BIN_Z = 0.052  # bin origin at rest: build_bin sets p.z = floor half 0.002 + wal
 GRASP_Z = 0.062  # solve_pickup_bin: grasp pose at the bin origin, then 0.01 back along the approach (up)
 HANDLE_TOP, PLATE_TOP = 0.072, 0.054  # handle box: origin +/- 0.02; floor plate (now on top): origin + 0.002
 PICKED = 0.15  # is_bin_pickup: bin origin z > 0.15
-SCRIPT_GRASP_Z = 0.045  # ours, not RoboMME's 0.062: the KB records a pick-up only below z_low = 0.05 (actions.py;
-# NOTES "Model screen"), and the screen's memory must be right; inside GRASP_BAND
-LIFT_MIN = PICKED + (SCRIPT_GRASP_Z - BIN_Z)  # 0.143: TCP height that lifts the origin above 0.15 after that grasp
+SCRIPT_GRASP_Z = GRASP_Z  # the script grasps where RoboMME does; the KB now tells a grasp from the fingers (6ee63b8)
+LIFT_MIN = round(PICKED + (SCRIPT_GRASP_Z - BIN_Z), 4)  # 0.16: TCP height lifting the origin past 0.15
 ABOVE_MIN = 0.10  # handle top 0.072 + FINGER_LENGTH 0.025 (solve_pickup_bin) = 0.097, rounded up
 Z_MAX = 0.40  # ours: below the script's home height 0.45 (RoboMME's own reach / lift height is 0.2)
 GRASP_BAND = (0.02, HANDLE_TOP + 0.005)  # ours on both ends: fingertips off the table; at most 5 mm above the handle

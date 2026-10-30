@@ -2733,8 +2733,8 @@ VideoUnmaskSwap episode? A coarse screen (5 episodes × 7 stages × 2 passes per
   (4) lifted → put A down; (5) after the put-down → above B; (6) above B → close on B; (7) after the scripted lift
   of B → done (`waypoint: null`). Between stages the robot follows `two_pick.plan` (open loop: the script acts whatever
   the model answers; the KB records each scripted action as "your" decision, as in k2_offline) at RoboMME's heights:
-  above / lift 0.2 (`solve_pickup_bin`), release 0.07 (`solve_putdown_whenhold`), **grasp 0.045, not RoboMME's 0.062**
-  (next point). After the release the container settles at z 0.052.
+  above / lift 0.2 (`solve_pickup_bin`), release 0.07 (`solve_putdown_whenhold`), grasp 0.062 (`solve_pickup_bin`; first
+  0.045, see the next point). After the release the container settles at z 0.052.
 - **Found while proofreading the print (a KB issue, not fixed here; `actions.py` belongs to another window):** the KB
   records a `pick_up` only when the gripper closes with the hand below `z_low` = 0.05 m (`actions.py`, read off the
   dataset's cube picks: pick 0.020). RoboMME grasps a container at TCP 0.062. With the scripted grasp at 0.062, every
@@ -2742,8 +2742,10 @@ VideoUnmaskSwap episode? A coarse screen (5 episodes × 7 stages × 2 passes per
   the same rule**: a container closed on above 5 cm is never "picked up" in K's self-memory (Astra's first closes on
   containers were |dz| 0.8–2.5 cm (medians per arm) from the centre z 0.052, sign not recorded in NOTES, so some may
   have been above 5 cm). This may matter for K's two-pick
-  progress; to check on the dec1e03 / pilot K logs before the next K run. The screen scripts the grasp at 0.045
-  (inside the grasp band below) so its memory is right.
+  progress; to check on the dec1e03 / pilot K logs before the next K run. The screen first scripted the grasp at 0.045
+  to keep its memory right. **Fixed by the two-pick window in 6ee63b8** (NOTES "Grasps above z_low"): a pick_up is
+  now told from the settled finger opening, not the hand's height. **Changed back (user, 2026-10-30, before any
+  call): the screen grasps at RoboMME's 0.062**; every selected episode's view then reads "pick_up bin_… -> done".
 
 **Rules (per answer; every number from RoboMME's code, github.com/RoboMME/robomme_benchmark @ 69a2fe2,
 `src/robomme/robomme_env`, or marked "ours").** Geometry: `build_bin` makes an open box turned upside down, inner side
@@ -2762,11 +2764,11 @@ floor plate 4 mm (now on top, its top at 0.054), a 4 cm handle cube at the origi
   if z ≥ 0.054 (the handle's half width) else ≤ 0.01 m (fingers 0.08 m open, prompt "0.04 m each", must straddle the
   0.06 m walls). Not scored: yaw (the 4 cm handle fits the open gripper at any yaw; the 6 cm body does not at 45°,
   diagonal 8.5 cm; the K view gives no container yaw).
-- **Lift (stage 3):** gripper −1 or 0; 0.143 ≤ z ≤ 0.40: 0.143 = 0.15 + (scripted grasp 0.045 − origin 0.052), the
-  TCP height at which the origin passes `is_bin_pickup`'s 0.15. xy free (a sideways lift still lifts).
+- **Lift (stage 3):** gripper −1 or 0; 0.16 ≤ z ≤ 0.40: 0.16 = 0.15 + (scripted grasp 0.062 − origin 0.052), the
+  TCP height at which the origin passes `is_bin_pickup`'s 0.15 (was 0.143 with the 0.045 grasp). xy free (a sideways lift still lifts).
 - **Put down (stage 4):** release: gripper 1, 0.06 ≤ z ≤ 0.12 (the container's bottom reaches the table at TCP 0.062
   minus 2 mm, ours; a drop ≤ 5.8 cm, ours; RoboMME releases at 0.07), xy ≥ 0.075 m from every other container's centre
-  (`spawn_random_bin`: 2 × half 0.0275 + min_gap 0.02). Also right: carry first (gripper −1 / 0, 0.143 ≤ z ≤ 0.40,
+  (`spawn_random_bin`: 2 × half 0.0275 + min_gap 0.02). Also right: carry first (gripper −1 / 0, 0.16 ≤ z ≤ 0.40,
   the hand moved ≥ 0.03 m in xy (ours), ending ≥ 0.075 m from every other container).
 - Scored against the truth at that state (A held at the hand for stages 3–4; B and the others where they are).
 - Checked on the mock: RoboMME's own script (`screen_rules.canonical`) passes every stage of every selected episode

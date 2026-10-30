@@ -44,7 +44,7 @@ from arbiter_kb.types import FrameObs, ObjObs  # noqa: E402
 
 OUT, CACHE = ROOT / "results" / "runs" / "model_screen", ROOT / "results" / "llm_cache" / "model_screen"
 MIN_P = 0.8  # select(): the KB must be this sure of both goal containers (fixed before any call)
-SCRIPT_Z = [0.2, SCRIPT_GRASP_Z, 0.2, 0.07, 0.2, SCRIPT_GRASP_Z, 0.2]  # RoboMME's heights, but the grasp's
+SCRIPT_Z = [0.2, SCRIPT_GRASP_Z, 0.2, 0.07, 0.2, SCRIPT_GRASP_Z, 0.2]  # RoboMME's heights (two_pick.plan's xy)
 # id, group, total / active parameters (B; None = not published), $ per M in / out, max_tokens (min(32000, the
 # model's max output on OpenRouter)); OpenRouter models API, 2026-10-30. Cheapest first: a shared cap starves the end.
 CANDIDATES = [

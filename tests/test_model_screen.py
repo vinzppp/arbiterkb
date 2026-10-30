@@ -50,7 +50,7 @@ def test_states(items):
     assert len(items) == 14 and [x["stage"] for x in items[:7]] == list(range(1, 8))
     text = ["\n".join(p["text"] for p in x["messages"][1]["content"]) for x in items[:7]]
     assert '"finger_positions_m": [0.005, 0.005]' in text[2]  # stage 3 is asked after the scripted close on A
-    assert "pick_up bin" in text[3] and "-> done (pick_up" in text[3]  # the KB saw that grasp (SCRIPT_GRASP_Z)
+    assert "pick_up bin" in text[3] and "-> done (pick_up" in text[3]  # the KB saw the grasp at 0.062
     assert items[2]["truth"]["hand"] == items[2]["truth"]["A"]
     assert items[3]["A"] not in items[3]["truth"]["others"] and items[4]["A"] in items[4]["truth"]["others"]
     assert all(R.score(x["stage"], x["truth"], R.canonical(x))["passed"] for x in items)
