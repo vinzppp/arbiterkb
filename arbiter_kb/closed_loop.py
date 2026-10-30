@@ -134,7 +134,7 @@ class Episode:
         while self.status == "ongoing":
             self.turn()
         tot = {k: round(sum(float(x.get(k, 0)) for x in self.usage), 4)
-               for k in ("prompt_tokens", "completion_tokens", "usd", "seconds")}
+               for k in ("prompt_tokens", "cached_tokens", "completion_tokens", "usd", "seconds")}
         return {"arm": self.arm, "goal": self.goal, "status": self.status, "success": self.status == "success",
                 "end_reason": self.end, "model_calls": self.calls, "steps": self.steps, "usage": tot,
                 "episode_s": round(time.time() - t0, 1)}
@@ -182,9 +182,11 @@ class Episode:
         if m is not None and m.system is not None:
             record(m.system.kb, m.frames[-1].t if m.frames else 0, action[:6], action[6] < 0, answer.get("target"),
                    answer.get("cites") or ())
+        # what the model said it was doing, for reading failures later (the Astra reading had only retries' text)
+        said = {k: answer[k] for k in ("description", "target") if answer.get(k) is not None}
         new_obs, _, term, trunc, new_info = self.env.step(action)
         if new_obs is None or (new_info or {}).get("status") == "error":
-            self.steps.append({"action": action.tolist(), "error": (new_info or {}).get("error_message")})
+            self.steps.append({"action": action.tolist(), "error": (new_info or {}).get("error_message"), **said})
             return self.finish("error", "env_error")
         n = len(new_obs.get("front_rgb_list") or [])
         self.noops = self.noops + 1 if n == 0 else 0
@@ -193,7 +195,7 @@ class Episode:
             if m is not None:
                 m.feed(self.obs)
         st = self.info.get("status", "unknown")
-        self.steps.append({"action": action.tolist(), "frames": n, "status": st})
+        self.steps.append({"action": action.tolist(), "frames": n, "status": st, **said})
         last = {**self.obs, "front_rgb_list": self.obs["front_rgb_list"][-1:]}
         self.reply(text, h_content(self.obs, self.info, "Frames recorded during that motion") if n else
                    [text_part(NOOP_TEXT)] + h_content(last, self.info, "Current"))

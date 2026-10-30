@@ -54,6 +54,7 @@ def test_success_and_h_chains_the_conversation():
     row = run(FakeEnv([(5, "ongoing"), (5, "success")]), "H", ask)
     assert row["success"] and row["end_reason"] == "env:success" and row["model_calls"] == 2
     assert len(sent[1]) == 4  # system, first user turn, assistant, follow-up
+    assert row["steps"][0]["description"] == "go" and "target" not in row["steps"][0]  # what the model said, logged
 
 
 def test_endings_declared_complete_noops_env_error():

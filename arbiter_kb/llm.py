@@ -28,7 +28,10 @@ DEFAULT_MODEL = "qwen/qwen3.6-35b-a3b"
 PROVIDER = {"order": ["DeepInfra"], "allow_fallbacks": False, "require_parameters": True}
 
 
-USAGE = ("calls", "hits", "misses", "prompt_tokens", "completion_tokens", "reasoning_tokens", "images", "empty")
+USAGE = ("calls", "hits", "misses", "prompt_tokens", "completion_tokens", "reasoning_tokens", "images", "empty",
+         "cached_tokens", "cache_write_tokens")
+# cached_tokens / cache_write_tokens: the PROVIDER's prompt cache (usage.prompt_tokens_details), read at a lower price;
+# not our disk cache (hits). Astra pilot: ~77% of H's prompt tokens were cache reads, K's and R's none (NOTES).
 
 
 class BudgetExceeded(RuntimeError):
@@ -141,6 +144,8 @@ class LLM:
         return {"calls": 1, "hits": int(hit), "misses": int(not hit), "images": images,
                 "prompt_tokens": int(u.get("prompt_tokens", 0)), "completion_tokens": int(u.get("completion_tokens", 0)),
                 "reasoning_tokens": int((u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0),
+                "cached_tokens": int((u.get("prompt_tokens_details") or {}).get("cached_tokens") or 0),
+                "cache_write_tokens": int((u.get("prompt_tokens_details") or {}).get("cache_write_tokens") or 0),
                 "usd": 0.0 if hit else cost, "cached_usd": cost if hit else 0.0, "seconds": float(seconds),
                 "empty": int(not resp["choices"][0]["message"].get("content"))}
 

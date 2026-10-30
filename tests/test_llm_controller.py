@@ -46,6 +46,21 @@ def test_a_cache_hit_reports_the_original_calls_usage(tmp_path, monkeypatch):
     assert (first["usd"], again["usd"], again["cached_usd"]) == (pytest.approx(0.01), 0.0, pytest.approx(0.01))
 
 
+def test_provider_prompt_cache_tokens_are_counted(tmp_path, monkeypatch):
+    """The provider's prompt cache (Astra pilot: H's history read from it), apart from our disk cache."""
+    monkeypatch.setenv("OPENROUTER_API_KEY", KEY)
+    resp = {"choices": [{"message": {"content": "x"}}], "usage": {
+        "prompt_tokens": 2356, "completion_tokens": 181, "cost": 0.0385,
+        "prompt_tokens_details": {"cached_tokens": 2000, "cache_write_tokens": 356}}}
+    m = LLM(cache_dir=tmp_path, max_usd=1, transport=lambda body, key: resp)
+    _, u = m.call([{"role": "user", "content": "hi"}])
+    assert (u["cached_tokens"], u["cache_write_tokens"], u["hits"]) == (2000, 356, 0)
+    _, again = m.call([{"role": "user", "content": "hi"}])
+    assert again["cached_tokens"] == 2000 and m.usage["cached_tokens"] == 4000
+    _, none = LLM(cache_dir=tmp_path / "b", max_usd=1, transport=fake()[0]).call([{"role": "user", "content": "y"}])
+    assert none["cached_tokens"] == 0
+
+
 def test_budget_cap_refuses_the_call_that_would_pass_it(tmp_path, monkeypatch):
     m, calls = llm(tmp_path, monkeypatch, cost=0.02)
     m.chat([{"role": "user", "content": "a"}])  # price unknown: allowed

@@ -1,5 +1,6 @@
 """arbiter_kb/callout.py: the layer-1 scoring rules of NOTES "Layer 1 on real scenes"."""
-from arbiter_kb.callout import holds, label, objects, pointable, right_object, right_sequence, score, summarize
+from arbiter_kb.callout import (holds, label, objects, pointable, right_object, right_sequence, score, summarize,
+                               went_back)
 
 SWAP_GOAL = "pick up the container hiding the blue cube"
 TRUTH = {"bin_0": [0.0, 0.0, 0.03, 0.0], "bin_1": [0.0, 0.15, 0.03, 0.0], "bin_2": [0.0, -0.15, 0.03, 0.0],
@@ -99,3 +100,15 @@ def test_labels_first_rule_wins():
     assert label({"end_reason": "model_answer:declared_complete"}, right_high, seq, {})[0] == "premature done"
     assert label({"end_reason": "env:fail"}, holds(lift(0.0, 0.15, 0.15), o), seq, {0: 0.25})[0] == "lift too low"
     assert label({"end_reason": "env:timeout"}, [], seq, {})[0] == "other"
+
+
+def test_went_back_after_the_put_down():
+    o = objects(TRUTH)
+    seq = ["bin_1", "bin_2"]
+    pick1 = [act(0.0, 0.15, 0.04, -1.0), act(0.0, 0.15, 0.04, -1.0), act(0.0, 0.15, 0.25), act(0.2, 0.15, 0.06, 1.0)]
+    back = pick1 + [act(0.2, 0.15, 0.04, -1.0), act(0.2, 0.15, 0.25)]  # re-lifts the first bin where it was put
+    onward = pick1 + [act(0.0, -0.15, 0.04, -1.0), act(0.0, -0.15, 0.25)]
+    assert went_back(back, o, seq)[0] == "yes"
+    assert went_back(onward, o, seq)[0] == "no"  # the re-close inside pick 1 is not a go-back
+    assert went_back(pick1[:3] + [act(0.0, -0.14, 0.06, 1.0)], o, seq)[0] == "ambiguous"  # put down on bin_2
+    assert went_back(back, o, ["bin_1"])[0] == "n/a"

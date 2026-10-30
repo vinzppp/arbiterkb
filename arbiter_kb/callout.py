@@ -197,3 +197,29 @@ def label(row: dict, hs: list[dict], sequence: list[str], min_lift: dict) -> tup
     if picks:
         return LABELS[4], f"{len(picks)} of {len(sequence)} right pick(s) lifted as high as the successes'; ended {end}"
     return LABELS[5], f"{len(hs)} close(s), none a lifted right pick; ended {end}"
+
+
+def went_back(steps: list, objs: dict, sequence: list[str]) -> tuple[str, str]:
+    """On a two-pick goal: after the first right pick is put down (the first open after its close, at P; the gripper
+    command is taken to act at the end of the motion), does a later lifted hold go back to P rather than to the second
+    right object (S, at its reset position)? P and the later closes are the robot's own positions, so no object pose
+    after reset is needed. ("yes" | "no" | "ambiguous" | "n/a", why). A "yes" is a behaviour, not a failure: a model
+    may move the first bin aside on purpose (Astra R ep 1 did, then succeeded)."""
+    if len(sequence) < 2:
+        return "n/a", "one-pick goal"
+    acts = actions(steps)
+    picks, _ = right_picks(holds(steps, objs), sequence)
+    if not picks:
+        return "n/a", "no lifted first pick"
+    k = next((j for j in range(picks[0][1]["step"] + 1, len(acts)) if acts[j][6] > 0), None)
+    if k is None:
+        return "n/a", "first pick never put down"
+    put, s = acts[k][:2], objs[sequence[1]][:2]
+    if np.hypot(*np.subtract(put, s)) < MAPPED:
+        return "ambiguous", f"put down within {MAPPED} m of {sequence[1]}"
+    rest = acts[k + 1:]
+    for h in holds([{"action": a.tolist()} for a in rest], objs):
+        a = rest[h["step"]]
+        if h["rise"] >= LIFTED and np.hypot(*np.subtract(a[:2], put)) < np.hypot(*np.subtract(a[:2], s)):
+            return "yes", f"lifted at {np.round(a[:2], 3).tolist()} near the put-down {np.round(put, 3).tolist()}"
+    return "no", f"no later lifted hold nearer the put-down than {sequence[1]}"

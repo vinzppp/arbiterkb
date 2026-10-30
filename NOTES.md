@@ -2289,3 +2289,41 @@ failures point to HANDOFF_EXECUTION option 3 (skills) or option 4 (KB as complet
   - **Neither** for K ep 0 (the KB's own wrong bin: a perception / memory error to read in that episode's view).
   - Overlap: K ep 8 and R ep 9 count for both. **Order suggested by this reading:** option 4's progress section first
     (cheap, every memory arm, fits the claims), then option 3 as the separate system.
+
+## Does K lose track on two-pick goals? The test, fixed before running (2026-10-30, user decision)
+Why: of the 4 "went back to the first bin" failures above, 3 are R's (a baseline we do not change) and 1 is K's
+(ep 8). So the evidence for adding progress facts to K is one episode, and K at 8 / 10 cannot show a gain on those 10.
+First measure whether K itself loses track, on new episodes.
+- **Detector, written and checked on the pilot before this run** (`callout.went_back`): on a two-pick goal, P = where
+  the first right pick was put down (the first open after its close; the gripper command is taken to act at the end of
+  the motion: assumed, not read in RoboMME's executor); "yes" when a later hold lifted ≥ 5 cm is nearer P than the
+  second right object's reset position; "ambiguous" when P is within 3 cm of that object. On the pilot it says yes for
+  R ep 1 (a success: it moved the dropped first bin aside), R ep 3, 7, 8, 9 and K ep 8, ambiguous for H ep 1. R ep 7's
+  texts say "I will grasp bin_0 first": it never finished pick 1, so a "yes" is not by itself losing track.
+- **Logging added (not read by the model):** each executed step in result.json now carries the model's `description`
+  and `target`. `closed_loop.py` is in the prompts hash, so params were re-frozen (params a810942859b9, prompts
+  82d83ed1f52d); the prompts and views the model reads are unchanged. Also `llm.py` now counts the provider's prompt
+  cache (`cached_tokens`, `cache_write_tokens` from `prompt_tokens_details`; not our disk cache), and the episode
+  totals in result.json include `cached_tokens`.
+- **Episodes, chosen from goals only, before any call:** VideoUnmaskSwap **val**, episodes 10 onward in order
+  (`stress/list_goals.py`, free: one reset each), those whose goal names exactly two coloured cubes; the first 20
+  (fewer if the split ends; reported).
+- **Run:** arm K only, `openai/gpt-6-astra` (OpenAI, API defaults), the pilot's harness otherwise; `--max-usd 8`
+  (estimate ~$6: K's pilot median $0.28 per episode, two-pick episodes run longer); the default per-episode cap ($3,
+  unscored). Results in `/workspace/cl/astra_k2pick`, copied to `data/cl_pod/astra_k2pick/`.
+- **Per episode:** success; `went_back`; and, for every failure, a label by the rule above with one correction
+  written now: re-lifting the first bin **after it was put down** counts as "wrong object at close" (the old re-grasp
+  clause stays for re-closes before any open).
+- **"K loses track" in an episode** = it failed, `went_back` is "yes", and its logged descriptions after the put-down
+  name the first container (or the first cube's colour) as the one to pick now: read by hand and quoted here.
+- **Decision rule:**
+  - **≥ 2 loses-track episodes** → design option 4's progress section (below);
+  - **0 or 1** → the KB already carries progress well enough on this task; the finding is the R-vs-K gap on going
+    back (pilot: R 5 of 5 two-pick episodes "yes", K 1 of 5), and we look for K's failures on harder tasks instead.
+  - Also reported, not decided on: K's success on two-pick goals with a Wilson interval, the other failure labels.
+- **If option 4 is built (constraints fixed now):** facts only (what was lifted, to what height, put down where; which
+  goal items remain), with the goal's items parsed generically by `task_items`; no thresholds learned from these
+  episodes (no "lifted enough" at 16 cm or any other number read off them); a new prompt version, re-frozen, whose
+  results are never mixed with this run's or the pilot's.
+- n ≈ 20, one model, one task: a direction. Ask the user before the run (it is paid; OpenRouter answered 402 for low
+  credit in the pilot).
