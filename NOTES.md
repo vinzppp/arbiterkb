@@ -2164,3 +2164,39 @@ Read from the pod session's report (pasted by the user); the files stay on the p
     and the old attribute-keyed walk listed one actor under several keys. The three cubes are at three positions.
   - **Do not use the env's `target_cube` as the right object:** in ep 9 it is the red cube (`target_cube_color` 'red')
     while the goal asks for green, then blue. The goal's colour is the reference, as the rule says.
+- **Stage 2 results (pod, 2026-10-30 06:39; `/workspace/cl/callout/callout_rows.csv`, `callout_summary.csv`,
+  raw lines `/workspace/cl/callout_score.txt`; not yet copied to the Mac). No unknown or no_objects rows.**
+
+| task | arm | model | n | right | uncertain | wrong | no action | d1 median / max (m) | d_right median / max | \|close dz\| median / max |
+|---|---|---|---|---|---|---|---|---|---|---|
+| VideoUnmaskSwap | H | astra | 10 | 10 | 0 | 0 | 0 | 0.0049 / 0.0173 | 0.0049 / 0.0173 | 0.0253 / 0.0284 |
+| VideoUnmaskSwap | R | astra | 10 | 10 | 0 | 0 | 0 | 0.0137 / 0.0294 | 0.0137 / 0.0294 | 0.0138 / 0.0244 |
+| VideoUnmaskSwap | K | astra | 10 | 9 | 0 | 1 | 0 | 0.0135 / 0.0294 | 0.0142 / 0.1962 | 0.0083 / 0.0217 |
+| VideoUnmaskSwap | H | qwen | 5 | 1 | 2 | 2 | 0 | 0.0701 / 0.1743 | 0.096 / 0.1743 | 0.006 / 0.4467 |
+| VideoUnmaskSwap | R | qwen | 5 | 4 | 0 | 1 | 0 | 0.0124 / 0.0149 | 0.0138 / 0.1647 | 0.0067 / 0.0133 |
+| VideoUnmaskSwap | K | qwen | 4 | 2 | 0 | 2 | 0 | 0.0118 / 0.0134 | 0.088 / 0.1962 | 0.005 / 0.0083 |
+| VideoPlaceOrder | H | qwen | 4 | 0 | 0 | 4 | 0 | 0.0354 / 0.0619 | 0.0656 / 0.1808 | 0.03 / 0.28 |
+| VideoPlaceOrder | R | qwen | 4 | 3 | 0 | 0 | 1 | 0.0079 / 0.0094 | 0.0079 / 0.0094 | 0.02 / 0.08 |
+| VideoPlaceOrder | K | qwen | 3 | 3 | 0 | 0 | 0 | 0.0072 / 0.0079 | 0.0072 / 0.0079 | 0.03 / 0.03 |
+
+  (Qwen's n are the pilot's episodes before it was stopped; VideoPlaceOrder has no Astra rows beyond the probe.)
+- **Reading (about 70 episodes over 9 cells; a direction, not a conclusion):**
+  - **With memory (R, K) the first call-out is right in most episodes for both models:** Astra 19 / 20, Qwen 12 / 16
+    of the episodes that acted. The memory arms' xy errors repeat to 0.1 mm across arms and across models (VideoUnmaskSwap
+    ep 1: 0.0098 for Qwen K, Qwen R, Astra K, Astra R; ep 2: 0.0113; ep 4: 0.0149), so **their waypoint copies the
+    perceived position, and their 0.3–2.9 cm error is perception's, not the model's.** Two of those rows sit near the
+    3 cm line (Astra K / R ep 9: 2.94 cm).
+  - **The memory arms' wrong picks are of two kinds.** VideoUnmaskSwap ep 0: Qwen K and Astra K both chose bin_1 at the
+    same distance, while R chose right with both models: K's memory pointed at the wrong bin there (a KB error, to
+    read in that episode's view). ep 3: Qwen K and Qwen R both chose bin_1, Astra K and R chose right from the same
+    kind of memory: the model's choice, not the memory.
+  - **From images (H) it depends on the model:** Astra H is right in 10 / 10 and the most precise of all rows (median
+    4.9 mm, better than perception's ~1.3 cm); Qwen H is right in 1 / 9, with two "uncertain" first moves 9–17 cm from
+    every object and VideoPlaceOrder first moves 3.4–3.7 cm from the right cube (ep 0, 2) or at another object
+    (ep 1, 3).
+  - **So "a small model can find the place" holds only when the memory gives the positions;** Qwen cannot localise
+    from the images. Qwen K / R's low pilot success comes mostly after a first move that is right.
+  - **The first close already shows layer-2 failures for Qwen:** H closed 28 cm (VideoPlaceOrder ep 0) and 45 cm
+    (VideoUnmaskSwap ep 2) above the object's centre (in the air). On VideoPlaceOrder the memory arms closed 1–8 cm
+    above the 4 cm cube's centre (K: 1, 3, 3 cm; R up to 8 cm), i.e. at or above its top face for most, where a grasp
+    likely fails. Astra's closes on bins are consistently 1–3 cm below the bin's centre.
