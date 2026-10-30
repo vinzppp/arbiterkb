@@ -12,6 +12,7 @@ interface text is theirs, verbatim where possible. Ours: the memory section per 
   or history). It separates "memory" from "being given coordinates".
 - S (v1.6): the current frames + one sentence per hidden cube naming its most likely container (Bound-like).
   If S ties K, the KB's structure adds nothing on that task.
+- K2 (2026-10-30, user design): initial state, an appended change log, the current state (view_k2.py).
 """
 from __future__ import annotations
 
@@ -22,7 +23,7 @@ import re
 
 import numpy as np
 
-ARMS = ("H", "K", "K-L3", "R", "K0", "S")
+ARMS = ("H", "K", "K-L3", "R", "K0", "S", "K2")
 BASE = np.array([-0.615, 0.0, 0.0])
 SHOULDER = BASE + [0, 0, 0.333]  # Panda joint 2 height above the base
 REACH = 0.855  # m: Panda reach from the shoulder (datasheet)
@@ -60,6 +61,16 @@ images, the TCP pose, the finger positions (0.04 m each = fully open, 0 = closed
 tracked object's 3D centre (world frame, m; from depth) or "hidden". Nothing else is inferred for you. Then the
 current front and wrist images, the TCP pose, the finger positions and the elapsed control steps.""",
 }
+MEMORY["K2"] = """Memory: instead of the image history you get the robot's memory in three parts. (1) Initial state:
+every object as first seen, with its 3D centre (world frame, m; from depth). (2) Change log, oldest first, only ever
+appended: what changed at each time (moves with their displacement and end point, objects seen or no longer seen,
+covers, close passes, the robot's pick-ups and put-downs, new beliefs and corrections that supersede earlier ones).
+(3) Current state, rewritten every turn and authoritative where it differs from anything above: the hand and what it
+holds, every object (visible with its position and when it was seen, or hidden with which container probably hides
+it, as probabilities), relative positions, the goal's items with what the robot has done to each, and a summary of
+what has happened. Ids are in brackets; cite the ids you rely on. A probability below 1 means the memory is unsure:
+decide whether to act on the most likely answer or to look first. Then the current front and wrist images, the TCP
+pose, the finger positions (0.04 m each = fully open, 0 = closed) and the elapsed control steps."""
 MEMORY["K-L3"] = MEMORY["K"].replace(", and an event log with times and where-from / where-to", "")
 MEMORY["K0"] = """Memory: none. You get a table of the objects visible in the current frame with their 3D centres (world
 frame, m; from depth), then the current front and wrist images, the TCP pose, the finger positions (0.04 m each

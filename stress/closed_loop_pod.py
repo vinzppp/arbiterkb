@@ -106,7 +106,7 @@ def episode(task: str, ep: int, arm: str, a, llm, params) -> dict:
             raise Limit("episode_usd")
         return llm.call(m, temperature=a.temperature if qwen else None, seed=0 if qwen else None,
                         max_tokens=a.max_tokens, reasoning=eff, sampling=sampling)
-    row = run(env, arm, ask, memory, EFFORT[a.effort], a.layout, explicit and a.layout == "fixed_first")
+    row = run(env, arm, ask, memory, EFFORT[a.effort], a.layout, explicit and (a.layout == "fixed_first" or arm == "K2"))
     env.close()
     return {**row, "task": task, "episode": ep, "dataset": a.dataset, "effort": a.effort, "vocab": a.vocab,
             "layout": a.layout, "prompt_cache": a.prompt_cache}

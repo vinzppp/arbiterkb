@@ -2457,3 +2457,61 @@ Astra pilot K sent 38% of H's prompt tokens and paid as much ("Why K's fewer tok
   rule and decision rule as the dec1e03 run; extracted into its own directory (`/workspace/score_fix`), started only
   after the dec1e03 run has finished (extracting over `/workspace/score` would change the running job's code).
   Compared per episode with the dec1e03 run: success, `went_back`, and the confirmed "loses track" episodes.
+
+## K2: initial state, change log, current state (2026-10-30, user design; replaces the (b) layout above)
+Why: K's view mixes what changed, what is true now and the history, in an order no reader would choose, and it starts
+with text that changes every call, so the provider can never cache it ("K's request layout and the provider's prompt
+cache" above). The user's design, a new arm K2 (`arbiter_kb/view_k2.py`), with K's KB and K's perception unchanged:
+- **A. Initial (fixed for the episode):** `Task goal: …`, the camera calibration, and every object as observed in the
+  first frame (`seen at (x, y, z)` or `not seen yet`), from the KB's trace (`system.rows[0]`).
+- **B. Change log (one message per call, appended, never edited):** the evidence and events since the previous call:
+  moves as displacement and end point (`bin_1 moved by (dx, dy, dz) to (x, y, z) (t=a-b)`), objects seen (with
+  where), no longer seen, covers, close passes, the robot's pick-ups and put-downs, and each Inside belief when it first
+  appears and when it changes (`correction: … supersedes … stated at t=…`; a change = another top container or the top
+  probability down by ≥ 0.1, self_memory's existing rule). The first frame's sightings are in A, not repeated in B.
+- **C. Current state (rewritten every call, last, "authoritative"):** the hand and what it holds; every object
+  (visible with position and seen time, held, or hidden with its Inside probabilities); relative positions (left to
+  right, near to far, On / Near); the goal's coloured items in order, each with where the memory puts it and what the
+  robot did to the container believed to hide it (`bin_1: picked up at t=174, put down at t=234` / `not picked up
+  yet`); counts of the robot's actions; a summary of what happened (narrative's timeline plus pick-ups and
+  put-downs). Then the current frames and the changing state.
+- K2 has no `self_memory` section (the controller's own decisions): C's task lines and the log say what was done.
+- **What is new against K, so the test cannot attribute a difference to one part:** the order (A → B → C), the
+  log's wording (displacements), the per-item task lines (option 4's progress facts, facts only, no threshold) and
+  the dropped decisions section. If K2 differs from K, a follow-up would separate them.
+- **Requests:** system (K2's memory section in `controller.MEMORY["K2"]`), then user messages A, B1…Bn, C; in
+  explicit cache mode (`--prompt-cache explicit`) A and every B carry a breakpoint, C none. Tests: every earlier message
+  is byte-identical in the next request; C comes last and has no breakpoint; a move is logged once with its
+  displacement.
+- **Free simulation (`tools/cache_sim.py`, the rebuilt G episodes above, 10 × 8 calls):** K2 sends 1.56× K's tokens
+  (the log is never truncated: the opening video's first message is ~2,400 tokens, cached after the first call), 0.67
+  of them cache reads; cost vs K now **0.53** (66 image tokens) / **0.55** (255), against `fixed_first` 0.61 / 0.63.
+  C is median 778 tokens (max 1,132). The opening log is mostly moves of a few millimetres (perception noise in the
+  rebuilt episodes; the pilot's real logs are on the pod and not yet read).
+- The scripted continuation moved to `scripts/two_pick.py` (shared by `tools/cache_sim.py` and the test below); it now
+  records "keep" (gripper 0) as the state before it (`closed_loop.gripper_closed`, the fix in 038ddf1), so the
+  simulation's K text changed slightly (cost ratios moved by ≤ 0.01).
+
+### K vs K2 offline: the test, fixed before running (needs the user's go: Qwen, paid)
+- **Data:** synthetic VideoUnmaskSwap train episodes 100–129 (`SyntheticSource(swap_steps="mix", lane_offset="mix")`,
+  as Batch A: clean, text only, no frames), goal rewritten to two cubes (`gt.targets[0]`, then the next cube in the
+  ground truth's order), then `scripts/two_pick.py`'s seven scripted actions (open loop; 3 mm noise on observations
+  after the video). Both arms read the same KB at every call; K's request is `user_content(..., layout "v1")` (the
+  closed loop's K now, with the gripper fix), K2's is `view_k2.request` (no breakpoints offline).
+- **Model:** Qwen 3.6-35B-A3B on CoreWeave with the closed loop's Qwen settings (temperature 0.6, top-p 0.95, top-k 20,
+  presence penalty 1.5, 32k cap, default thinking). One call per (episode, call, arm): 30 × 7 × 2 = 420 calls; cap
+  `--max-usd 1.5` (estimate ~$1 from Batch A's $0.0015 per call and longer prompts).
+- **Score per call:** the right container = the goal's first container for calls 1–3 (before its pick is done), the
+  second for calls 5–7 (after the first was put down); `both` = `target` names it and the waypoint's xy is within
+  3 cm of its true centre. Call 4 (first container just lifted: put it down or go on are both reasonable) is reported
+  only (which container `target` names).
+- **Primary:** per episode, the mean of `both` over calls 1, 2, 3, 5, 6, 7; K2 − K with a 95% paired bootstrap CI over
+  episodes (10,000 resamples, seed 0). **Rule: K2 may replace K for a closed-loop run only if the CI's lower bound
+  is above −0.05** (the margin from the (b) test above, a design choice not read off any data). Otherwise K2 is not run
+  in the closed loop, and the result is recorded as it is.
+- **Also reported, not decided on:** calls 5–7 alone (where losing track would show), call 4's targets, mean prompt
+  tokens per arm, spend.
+- Script: `scripts/k2_offline.py` (`--print` shows episode 100's requests for free; `--call` runs). Results in
+  `results/runs/k2_offline_<time>/` (rows.csv, summary.json, meta.json with commit and params hash).
+- **Re-frozen:** params a810942859b9, prompts 946e17f79534 (K2's memory text, `view_k2.py`, now in the prompts hash, and the runner flags); K's
+  own text is unchanged by this commit.

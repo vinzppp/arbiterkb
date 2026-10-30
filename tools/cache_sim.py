@@ -2,9 +2,7 @@
 provider's prompt cache"). No LLM call and no pod: the requests are rebuilt on the Mac.
 
 Requests: G's perceived VideoUnmaskSwap opening videos (data/g_perceived, real perception) fed to ArbiterKBSystem, then
-a scripted two-pick robot continuation (above bin A, close, lift, put down and open, above bin B, close, lift, done),
-eight calls per episode. During the continuation every visible object gets N(0, 3 mm) noise per frame (perception is
-not still), a held bin follows the hand, and the cube under a lifted bin becomes visible. Before each call the K
+the scripted two-pick continuation of scripts/two_pick.py (seven actions, then "done": eight calls). Before each call the K
 memory text is built exactly as closed_loop.Memory.text() builds it, and after it the decision is recorded as
 closed_loop.Episode.execute() does. The two current frames are stand-ins: they change every call, so they never
 match a cached prefix, and their token count is a parameter (--img-tokens; not known for GPT-6-Astra).
@@ -34,71 +32,25 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 
 from arbiter_kb.closed_loop import Memory  # noqa: E402
 from arbiter_kb.controller import system_prompt, user_content  # noqa: E402
 from arbiter_kb.params import Params  # noqa: E402
-from arbiter_kb.self_memory import record  # noqa: E402
 from arbiter_kb.sources.perceived import PerceivedSource  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
-from arbiter_kb.types import ObjObs  # noqa: E402
+from two_pick import CALIB, Robot, plan as two_pick_plan  # noqa: E402
 from arbiter_kb.self_memory import changes  # noqa: E402
 from arbiter_kb.views import event_log  # noqa: E402
+from arbiter_kb.view_k2 import K2View  # noqa: E402
 
 MIN_PREFIX, READ, WRITE = 1024, 0.1, 1.25
-OPEN, CLOSED = 0.08, 0.01  # gripper width, m
-# The camera calibration as the state carries it (fixed for an episode); the numbers are stand-ins of the same shape.
-CALIB = {"wrist_camera_K": [[128.0, 0.0, 128.0], [0.0, 128.0, 128.0], [0.0, 0.0, 1.0]],
-         "front_camera_K": [[221.7, 0.0, 128.0], [0.0, 221.7, 128.0], [0.0, 0.0, 1.0]],
-         "front_camera_extrinsic_world_to_camera": [[0.0, 1.0, 0.0, 0.0], [0.5547, 0.0, -0.8321, 0.2219],
-                                                    [-0.8321, 0.0, -0.5547, 1.2481]]}
+
 
 
 def tokens(s: str) -> int:
     import tiktoken
     return len(tiktoken.get_encoding("o200k_base").encode(s, disallowed_special=()))
-
-
-class Robot:
-    """The scripted continuation after G's opening video: frames of each motion, every third fed to the KB."""
-
-    def __init__(self, last, rng, reveal: dict):
-        self.objs = {k: o for k, o in last.objects.items()}
-        self.pos = {k: (o.xyz.copy() if o.xyz is not None else None) for k, o in self.objs.items()}
-        self.ee, self.width, self.held, self.t = np.array([0.0, 0.0, 0.45]), OPEN, None, last.t
-        self.rng, self.reveal = rng, reveal  # reveal: {bin: (cube id, xyz)}
-
-    def frames(self, to, gripper: int, n: int = 30):
-        """Move the hand to `to` in n frames; then apply the gripper command (the command acts at the end)."""
-        from arbiter_kb.types import FrameObs
-        start, out = self.ee.copy(), []
-        for k in range(1, n + 1):
-            self.ee = start + (np.asarray(to, float) - start) * k / n
-            if k == n and gripper:
-                self.width = CLOSED if gripper < 0 else OPEN
-                if gripper < 0:
-                    self.held = min((b for b in self.pos if b.startswith("bin_") and self.pos[b] is not None),
-                                    key=lambda b: np.linalg.norm(self.pos[b][:2] - self.ee[:2]))
-                else:
-                    self.held = None
-            if self.held:
-                self.pos[self.held] = self.ee.copy()
-                if self.ee[2] > 0.08 and self.held in self.reveal:  # the cube under a lifted bin is seen
-                    c, p = self.reveal.pop(self.held)
-                    self.pos[c] = p
-            self.t += 1
-            objs = {}
-            for oid, o in self.objs.items():
-                p = self.pos[oid]
-                vis = p is not None and (o.cls != "cube" or oid in self.revealed())
-                xyz = p + self.rng.normal(0, 0.003, 3) if vis else None
-                objs[oid] = ObjObs(oid, o.cls, vis, xyz, None, 1.0)
-            if k % 3 == 0 or k == n:
-                out.append(FrameObs(self.t, objs, self.ee.copy(), self.width, False))
-        return out
-
-    def revealed(self) -> set:
-        return {c for c in self.pos if c.startswith("cube_") and self.pos[c] is not None}
 
 
 def episode(src: PerceivedSource, ep: int, rng) -> list[dict]:
@@ -124,28 +76,18 @@ def episode(src: PerceivedSource, ep: int, rng) -> list[dict]:
     robot = Robot(last, rng, {b: (c, np.array([*bins[b][:2], 0.017])) for c, b in c2b.items()})
     A, B = c2b[f"cube_{colors[0]}"], c2b[f"cube_{colors[1]}"]
     pa, pb = bins[A], bins[B]
-    side = np.array([pa[0] - 0.05, pa[1] + (0.15 if pa[1] < 0.1 else -0.15), 0.035])
-    plan = [(A, [*pa[:2], 0.17], 1), (A, [*pa[:2], 0.035], -1), (A, [*pa[:2], 0.22], 0), (A, list(side), 1),
-            (B, [*pb[:2], 0.17], 0), (B, [*pb[:2], 0.035], -1), (B, [*pb[:2], 0.22], 0), (None, None, 0)]
-    calls = []
-    for target, wp, g in plan:
+    steps = two_pick_plan(A, B, pa, pb) + [(None, None, 0)]
+    calls, k2 = [], K2View()
+    for target, wp, g in steps:
         mem_text = mem.text()
-        state = {"tcp_pose_xyz_rpy": [round(float(v), 4) for v in robot.ee] + [-3.1416, 0.0, 0.0],
-                 "finger_positions_m": [robot.width / 2] * 2, "elapsed_control_steps": int(robot.t * 3),
-                 "wrist_camera_K": CALIB["wrist_camera_K"],
-                 "wrist_camera_extrinsic_world_to_camera": [[0.0, -1.0, 0.0, round(float(robot.ee[1]), 4)],
-                                                            [-1.0, 0.0, 0.0, round(float(robot.ee[0]), 4)],
-                                                            [0.0, 0.0, -1.0, round(float(robot.ee[2]) + 0.1, 4)]],
-                 "front_camera_K": CALIB["front_camera_K"],
-                 "front_camera_extrinsic_world_to_camera": CALIB["front_camera_extrinsic_world_to_camera"]}
+        state = robot.state()
         ds = system.kb.task.get("decisions", [])
         calls.append({"goal": goal, "memory": mem_text, "state": state, "events": event_section(mem_text),
                       "full_log": event_log(system.kb, last=10 ** 9, low_level=False),
-                      "changes": changes(system.kb, ds[-1]) if ds else []})
+                      "changes": changes(system.kb, ds[-1]) if ds else [], "k2": k2.update(system)})
         if wp is None:
             break
-        record(system.kb, mem.frames[-1].t, np.array(wp + [-3.1416, 0.0, 0.0]), g < 0, target, ())
-        for f in robot.frames(wp, g):
+        for f in robot.act(system.kb, mem.frames[-1].t, target, wp, g):
             mem.frames.append(f)
             system.step(f)
     return calls
@@ -172,7 +114,7 @@ def layouts(calls: list[dict], img: int, answer: int) -> dict:
     third field is False)."""
     sysk = system_prompt("K")
     S = ("sys", tokens(sysk))
-    out = {k: [] for k in ("current", "a_reorder", "fixed_first", "b_append", "c_conversation")}
+    out = {k: [] for k in ("current", "a_reorder", "fixed_first", "b_append", "c_conversation", "k2")}
     convo, seen_lines, appended = [], set(), []
     for i, c in enumerate(calls):
         mem, goal = c["memory"], c["goal"]
@@ -206,6 +148,11 @@ def layouts(calls: list[dict], img: int, answer: int) -> dict:
         out["b_append"].append([([S], True), ([("goal", T["goal"]), ("calib", T["calib"])], True), *appended,
                                 ([(f"cur{i}", cur), frames, (f"sdyn{i}", T["state_dyn"])], False)])
         # c_conversation: H's way: every turn's full K content stays, with the model's answers between them
+        # k2 (view_k2.request): fixed block with the initial state, one message per log, then the current state
+        a, logs, cur2 = c["k2"]
+        out["k2"].append([([S], True), ([("goal", T["goal"]), ("calib", T["calib"]), ("init", tokens(a))], True),
+                          *[([(f"log{j}", tokens(x))], True) for j, x in enumerate(logs)],
+                          ([(f"k2cur{i}", tokens(cur2)), frames, (f"sdyn{i}", T["state_dyn"])], False)])
         # (every message end is a breakpoint in both modes)
         turn = (head + [mem_seg, frames, (f"state{i}", T["state"])], True)
         convo = convo + ([([(f"ans{i - 1}", answer)], True)] if i else []) + [turn]
@@ -242,6 +189,7 @@ def main() -> None:
     ap.add_argument("--img-tokens", type=int, default=66)
     ap.add_argument("--answer-tokens", type=int, default=110)
     ap.add_argument("--show", action="store_true", help="print the first episode's K memory texts")
+    ap.add_argument("--show-k2", dest="show_k2", type=int, default=0, help="print K2's parts at this call (1-based)")
     a = ap.parse_args()
     src, rng = PerceivedSource(), np.random.default_rng(0)
     eps = src.episodes("train")[:a.episodes]
@@ -249,6 +197,9 @@ def main() -> None:
     parts = {"sys": [], "mem": [], "events": [], "state": [], "calib": [], "goal": []}
     for ep in eps:
         calls = episode(src, ep, rng)
+        if a.show_k2 and ep == eps[0]:
+            ini, logs, cur = calls[a.show_k2 - 1]["k2"]
+            print("\n\n".join([ini, *logs, cur]), "\n" + "-" * 80)
         if a.show and ep == eps[0]:
             for c in calls:
                 print(c["memory"], "\n" + "-" * 80)

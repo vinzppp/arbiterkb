@@ -10,8 +10,7 @@ Ours: arm H chains the whole conversation by re-sending it (OpenRouter has no pr
 the same); every other arm gets a fresh request per step with its memory text and the CURRENT front and wrist frames;
 the KB reads the same stride-3 frames H sees (perceive), and its view starts with self_memory's section; our check()
 problems get one retry, as an executor error would.
-`env` is RoboMME's BenchmarkEnvBuilder(..., action_space="waypoint", max_steps=1300) env on the pod; the Mac tests use
-a fake env with the same observation keys.
+`env`: RoboMME's BenchmarkEnvBuilder(..., action_space="waypoint", max_steps=1300) on the pod; a fake env in tests.
 """
 from __future__ import annotations
 
@@ -24,6 +23,7 @@ import numpy as np
 from .controller import (check, image_part, parse_answer, raw_tracker_log, shown_ids, system_prompt, text_part,
                          to_action, user_content)
 from .self_memory import record, self_view
+from .view_k2 import K2View, request as k2_request
 from .views import controller_view
 
 MAX_CALLS, MAX_NOOPS, STRIDE = 150, 3, 3
@@ -102,6 +102,7 @@ class Memory:
 
     def __init__(self, arm: str, system, perceive: Callable):
         self.arm, self.system, self.perceive, self.frames = arm, system, perceive, []
+        self.k2 = K2View() if arm == "K2" else None  # arm K2's appended log lives across the episode's calls
 
     def feed(self, obs: dict) -> None:
         for f in self.perceive(obs):
@@ -110,8 +111,7 @@ class Memory:
                 self.system.step(f)
 
     def ids(self) -> set[str]:
-        """The objects perception has seen at least once (R's log and its target check; never-seen slots are left out,
-        as in K's view)."""
+        """Objects perception has seen at least once (R's log and its target check; never-seen slots left out)."""
         return {k for f in self.frames for k, o in f.objects.items() if o.visible}
 
     def text(self) -> str:
@@ -124,18 +124,17 @@ class Memory:
 
 def run(env, arm: str, ask: Callable, memory: Memory | None = None, effort: dict | None = None, layout: str = "v1",
         breakpoint: bool = False) -> dict:
-    """One episode. ask(messages, reasoning) -> (text, usage). Returns their result row plus our usage.
-    layout / breakpoint: the fresh arms' request layout (controller.user_content); H is unaffected."""
+    """One episode. ask(messages, reasoning) -> (text, usage) -> their result row plus our usage. layout / breakpoint:
+    the fresh arms' request layout (controller.user_content; K2 has its own, view_k2); H is unaffected."""
     return Episode(env, arm, ask, memory, effort, layout, breakpoint).run()
 
 
 class Episode:
     def __init__(self, env, arm: str, ask: Callable, memory: Memory | None, effort: dict | None, layout: str = "v1",
                  breakpoint: bool = False):
-        self.env, self.arm, self.ask, self.memory, self.effort = env, arm, ask, memory, effort
-        self.layout, self.breakpoint = layout, breakpoint
+        self.env, self.arm, self.ask, self.memory, self.effort, self.layout = env, arm, ask, memory, effort, layout
+        self.breakpoint, self.status, self.end = breakpoint, "ongoing", None
         self.steps, self.usage, self.calls, self.noops, self.retried, self.note = [], [], 0, 0, False, []
-        self.status, self.end = "ongoing", None
 
     def run(self) -> dict:
         self.obs, self.info = self.env.reset()
@@ -160,9 +159,14 @@ class Episode:
         self.status, self.end = status, end
 
     def turn(self) -> None:
-        mem = self.memory.text() if self.memory is not None else ""
-        user = self.convo if self.arm == "H" else [{"role": "user", "content": _fresh(
-            self.arm, self.goal, mem, self.obs, self.info, self.layout, self.breakpoint) + self.note}]
+        if self.arm == "K2":  # view_k2: initial, appended change log, current state (several user messages)
+            user, mem = k2_request(self.memory.k2, self.memory.system, self.goal, _current(self.obs),
+                                   state(self.obs, self.info, True), self.breakpoint, self.note)
+        else:
+            mem = self.memory.text() if self.memory is not None else ""
+            user = self.convo if self.arm == "H" else [{"role": "user", "content": user_content(
+                self.arm, self.goal, mem, _current(self.obs), state(self.obs, self.info, True), self.layout,
+                self.breakpoint) + self.note}]
         self.note = []
         try:
             text, u = self.ask([self.sys_msg] + user, self.effort)
@@ -235,10 +239,9 @@ def _problems(action, answer, mem: str, memory: Memory | None) -> list[str]:
     return errs if mem else [e for e in errs if not e.startswith(("unknown target", "unknown cite"))]
 
 
-def _fresh(arm: str, goal: str, mem: str, obs: dict, info: dict, layout: str = "v1", breakpoint: bool = False) -> list:
-    cur = [(_np(obs["front_rgb_list"][-1]).astype(np.uint8), "Current front camera"),
-           (_np(obs["wrist_rgb_list"][-1]).astype(np.uint8), "Current wrist camera")]
-    return user_content(arm, goal, mem, cur, state(obs, info, True), layout, breakpoint)
+def _current(obs: dict) -> list:
+    return [(_np(obs["front_rgb_list"][-1]).astype(np.uint8), "Current front camera"),
+            (_np(obs["wrist_rgb_list"][-1]).astype(np.uint8), "Current wrist camera")]
 
 
 def memory_meta(memory: Memory, goal: str):

@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_MODULE, MAX_FUNC = 250, 40
 EXEMPT = {"sg_compat.py"}
 ALLOWED_BASES = {"Protocol", "Exception", "RuntimeError", "ValueError", "object"}
-WHITELIST = {"numpy", "scipy", "matplotlib", "pytest", "nbformat", "nbconvert", "arbiter_kb", "run", "selftest", "figures", "measure_kb", "dry_run", "video_windows", "extract_test", "qa_stats", "check_actions", "perceived_qa"}  # last nine: sibling scripts
+WHITELIST = {"numpy", "scipy", "matplotlib", "pytest", "nbformat", "nbconvert", "arbiter_kb", "run", "selftest", "figures", "measure_kb", "dry_run", "video_windows", "extract_test", "qa_stats", "check_actions", "perceived_qa", "two_pick"}  # from "run" on: sibling scripts
 
 
 def files() -> list[Path]:

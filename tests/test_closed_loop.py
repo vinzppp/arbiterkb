@@ -7,7 +7,7 @@ import numpy as np
 from arbiter_kb.closed_loop import NOOP_TEXT, Memory, fingers_closed, frame_indices, gripper_closed, run
 from arbiter_kb.params import Params
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
-from arbiter_kb.types import FrameObs
+from arbiter_kb.types import EpisodeMeta, FrameObs, ObjObs
 
 
 class FakeEnv:
@@ -167,3 +167,58 @@ def test_gripper_keep_holds_the_state_before_it():
     run(FakeEnv([(5, "ongoing")] * 4 + [(5, "success")]), "K", ask, mem)
     closed = [d["gripper_closed"] for d in mem.system.kb.task["decisions"]]
     assert closed == [True, True, True, False, False]  # with the bug: [True, False, False, False, False]
+
+
+# ---- arm K2 (view_k2.py): the initial block and earlier log messages never change, so each request starts with the
+# previous one; the current state comes last; changes are logged once.
+
+
+def _frames(t0: int, n: int, x0: float, x1: float):
+    """bin_0 slides from x0 to x1; the red cube is visible from t=2 on."""
+    out = []
+    for k in range(n):
+        t = t0 + k
+        x = x0 + (x1 - x0) * k / max(n - 1, 1)
+        objs = {"bin_0": ObjObs("bin_0", "container", True, np.array([x, 0.1, 0.03]), None, 1.0),
+                "cube_red": ObjObs("cube_red", "cube", t >= 2, np.array([0.2, -0.1, 0.02]) if t >= 2 else None,
+                                   None, 1.0)}
+        out.append(FrameObs(t, objs, np.array([0.0, 0.0, 0.45]), 0.08, False))
+    return out
+
+
+def _memory(batches):
+    it = iter(batches)
+
+    def perceive(obs):
+        return next(it, [])
+    perceive.objects = lambda: [("bin_0", "container", {}), ("cube_red", "cube", {"color": "red"})]
+    return Memory("K2", ArbiterKBSystem(Params()), perceive)
+
+
+def test_each_request_starts_with_the_previous_one_and_ends_with_the_current_state():
+    mem = _memory([_frames(0, 12, 0.0, 0.0), _frames(12, 12, 0.0, 0.15), _frames(24, 12, 0.15, 0.15)])
+    ask, sent = scripted([WP, WP, WP])
+    run(FakeEnv([(5, "ongoing"), (5, "ongoing"), (5, "success")]), "K2", ask, mem, breakpoint=True)
+    users = [m[1:] for m in sent]
+    for a, b in zip(users, users[1:]):
+        assert b[:len(a) - 1] == a[:-1]  # every earlier message is byte-identical: a cacheable prefix
+    last = users[-1]
+    assert last[0]["content"][0]["text"] == "Task goal: pick up the red cube"
+    assert last[0]["content"][2]["text"].startswith("Initial state (t=0")
+    assert last[-1]["content"][0]["text"].startswith("Current state at t=")
+    assert all(m["content"][-1].get("prompt_cache_breakpoint") for m in last[:-1])
+    assert "prompt_cache_breakpoint" not in json.dumps(last[-1])
+    log = "\n".join(m["content"][0]["text"] for m in last[1:-1])
+    assert "bin_0 moved by (0.15" in log and log.count("cube_red seen at") == 1
+
+
+def test_initial_lists_unseen_objects_and_current_lists_the_goal_items():
+    from arbiter_kb.view_k2 import K2View
+    s = ArbiterKBSystem(Params())
+    s.reset(EpisodeMeta("t", 0, "train", "pick up the container that hides the red cube",
+                        [("bin_0", "container", {}), ("cube_red", "cube", {"color": "red"})], None, None))
+    for f in _frames(0, 6, 0.0, 0.0):
+        s.step(f)
+    a, logs, c = K2View().update(s)
+    assert "[cube_red] red cube, not seen yet" in a and "[bin_0] container, seen at (0.000, 0.100, 0.030)" in a
+    assert "1. red cube [cube_red]: visible" in c and "Robot: hand at (0.000, 0.000, 0.450); holding nothing." in c
