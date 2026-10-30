@@ -42,7 +42,9 @@ def test_right_wrong_uncertain_and_no_action():
     assert score([act(0.0, 0.2, 0.2)], o, right)["category"] == "wrong"  # nearest is right, but 5 cm off
     assert score([act(0.0, 0.075, 0.2)], o, right)["category"] == "uncertain"  # halfway between bin_0 and bin_1
     assert score([{"answer": "x", "problems": ["p"]}], o, right)["category"] == "no_action"
-    assert score([act(0.0, 0.16, 0.2)], o, None)["category"] == "unknown"
+    unknown = score([act(0.0, 0.16, 0.2), act(0.0, 0.15, 0.03, -1.0)], o, None)  # fallback: no right object, but
+    assert unknown["category"] == "unknown" and unknown["d_right"] is None  # d1 and the close dz still reported
+    assert abs(unknown["d1"] - 0.01) < 1e-9 and unknown["close_object"] == "bin_1"
 
 
 def test_first_close_dz_and_retries_skipped():

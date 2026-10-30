@@ -2013,6 +2013,13 @@ far (M4, Batch A) is synthetic text with oracle positions only. No LLM call: it 
   VideoUnmaskSwap), else the cube itself (VideoPlaceOrder). The cube is the object whose actor name contains the colour;
   if none or several do, the right object is **unknown** and the episode is reported, not scored. A `--list` pass
   prints every episode's objects and right object before scoring, to be read first.
+- **Fallback when the goal names no coloured cube** (e.g. VideoPlaceOrder's goal may only say "in the order of the
+  video"; decided 2026-10-29, before any listing): **the right object stays unknown and the task is not scored for
+  "right"**. Its rows still report what needs no right object: d1 (does the waypoint point at any object at all),
+  uncertain, and dz at the first close. Not chosen: "the first cube picked in the video". RoboMME's reset returns after
+  the video, so the simulator's poses cannot show it; it would need an env attribute whose name and meaning we have
+  not read, and whether that cube is the right *first* pick depends on the task's rule, which we would be guessing
+  after seeing the data. If the listing shows such an attribute, a rule for it is written here before any scoring.
 - **First waypoint:** the first step with an executed-or-attempted action (retries without an action skipped). d1, d2 =
   xy distance to the nearest and second-nearest object.
   - **right:** nearest = the right object and d1 < 3 cm;
@@ -2026,3 +2033,6 @@ far (M4, Batch A) is synthetic text with oracle positions only. No LLM call: it 
 - **Limits, fixed now:** only the first waypoint and the first close (later steps need replays whose determinism is
   unverified); about 30 episodes, so a direction, not a conclusion; the first waypoint can be a pre-grasp above the
   object, so only its xy is scored. Run on the pod after the target-phrase test, with the user's go.
+- **Run procedure:** the code goes to its own directory (`/workspace/score`), never over the pilot's copy; the pod is
+  not touched until the target-phrase test has finished; stage 1 is `--list` only, its output comes back and the
+  right objects are confirmed here before stage 2 (scoring) runs.
