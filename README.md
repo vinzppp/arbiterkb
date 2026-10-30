@@ -12,7 +12,7 @@ are the KB's beliefs **calibrated** (`docs/GOALS.md`).
   on counting. Claims 1–2 can only move in the closed loop.
 - **Claim 3 (no LLM, G test):** the registered main test is not supported; with the distance feature the KB's p ranks
   its errors better than SoftHaircut, and the lead comes from R6 on a cover-time distribution, not the belief layer.
-- **Closed loop (in progress):** 2610.17350's loop is ported (`arbiter_kb/closed_loop.py`) and the smoke test is
+- **Closed loop (in progress):** the 2610.17350 loop runs on a RunPod A40. Qwen as the controller hit a floor (1 / 25); GPT-6-Astra solved 2 / 2 probes; its H / R / K pilot on VideoUnmaskSwap is running. The execution gap: `docs/HANDOFF_EXECUTION.md`.
   running on a RunPod A40 (`stress/POD_CLOSED_LOOP.md`). Next: a val pilot with arms H / R / K.
 - Details and every number: `HANDOFF.md` (the short version), `NOTES.md` (the log, newest at the bottom).
 

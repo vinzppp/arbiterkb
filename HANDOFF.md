@@ -1,24 +1,27 @@
-# ArbiterKB: handoff (2026-10-29, evening)
+# ArbiterKB: handoff (2026-10-30)
 
 Read first: `README.md` (one page), `docs/GOALS.md` (claims, falsifiers), `DEVELOPMENT.md` (spec v1.12: §2 the loop and its
 reasoning, §3.8 controller, §6 phases), `NOTES.md` (the log; newest at the bottom). Answer the user in Chinese,
-concisely. Docs in English.
+concisely. Docs in English. For the execution-gap discussion (IK, controller design, models, landscape):
+`docs/HANDOFF_EXECUTION.md`. Upstream bug reports to prepare: `docs/UPSTREAM.md`.
 
 ## Direction (NOTES "Direction v2")
 - The KB is the memory module of an LLM controller that outputs waypoints itself, in the 2610.17350 harness.
 - Claims: (1) a smaller model, or (2) far fewer tokens and images, at matched success; (3) the KB's beliefs are calibrated.
 
-## Now: the closed-loop smoke test is running on a RunPod A40
-- Code: `arbiter_kb/closed_loop.py` (2610.17350's loop, their commit 79dcc7f), `arbiter_kb/sources/online.py`,
-  `stress/closed_loop_pod.py`, runbook `stress/POD_CLOSED_LOOP.md`. Upload = `git archive` → `pod_upload_arbiter-kb.tar.gz`
-  (repo root, git-ignored); the pod session checks its md5 before extracting.
-- Found and fixed in the smoke runs (NOTES "Closed loop"): a second `reset()` on one RoboMME env gives another episode
-  (probe on a throwaway env); DeepInfra takes ≤ 30 images (all arms now use **Parasail**, 160 OK); a 4,000-token cap cut
-  H's and R's reasoning (**16,000** for all arms); generic "cube." slots shared a name in `OnlineObs` (now `cube_s<slot>`).
-- First signal: arm H solved VideoUnmaskSwap val episode 0 in 3 calls ($0.007). The full smoke report (all three arms
-  with the fixed upload, md5 bd4c48ec…) is pending; then the user decides on the val pilot (step 4 of the runbook).
-- Pod state: `/workspace/arbiter-kb`, venvs `sg-main` (robomme now at 856bc3a, pytest added) and `sg-percep`
-  (GroundingDINO already built for sm_86), setup notes in `/workspace/CL_SETUP.md`, old smoke runs kept under `/workspace/cl/`.
+## Now: the closed loop runs on a RunPod A40 (NOTES "Closed loop", bottom)
+- Code: `arbiter_kb/closed_loop.py` (2610.17350's loop), `arbiter_kb/sources/online.py`, `stress/closed_loop_pod.py`
+  (`--model`, `--provider auto`, `--max-usd-episode`), runbook `stress/POD_CLOSED_LOOP.md`. Upload = `git archive` →
+  `pod_upload_arbiter-kb.tar.gz` (repo root, git-ignored); the pod session checks its md5 before extracting.
+- **Qwen 3.6-35B-A3B val pilot, stopped at 25 / 60:** 1 success; every arm near 0 (floor effect). Failures are
+  execution and decisions (layers 2, 3, 5 in docs/HANDOFF_EXECUTION.md), runaway reasoning, and ManiSkill's zero-step bug.
+- **GPT-6-Astra probe:** H 2 / 2 ($0.17, $0.65 per episode). The harness works; the controller model was the bottleneck.
+- **Running on the pod:** (1) Astra VideoUnmaskSwap val pilot, H / R / K × 10 (`/workspace/cl/astra_pilot`, budget $20);
+  (2) the VideoPlaceOrder target-phrase test (no LLM; rule fixed in NOTES before measuring). The pod's Claude runs
+  as `/root/.local/bin/claude --continue` in tmux `main` (window 0); jobs in windows avus / afinish / phrase.
+- Fixed this round (tests, reviews, re-frozen; prompts 7aade10cec0b): R's ids and cites, the `"table"` crash, 32k cap,
+  targets are not containers (`task_items.place_word`, `PLACE_PHRASE`), robot-base / below-table detections dropped
+  (`online.not_objects`), API defaults for non-Qwen models, unscored per-episode spend cap.
 
 ## Latest results (NOTES for every number and its file)
 - **The LLM adds nothing offline:** on every QA set the KB's own top answer equals K (G Q1 0.846 = 0.846 train,
@@ -39,15 +42,12 @@ concisely. Docs in English.
   tell a pick-up from a put-down in 256-px front frames, so robot actions come from robot state.
 
 ## Next
-1. Read the pod's smoke report; then the **val pilot** (VideoUnmaskSwap, VideoPlaceOrder; H / R / K; about $3–4 GPU,
-   under $1 LLM) after the user's go. Bring every pod-side code change back to the Mac repo (`/workspace/cl_changes/`).
-   Consider a "K + raw positions around close passes" arm (R beats K on swapped cubes).
-2. Claim 3 only on fresh episodes: tune R6's magnitude (ECE / Brier as well as AURC) on train; the fair baseline is a
-   SoftHaircut that keeps the cover kernel; one read.
-3. M6 on fresh RoboMME test episodes after the freeze (ledger).
-4. Later on a pod: one multi-object Cutie on G's replays (lost tracks).
-5. Dropped or frozen: the min_q margin feature (`r6_feature` stays "min_3d"), C, more view arms, the LLM's stated
-   confidence as a claim-3 measure, counting. Push: the user approves each push.
+1. Read the Astra VideoUnmaskSwap pilot and the phrase test; look at K's failures (memory wrong vs read wrong vs
+   premature "done"). Pick VideoPlaceOrder's target phrase by the NOTES rule; run that task only if it passes.
+2. The execution-gap decisions in `docs/HANDOFF_EXECUTION.md` (model ladder with an oracle-memory arm, fair harness
+   fixes, a skills layer as a separate system claim, the KB as completion verifier, RoboMME's `multi_choice`).
+3. Upstream: a minimal repro of ManiSkill's `follow_path` zero-step crash (docs/UPSTREAM.md); the user files it.
+4. Claim 3 on fresh episodes; M6 on test after the freeze; the multi-object Cutie on G's replays.
 
 ## Reminders for the pod
 - Keep `/workspace/g/replays` (the multi-object Cutie re-run needs them). Never print or store the OpenRouter key.
