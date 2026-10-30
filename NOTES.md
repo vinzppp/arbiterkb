@@ -2679,3 +2679,25 @@ needed memory; the other four had the hand already above the right container. Re
   K's prompt fell to 235k tokens (from 269k), K2 sends 1.21× K's tokens; **K2 explicit = 0.45 / 0.49 of K implicit
   and 0.56 / 0.61 of K explicit** (66 / 255 image tokens).
 - **Re-frozen:** params b4caad02074a (move_min added), prompts 9eefe9411062.
+
+## K's view after a cube is seen again: one fact line instead of an open distribution (2026-10-30, user; rule before code)
+Found in episode 100 call 5 (a229e35): cube_blue is visible after bin_1 was lifted (R4 reveal at t=232), yet K's
+Relations still print `Inside(cube_blue) bin_1 0.92 | bin_2 0.07 | elsewhere 0.01` and its joined facts say "bin_1 may
+hold the blue cube (0.92)" (the open question 1a kind of stale belief). K2 already shows only hidden cubes'
+distributions and is not changed.
+- **Rule (K's view and `narrative`'s joined facts only):** a cube whose Inside belief exists but which is not hidden
+  now is no longer listed as an open distribution. Its Inside line becomes one fact:
+  - after an R4 reveal: `[Inside(cube)] was under <container>, revealed t=<t> [<event id>]`;
+  - seen again without a reveal: `[Inside(cube)] seen again at t=<t>, now at x, y, z; the earlier belief
+    (<container> <p>) no longer applies` (t: its last appear; the position is its current one).
+  Joined facts: a container no longer "may hold" a cube that is not hidden; after a reveal its line says "hid <the
+  cube> (revealed t=<t>)", and the cube's line says "visible; it was under <container> (revealed t=<t>)".
+- The KB's distributions are unchanged (only the text); `self_memory` is unchanged.
+- Two notes on the offline test (user): (1) the open-loop script's moves (home, D1, D2, A's new spot) are recorded as
+  decisions with target None, so both arms show them as "your" decisions (K: "move -> moved"; K2: `[d<n>] you: …`);
+  a side effect of the open loop, the same for both arms. (2) K keeps the "placed it down at table level" label
+  (actions.py's z_low label): K is the existing arm and is not changed for this; K2 gives the numbers instead.
+- **Done:** `narrative.revealed` / `narrative.seen_again`; K's Relations and joined facts follow the rule; tests
+  (revealed: `Inside(cube_red) was under bin_0, revealed t=…`, "hid the red cube", no "may hold"; seen again without a
+  reveal: `seen again at t=8, now at …`). `scripts/k2_offline.py --print [--noisy]` writes
+  `results/runs/k2_print/ep<first>_<clean|noisy>.txt`. Re-frozen: params b4caad02074a, prompts 643e351eb3f1.

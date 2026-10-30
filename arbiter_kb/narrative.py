@@ -66,14 +66,34 @@ def _place(kb: KB, oid: str, near: list[str]) -> str:
     return f"{side}, {'nearest to the robot' if rank == 1 else f'number {rank} from the robot'}"
 
 
+def revealed(kb: KB) -> dict[str, tuple[str, int, str]]:
+    """{cube: (container, t, event id)} from R4's reveal events (the last per cube)."""
+    return {v.args[1]: (v.args[0], v.t, v.id) for v in kb.events if v.type == "reveal"}
+
+
+def seen_again(kb: KB, cube: str, d, rev) -> str:
+    """The Inside line of a cube that is not hidden now (NOTES "K's view after a cube is seen again")."""
+    if rev:
+        return f"  [Inside({cube})] was under {rev[0]}, revealed t={rev[1]} [{rev[2]}]"
+    t = max((e.t for e in kb.evidence if e.kind == "appear" and e.args[0] == cube), default=kb.objects[cube].t_last_seen)
+    top, p = d.argmax()
+    now = kb.objects[cube].pose.value
+    at = f", now at {', '.join(f'{v:.3f}' for v in now)}" if now is not None else ""
+    return f"  [Inside({cube})] seen again at t={t}{at}; the earlier belief ({top or 'elsewhere'} {p:.2f}) no longer applies"
+
+
 def _container(kb: KB, b: str, near: list[str], ins: dict, mv: list) -> str:
-    holds = [f"{name(kb, c)} ({p:.2f})" for c, hyps in ins.items() for k, p in hyps if k == b and p >= HOLD_P]
+    """A container 'may hold' only cubes still hidden; after an R4 reveal it 'hid' that cube (NOTES "K's view after a
+    cube is seen again")."""
+    holds = [f"{name(kb, c)} ({p:.2f})" for c, hyps in ins.items() for k, p in hyps if k == b and p >= HOLD_P
+             and kb.objects[c].visibility.value == "hidden"]
+    hid = [f"hid {name(kb, c)} (revealed t={t})" for c, (box, t, _) in revealed(kb).items() if box == b]
     n = sum(m[0] == b for m in mv)
     last = next((g for g in reversed(exchanges(kb)) if b in g[2]), None)
     with_ = f", last at t={last[0]}-{last[1]} together with {', '.join(x for x in last[2] if x != b)}" if last and \
         len(last[2]) > 1 else ""
-    return (f"  {b}: {_place(kb, b, near)}; " + (f"may hold {' or '.join(holds)}" if holds else
-            "holds no cube as far as the memory knows") + f"; moved {n} time{'s' if n != 1 else ''}{with_}.")
+    return (f"  {b}: {_place(kb, b, near)}; " + "; ".join(hid + [f"may hold {' or '.join(holds)}" if holds else
+            "holds no cube as far as the memory knows"]) + f"; moved {n} time{'s' if n != 1 else ''}{with_}.")
 
 
 def seen(o) -> bool:
@@ -85,7 +105,8 @@ def seen(o) -> bool:
 def _cube(kb: KB, c: str, ins: dict, mv: list, items: list) -> str:
     o, tag = kb.objects[c], " (task item)" if is_task_item(kb.objects[c].attributes, kb.objects[c].cls, items) else ""
     if o.visibility.value != "hidden" or c not in ins:
-        return f"  {name(kb, c)}{tag}: visible."
+        rev = revealed(kb).get(c)
+        return f"  {name(kb, c)}{tag}: visible" + (f"; it was under {rev[0]} (revealed t={rev[1]})." if rev else ".")
     hyps = [(k, p) for k, p in ins[c] if k and p >= HOLD_P]
     covered = o.t_last_seen
     after = {k: sum(m[0] == k and m[1] > covered for m in mv) for k, _ in hyps}

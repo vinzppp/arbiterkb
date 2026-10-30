@@ -9,7 +9,8 @@ frames. Two conditions: clean, and noisy (every visible object, every frame, plu
 on still containers, data/g_perceived_still_residuals.npy from scripts/still_noise.py). Scored: `target` names the
 right container and the waypoint's xy is within 3 cm of its true centre. Ground truth is used for scoring only.
 
-  python scripts/k2_offline.py --print                 # episode 100's requests (clean), no API call
+  python scripts/k2_offline.py --print [--noisy]      # episode 100's five requests per arm, written to
+                                                       # results/runs/k2_print/ep100_<clean|noisy>.txt; no API call
   python scripts/k2_offline.py --call --max-usd 3      # Qwen, the closed loop's Qwen settings
 """
 from __future__ import annotations
@@ -147,6 +148,7 @@ def main() -> None:
     ap.add_argument("--episodes", type=int, default=30)
     ap.add_argument("--first", type=int, default=100)  # Batch A's train seeds start at 100
     ap.add_argument("--print", action="store_true")
+    ap.add_argument("--noisy", action="store_true", help="--print the noisy condition instead of the clean one")
     ap.add_argument("--call", action="store_true")
     ap.add_argument("--max-usd", dest="max_usd", type=float, default=3.0)
     a = ap.parse_args()
@@ -155,10 +157,7 @@ def main() -> None:
     items = [x for c in CONDITIONS for ep in range(a.first, a.first + a.episodes) for x in episode(src, ep, params, c,
                                                                                                      resid)]
     if a.print:
-        for x in [x for x in items if x["episode"] == a.first and x["condition"] == "clean"]:
-            for arm in ARMS:
-                print(f"=== episode {x['episode']} call {x['call']} arm {arm} (right: {x['right']})")
-                print("\n\n".join(p["text"] for m in x[arm][1:] for p in m["content"] if p["type"] == "text"))
+        show(items, a.first, "noisy" if a.noisy else "clean")
     if not a.call:
         return
     llm = LLM(model=QWEN["model"], max_usd=a.max_usd,
@@ -168,6 +167,19 @@ def main() -> None:
     rows = ask_all(llm, items)
     write(out, rows, summarize(rows, 2 * len(items)), {"commit": commit, "dirty": dirty, "params_hash": params.hash(),
                                                         "args": vars(a), "qwen": QWEN, "usage": llm.usage})
+
+
+def show(items: list[dict], ep: int, condition: str) -> None:
+    """Every asked call of one episode, both arms, full text (each user message separated by a blank line)."""
+    lines = []
+    for x in (x for x in items if x["episode"] == ep and x["condition"] == condition):
+        for arm in ARMS:
+            lines.append(f"=== episode {ep} {condition} call {x['call']} arm {arm} (right: {x['right']})")
+            lines.append("\n\n".join(p["text"] for m in x[arm][1:] for p in m["content"] if p["type"] == "text"))
+    path = ROOT / "results" / "runs" / "k2_print" / f"ep{ep}_{condition}.txt"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n")
+    print(path)
 
 
 def write(out: Path, rows: list[dict], summary: dict, meta: dict) -> None:

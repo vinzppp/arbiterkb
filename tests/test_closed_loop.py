@@ -266,6 +266,27 @@ def test_k2_logs_the_hold_numbers_decisions_and_belief_ids_and_r4_clears_the_lif
     assert "Inside(cube_blue): bin_1" in log and "replaces [b" in log
     assert "highest hand z while held 0.250" in log and "t=12 [bin_0] released, hand at (0.200, 0.200, 0.040)" in log
     assert "1. red cube [cube_red]: seen under [bin_0]; [bin_0]: grasped t=" in c
+    from arbiter_kb.views import controller_view  # K: the revealed cube is a fact, not an open belief
+    k = controller_view(s.kb)
+    assert "[Inside(cube_red)] was under bin_0, revealed t=" in k and "Inside(cube_red)] bin_0" not in k
+    assert "hid the red cube (revealed t=" in k and "may hold the red cube" not in k
+    assert "the red cube (task item): visible; it was under bin_0 (revealed t=" in k
+
+
+def test_k_lists_a_cube_seen_again_without_a_reveal_as_a_fact():
+    from arbiter_kb.views import controller_view
+    s = ArbiterKBSystem(Params())
+    s.reset(EpisodeMeta("t", 0, "train", "pick up the red cube",
+                        [("bin_0", "container", {}), ("cube_red", "cube", {"color": "red"})], None, None))
+    for t in range(12):  # the cube is covered at t=3 by bin_0, seen again at t=8 at another spot, nothing held
+        cube = t < 3 or t >= 8
+        objs = {"bin_0": ObjObs("bin_0", "container", True, np.array([0.0, 0.1, 0.03]), None, 1.0),
+                "cube_red": ObjObs("cube_red", "cube", cube, np.array([0.0, 0.1 if t < 3 else 0.3, 0.02])
+                                   if cube else None, None, 1.0)}
+        s.step(FrameObs(t, objs, np.array([0.0, 0.0, 0.45]), 0.08, False))
+    k = controller_view(s.kb)
+    assert "[Inside(cube_red)] seen again at t=8, now at 0.000, 0.300, 0.020; the earlier belief (bin_0" in k
+    assert "may hold the red cube" not in k
 
 
 def test_moves_below_the_noise_threshold_are_not_reported():
