@@ -110,14 +110,18 @@ class Memory:
         return "\n\n".join(x for x in (self_view(kb), controller_view(kb, self.system.params.rule)) if x)
 
 
-def run(env, arm: str, ask: Callable, memory: Memory | None = None, effort: dict | None = None) -> dict:
-    """One episode. ask(messages, reasoning) -> (text, usage). Returns their result row plus our usage."""
-    return Episode(env, arm, ask, memory, effort).run()
+def run(env, arm: str, ask: Callable, memory: Memory | None = None, effort: dict | None = None, layout: str = "v1",
+        breakpoint: bool = False) -> dict:
+    """One episode. ask(messages, reasoning) -> (text, usage). Returns their result row plus our usage.
+    layout / breakpoint: the fresh arms' request layout (controller.user_content); H is unaffected."""
+    return Episode(env, arm, ask, memory, effort, layout, breakpoint).run()
 
 
 class Episode:
-    def __init__(self, env, arm: str, ask: Callable, memory: Memory | None, effort: dict | None):
+    def __init__(self, env, arm: str, ask: Callable, memory: Memory | None, effort: dict | None, layout: str = "v1",
+                 breakpoint: bool = False):
         self.env, self.arm, self.ask, self.memory, self.effort = env, arm, ask, memory, effort
+        self.layout, self.breakpoint = layout, breakpoint
         self.steps, self.usage, self.calls, self.noops, self.retried, self.note = [], [], 0, 0, False, []
         self.status, self.end = "ongoing", None
 
@@ -144,8 +148,8 @@ class Episode:
 
     def turn(self) -> None:
         mem = self.memory.text() if self.memory is not None else ""
-        user = self.convo if self.arm == "H" else [{"role": "user", "content": _fresh(self.arm, self.goal, mem,
-                                                                                         self.obs, self.info) + self.note}]
+        user = self.convo if self.arm == "H" else [{"role": "user", "content": _fresh(
+            self.arm, self.goal, mem, self.obs, self.info, self.layout, self.breakpoint) + self.note}]
         self.note = []
         try:
             text, u = self.ask([self.sys_msg] + user, self.effort)
@@ -217,10 +221,10 @@ def _problems(action, answer, mem: str, memory: Memory | None) -> list[str]:
     return errs if mem else [e for e in errs if not e.startswith(("unknown target", "unknown cite"))]
 
 
-def _fresh(arm: str, goal: str, mem: str, obs: dict, info: dict) -> list:
+def _fresh(arm: str, goal: str, mem: str, obs: dict, info: dict, layout: str = "v1", breakpoint: bool = False) -> list:
     cur = [(_np(obs["front_rgb_list"][-1]).astype(np.uint8), "Current front camera"),
            (_np(obs["wrist_rgb_list"][-1]).astype(np.uint8), "Current wrist camera")]
-    return user_content(arm, goal, mem, cur, state(obs, info, True))
+    return user_content(arm, goal, mem, cur, state(obs, info, True), layout, breakpoint)
 
 
 def memory_meta(memory: Memory, goal: str):

@@ -117,6 +117,36 @@ def test_user_content_has_images_and_state():
     assert parts[1]["text"].startswith("[e1]") and parts[0]["text"] == "Task goal: pick it" and parts[-1]["text"].startswith("Robot state")
 
 
+def _read(parts):
+    """What the model reads, as (texts with the JSON parts decoded, images)."""
+    texts, imgs = [], [p["image_url"]["url"] for p in parts if p["type"] == "image_url"]
+    for p in parts:
+        if p["type"] == "text":
+            head, _, tail = p["text"].partition(": {")
+            texts.append((head, json.loads("{" + tail)) if tail else p["text"])
+    return texts, imgs
+
+
+def test_fixed_first_layout_reads_the_same_keys_and_values_with_the_fixed_part_first():
+    rgb = np.zeros((8, 8, 3), np.uint8)
+    cur = [(rgb, "Current front camera"), (rgb + 1, "Current wrist camera")]
+    st = {"tcp_pose_xyz_rpy": [0.1, 0, 0.2, -3.1416, 0, 0], "finger_positions_m": [0.04, 0.04], "elapsed_control_steps": 5,
+          "wrist_camera_K": [[1, 0, 2], [0, 1, 2], [0, 0, 1]], "wrist_camera_extrinsic_world_to_camera": [[0] * 4] * 3,
+          "front_camera_K": [[3, 0, 2], [0, 3, 2], [0, 0, 1]], "front_camera_extrinsic_world_to_camera": [[1] * 4] * 3}
+    view = "Since your last decision (t=4):\n  nothing\n\nGoal: pick it\nProgress: nothing yet"
+    v1, ff = C.user_content("K", "pick it", view, cur, st), C.user_content("K", "pick it", view, cur, st, "fixed_first")
+    (t1, i1), (t2, i2) = _read(v1), _read(ff)
+    assert i1 == i2 and t2[0] == "Task goal: pick it" and t2[2] == view == t1[1]  # same memory text and images
+    assert t2[1][0] == "Robot state, fixed part (camera calibration)" and set(t2[1][1]) == set(C.FIXED_STATE)
+    assert {**t2[1][1], **t2[-1][1]} == t1[-1][1] == st  # the same keys and values, split in two
+    st2 = {**st, "tcp_pose_xyz_rpy": [0.2, 0, 0.1, -3.1416, 0, 0], "elapsed_control_steps": 9}
+    later = C.user_content("K", "pick it", view + "\n[e9] more", [(rgb + 2, "Current front camera")], st2, "fixed_first")
+    assert later[:2] == ff[:2]  # the fixed block is byte-identical at every call of an episode
+    assert "prompt_cache_breakpoint" not in json.dumps(ff)
+    marked = C.user_content("K", "pick it", view, cur, st, "fixed_first", breakpoint=True)
+    assert marked[1]["prompt_cache_breakpoint"] == {"mode": "explicit"} and len(marked) == len(ff)
+
+
 @pytest.mark.parametrize("text, kind", [
     ('```json\n{"waypoint": [0.1, 0, 0.2, -3.14, 0, 0], "gripper": -1}\n```', None),
     ('{"waypoint": null}', "declared_complete"), ("no json here", "unparseable"),

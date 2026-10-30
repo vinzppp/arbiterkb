@@ -130,11 +130,31 @@ def one_sentence(inside: dict) -> str:
     return " ".join(f"{c} is under {b}." for c, b in inside.items() if b) or "No object is hidden."
 
 
-def user_content(arm: str, goal: str, memory_text: str, current: list, state: dict) -> list:
-    """One turn's content for K / K-L3 / R (H builds its frame list in the harness, as the paper does)."""
+FIXED_STATE = ("wrist_camera_K", "front_camera_K", "front_camera_extrinsic_world_to_camera")  # the same every call
+LAYOUTS = ("v1", "fixed_first")
+
+
+def user_content(arm: str, goal: str, memory_text: str, current: list, state: dict, layout: str = "v1",
+                 breakpoint: bool = False) -> list:
+    """One turn's content for K / K-L3 / R (H builds its frame list in the harness, as the paper does).
+    v1: [goal, unless the view starts with it], memory, current frames, the whole state.
+    fixed_first (NOTES "K's request layout and the provider's prompt cache"): what is the same at every call of an
+    episode first (the goal, then the state's camera calibration), then memory, frames and the rest of the state, so
+    that the system prompt and that block form a prefix the provider can cache (OpenAI caches >= 1,024 tokens; the
+    system prompt alone is 865). The same keys and values as v1; the goal is also given at the first call.
+    `breakpoint`: mark the end of the fixed block for OpenAI's explicit cache mode (sent only in that mode)."""
+    imgs = [p for rgb, label in current for p in (text_part(label + ":"), image_part(rgb))]
+    if layout == "fixed_first":
+        fixed = text_part("Robot state, fixed part (camera calibration): "
+                          + json.dumps({k: state[k] for k in FIXED_STATE if k in state}))
+        if breakpoint:
+            fixed["prompt_cache_breakpoint"] = {"mode": "explicit"}
+        mem = [text_part(memory_text)] if memory_text else []
+        rest = {k: v for k, v in state.items() if k not in FIXED_STATE}
+        return [text_part(f"Task goal: {goal}"), fixed] + mem + imgs + [text_part("Robot state: " + json.dumps(rest))]
+    assert layout == "v1", layout
     head = [] if memory_text.startswith("Goal:") else [text_part(f"Task goal: {goal}")]  # the KB view has it
     head += [text_part(memory_text)] if memory_text else []
-    imgs = [p for rgb, label in current for p in (text_part(label + ":"), image_part(rgb))]
     return head + imgs + [text_part("Robot state: " + json.dumps(state))]
 
 

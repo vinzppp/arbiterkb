@@ -134,3 +134,18 @@ def test_a_limit_raised_by_ask_ends_the_episode_as_a_failure():
         raise Limit("episode_usd")
     row = run(FakeEnv([]), "H", ask)
     assert row["end_reason"] == "limit:episode_usd" and not row["success"] and row["model_calls"] == 0
+
+
+def test_fixed_first_layout_reaches_the_fresh_arms_only():
+    def perceive(obs):
+        return [FrameObs(0, {}, np.zeros(3), 0.08, False)]
+    perceive.objects = lambda: []
+    ask, sent = scripted([WP, WP])
+    run(FakeEnv([(5, "ongoing"), (5, "success")]), "K", ask, Memory("K", ArbiterKBSystem(Params()), perceive),
+        layout="fixed_first", breakpoint=True)
+    firsts = [m[1]["content"][:2] for m in sent]
+    assert firsts[0] == firsts[1] and firsts[0][0]["text"] == "Task goal: pick up the red cube"
+    assert firsts[0][1]["prompt_cache_breakpoint"] == {"mode": "explicit"}
+    ask, sent = scripted([WP])
+    run(FakeEnv([(5, "success")]), "H", ask, layout="fixed_first", breakpoint=True)
+    assert "prompt_cache_breakpoint" not in json.dumps(sent)

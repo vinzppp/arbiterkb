@@ -2365,12 +2365,13 @@ Astra pilot K sent 38% of H's prompt tokens and paid as much ("Why K's fewer tok
   and never reads. Two checks against the pilot: 0 cached tokens for K and R (observed), and ~$12.50 / M = 1.25 ×
   Astra's $10 / M input (observed). H's growing conversation ends each turn on a user message, so its history is
   re-read at 0.1×.
-- **Free simulation (`scripts/cache_sim.py`):** requests rebuilt on the Mac: G's perceived opening videos (train
-  episodes 0–9 of the listing, real perception) through `ArbiterKBSystem`, then a scripted two-pick continuation (8
-  calls: above bin A, close, lift, put down, above bin B, close, lift, done; 3 mm noise on visible objects per frame;
-  the cube under a lifted bin becomes visible); the memory text built as `Memory.text()` builds it and each decision
-  recorded as `Episode.execute` does. Rebuilt per-call size 3,370–3,750 tokens (pilot 3,710). The cache model is the
-  rules above plus two assumptions (a request reads the longest earlier breakpoint prefix it starts with; an
+- **Free simulation (`tools/cache_sim.py`; tiktoken is outside the whitelist, so tools/):** requests rebuilt on the
+  Mac: G's perceived opening videos (train episodes 0–9 of the listing, real perception) through `ArbiterKBSystem`,
+  then a scripted two-pick continuation (8 calls: above bin A, close, lift, put down, above bin B, close, lift, done;
+  3 mm noise on visible objects per frame; the cube under a lifted bin becomes visible); the memory text built as
+  `Memory.text()` builds it and each decision recorded as `Episode.execute` does. Rebuilt mean per call 3,370 or
+  3,750 tokens (66 or 255 per image; pilot 3,710). The cache model is the rules above plus two assumptions (a
+  request reads the longest earlier breakpoint prefix it starts with; an
   episode's calls reach a machine holding its earlier writes). Image tokens per 256-px frame are not known for
   Astra: 66 and 255 both run.
 
@@ -2416,7 +2417,7 @@ Astra pilot K sent 38% of H's prompt tokens and paid as much ("Why K's fewer tok
     The current state is always stated in full, because R (a log the model must reduce itself) did worst in the
     pilot (6 / 10, median 16 calls).
   - Data: synthetic VideoUnmaskSwap train seeds 100–129 (as Batch A: clean, text only) with two-cube goals and
-    `cache_sim`'s scripted two-pick continuation; the robot follows the script whatever the model answers (open
+    `tools/cache_sim.py`'s scripted two-pick continuation; the robot follows the script whatever the model answers (open
     loop), and the model is asked at each of the 7 calls before "done".
   - Arms: K `v1` (now) and K (b), Qwen 3.6-35B-A3B, the closed loop's Qwen settings; the same frames (none: text only).
   - Score per call: `target` names the container the script acts on at that call (bin A for calls 1–4, bin B for
@@ -2425,7 +2426,10 @@ Astra pilot K sent 38% of H's prompt tokens and paid as much ("Why K's fewer tok
   - Rule: (b) may replace `v1` for a closed-loop run only if the CI's lower bound is above −0.05 (a margin chosen
     now as a design choice, not read off any data); otherwise (b) is dropped and the result is recorded as it is.
     Also reported, not decided on: calls 5–7 alone (after the put-down, where losing track would show).
-- **Not touched:** the two-pick test's section above and the pod upload package.
+- **Re-frozen:** params a810942859b9 (unchanged), prompts 7148880935b2 (`python scripts/run.py --freeze --force`).
+  The two-pick test runs from its own package (dec1e03, prompts 82d83ed1f52d) with the `v1` layout.
+- **Not touched:** the two-pick test's section above and the pod upload package. (This section's first draft was
+  swept into commit 8eee38f by the other session's `git add`; this commit is its final text.)
 - **Approved by the user (2026-10-30), one change before the run: `--max-usd 15`, not 8.** All 20 are two-pick
   episodes, which take more steps than the pilot's mix (K averaged ~$0.35 per episode over one- and two-pick goals);
   hitting the cap only stops the run and costs a resume, and the cap is not spend. OpenRouter balance ≥ $20 before

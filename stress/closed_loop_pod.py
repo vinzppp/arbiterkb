@@ -27,6 +27,7 @@ sys.path[:0] = [str(SG_PILOT), str(ROOT), str(ROOT / "scripts"), str(ROOT / "str
 
 from arbiter_kb import ledger  # noqa: E402
 from arbiter_kb.closed_loop import STRIDE, Limit, Memory, run  # noqa: E402
+from arbiter_kb.controller import LAYOUTS  # noqa: E402
 from arbiter_kb.llm import LLM, BudgetExceeded  # noqa: E402
 from arbiter_kb.sources.online import OnlineObs  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
@@ -95,6 +96,9 @@ def episode(task: str, ep: int, arm: str, a, llm, params) -> dict:
     env = make_env(task, ep, a.dataset)
     qwen = a.model.startswith("qwen/")  # Qwen's thinking settings; any other model runs on its API defaults
     sampling = {"top_p": a.top_p, "top_k": a.top_k, "presence_penalty": a.presence_penalty} if qwen else None
+    explicit = a.prompt_cache == "explicit" and arm != "H"  # H keeps the implicit cache of its growing conversation
+    if explicit:  # OpenAI GPT-5.6+: only marked blocks are written (1.25x); the rest is billed at the plain rate
+        sampling = {**(sampling or {}), "prompt_cache_options": {"mode": "explicit"}}
     start = llm.usage["usd"]
 
     def ask(m, eff):
@@ -102,9 +106,10 @@ def episode(task: str, ep: int, arm: str, a, llm, params) -> dict:
             raise Limit("episode_usd")
         return llm.call(m, temperature=a.temperature if qwen else None, seed=0 if qwen else None,
                         max_tokens=a.max_tokens, reasoning=eff, sampling=sampling)
-    row = run(env, arm, ask, memory, EFFORT[a.effort])
+    row = run(env, arm, ask, memory, EFFORT[a.effort], a.layout, explicit and a.layout == "fixed_first")
     env.close()
-    return {**row, "task": task, "episode": ep, "dataset": a.dataset, "effort": a.effort, "vocab": a.vocab}
+    return {**row, "task": task, "episode": ep, "dataset": a.dataset, "effort": a.effort, "vocab": a.vocab,
+            "layout": a.layout, "prompt_cache": a.prompt_cache}
 
 
 def main() -> None:
@@ -133,7 +138,13 @@ def main() -> None:
     ap.add_argument("--top-k", dest="top_k", type=int, default=20)
     ap.add_argument("--presence-penalty", dest="presence_penalty", type=float, default=1.5,  # loop probe, smoke run:
                     help="Qwen's anti-repetition setting")  # 0 / 15 first turns looped with it, 3 / 15 without
+    ap.add_argument("--layout", choices=list(LAYOUTS), default="v1",  # NOTES "K's request layout and the provider's
+                    help="fresh arms' request layout (controller.user_content)")  # prompt cache"
+    ap.add_argument("--prompt-cache", dest="prompt_cache", choices=["implicit", "explicit"], default="implicit",
+                    help="explicit (OpenAI GPT-5.6+ only, fresh arms only): write only the marked fixed block")
     a = ap.parse_args()
+    if a.prompt_cache == "explicit" and not a.model.startswith("openai/"):
+        sys.exit("--prompt-cache explicit is OpenAI's (GPT-5.6 and later)")
     if a.provider == "auto":
         a.provider = next((v for k, v in PROVIDER.items() if a.model.startswith(k)), None) or \
             sys.exit(f"--provider needed for {a.model}")
