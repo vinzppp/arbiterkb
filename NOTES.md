@@ -2155,3 +2155,12 @@ Read from the pod session's report (pasted by the user); the files stay on the p
     after seeing the data; it is the user's decision and would be stated as such.
 - **Decided (user, 2026-10-30): the rule stands.** circle. and disc. are out, no phrase qualifies, and VideoPlaceOrder's
   K arm is not run; VideoPlaceOrder compares H and R only. The rule is not changed after seeing the data.
+- **Stage 1 rerun (pod, 2026-10-30 06:32; commit b5240fa in `/workspace/score`): right object filled in all 14
+  episodes, checked here one by one against the listed poses.** VideoPlaceOrder 0–3: the goal's cube (`cube_red_0`,
+  `cube_red_0`, `cube_blue_0`, `cube_blue_0`). VideoUnmaskSwap 0–9: the bin at the xy of `target_cube_<goal colour>`
+  (bin_2, bin_1, bin_1, bin_2, bin_1, bin_0, bin_2, bin_0, bin_1, bin_1); every one matches to ≤ 1 mm. Stage 2 may run.
+  - **ep 9's "two cubes at one position" was ours, not the scene's:** the env reaches the same actors through many
+    aliases (`target_cube`, `target_cube_0/1/2`, `target_cube_for_bin_0/1/2`, `target_cube_<colour>`, `other_cubes`),
+    and the old attribute-keyed walk listed one actor under several keys. The three cubes are at three positions.
+  - **Do not use the env's `target_cube` as the right object:** in ep 9 it is the red cube (`target_cube_color` 'red')
+    while the goal asks for green, then blue. The goal's colour is the reference, as the rule says.
