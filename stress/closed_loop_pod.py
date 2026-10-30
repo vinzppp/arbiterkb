@@ -39,8 +39,10 @@ EFFORT = {"default": None, "off": {"enabled": False}}
 def make_env(task: str, episode: int, dataset: str):
     """Their env (waypoint, 1300 steps) plus the depth and calibration the perception needs (never shown to the model)."""
     from robomme.env_record_wrapper import BenchmarkEnvBuilder
-    return BenchmarkEnvBuilder(env_id=task, dataset=dataset, action_space="waypoint", gui_render=False,
-                               max_steps=1300).make_env_for_episode(
+    from pod_checks import in_split
+    b = BenchmarkEnvBuilder(env_id=task, dataset=dataset, action_space="waypoint", gui_render=False, max_steps=1300)
+    in_split(b, episode)  # RoboMME builds a default scene for an index it does not have, without an error
+    return b.make_env_for_episode(
         episode, include_front_depth=True, include_front_camera_extrinsic=True, include_front_camera_intrinsic=True,
         include_wrist_camera_extrinsic=True, include_wrist_camera_intrinsic=True)
 

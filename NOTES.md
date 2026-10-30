@@ -2327,3 +2327,13 @@ First measure whether K itself loses track, on new episodes.
   results are never mixed with this run's or the pilot's.
 - n ≈ 20, one model, one task: a direction. Ask the user before the run (it is paid; OpenRouter answered 402 for low
   credit in the pilot).
+- **Goal listing (pod, 2026-10-30 07:33, commit dec1e03, free; `/workspace/cl/goals.jsonl`).** VideoUnmaskSwap val
+  has **50 episodes (0–49)**: for 50–59 RoboMME silently built one identical default scene (same cube positions,
+  115-frame video, goal) instead of raising, so `list_goals.py` never stopped. Those lines are ignored. Fixed after the
+  listing: `pod_checks.in_split` raises for an episode outside the split (`get_episode_num()`), used by both
+  `pod_checks.make_env` and `closed_loop_pod.make_env` (stress/ only, not in the prompts hash).
+  - Episodes 10–49: 18 one-cube goals (10, 12, 13, 14, 18, 20, 21, 22, 26, 28, 30, 33, 34, 36, 38, 42, 46, 48) and
+    **22 two-cube goals** (11, 15, 16, 17, 19, 23, 24, 25, 27, 29, 31, 32, 35, 37, 39, 40, 41, 43, 44, 45, 47, 49); the
+    pod session's summary said 16 / 24, its own lists say 18 / 22.
+  - **Chosen by the rule (the first 20 two-cube episodes from 10): 11, 15, 16, 17, 19, 23, 24, 25, 27, 29, 31, 32,
+    35, 37, 39, 40, 41, 43, 44, 45.** Not yet run.

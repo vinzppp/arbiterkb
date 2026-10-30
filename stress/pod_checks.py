@@ -31,11 +31,24 @@ from arbiter_kb.skills import pick  # noqa: E402
 TASKS = ("VideoUnmaskSwap", "VideoPlaceOrder")
 
 
+def in_split(builder, episode: int) -> None:
+    """Raise for an episode the split does not have: for an index without metadata RoboMME silently builds a default,
+    unseeded scene (VideoUnmaskSwap val has 50; episodes 50-59 all gave one identical scene, pod 2026-10-30)."""
+    try:
+        n = int(builder.get_episode_num())
+    except Exception:  # noqa: BLE001 (an older robomme without the call: cannot check, say so once per call)
+        print("warning: robomme has no get_episode_num(); episode range not checked", file=sys.stderr)
+        return
+    if not 0 <= episode < n:
+        raise ValueError(f"episode {episode} is not in this split ({n} episodes)")
+
+
 def make_env(task: str, episode: int, dataset: str = "val"):
     """closed_loop_pod's env (waypoint, 1300 steps), without perception's extras."""
     from robomme.env_record_wrapper import BenchmarkEnvBuilder
-    return BenchmarkEnvBuilder(env_id=task, dataset=dataset, action_space="waypoint", gui_render=False,
-                               max_steps=1300).make_env_for_episode(episode)
+    b = BenchmarkEnvBuilder(env_id=task, dataset=dataset, action_space="waypoint", gui_render=False, max_steps=1300)
+    in_split(b, episode)
+    return b.make_env_for_episode(episode)
 
 
 def _np(x):
