@@ -2248,3 +2248,44 @@ failures point to HANDOFF_EXECUTION option 3 (skills) or option 4 (KB as complet
 - **Pointing (fixed now):** labels 2–5 that a deterministic pick (grasp height from the KB centre, fixed lift) would
   remove point to option 3; label 3 (and a "done" after a missed grasp) points to option 4; label 1 is the planner's
   and points to neither; label 2 is a decision / memory error and points to neither. n = 7: a direction only.
+- **Read (2026-10-30; `scripts/read_failures.py` on `data/cl_pod/astra_pilot/`, 30 result.json from the pod's Jupyter;
+  no LLM call).** Reference from the 23 successes: lowest lift of the first right pick 0.13 m, of the second 0.16 m.
+  The rule's label is reported as computed; the raw steps of every failure were then read by hand, because most later
+  closes are flagged (> 3 cm from every reset position: the bins had been moved).
+
+| episode | goal picks | rule label | what the steps show | layer | points to |
+|---|---|---|---|---|---|
+| K ep 0 | 1 | wrong object at close | first move to bin_1 (KB's wrong bin, as the call-out found), lifted → fail | memory | neither (a KB error) |
+| H ep 1 | 2 | grasp missed (inferred) | pick 1 right (bin_1 to 0.19 m), then **opened at 0.16 m directly above bin_2**, dropping bin_1 onto it; closed there and lifted → fail (most likely bin_1 again) | 3 (put-down) | option 3 |
+| R ep 3 | 2 | grasp missed (inferred) | pick 1 right (bin_2, four closes, to 0.18 m), put down at (−0.23, −0.24); **then re-grasped and lifted the same bin_2** → fail; bin_0 never tried | 3 / progress | option 4 |
+| R ep 7 | 2 | planning failure | pick 1: closed at bin_0 but lifted only to 0.085 m and opened; repeated closes pushed bin_0 out to x ≈ 0.20; 5 answers rejected by our reach check; RRT* exhausted | 2 (grasp / lift) | option 3 |
+| K ep 8 | 2 | wrong object at close | pick 1 right (bin_1 to 0.23 m, put down); pick 2 bin_0 **lifted only to 0.14 m (< 0.16) and released**; then went back and lifted bin_1 again → fail | 3 (lift) + progress | options 3 and 4 |
+| R ep 8 | 2 | grasp missed (inferred) | pick 1 right (bin_1 to 0.23 m, put down); **then hovered over and re-grasped bin_1 three times and lifted it** → fail; bin_0 never tried | progress | option 4 |
+| R ep 9 | 2 | planning failure | pick 1 (bin_1) lifted to 0.17 m and **released in the air**; bin_1 landed near x ≈ 0.19; the model kept returning to bin_1, not bin_2 (2 answers rejected by reach); RRT* exhausted | 3 (put-down) + progress | options 3 and 4 |
+
+- **The rule mislabelled three episodes** (H ep 1, R ep 3, R ep 8 as "grasp missed"): its re-grasp clause (added to
+  spare a re-lift after a slip) also spared re-lifting the first bin **after it had been put down**. A better clause:
+  re-lifting the just-picked object counts as wrong once an open has put it down. Not applied retroactively; the
+  table keeps the rule's labels next to the hand reading.
+- **What the 7 show (n = 7, one model, one task: a direction):**
+  - **Two-pick goals are where Astra fails:** single-pick episodes (0, 2, 4, 5, 6) 14 / 15 success, the one failure
+    the KB's wrong bin; two-pick episodes (1, 3, 7, 8, 9) 9 / 15. Six of the seven failures are in two-pick goals.
+  - **The most common failure is losing track of progress:** in 4 episodes (R ep 3, K ep 8, R ep 8, R ep 9) the model,
+    after a successful first pick, went back to the first bin instead of the second. No failure is a premature
+    "done": none ended `declared_complete`.
+  - **Execution failures are put-downs and low lifts, not grasps at the wrong height:** dropping a bin from 0.16–0.17 m
+    (H ep 1, R ep 9), lifting to 0.085 m and 0.14 m (R ep 7, K ep 8 pick 2). A bin dropped or pushed toward x ≈ 0.2
+    ends in reach rejections and an RRT* failure (R ep 7, 9): both `env_error`s are consequences, not the planner's
+    fault alone.
+- **Which option:**
+  - **Option 4, reshaped:** the evidence is not for a "done?" verifier (no premature done) but for **progress facts
+    against the goal**: "pick 1 of 2 done: bin_1 lifted to 0.23 m and put down at (x, y); next: the container hiding
+    green = bin_0 at (x, y)". 4 of 7 failures. This is a memory contribution (fits claims 1–2). K already shows its
+    own decisions (self_memory), yet K ep 8 still went back to bin_1: decisions alone do not say which subgoal is done,
+    so the section must be phrased against the goal's sequence.
+  - **Option 3** would remove the put-down and lift failures (4 of 7: H ep 1, R ep 7, K ep 8, R ep 9): a fixed lift
+    (≥ the successes' 0.16 m, or the env's threshold once read) and a put-down that lowers to the table at a free spot
+    away from the other bins and the reach limit. A separate system claim, as HANDOFF_EXECUTION says.
+  - **Neither** for K ep 0 (the KB's own wrong bin: a perception / memory error to read in that episode's view).
+  - Overlap: K ep 8 and R ep 9 count for both. **Order suggested by this reading:** option 4's progress section first
+    (cheap, every memory arm, fits the claims), then option 3 as the separate system.
