@@ -2787,16 +2787,20 @@ temperature, seed, reasoning or provider is sent (OpenRouter routes; the provide
 | qwen/qwen3.6-27b | small | 27 dense | 0.32 / 3.20 | 32000 |
 | google/gemini-4-argon | strong | not published | 2.00 / 10.00 (until 2026-11-30) | 32000 |
 | openai/gpt-6-sol | strong | not published | 2.00 / 10.00 | 32000 |
+| anthropic/claude-opus-5.5 | strong (added 2026-10-30, user) | not published | 4.00 / 20.00 | 32000 |
 | openai/gpt-6-astra | strong (reference; pilot) | not published | 10.00 / 50.00 | 32000 |
 
 Parameter counts from each model's OpenRouter description / Hugging Face id. Not chosen: Kimi K2.6 (1T total, not
 mid-size), Mistral Small 4 (119B, active not published), Gemini 3.5 Flash-Lite / 3.8 Flash (closed, size unknown;
-the backup if the open group fails), Claude Opus 5.5 (a third strong model would pass the $10 cap).
+the backup if the open group fails). Claude Opus 5.5 was first left out for the $10 cap; added with the cap at $15
+(user, 2026-10-30). OpenRouter models API, 2026-10-30: `anthropic/claude-opus-5.5`, input text / image / file, $4 /
+$20 per M (cache read $0.20, write $5), max output 128,000 (so max_tokens 32000), context 1,000,000.
 
-**Run.** Models run cheapest first under one total cap (`--max-usd`, default and agreed cap $10); a call the cap
+**Run.** Models run cheapest first under one total cap (`--max-usd`, default and agreed cap **$15**, user
+2026-10-30; was $10); a call the cap
 cannot cover is recorded as `budget` and not scored. Estimate (request ≈ 1.85–2.0k tokens by characters / 4; output
 unknown: 0.3k per call as Astra's pilot K, up to 3k for thinking models): the six small models $0.1–0.7 each
-(≈ $2 together, ≈ $5 if they all think long); Sol ≈ $0.5–2.4; Argon ≈ $1–2.5; Astra ≈ $3.5 (pilot: $0.05 per K
+(≈ $2 together, ≈ $5 if they all think long); Sol ≈ $0.5–2.4; Argon ≈ $1–2.5; Opus 5.5 ≈ $2–10 (2k in + 0.3–3k out per call, 70 calls); Astra ≈ $3.5 (pilot: $0.05 per K
 call). The total may reach the cap at Astra, which runs last; if so, Astra is run with `--passes 1` (its pilot exists).
 **Not run: the paid run waits for the user's and the orchestrator's go.**
 
@@ -2805,9 +2809,13 @@ reason, z, gripper, xy distance, $, seconds, tokens, provider, the answer), summ
 stage, overall, JSON-valid rate, agreement between the two passes per state, $ and seconds per call; every failure with
 the model's own text).
 
-**Reading (proposed, for the user to confirm before the run):** a small model is a candidate for claim 1 if its pass
-rate over all 70 calls is ≥ 0.8, its JSON-valid rate ≥ 0.95 and no stage is below 0.6; among candidates the one with
-the fewest active parameters, then the cheapest. The strong group's best overall pass rate is the ceiling the small
+**Choice rule (decided, user 2026-10-30; was "proposed"):** computed over stages 1–6 only, 60 calls per model (5
+episodes × 6 stages × 2 passes); **stage 7 (done) is reported on its own and never enters the choice.** A small model
+is a candidate for claim 1 if, over those 60 calls, its pass rate is ≥ 0.8, its JSON-valid rate ≥ 0.95, and each of
+stages 1–6 has a pass rate ≥ 0.6. Among candidates: the fewest active parameters first, then the cheapest (mean $ per
+call in this screen). Code: `screen_rules.selection` / `screen_rules.choose`; each model's summary.json carries
+`pass_1_6`, `valid_json_1_6`, `stage_min_1_6`, `stage7_done`, `meets`; the run writes `choice.json`. Calls the cap
+or the API stopped are not answered and not counted (reported as errors). The strong group's best overall pass rate is the ceiling the small
 models are read against. n = 5 episodes: a screen, then the closed loop decides.
 
 **Limits, stated now:** no images; open loop (an answer is never executed, so recovery is not tested); clean memory
@@ -2818,3 +2826,8 @@ the grasp holds); yaw not scored; one task.
   each is scored against); `--mock` (canonical answers, plus prose at the first episode's stage 2 and a premature null
   at the second's stage 3): pass 0.943 = 33 / 35 per pass, JSON-valid 0.971, agreement 1.0, as built in. `make check`
   passes.
+- **Decided before the run (user, 2026-10-30):** the choice rule above (stages 1–6, stage 7 apart); Opus 5.5 added
+  to the strong group; total cap $15, Astra still last. `docs/GOALS.md` is not changed now: after the screen's
+  results, a draft of its change goes to the user for confirmation. The `pick_up` z_low question (RoboMME grasps
+  containers at 0.062 > 0.05) belongs to the two-pick window; `actions.py` is not touched here. Mock run after the
+  change: pass_1_6 0.933, valid_json_1_6 0.967, stage_min_1_6 0.8, stage7_done 1.0, meets (as built in). **Not run.**

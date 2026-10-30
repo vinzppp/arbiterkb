@@ -73,3 +73,16 @@ def test_budget_rows_are_not_scored(items, tmp_path):
     rows = M.run_model(cand, items[:3], 1, 0.0, R.mock_transport(items), tmp_path)
     assert all(r["error"] == "budget" and r["passed"] is None for r in rows)
     assert M.summarize(rows, cand)["answered"] == 0
+
+
+def test_choice_uses_stages_1_to_6_and_reports_stage_7_apart():
+    rows = [{"stage": s, "passed": int(s != 7), "valid_json": 1} for s in range(1, 8) for _ in range(10)]
+    sel = R.selection(rows)
+    assert sel["calls_1_6"] == 60 and sel["pass_1_6"] == 1.0 and sel["stage7_done"] == 0.0 and sel["meets"]
+    low = [{**r, "passed": 0} if r["stage"] == 3 and i % 10 < 5 else r for i, r in enumerate(rows)]  # stage 3: 0.5
+    assert not R.selection(low)["meets"]
+    s = lambda m, g, act, usd, meets: {"model": m, "group": g, "active_B": act, "usd_per_call": usd, "meets": meets}  # noqa: E731
+    assert R.choose([s("big", "small", 17, 0.001, True), s("cheap", "small", 10, 0.002, True),
+                     s("fail", "small", 3, 0.0001, False), s("ceil", "strong", None, 0.1, True)])["model"] == "cheap"
+    assert R.choose([s("a", "small", 10, 0.002, True), s("b", "small", 10, 0.001, True)])["model"] == "b"
+    assert R.choose([s("x", "strong", None, 0.1, True)]) is None

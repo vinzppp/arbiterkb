@@ -11,7 +11,7 @@ reasoning or provider sent); every state twice, each pass with its own disk cach
 
   python scripts/model_screen.py --print                      # the first episode's seven requests; no call
   python scripts/model_screen.py --mock                       # the whole scoring path with a fake model; no call
-  python scripts/model_screen.py --call --max-usd 10 [--models id,id]
+  python scripts/model_screen.py --call --max-usd 15 [--models id,id]
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from run import git_state, load_params  # noqa: E402
-from screen_rules import BIN_Z, SCRIPT_GRASP_Z, STAGES, mock_transport, score  # noqa: E402
+from screen_rules import BIN_Z, SCRIPT_GRASP_Z, STAGES, choose, mock_transport, score, summarize  # noqa: E402
 from two_pick import Robot, plan  # noqa: E402
 from arbiter_kb.closed_loop import Memory  # noqa: E402
 from arbiter_kb.controller import system_prompt, user_content  # noqa: E402
@@ -56,6 +56,7 @@ CANDIDATES = [
     ("qwen/qwen3.6-27b", "small", 27, 27, 0.32, 3.20, 32000),
     ("google/gemini-4-argon", "strong", None, None, 2.00, 10.00, 32000),
     ("openai/gpt-6-sol", "strong", None, None, 2.00, 10.00, 32000),
+    ("anthropic/claude-opus-5.5", "strong", None, None, 4.00, 20.00, 32000),  # images in; max output 128k
     ("openai/gpt-6-astra", "strong", None, None, 10.00, 50.00, 32000)]
 
 
@@ -161,26 +162,6 @@ def run_model(cand: tuple, items: list[dict], passes: int, cap: float, transport
     return rows
 
 
-def summarize(rows: list[dict], cand: tuple) -> dict:
-    ok = [r for r in rows if r["error"] is None]
-    by = {(r["episode"], r["stage"]): {} for r in ok}
-    for r in ok:
-        by[(r["episode"], r["stage"])][r["pass"]] = r["passed"]
-    both = [v for v in by.values() if len(v) == 2]
-    model, group, total, active, pin, pout, _ = cand
-    return {"model": model, "group": group, "total_B": total, "active_B": active, "usd_per_M": [pin, pout],
-            "calls": len(rows), "answered": len(ok), "errors": len(rows) - len(ok),
-            "stage_pass": {f"{s}_{n}": _avg([r["passed"] for r in ok if r["stage"] == s]) for s, n in STAGES.items()},
-            "pass_all": _avg([r["passed"] for r in ok]), "valid_json": _avg([r["valid_json"] for r in ok]),
-            "agreement": _avg([int(len(set(v.values())) == 1) for v in both]), "pairs": len(both),
-            "usd_per_call": _avg([r["usd"] for r in ok], 5), "s_per_call": _avg([r["seconds"] for r in ok], 2),
-            "usd_total": round(sum(r["usd"] for r in rows), 4)}
-
-
-def _avg(x: list, nd: int = 3) -> float | None:
-    return round(float(np.mean(x)), nd) if x else None
-
-
 def write(out: Path, rows: list[dict], summary: dict) -> None:
     out.mkdir(parents=True, exist_ok=True)
     with open(out / "rows.csv", "w", newline="") as f:
@@ -220,7 +201,7 @@ def main() -> None:
     ap.add_argument("--mock", action="store_true")
     ap.add_argument("--call", action="store_true")
     ap.add_argument("--models", default="", help="comma-separated ids (default: every candidate)")
-    ap.add_argument("--max-usd", dest="max_usd", type=float, default=10.0, help="total cap over all models")
+    ap.add_argument("--max-usd", dest="max_usd", type=float, default=15.0, help="total cap over all models")
     ap.add_argument("--run", default="screen1", help="results/runs/model_screen/<run>/<model>/")
     a = ap.parse_args()
     params, src = load_params(), SyntheticSource(swap_steps="mix", lane_offset="mix")
@@ -239,11 +220,16 @@ def main() -> None:
             "episodes": sorted({x["episode"] for x in items})}, 0.0
     (OUT / a.run).mkdir(parents=True, exist_ok=True)
     (OUT / a.run / "meta.json").write_text(json.dumps(meta, indent=1))
+    sums = []
     for cand in chosen:
         rows = run_model(cand, items, a.passes, a.max_usd - spent)
         spent += sum(r["usd"] for r in rows)  # replayed calls report their original cost: a resume counts them
         write(OUT / a.run / cand[0].replace("/", "__"), rows, s := summarize(rows, cand))
-        print(json.dumps({k: s[k] for k in ("model", "pass_all", "valid_json", "agreement", "usd_total")}))
+        sums.append(s)
+        print(json.dumps({k: s[k] for k in ("model", "pass_1_6", "valid_json_1_6", "stage_min_1_6", "stage7_done",
+                                            "meets", "usd_total")}))
+    (OUT / a.run / "choice.json").write_text(json.dumps({"chosen": (choose(sums) or {}).get("model"), "models": sums},
+                                                         indent=1))
 
 
 if __name__ == "__main__":

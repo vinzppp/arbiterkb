@@ -130,6 +130,53 @@ def canonical(item: dict) -> str:
                        "target": item["A"] if s <= 4 else item["B"], "cites": []})
 
 
+SELECT_STAGES = (1, 2, 3, 4, 5, 6)  # stage 7 (done) is reported on its own, never in the choice (user, 2026-10-30)
+SELECT = {"pass": 0.8, "valid_json": 0.95, "stage_min": 0.6}  # NOTES "Model screen": the choice rule, decided
+
+
+def selection(ok: list[dict]) -> dict:
+    """The choice rule's numbers over the answered calls of stages 1-6 (5 episodes x 6 stages x 2 passes = 60), and
+    stage 7 apart. `meets`: pass >= 0.8, JSON-valid >= 0.95 and every stage 1-6 >= 0.6."""
+    sel = [r for r in ok if r["stage"] in SELECT_STAGES]
+    per = {s: [r["passed"] for r in sel if r["stage"] == s] for s in SELECT_STAGES}
+    mean = lambda x: round(float(np.mean(x)), 3) if x else None  # noqa: E731
+    out = {"calls_1_6": len(sel), "pass_1_6": mean([r["passed"] for r in sel]),
+           "valid_json_1_6": mean([r["valid_json"] for r in sel]),
+           "stage_min_1_6": min((mean(v) for v in per.values() if v), default=None),
+           "stage7_done": mean([r["passed"] for r in ok if r["stage"] == 7])}
+    out["meets"] = bool(sel) and all(v is not None for v in out.values()) and out["pass_1_6"] >= SELECT["pass"] and \
+        out["valid_json_1_6"] >= SELECT["valid_json"] and out["stage_min_1_6"] >= SELECT["stage_min"]
+    return out
+
+
+def choose(summaries: list[dict]) -> dict | None:
+    """Among the small group's models that meet the rule: fewest active parameters (published), then the lowest mean $
+    per call in the screen. None if none meets it."""
+    ok = [s for s in summaries if s["group"] == "small" and s["meets"]]
+    return min(ok, key=lambda s: (s["active_B"] if s["active_B"] is not None else float("inf"),
+                                  s["usd_per_call"] or 0.0)) if ok else None
+
+
+def summarize(rows: list[dict], cand: tuple) -> dict:
+    ok = [r for r in rows if r["error"] is None]
+    by = {(r["episode"], r["stage"]): {} for r in ok}
+    for r in ok:
+        by[(r["episode"], r["stage"])][r["pass"]] = r["passed"]
+    both = [v for v in by.values() if len(v) == 2]
+    model, group, total, active, pin, pout, _ = cand
+    return {"model": model, "group": group, "total_B": total, "active_B": active, "usd_per_M": [pin, pout],
+            "calls": len(rows), "answered": len(ok), "errors": len(rows) - len(ok),
+            "stage_pass": {f"{s}_{n}": _avg([r["passed"] for r in ok if r["stage"] == s]) for s, n in STAGES.items()},
+            "pass_all": _avg([r["passed"] for r in ok]), "valid_json": _avg([r["valid_json"] for r in ok]),
+            "agreement": _avg([int(len(set(v.values())) == 1) for v in both]), "pairs": len(both),
+            "usd_per_call": _avg([r["usd"] for r in ok], 5), "s_per_call": _avg([r["seconds"] for r in ok], 2),
+            "usd_total": round(sum(r["usd"] for r in rows), 4), **selection(ok)}
+
+
+def _avg(x: list, nd: int = 3) -> float | None:
+    return round(float(np.mean(x)), nd) if x else None
+
+
 def mock_transport(items: list[dict]):
     """A fake OpenRouter for the scoring path: the canonical answer to every request, except prose at the first
     episode's stage 2 and a premature "done" at the second episode's stage 3 (both must score 0)."""
