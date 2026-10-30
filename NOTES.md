@@ -2153,3 +2153,5 @@ Read from the pod session's report (pasted by the user); the files stay on the p
     **VideoPlaceOrder's K arm is not run.** The pod session called circle. "clearly best", which is true of found and
     coverage but not the rule's verdict. Changing the rule now (e.g. allowing one lost cube in five) would be a change
     after seeing the data; it is the user's decision and would be stated as such.
+- **Decided (user, 2026-10-30): the rule stands.** circle. and disc. are out, no phrase qualifies, and VideoPlaceOrder's
+  K arm is not run; VideoPlaceOrder compares H and R only. The rule is not changed after seeing the data.
