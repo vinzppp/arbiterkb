@@ -85,7 +85,8 @@ def below(kb: KB, obj: str, xyz: np.ndarray, p: RuleParams) -> str | None:
     a hidden cube's pose is its container's (R2), so a container put back would land "on" its own cube."""
     cands = [(float(np.linalg.norm(o.pose.value[:2] - xyz[:2])), o.id) for o in kb.objects.values()
              if o.id != obj and o.pose.value is not None and o.pose.value[2] < xyz[2]
-             and o.visibility.value in ("visible", "held")]
+             and (o.visibility.value in ("visible", "held") or o.cls == "target")]  # a flat target does not move; the
+    # cube being put on it can hide it from the front camera
     cands = [c for c in cands if c[0] < p.r_on]
     return min(cands)[1] if cands else None
 

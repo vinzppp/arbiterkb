@@ -82,10 +82,14 @@ class LLM:
         self.usage = dict.fromkeys(USAGE, 0) | {"usd": 0.0, "cached_usd": 0.0, "seconds": 0.0}
         self._lock, self._inflight, self._price = threading.Lock(), 0, 0.0
 
-    def body(self, messages: list, schema: dict | None, temperature: float, seed: int, max_tokens: int,
+    def body(self, messages: list, schema: dict | None, temperature: float | None, seed: int | None, max_tokens: int,
              reasoning: dict | None = None, sampling: dict | None = None) -> dict:
+        """temperature None: left out, the model's API default (2610.17350 ran GPT-6-Astra on its defaults)."""
         b = {"model": self.model, "messages": messages, "temperature": temperature, "seed": seed,
              "max_tokens": max_tokens, "usage": {"include": True}, **(sampling or {})}
+        for k in ("temperature", "seed"):  # None: left out (Anthropic's endpoints take no seed)
+            if b[k] is None:
+                del b[k]
         if self.provider:
             b["provider"] = self.provider
         if reasoning or self.reasoning:
@@ -99,7 +103,7 @@ class LLM:
         """The assistant's text. Cached; counted; refuses a call the budget cannot cover."""
         return self.call(messages, schema, temperature, seed, max_tokens, reasoning)[0]
 
-    def call(self, messages: list, schema: dict | None = None, temperature: float = 0.0, seed: int = 0,
+    def call(self, messages: list, schema: dict | None = None, temperature: float | None = 0.0, seed: int | None = 0,
              max_tokens: int = 600, reasoning: dict | None = None, sampling: dict | None = None) -> tuple[str, dict]:
         """(text, this call's usage). Thread-safe; `reasoning` overrides the client's for this call; `sampling` adds
         e.g. top_p / top_k (none by default, so earlier cache keys are unchanged)."""

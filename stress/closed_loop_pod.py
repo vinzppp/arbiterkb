@@ -26,12 +26,13 @@ SG_PILOT = Path(os.environ.get("SG_PILOT_DIR", "/workspace/sg/notebooks/pilot"))
 sys.path[:0] = [str(SG_PILOT), str(ROOT), str(ROOT / "scripts"), str(ROOT / "stress")]
 
 from arbiter_kb import ledger  # noqa: E402
-from arbiter_kb.closed_loop import STRIDE, Memory, run  # noqa: E402
-from arbiter_kb.llm import LLM  # noqa: E402
+from arbiter_kb.closed_loop import STRIDE, Limit, Memory, run  # noqa: E402
+from arbiter_kb.llm import LLM, BudgetExceeded  # noqa: E402
 from arbiter_kb.sources.online import OnlineObs  # noqa: E402
 from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem  # noqa: E402
 
-MODEL = "qwen/qwen3.6-35b-a3b"  # takes images (OpenRouter); every arm uses it
+MODEL = "qwen/qwen3.6-35b-a3b"  # takes images (OpenRouter); every arm uses it unless --model
+PROVIDER = {"qwen/": "CoreWeave", "openai/": "OpenAI"}  # --provider auto; others untested, name one
 EFFORT = {"default": None, "off": {"enabled": False}}
 
 
@@ -90,9 +91,16 @@ def episode(task: str, ep: int, arm: str, a, llm, params) -> dict:
         p = Perceive(info["task_goal"][0], a.vocab, ep, info["front_camera_intrinsic"])
         memory = Memory(arm, ArbiterKBSystem(params) if arm != "R" else None, p)
     env = make_env(task, ep, a.dataset)
-    sampling = {"top_p": a.top_p, "top_k": a.top_k, "presence_penalty": a.presence_penalty}
-    row = run(env, arm, lambda m, eff: llm.call(m, temperature=a.temperature, max_tokens=a.max_tokens, reasoning=eff,
-                                                sampling=sampling), memory, EFFORT[a.effort])
+    qwen = a.model.startswith("qwen/")  # Qwen's thinking settings; any other model runs on its API defaults
+    sampling = {"top_p": a.top_p, "top_k": a.top_k, "presence_penalty": a.presence_penalty} if qwen else None
+    start = llm.usage["usd"]
+
+    def ask(m, eff):
+        if llm.usage["usd"] - start >= a.max_usd_episode:  # one runaway episode must not spend the run's budget
+            raise Limit("episode_usd")
+        return llm.call(m, temperature=a.temperature if qwen else None, seed=0 if qwen else None,
+                        max_tokens=a.max_tokens, reasoning=eff, sampling=sampling)
+    row = run(env, arm, ask, memory, EFFORT[a.effort])
     env.close()
     return {**row, "task": task, "episode": ep, "dataset": a.dataset, "effort": a.effort, "vocab": a.vocab}
 
@@ -108,9 +116,12 @@ def main() -> None:
     ap.add_argument("--vocab", choices=["open", "scene"], default="open")
     ap.add_argument("--out", default="/workspace/cl/pilot")
     ap.add_argument("--max-usd", dest="max_usd", type=float, default=5.0)
-    ap.add_argument("--provider", default="CoreWeave",  # one for every arm; DeepInfra takes at most 30 images (H: ~150);
-                    help="OpenRouter provider, no fallbacks")  # Parasail took 160 but was rate-limited for minutes;
-    # CoreWeave took 160, answered fastest and gave no 429 in the smoke run
+    ap.add_argument("--max-usd-episode", dest="max_usd_episode", type=float, default=3.0,
+                    help="an episode that has spent this much ends as limit:episode_usd")
+    ap.add_argument("--model", default=MODEL)
+    ap.add_argument("--provider", default="auto",  # one for every arm; DeepInfra takes at most 30 images (H: ~150);
+                    help="OpenRouter provider, no fallbacks; auto: by the model's family (PROVIDER)")  # Parasail took
+    # 160 but was rate-limited for minutes; CoreWeave took 160, answered fastest and gave no 429 in the smoke run
     ap.add_argument("--max-tokens", dest="max_tokens", type=int, default=32000,  # 4000 cut H's and R's reasoning;
                     help="completion cap per call, every arm alike")  # 16000 cut R's on VideoPlaceOrder (no loop, smoke run)
     # Qwen's recommended thinking-mode sampling, every arm alike: at temperature 0 (greedy) R's and K's reasoning looped
@@ -121,12 +132,17 @@ def main() -> None:
     ap.add_argument("--presence-penalty", dest="presence_penalty", type=float, default=1.5,  # loop probe, smoke run:
                     help="Qwen's anti-repetition setting")  # 0 / 15 first turns looped with it, 3 / 15 without
     a = ap.parse_args()
+    if a.provider == "auto":
+        a.provider = next((v for k, v in PROVIDER.items() if a.model.startswith(k)), None) or \
+            sys.exit(f"--provider needed for {a.model}")
+    if not a.model.startswith("qwen/"):  # recorded as sent: the API defaults
+        a.temperature = a.top_p = a.top_k = a.presence_penalty = None
     params, (commit, dirty) = load_params(), git_state()
     if a.dataset == "test":
         if not ledger.was_frozen(params.hash()):
             sys.exit("freeze params first (run.py --freeze)")
         ledger.record("READ", params.hash(), f"RoboMME test closed loop {a.tasks} {a.episodes} {a.arms}")
-    llm = LLM(model=MODEL, max_usd=a.max_usd, provider={"order": [a.provider], "allow_fallbacks": False,
+    llm = LLM(model=a.model, max_usd=a.max_usd, provider={"order": [a.provider], "allow_fallbacks": False,
                                                          "require_parameters": True})
     for task in a.tasks.split(","):
         for ep in a.episodes:
@@ -137,10 +153,16 @@ def main() -> None:
                 d.mkdir(parents=True, exist_ok=True)
                 try:
                     row = episode(task, ep, arm, a, llm, params)
+                except BudgetExceeded as ex:  # the run's budget: every later episode would fail the same way
+                    print(json.dumps({"task": task, "episode": ep, "arm": arm, "stopped": repr(ex)}), flush=True)
+                    return print("usage", llm.usage)
                 except Exception as ex:  # recorded unscored, rerun on resume (theirs)
                     row = {"task": task, "episode": ep, "arm": arm, "status": "harness_error", "success": None,
                            "error": repr(ex)}
-                row.update(commit=commit, dirty=dirty, params_hash=params.hash(), model=MODEL, provider=a.provider,
+                if row.get("status") == "limit":  # a spend cap, not the policy: unscored (H costs most, so a scored
+                    row["success"] = None  # cap would favour the memory arms for a budget reason)
+                row.update(commit=commit, dirty=dirty, params_hash=params.hash(), model=a.model, provider=a.provider,
+                           max_usd_episode=a.max_usd_episode,
                            max_tokens=a.max_tokens, temperature=a.temperature, top_p=a.top_p, top_k=a.top_k,
                            presence_penalty=a.presence_penalty)
                 if row.get("status") != "harness_error":

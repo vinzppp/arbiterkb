@@ -15,7 +15,7 @@ class ObjObs:
     under corruption; positions are always the truth of whatever the track is following."""
 
     id: str  # e.g. "bin_0", "cube_green"
-    cls: str  # "container" | "cube"
+    cls: str  # "container" | "cube" | "target" (a flat place a cube goes onto; it hides nothing)
     visible: bool
     xyz: np.ndarray | None  # world metres; None if not visible
     uv: np.ndarray | None  # front-image pixel (u = column, v = row); None if not visible / no camera

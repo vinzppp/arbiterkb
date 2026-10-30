@@ -39,6 +39,8 @@ def open_config(sg, goal: str) -> tuple[dict, list[dict]]:
     classes = open_vocabulary(items)
     cfg["task"].update(classes=classes, num_objects=len(classes), slot_by_class={i: i + 1 for i in range(len(classes))})
     cfg["perception"]["num_processors"] = len(classes)
+    # the first slots keep sg_pilot's area floor also as "target." slots: without it spare slots seed on cubes
+    # (sg_pilot.py), and the val pilot's "bins" on VideoPlaceOrder were the targets, so targets pass it
     return cfg, items
 
 

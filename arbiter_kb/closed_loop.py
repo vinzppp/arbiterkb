@@ -35,6 +35,10 @@ NOOP_TEXT = ("The last action executed no steps: the robot did not move and no t
 TERMINAL = ("success", "fail", "timeout", "error")
 
 
+class Limit(Exception):
+    """Raised by `ask` to end the episode as a failure, "limit:<reason>" (the pod runner's per-episode spend cap)."""
+
+
 def frame_indices(n: int, stride: int = STRIDE) -> list[int]:
     """One frame in every `stride`, plus the last (current) frame (theirs)."""
     return sorted(set(range(0, n, stride)) | {n - 1})
@@ -143,7 +147,10 @@ class Episode:
         user = self.convo if self.arm == "H" else [{"role": "user", "content": _fresh(self.arm, self.goal, mem,
                                                                                          self.obs, self.info) + self.note}]
         self.note = []
-        text, u = self.ask([self.sys_msg] + user, self.effort)
+        try:
+            text, u = self.ask([self.sys_msg] + user, self.effort)
+        except Limit as e:
+            return self.finish("limit", f"limit:{e}")
         self.calls, answer = self.calls + 1, parse_answer(text)
         self.usage.append(u)
         action, kind = to_action(answer)

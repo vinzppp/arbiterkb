@@ -124,3 +124,12 @@ def test_r_targets_come_from_the_frames_and_never_seen_slots_are_left_out():
     assert row["success"] and row["model_calls"] == 1
     log = json.dumps(sent[0][1]["content"])
     assert "bin_0" in log and "cube_s9" not in log
+
+
+def test_a_limit_raised_by_ask_ends_the_episode_as_a_failure():
+    from arbiter_kb.closed_loop import Limit
+
+    def ask(msgs, effort):
+        raise Limit("episode_usd")
+    row = run(FakeEnv([]), "H", ask)
+    assert row["end_reason"] == "limit:episode_usd" and not row["success"] and row["model_calls"] == 0

@@ -43,3 +43,10 @@ def test_controller_view_marks_task_items():
     others = [c for c in ("cube_red", "cube_green", "cube_blue") if c != target]
     assert not any("(task item)" in line for line in v.splitlines() for c in others if line.strip().startswith(f"[{c}]"))
 
+
+
+def test_a_placing_goal_looks_for_targets_not_containers():
+    v = open_vocabulary(parse_task_items("place the red cube on the first target it was previously placed on"))
+    assert v[:GENERIC_SLOTS["container"]] == ["target."] * GENERIC_SLOTS["container"] and "container." not in v
+    assert open_vocabulary(parse_task_items("pick up the container that hides the green cube"))[0] == "container."
+    assert open_vocabulary(parse_task_items("put the cube on the blue target"))[0] == "target."

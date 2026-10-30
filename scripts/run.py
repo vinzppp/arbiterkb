@@ -60,7 +60,8 @@ def git_state() -> tuple[str, bool | None]:
         return "no-git", None
 
 
-PROMPT_FILES = ("controller", "views", "action_view", "narrative", "goal_counter", "keyframe", "ask", "epistemic", "memtool", "self_memory", "closed_loop")
+PROMPT_FILES = ("controller", "views", "action_view", "narrative", "goal_counter", "keyframe", "ask", "epistemic", "memtool", "self_memory", "closed_loop",
+                "task_items", "sources/online")
 
 
 def prompts_hash() -> str:

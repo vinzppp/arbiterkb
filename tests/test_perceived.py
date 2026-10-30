@@ -103,3 +103,37 @@ def test_online_names_generic_cube_slots_apart():
     from arbiter_kb.sources.online import OnlineObs
     names = [oid for oid, _, _ in OnlineObs(["container."] * 2 + ["green cube.", "cube.", "cube."], 2).objects()]
     assert names == ["bin_0", "bin_1", "cube_green", "cube_s3", "cube_s4"]
+
+
+def test_online_cube_placed_on_a_target_is_on_it_not_inside():
+    """VideoPlaceOrder (val pilot): with "container." slots the KB read a cube on a target as hidden in a bin."""
+    from arbiter_kb.sg_compat import F_HIDDEN, F_U, F_X
+    from arbiter_kb.sources.online import OnlineObs
+    from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
+    from arbiter_kb.params import Params
+    from arbiter_kb.task_items import open_vocabulary, parse_task_items
+    from arbiter_kb.types import EpisodeMeta
+    goal = "place the red cube on the first target it was previously placed on"
+    cls = open_vocabulary(parse_task_items(goal))
+    on, kb_sys = OnlineObs(cls, 0), ArbiterKBSystem(Params())
+    kb_sys.reset(EpisodeMeta("t", 0, "test", goal, on.objects(), None, None))
+    ci = cls.index("red cube.")
+
+    def row(cube):
+        r = np.full((len(cls), 8), np.nan, np.float32)
+        r[:, F_HIDDEN] = 1
+        for s, p in ((0, (0.1, 0.1, 0.005)), (ci, cube)):
+            r[s, F_HIDDEN], r[s, F_U:F_U + 2], r[s, F_X:F_X + 3] = 0, (100, 100), p
+        return r
+    at, up = (0, -0.1, 0.02), (0, -0.1, 0.1)
+    path = [(at, up, 0.08)] * 12 + [(at, at, 0.08)] * 3 + [(at, at, 0.02)] * 3
+    path += [((0, -0.1 + 0.02 * k, 0.12),) * 2 + (0.02,) for k in range(11)]
+    on_t = (0.1, 0.1, 0.03)
+    path += [(on_t, on_t, 0.02)] * 3 + [(on_t, on_t, 0.08)] * 3 + [(on_t, (0.1, 0.1, 0.15), 0.08)] * 4
+    for cube, ee, w in path:
+        kb_sys.step(on.step(row(cube), ee, w))
+    kb = kb_sys.kb
+    assert [(e.type, e.args) for e in kb.events] == [("grasp", ("cube_red",)), ("place", ("cube_red", "target_0"))]
+    assert kb.objects["cube_red"].visibility.value == "visible" and not kb.inside("cube_red")
+    from arbiter_kb.sources.online import OnlineObs as O  # a coloured target is a target, not a cube
+    assert [n[:2] for n in O(["blue target.", "blue cube."], 0).objects()] == [("target_0", "target"), ("cube_blue", "cube")]

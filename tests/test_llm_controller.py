@@ -179,3 +179,12 @@ def test_cites_written_as_one_string_or_in_brackets_are_split():
     assert C.check(act, {"cites": "e32,e37,o49:bin_2"}, known) == []
     assert C.check(act, {"cites": ["[o74:bin_2]"]}, known) == []
     assert C.check(act, {"cites": ["e99"]}, known) == ["unknown cite 'e99'"]
+
+
+def test_temperature_none_is_left_out_for_the_api_default():
+    from arbiter_kb.llm import LLM
+    c = LLM(model="openai/gpt-6-astra", provider=None)
+    assert "temperature" not in c.body([{"role": "user", "content": "x"}], None, None, 0, 10)
+    assert c.body([{"role": "user", "content": "x"}], None, 0.6, 0, 10)["temperature"] == 0.6
+    assert "seed" not in LLM(model="anthropic/x", provider=None).body([{"role": "user", "content": "x"}], None, None,
+                                                                       None, 10)

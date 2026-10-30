@@ -2,7 +2,8 @@
 version of PerceivedSource(relinked=True) with the occlusion step: the same Relinker (bit-identical to
 relink_margin), and an occlusion step whose cube height z0 is the median of the first `first` sightings SO FAR (the
 batch occluded() also uses later sightings until it has `first`; NOTES "Closed loop" gives the agreement on G).
-Ids: container slot s -> bin_<s>, cube slot s -> cube_<colour>, from the perception classes.
+Ids: container slot s -> bin_<s>, target slot s -> target_<s> (task_items.place_word), cube slot s -> cube_<colour>,
+from the perception classes. Targets hide nothing: only containers cover cubes.
 """
 from __future__ import annotations
 
@@ -56,8 +57,9 @@ class Occluder:
 
 class OnlineObs:
     def __init__(self, classes: list[str], n_bins: int, r: float = 0.08, dz: float = 0.01, relinked: bool = True):
-        self.names = [(f"bin_{s}", "container", {}) if s < n_bins else (_cube(c, s, classes)[0], "cube",
-                      _cube(c, s, classes)[1]) for s, c in enumerate(classes)]
+        self.names = [(f"bin_{s}", "container", {}) if s < n_bins else (f"target_{s}", "target", {})
+                      if c.rstrip(".").split()[-1] == "target" else (*_cube(c, s, classes)[:1], "cube", _cube(c, s, classes)[1])
+                      for s, c in enumerate(classes)]
         self.n, self.t = n_bins, 0
         self.relinker = Relinker(n_bins) if relinked else None
         self.occ = Occluder(n_bins, len(classes), r, dz)
@@ -72,7 +74,7 @@ class OnlineObs:
         occ = self.occ.step(row)
         objs = {}
         for s, (oid, cls, _) in enumerate(self.names):
-            vis = _seen(row, s) and not occ[s]
+            vis = _seen(row, s) and not (occ[s] and cls == "cube")
             q = min(1.0, margin[s] / MARGIN_CAP) if cls == "container" and self.relinker is not None else 1.0
             objs[oid] = ObjObs(oid, cls, vis, row[s, F_X:F_Z + 1].astype(float) if vis else None,
                                row[s, F_U:F_V + 1].astype(float) if vis else None, q)
