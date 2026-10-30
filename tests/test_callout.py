@@ -1,5 +1,5 @@
 """arbiter_kb/callout.py: the layer-1 scoring rules of NOTES "Layer 1 on real scenes"."""
-from arbiter_kb.callout import objects, pointable, right_object, score, summarize
+from arbiter_kb.callout import holds, label, objects, pointable, right_object, right_sequence, score, summarize
 
 SWAP_GOAL = "pick up the container hiding the blue cube"
 TRUTH = {"bin_0": [0.0, 0.0, 0.03, 0.0], "bin_1": [0.0, 0.15, 0.03, 0.0], "bin_2": [0.0, -0.15, 0.03, 0.0],
@@ -71,3 +71,31 @@ def test_summary_counts_and_medians():
     s = summarize(rows)[0]
     assert (s["n"], s["right"], s["wrong"], s["closes"]) == (3, 2, 1, 3)
     assert s["d_right_median"] == 0.01 and s["d_right_max"] == 0.1
+
+
+def test_right_sequence_two_containers():
+    o = objects(TRUTH)
+    goal = "pick up the container hiding the blue cube, finally pick up another container hiding the red cube"
+    assert right_sequence(goal, o) == ["bin_1", "bin_2"]
+
+
+def test_holds_track_lift_until_open():
+    o = objects(TRUTH)
+    steps = [act(0.0, 0.15, 0.2, 1.0), act(0.0, 0.15, 0.04, -1.0), act(0.0, 0.15, 0.3), act(0.0, 0.0, 0.1, 1.0),
+             act(0.0, 0.0, 0.035, -1.0), act(0.0, 0.0, 0.06)]
+    hs = holds(steps, o)
+    assert [(h["object"], h["lift"]) for h in hs] == [("bin_1", 0.3), ("bin_0", 0.06)]
+
+
+def test_labels_first_rule_wins():
+    o = objects(TRUTH)
+    seq = ["bin_1", "bin_2"]
+    lift = lambda x, y, z: [act(x, y, 0.04, -1.0), act(x, y, z), act(x, y, z, 1.0)]  # noqa: E731
+    right_high = holds(lift(0.0, 0.15, 0.3), o)
+    assert label({"end_reason": "env_error"}, right_high, seq, {0: 0.25})[0] == "planning failure"
+    assert label({"end_reason": "env:fail"}, holds(lift(0.0, 0.0, 0.3), o), seq, {})[0] == "wrong object at close"
+    relift = holds(lift(0.0, 0.15, 0.3) + lift(0.0, 0.15, 0.3), o)  # the same right object twice is not wrong
+    assert label({"end_reason": "env:fail"}, relift, seq, {0: 0.25})[0] == "grasp missed (inferred)"
+    assert label({"end_reason": "model_answer:declared_complete"}, right_high, seq, {})[0] == "premature done"
+    assert label({"end_reason": "env:fail"}, holds(lift(0.0, 0.15, 0.15), o), seq, {0: 0.25})[0] == "lift too low"
+    assert label({"end_reason": "env:timeout"}, [], seq, {})[0] == "other"

@@ -2220,3 +2220,31 @@ Read from the pod session's report (pasted by the user); the files stay on the p
     −2.8 cm); K ep 8 closed 2.2 cm above bin_1's centre, and R ep 8 / ep 9 at +0.1 cm, the highest of R's closes
     (R's successes: −0.6 to −2.4 cm). A weak hint that closing high goes with failing; n is far too small, and the
     cause may be later. To be read in those episodes' later steps.
+
+## Astra's 7 VideoUnmaskSwap failures after the first move: the reading, fixed before reading (2026-10-30, user request)
+Question: in the 7 failed Astra episodes (K ep 0, 8; H ep 1; R ep 3, 7, 8, 9), where did it go wrong, and do the
+failures point to HANDOFF_EXECUTION option 3 (skills) or option 4 (KB as completion verifier)? Free: `result.json` only.
+- **Data:** `/workspace/cl/astra_pilot/*/result.json` (all 30, so the 23 successes give the reference), copied to
+  `data/cl_pod/astra_pilot/`; scene objects and goals of VideoUnmaskSwap val 0–9 from the stage-1 listing
+  (`data/cl_pod/callout/vus_objects.json`, transcribed from the pod's output).
+- **What a result.json has:** per executed step the 7-vector action, frames recorded, env status; the ending. **Not**
+  finger widths, object poses after reset, or the model's answers (except rejected retries). So "the grasp missed"
+  cannot be observed, only inferred.
+- **Trace per episode:** each close (gripper −1) is mapped to the nearest object at its **reset** position (after a bin
+  is lifted and put down it moves, so a later close can be mis-mapped: flagged when the close is > 3 cm from every
+  object); "held" from a close until the next open (+1); the lift of a hold = the highest waypoint z while held.
+  The goal's sequence of right objects = the container hiding each coloured cube the goal names, in order.
+- **One label per failed episode, first rule that applies:**
+  1. **planning failure:** ended `env_error`;
+  2. **wrong object at close:** a hold on an object that is neither the next in the goal's sequence nor the one just
+     picked (re-lifting it after a slip is not wrong), followed by a lift ≥ 5 cm; (re-grasp clause added while writing
+     the code, before reading any data)
+  3. **premature "done":** ended `declared_complete` (waypoint null) without the env's success;
+  4. **lift too low:** a hold on the right object whose lift is below the lowest lift of that object-pick in any
+     successful episode (all arms), then the episode ended without success;
+  5. **grasp missed (inferred):** a hold on the right object lifted at least as high as the successes', and still no
+     success: unconfirmed, as result.json has no finger widths;
+  6. **other:** anything else, described.
+- **Pointing (fixed now):** labels 2–5 that a deterministic pick (grasp height from the KB centre, fixed lift) would
+  remove point to option 3; label 3 (and a "done" after a missed grasp) points to option 4; label 1 is the planner's
+  and points to neither; label 2 is a decision / memory error and points to neither. n = 7: a direction only.

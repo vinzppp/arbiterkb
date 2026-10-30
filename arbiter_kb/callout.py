@@ -129,3 +129,71 @@ def summarize(rows: list[dict]) -> list[dict]:
         s["closes"] = sum(r.get("close_dz") is not None for r in rs)
         out.append(s)
     return out
+
+
+# --- after the first move: what each hold did (NOTES "Astra's 7 VideoUnmaskSwap failures") ---
+LIFTED, MAPPED = 0.05, 0.03  # m: a hold counts as lifted above this rise; a close farther than this from every object
+# at its reset position is flagged (the object may have moved since)
+LABELS = ("planning failure", "wrong object at close", "premature done", "lift too low", "grasp missed (inferred)",
+          "other")
+
+
+def right_sequence(goal: str, objs: dict) -> list[str]:
+    """The objects the goal asks for, in order: the container hiding each coloured cube it names (VideoUnmaskSwap's
+    "..., finally pick up another container hiding the blue cube"), or the cube itself when no container is named."""
+    container = any(it["noun"] == "container" for it in parse_task_items(goal))
+    return [right_object(f"pick up the container hiding the {it['color']} cube" if container else
+                         f"pick up the {it['color']} cube", objs)[0]
+            for it in parse_task_items(goal) if it["noun"] == "cube" and it["color"]]
+
+
+def holds(steps: list, objs: dict) -> list[dict]:
+    """Every close (gripper -1) with the object nearest it at its reset position, held until the next open (+1):
+    {step, object, d, flagged, close_z, lift (highest waypoint z while held), rise (lift - close_z)}."""
+    near_objs, out, cur = pointable(objs), [], None
+    for i, a in enumerate(actions(steps)):
+        if a[6] < 0 and cur is None:
+            d, n = nearest(a[:2], near_objs)[0]
+            cur = {"step": i, "object": n, "d": round(d, 4), "flagged": d > MAPPED, "close_z": round(float(a[2]), 4),
+                   "lift": float(a[2])}
+            out.append(cur)
+        elif cur is not None:
+            cur["lift"] = max(cur["lift"], float(a[2]))
+            if a[6] > 0:
+                cur = None
+    for h in out:
+        h["lift"], h["rise"] = round(h["lift"], 4), round(h["lift"] - h["close_z"], 4)
+    return out
+
+
+def right_picks(hs: list[dict], sequence: list[str]) -> tuple[list[tuple[int, dict]], dict | None]:
+    """The lifted holds matched in order to the goal's sequence ([(k, hold)]), and the first lifted hold of an object
+    that is neither the next right object nor the one just picked (None if there is none)."""
+    picks = []
+    for h in (h for h in hs if h["rise"] >= LIFTED):
+        k = len(picks)
+        if k < len(sequence) and h["object"] == sequence[k]:
+            picks.append((k, h))
+        elif not (picks and h["object"] == picks[-1][1]["object"]):
+            return picks, h
+    return picks, None
+
+
+def label(row: dict, hs: list[dict], sequence: list[str], min_lift: dict) -> tuple[str, str]:
+    """(label, why) for one failed episode, the first rule that applies (NOTES). `min_lift`: {k: lowest lift of the
+    k-th right pick among successful episodes}."""
+    picks, wrong = right_picks(hs, sequence)
+    end = row.get("end_reason")
+    if end == "env_error":
+        return LABELS[0], f"env_error after {len(picks)} of {len(sequence)} right pick(s)"
+    if wrong is not None:
+        nxt = sequence[len(picks)] if len(picks) < len(sequence) else "none"
+        return LABELS[1], f"lifted {wrong['object']} at step {wrong['step']} (next right: {nxt})"
+    if end == "model_answer:declared_complete":
+        return LABELS[2], f"declared complete after {len(picks)} of {len(sequence)} right pick(s)"
+    for k, h in picks:
+        if k in min_lift and h["lift"] < min_lift[k]:
+            return LABELS[3], f"pick {k + 1} lifted to z {h['lift']} < successes' lowest {min_lift[k]}"
+    if picks:
+        return LABELS[4], f"{len(picks)} of {len(sequence)} right pick(s) lifted as high as the successes'; ended {end}"
+    return LABELS[5], f"{len(hs)} close(s), none a lifted right pick; ended {end}"
