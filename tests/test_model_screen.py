@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -49,7 +50,7 @@ def items():
 def test_states(items):
     assert len(items) == 14 and [x["stage"] for x in items[:7]] == list(range(1, 8))
     text = ["\n".join(p["text"] for p in x["messages"][1]["content"]) for x in items[:7]]
-    assert '"finger_positions_m": [0.005, 0.005]' in text[2]  # stage 3 is asked after the scripted close on A
+    assert '"finger_positions_m": [0.0183, 0.0183]' in text[2]  # stage 3 is asked after the scripted close on A
     assert "pick_up bin" in text[3] and "-> done (pick_up" in text[3]  # the KB saw the grasp at 0.062
     assert items[2]["truth"]["hand"] == items[2]["truth"]["A"]
     assert items[3]["A"] not in items[3]["truth"]["others"] and items[4]["A"] in items[4]["truth"]["others"]
@@ -86,3 +87,19 @@ def test_choice_uses_stages_1_to_6_and_reports_stage_7_apart():
                      s("fail", "small", 3, 0.0001, False), s("ceil", "strong", None, 0.1, True)])["model"] == "cheap"
     assert R.choose([s("a", "small", 10, 0.002, True), s("b", "small", 10, 0.001, True)])["model"] == "b"
     assert R.choose([s("x", "strong", None, 0.1, True)]) is None
+
+
+def test_scripted_closed_width_is_read_by_w_empty():
+    """two_pick's closed widths against actions.py's w_empty: holding a container (0.0366, the dataset's settled
+    opening on a 4 cm cube) is a pick_up; a close on nothing (0.0) is not."""
+    from arbiter_kb.detectors import Detectors
+    from arbiter_kb.params import DetectParams
+    from arbiter_kb.types import FrameObs
+    from two_pick import EMPTY, HOLDING, OPEN
+
+    def picks(w):
+        d, path = Detectors(DetectParams()), [(0.2, OPEN), (0.062, OPEN), (0.062, w), (0.062, w), (0.2, w)]
+        return [e.kind for t, (z, x) in enumerate(path) for e in d.step(FrameObs(t, {}, np.array([0, 0, z]), x, False))
+                if e.kind == "pick_up"]
+    assert DetectParams().w_empty < HOLDING and picks(HOLDING) == ["pick_up"]
+    assert EMPTY <= DetectParams().w_empty and picks(EMPTY) == []

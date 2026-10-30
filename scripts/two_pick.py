@@ -18,7 +18,9 @@ from arbiter_kb.closed_loop import gripper_closed
 from arbiter_kb.self_memory import record
 from arbiter_kb.types import FrameObs, ObjObs
 
-OPEN, CLOSED = 0.08, 0.01  # gripper width (m)
+OPEN = 0.08  # gripper width (m)
+HOLDING, EMPTY = 0.0366, 0.0  # closed width (m) holding a container's 4 cm handle / holding nothing: the settled opening
+# on the dataset's 4 cm cube picks and empty closes (NOTES "Grasps above z_low", 6ee63b8)
 HOME = [0.0, 0.0, 0.45]
 DOWN = [-3.1416, 0.0, 0.0]  # hand pointing down
 # The camera calibration as the state carries it (fixed for an episode); stand-ins of the real shape.
@@ -51,9 +53,9 @@ class Robot:
         for k in range(1, n + 1):
             self.ee = start + (np.asarray(to, float) - start) * k / n
             if k == n and gripper:
-                self.width = CLOSED if gripper < 0 else OPEN
                 self.held = min((b for b in self.pos if b.startswith("bin_") and self.pos[b] is not None),
                                 key=lambda b: np.linalg.norm(self.pos[b][:2] - self.ee[:2])) if gripper < 0 else None
+                self.width = OPEN if gripper > 0 else HOLDING if self.held else EMPTY
             if self.held:
                 self.pos[self.held] = self.ee.copy()
                 if self.ee[2] > 0.08 and self.held in self.reveal:

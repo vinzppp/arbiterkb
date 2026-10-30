@@ -2746,6 +2746,13 @@ VideoUnmaskSwap episode? A coarse screen (5 episodes × 7 stages × 2 passes per
   to keep its memory right. **Fixed by the two-pick window in 6ee63b8** (NOTES "Grasps above z_low"): a pick_up is
   now told from the settled finger opening, not the hand's height. **Changed back (user, 2026-10-30, before any
   call): the screen grasps at RoboMME's 0.062**; every selected episode's view then reads "pick_up bin_… -> done".
+- **Scripted finger opening (user, 2026-10-30, before any call; `scripts/two_pick.py`, shared with K2 / k2_offline):**
+  the closed width was a fixed 0.01 m, so a held container read `finger_positions_m [0.005, 0.005]` ("almost shut,
+  maybe missed"). Now a close leaves the fingers at **0.0366 m in total (0.0183 each) when holding a container** (the
+  settled opening on the dataset's 4 cm cube picks, NOTES "Grasps above z_low" / 6ee63b8; the container's handle is
+  4 cm) and **0.0 when holding nothing** (the dataset's empty closes settle at 0.000). `actions.py`'s w_empty 0.005
+  reads 0.0366 as a pick_up and 0.0 as an empty close (test). two_pick is not in the prompts hash's files: prompts
+  4612ab9e1390 unchanged, no re-freeze; the model-facing text changes only in the scripted robot state.
 
 **Rules (per answer; every number from RoboMME's code, github.com/RoboMME/robomme_benchmark @ 69a2fe2,
 `src/robomme/robomme_env`, or marked "ours").** Geometry: `build_bin` makes an open box turned upside down, inner side
