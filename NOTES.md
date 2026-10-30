@@ -2831,3 +2831,38 @@ the grasp holds); yaw not scored; one task.
   results, a draft of its change goes to the user for confirmation. The `pick_up` z_low question (RoboMME grasps
   containers at 0.062 > 0.05) belongs to the two-pick window; `actions.py` is not touched here. Mock run after the
   change: pass_1_6 0.933, valid_json_1_6 0.967, stage_min_1_6 0.8, stage7_done 1.0, meets (as built in). **Not run.**
+
+## Grasps above z_low, and K's decision record: the count, then the fixes (2026-10-30, user request; rules before code)
+Background (model screen, bdd8afe): `actions.py` records a `pick_up` only when the gripper closes with the hand below
+`z_low` = 0.05 m (read off the dataset's cube picks at 0.020); RoboMME's own container grasp is at TCP 0.062.
+- **Free count (`data/cl_pod/astra_pilot`, `astra_k2pick`, K episodes; the commanded waypoint z of each close that
+  starts a grasp, as the hand's z; dec1e03 = "with the gripper-0 bug"):** pilot 5 of 17 closes at z ≥ 0.05 (ep 3,
+  7, 8 ×2, 9); dec1e03 5 of 42 (ep 16 at 0.052, 17 at 0.054, 37 at 0.050 and 0.051, 41 at 0.065). Astra closes on
+  containers lower than RoboMME's script (0.03–0.054 mostly). Descriptions after those closes (dec1e03 only; the pilot
+  logged none): **one** doubts the pickup: ep 17, after the 0.054 close, "the first container pickup has not been
+  confirmed", re-grasped, and the episode **succeeded**; ep 16, 37 (×2) and 41 say the grasp happened. So in these
+  runs the z_low rule cost little that shows; it would bite whenever a controller grasps at RoboMME's 0.062.
+- **Geometry check on the dataset (free; `data/robomme_lerobot`, 30 episodes each of BinFill, PickXtimes,
+  SwingXtimes, VideoPlaceOrder, VideoRepick):** the finger opening the gripper settles at after a close is 0.0366 m
+  holding a cube (3.66 cm) and **exactly 0.000 on every empty close**: all 150 button presses, and 29 of 469 labelled
+  picks, which are demo recoveries that closed above the cube (e.g. BinFill_1200 t=243 at z 0.059: opening 0, lift,
+  reopen, retry). Something between the fingers, not the hand's height, tells a grasp.
+- **Rules for the fixes (fixed now, before code):**
+  1. **Grasp from the fingers (`actions.py`):** a `grip_close` starts a pending grasp; when the opening has settled
+     (changes < 1 mm between observed frames while closed) it is a `pick_up` if the opening is above **w_empty =
+     0.005 m** (a margin over the fully closed 0.000; any held object keeps the fingers apart by its thickness),
+     else an empty close (no event). An open before settling is an empty close. The hand's height no longer decides
+     a pick_up (z_low stays for presses and for how a release is named). Not from the pilot: 0.000 is the gripper's
+     closed reading; **to check in the preflight:** the opening when RoboMME's gripper holds a container (its wall
+     must be thicker than 5 mm, or w_empty is wrong).
+  2. **Record what the step did (`closed_loop.py`, review push_2026-10-30_code):** the decision is recorded after
+     `env.step` and before its frames reach the KB; the gripper state changes only when the step executed (n > 0);
+     a step that executed nothing (n = 0) or errored is recorded as **not executed**, and K's view says so ("not
+     executed: the robot did not move") instead of "pick_up -> not done yet".
+  3. **A pick_up intent only on a change from open to closed (`self_memory.intent`):** a keep (or a close) while
+     already closed with nothing held is a "press" when the hand is low (as before) and a "move" otherwise, not a
+     "pick_up" (the review: every such keep read as a pick_up; button tasks).
+  - Not fixed here: a held object slipping out (the opening falls to 0 while closed) is not detected; open.
+- **Fixed K (updates "Fixed K is not only the gripper fix" above):** = the gripper-0 fix (038ddf1) + R4 reveal
+  (f6fad9a) + the move threshold (a229e35) + these three (grasp from the fingers, record what executed, pick_up only
+  on open→closed), re-frozen together. Differences between the fixed-K run and dec1e03 cannot be put on any one part.
