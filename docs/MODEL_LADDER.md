@@ -1,9 +1,44 @@
-# Model ladder for the closed-loop controller: candidates, roles, screening (2026-10-30)
+# Model ladder for the closed-loop controller: candidates, roles, screening (2026-10-30, updated the same day)
 
 Research and plan only: no code, no paid run. Answers option 1 of `docs/HANDOFF_EXECUTION.md` ("model ladder on the
 current interface"). Every number found online carries its source and the date it was read (all read **2026-10-30**);
 "unverified" means a secondary source or no source. Our own numbers come from NOTES ("Layer 1 on real scenes", "Astra
 VideoUnmaskSwap val pilot…", "Does K lose track on two-pick goals?").
+
+## Update after the user's decisions (2026-10-30; NOTES "Model screen: the small model changes, rules fixed before any call")
+
+The decisions supersede parts of sections 3, 5 and 7 below; those sections are kept as the first plan.
+- **Access:** every model through OpenRouter. Gemini Robotics-ER 2 (Google key) only if no OpenRouter model passes.
+- **Claim 1 keeps a small model, but not `qwen3.6-35b-a3b`** (3B active: pilot 1/24, H localises 1/9). The small
+  model is a mid-size model, open weights preferred (published parameter counts make "smaller" checkable), chosen by
+  the screen below. Claim 1 is unchanged. Rung 5 of section 3 is dropped; rung 4 (qwen3.6-27b) becomes one candidate
+  among six.
+- **The frontier model is open too:** Astra plus two strong models set the ceiling in the same screen.
+- **The screen replaces S0 / S1 as the first step:** `scripts/model_screen.py` — 5 synthetic two-pick
+  VideoUnmaskSwap train episodes (memory from simulator truth, KB sure of both goal containers), 7 stages each (above
+  A, close on A, lift, put down, above B, close on B, done), the closed loop's K request (text only), each state asked
+  twice per model; per-stage rules from RoboMME's code (NOTES). It needs no K-O arm and no simulator. S1 (oracle-memory
+  closed loop) stays the next step for the models the screen keeps.
+- **Candidates (9, every one takes images on OpenRouter):**
+
+| model | group | total / active (B) | $ / M in / out |
+|---|---|---|---|
+| meta-llama/llama-4-scout | small | 109 / 17 | 0.10 / 0.30 |
+| nvidia/nemotron-3.5-super-vl | small | 120 / 12 | 0.15 / 0.50 |
+| google/gemma-4-31b-it | small | 30.7 dense | 0.20 / 0.40 |
+| qwen/qwen3.5-122b-a10b | small | 122 / 10 | 0.26 / 2.08 |
+| z-ai/glm-4.6v | small | 106 / 12 (unverified) | 0.30 / 0.90 |
+| qwen/qwen3.6-27b | small | 27 dense | 0.32 / 3.20 |
+| google/gemini-4-argon | strong | not published | 2.00 / 10.00 (until 2026-11-30) |
+| openai/gpt-6-sol | strong | not published | 2.00 / 10.00 |
+| openai/gpt-6-astra | strong, reference | not published | 10.00 / 50.00 |
+
+  OpenRouter's default settings per model (nothing sent but `max_tokens` and usage accounting); total cap $10,
+  cheapest first. Estimated ≈ $2–5 for the small group, ≈ $1.5–5 for Sol and Argon, ≈ $3.5 for Astra.
+- **Proposed reading (user to confirm before the run):** a small model qualifies with overall pass ≥ 0.8, JSON-valid
+  ≥ 0.95 and no stage below 0.6; among those, the fewest active parameters, then the cheapest.
+- **A KB issue found while building the screen** (NOTES): `actions.py` records a pick-up only below z 0.05 m, while
+  RoboMME grasps a container at 0.062 m, so K's self-memory can miss container pick-ups in the closed loop.
 
 ## 1. What the ladder has to show
 

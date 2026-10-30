@@ -2701,3 +2701,120 @@ distributions and is not changed.
   (revealed: `Inside(cube_red) was under bin_0, revealed t=…`, "hid the red cube", no "may hold"; seen again without a
   reveal: `seen again at t=8, now at …`). `scripts/k2_offline.py --print [--noisy]` writes
   `results/runs/k2_print/ep<first>_<clean|noisy>.txt`. Re-frozen: params b4caad02074a, prompts 643e351eb3f1.
+
+## Model screen: the small model changes, rules fixed before any call (2026-10-30, user decision)
+**Decided (user, 2026-10-30):**
+1. Every model goes through OpenRouter except Gemini Robotics-ER 2, which is the last resort (it needs a Google key),
+   considered only if no OpenRouter model passes.
+2. **Claim 1 stays; its small model changes.** `qwen/qwen3.6-35b-a3b` (3B active) is too small: val pilot 1 / 24, H
+   localises 1 / 9 (NOTES "Layer 1 on real scenes"). The small model becomes a mid-size model chosen by this screen.
+   Claim 1 itself ("a smaller model with the KB reaches the frontier model's success") is unchanged. GOALS.md still
+   names the old primary; that line is to be updated when the screen has chosen (the user's edit or go).
+3. The frontier model is not fixed either: the screen also sets the ceiling.
+
+**Question.** With memory that is right, can a model write the right waypoint at each stage of a two-pick
+VideoUnmaskSwap episode? A coarse screen (5 episodes × 7 stages × 2 passes per model), not a claim.
+`scripts/model_screen.py` (states, calls, output), `scripts/screen_rules.py` (rules, mock model), tests in
+`tests/test_model_screen.py`.
+
+**States.**
+- Synthetic VideoUnmaskSwap train episodes built as `scripts/k2_offline.py` builds them (`SyntheticSource(swap_steps=
+  "mix", lane_offset="mix")`, two-cube goal "pick up the container that hides the X cube, then … the Y cube"), clean
+  (frames are simulator truth), containers moved to RoboMME's height (bin origin z = 0.052; the synthetic source puts
+  them at 0.03).
+- **Episode selection (fixed now):** from seed 100 upward, the first 5 episodes in which the KB's top Inside belief for
+  both goal cubes is the true container with p ≥ 0.8 (the screen tests execution, not doubt; with `lane_offset="mix"`
+  some memories are coin flips: 101, 103, 109 have 0.49–0.50). This gives **100, 102, 105, 107, 108** (one with 4
+  containers, four with 3).
+- Request: the closed loop's K request (`controller.user_content`, layout v1, system prompt K), **text only**: the
+  synthetic source has no images, so the K arm's two current frames are missing (a stated deviation; every candidate
+  takes images, for the closed loop later).
+- Seven stages, each asked once: (1) hand at home → above A; (2) above A → close on A; (3) closed on A → lift;
+  (4) lifted → put A down; (5) after the put-down → above B; (6) above B → close on B; (7) after the scripted lift
+  of B → done (`waypoint: null`). Between stages the robot follows `two_pick.plan` (open loop: the script acts whatever
+  the model answers; the KB records each scripted action as "your" decision, as in k2_offline) at RoboMME's heights:
+  above / lift 0.2 (`solve_pickup_bin`), release 0.07 (`solve_putdown_whenhold`), **grasp 0.045, not RoboMME's 0.062**
+  (next point). After the release the container settles at z 0.052.
+- **Found while proofreading the print (a KB issue, not fixed here; `actions.py` belongs to another window):** the KB
+  records a `pick_up` only when the gripper closes with the hand below `z_low` = 0.05 m (`actions.py`, read off the
+  dataset's cube picks: pick 0.020). RoboMME grasps a container at TCP 0.062. With the scripted grasp at 0.062, every
+  later view said "pick_up bin_1 -> not done yet" while the container was held at 0.2 m. **The closed-loop K arm has
+  the same rule**: a container closed on above 5 cm is never "picked up" in K's self-memory (Astra's first closes on
+  containers were |dz| 0.8–2.5 cm (medians per arm) from the centre z 0.052, sign not recorded in NOTES, so some may
+  have been above 5 cm). This may matter for K's two-pick
+  progress; to check on the dec1e03 / pilot K logs before the next K run. The screen scripts the grasp at 0.045
+  (inside the grasp band below) so its memory is right.
+
+**Rules (per answer; every number from RoboMME's code, github.com/RoboMME/robomme_benchmark @ 69a2fe2,
+`src/robomme/robomme_env`, or marked "ours").** Geometry: `build_bin` makes an open box turned upside down, inner side
+and wall height 2.5 × cube_half_size = 0.05 (cube_half_size 0.02, ManiSkill `PICK_CUBE_CONFIGS["panda"]`), walls 5 mm,
+floor plate 4 mm (now on top, its top at 0.054), a 4 cm handle cube at the origin (0.032–0.072); origin at rest z =
+0.052. Success: `is_bin_pickup` = container origin z > 0.15; two-pick task list = pick A, `is_bin_putdown` (origin
+≤ 0.07, not grasped, TCP z > 0.05), pick B; picking any other container fails.
+- Every action must pass `controller.check`'s workspace box and reach (as the loop does); target and cites not scored.
+- An answer that does not parse into a valid action or `null` is wrong (counted in the JSON-valid rate); a `null` at
+  stages 1–6 is wrong ("premature done"); at stage 7 only `null` is right.
+- **Above (stages 1, 5):** gripper 0 or 1; xy ≤ 0.03 m from the container's centre (walls' outer half width
+  0.025 + 0.005); 0.10 ≤ z ≤ 0.40 (0.10 = handle top 0.072 + `FINGER_LENGTH` 0.025 from `solve_pickup_bin`, rounded
+  up; 0.40 ours, below the script's home 0.45). Also right: a direct grasp (gripper −1 under the grasp rule).
+- **Grasp (stages 2, 6):** gripper −1, or 0 / 1 ("descend first, close next": the prompt lets the next call close);
+  0.02 ≤ z ≤ 0.077 (ours on both ends: fingertips off the table, at most 5 mm above the handle top 0.072); xy ≤ 0.02 m
+  if z ≥ 0.054 (the handle's half width) else ≤ 0.01 m (fingers 0.08 m open, prompt "0.04 m each", must straddle the
+  0.06 m walls). Not scored: yaw (the 4 cm handle fits the open gripper at any yaw; the 6 cm body does not at 45°,
+  diagonal 8.5 cm; the K view gives no container yaw).
+- **Lift (stage 3):** gripper −1 or 0; 0.143 ≤ z ≤ 0.40: 0.143 = 0.15 + (scripted grasp 0.045 − origin 0.052), the
+  TCP height at which the origin passes `is_bin_pickup`'s 0.15. xy free (a sideways lift still lifts).
+- **Put down (stage 4):** release: gripper 1, 0.06 ≤ z ≤ 0.12 (the container's bottom reaches the table at TCP 0.062
+  minus 2 mm, ours; a drop ≤ 5.8 cm, ours; RoboMME releases at 0.07), xy ≥ 0.075 m from every other container's centre
+  (`spawn_random_bin`: 2 × half 0.0275 + min_gap 0.02). Also right: carry first (gripper −1 / 0, 0.143 ≤ z ≤ 0.40,
+  the hand moved ≥ 0.03 m in xy (ours), ending ≥ 0.075 m from every other container).
+- Scored against the truth at that state (A held at the hand for stages 3–4; B and the others where they are).
+- Checked on the mock: RoboMME's own script (`screen_rules.canonical`) passes every stage of every selected episode
+  (test).
+
+**Models and settings (OpenRouter models API, 2026-10-30; every one lists image input).** OpenRouter's defaults: no
+temperature, seed, reasoning or provider is sent (OpenRouter routes; the provider used is logged per call); sent:
+`max_tokens` = min(32000, the model's max output on OpenRouter) and `usage.include`. Pass 2 has its own disk cache
+(`results/llm_cache/model_screen/pass{1,2}`), so it is a second sample, and a rerun resumes from the cache.
+
+| model | group | total / active params (B) | $ / M in / out | max_tokens |
+|---|---|---|---|---|
+| meta-llama/llama-4-scout | small | 109 / 17 | 0.10 / 0.30 | 16384 |
+| nvidia/nemotron-3.5-super-vl | small | 120 / 12 | 0.15 / 0.50 | 32000 |
+| google/gemma-4-31b-it | small | 30.7 dense | 0.20 / 0.40 | 16384 |
+| qwen/qwen3.5-122b-a10b | small | 122 / 10 | 0.26 / 2.08 | 32000 |
+| z-ai/glm-4.6v | small | 106 / 12 (**unverified**: not on the OpenRouter page) | 0.30 / 0.90 | 32000 |
+| qwen/qwen3.6-27b | small | 27 dense | 0.32 / 3.20 | 32000 |
+| google/gemini-4-argon | strong | not published | 2.00 / 10.00 (until 2026-11-30) | 32000 |
+| openai/gpt-6-sol | strong | not published | 2.00 / 10.00 | 32000 |
+| openai/gpt-6-astra | strong (reference; pilot) | not published | 10.00 / 50.00 | 32000 |
+
+Parameter counts from each model's OpenRouter description / Hugging Face id. Not chosen: Kimi K2.6 (1T total, not
+mid-size), Mistral Small 4 (119B, active not published), Gemini 3.5 Flash-Lite / 3.8 Flash (closed, size unknown;
+the backup if the open group fails), Claude Opus 5.5 (a third strong model would pass the $10 cap).
+
+**Run.** Models run cheapest first under one total cap (`--max-usd`, default and agreed cap $10); a call the cap
+cannot cover is recorded as `budget` and not scored. Estimate (request ≈ 1.85–2.0k tokens by characters / 4; output
+unknown: 0.3k per call as Astra's pilot K, up to 3k for thinking models): the six small models $0.1–0.7 each
+(≈ $2 together, ≈ $5 if they all think long); Sol ≈ $0.5–2.4; Argon ≈ $1–2.5; Astra ≈ $3.5 (pilot: $0.05 per K
+call). The total may reach the cap at Astra, which runs last; if so, Astra is run with `--passes 1` (its pilot exists).
+**Not run: the paid run waits for the user's and the orchestrator's go.**
+
+**Output per model** (`results/runs/model_screen/<run>/<model>/`): rows.csv (every call: stage, valid, pass, variant,
+reason, z, gripper, xy distance, $, seconds, tokens, provider, the answer), summary.json and report.md (pass rate per
+stage, overall, JSON-valid rate, agreement between the two passes per state, $ and seconds per call; every failure with
+the model's own text).
+
+**Reading (proposed, for the user to confirm before the run):** a small model is a candidate for claim 1 if its pass
+rate over all 70 calls is ≥ 0.8, its JSON-valid rate ≥ 0.95 and no stage is below 0.6; among candidates the one with
+the fewest active parameters, then the cheapest. The strong group's best overall pass rate is the ceiling the small
+models are read against. n = 5 episodes: a screen, then the closed loop decides.
+
+**Limits, stated now:** no images; open loop (an answer is never executed, so recovery is not tested); clean memory
+(no perception noise); no physics (a pass means the waypoint satisfies RoboMME's geometry and success rule, not that
+the grasp holds); yaw not scored; one task.
+
+- **Done (free):** `--print` → `results/runs/model_screen_print/ep100.txt` (episode 100's seven requests and the truth
+  each is scored against); `--mock` (canonical answers, plus prose at the first episode's stage 2 and a premature null
+  at the second's stage 3): pass 0.943 = 33 / 35 per pass, JSON-valid 0.971, agreement 1.0, as built in. `make check`
+  passes.
