@@ -1,4 +1,4 @@
-# ArbiterKB: handoff (2026-10-30)
+# ArbiterKB: handoff (2026-10-30, orchestrator round)
 
 Read first: `README.md` (one page), `docs/GOALS.md` (claims, falsifiers), `DEVELOPMENT.md` (spec v1.12: §2 the loop and its
 reasoning, §3.8 controller, §6 phases), `NOTES.md` (the log; newest at the bottom). Answer the user in Chinese,
@@ -9,19 +9,20 @@ concisely. Docs in English. For the execution-gap discussion (IK, controller des
 - The KB is the memory module of an LLM controller that outputs waypoints itself, in the 2610.17350 harness.
 - Claims: (1) a smaller model, or (2) far fewer tokens and images, at matched success; (3) the KB's beliefs are calibrated.
 
-## Now: the closed loop runs on a RunPod A40 (NOTES "Closed loop", bottom)
-- Code: `arbiter_kb/closed_loop.py` (2610.17350's loop), `arbiter_kb/sources/online.py`, `stress/closed_loop_pod.py`
-  (`--model`, `--provider auto`, `--max-usd-episode`), runbook `stress/POD_CLOSED_LOOP.md`. Upload = `git archive` →
-  `pod_upload_arbiter-kb.tar.gz` (repo root, git-ignored); the pod session checks its md5 before extracting.
-- **Qwen 3.6-35B-A3B val pilot, stopped at 25 / 60:** 1 success; every arm near 0 (floor effect). Failures are
-  execution and decisions (layers 2, 3, 5 in docs/HANDOFF_EXECUTION.md), runaway reasoning, and ManiSkill's zero-step bug.
-- **GPT-6-Astra probe:** H 2 / 2 ($0.17, $0.65 per episode). The harness works; the controller model was the bottleneck.
-- **Running on the pod:** (1) Astra VideoUnmaskSwap val pilot, H / R / K × 10 (`/workspace/cl/astra_pilot`, budget $20);
-  (2) the VideoPlaceOrder target-phrase test (no LLM; rule fixed in NOTES before measuring). The pod's Claude runs
-  as `/root/.local/bin/claude --continue` in tmux `main` (window 0); jobs in windows avus / afinish / phrase.
-- Fixed this round (tests, reviews, re-frozen; prompts 7aade10cec0b): R's ids and cites, the `"table"` crash, 32k cap,
-  targets are not containers (`task_items.place_word`, `PLACE_PHRASE`), robot-base / below-table detections dropped
-  (`online.not_objects`), API defaults for non-Qwen models, unscored per-episode spend cap.
+## Now (2026-10-30): orchestrated by a separate conversation
+- **Start here:** `docs/HANDOFF_ORCHESTRATOR.md` (state, open questions in order, workers, rules). Execution gap:
+  `docs/HANDOFF_EXECUTION.md`; layer tests: `docs/TEST_PLAN_COMPONENTS.md`.
+- Closed loop code: `arbiter_kb/closed_loop.py`, `sources/online.py`, `stress/closed_loop_pod.py` (`--model`,
+  `--provider auto`, `--max-usd-episode`, `--layout`, `--prompt-cache`), K2 view `arbiter_kb/view_k2.py`; runbook
+  `stress/POD_CLOSED_LOOP.md`. Upload = `git archive` → `pod_upload_arbiter-kb.tar.gz` (git-ignored); the pod
+  checks its md5 and extracts into its own directory (`/workspace/score`), never over a running job's code.
+- **Results this round** (NOTES, bottom): Astra VideoUnmaskSwap val 0–9 H 9/10, R 6/10, K 8/10; K 38% of H's prompt
+  tokens but the same cost (caching); first call-outs right with memory (layer 1 is not the problem); K two-pick 9/20
+  but run with the gripper-0 bug (not usable for its question); VideoPlaceOrder K not run (no phrase passes).
+- **Pod:** RunPod A40; results under `/workspace/cl/` (pilot, astra_pilot, phrase_check, callout, astra_k2pick,
+  goals.jsonl). If stopped: `/workspace` survives, the container disk (Claude binary, `~/.claude`) does not; read
+  `/workspace/POD_STATE.md` first if it exists.
+- **Rule added 2026-10-30:** every paid run is proofread and preflighted for free first (HANDOFF_ORCHESTRATOR "Rules").
 
 ## Latest results (NOTES for every number and its file)
 - **The LLM adds nothing offline:** on every QA set the KB's own top answer equals K (G Q1 0.846 = 0.846 train,
@@ -42,12 +43,9 @@ concisely. Docs in English. For the execution-gap discussion (IK, controller des
   tell a pick-up from a put-down in 256-px front frames, so robot actions come from robot state.
 
 ## Next
-1. Read the Astra VideoUnmaskSwap pilot and the phrase test; look at K's failures (memory wrong vs read wrong vs
-   premature "done"). Pick VideoPlaceOrder's target phrase by the NOTES rule; run that task only if it passes.
-2. The execution-gap decisions in `docs/HANDOFF_EXECUTION.md` (model ladder with an oracle-memory arm, fair harness
-   fixes, a skills layer as a separate system claim, the KB as completion verifier, RoboMME's `multi_choice`).
-3. Upstream: a minimal repro of ManiSkill's `follow_path` zero-step crash (docs/UPSTREAM.md); the user files it.
-4. Claim 3 on fresh episodes; M6 on test after the freeze; the multi-object Cutie on G's replays.
+See `docs/HANDOFF_ORCHESTRATOR.md` "Open questions": the two free checks on real K views (Inside after uncover, jitter
+as moves), a noisy K2 offline test, the dec1e03 read, the preflight script, then one preflighted package for K (fixed)
++ H (+ K2) on the 20 two-pick episodes.
 
 ## Reminders for the pod
 - Keep `/workspace/g/replays` (the multi-object Cutie re-run needs them). Never print or store the OpenRouter key.
@@ -60,7 +58,7 @@ concisely. Docs in English. For the execution-gap discussion (IK, controller des
 - Tags: `phase-M0-done`, `phase-M1-done` (bb50365).
 - Gate per phase: `make check` (pytest + quality.py + selftest), then the code-reviewer and goal-reviewer agents
   (`/review-phase`, or spawned directly); reviews land in `reviews/`. Fix, record in NOTES, then tag.
-- Frozen params: hash a810942859b9, prompts c4b915da48c6 (`params.json` holds both; `load_params` refuses a mismatch).
+- Frozen params: hash a810942859b9, prompts 946e17f79534 (`params.json` holds both; `load_params` refuses a mismatch).
   E5c: test-split reads need a FREEZE line in `results/test_reads.log`; any parameter or prompt change means
   `python scripts/run.py --freeze --force` before the next read.
 

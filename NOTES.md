@@ -2337,6 +2337,15 @@ First measure whether K itself loses track, on new episodes.
     pod session's summary said 16 / 24, its own lists say 18 / 22.
   - **Chosen by the rule (the first 20 two-cube episodes from 10): 11, 15, 16, 17, 19, 23, 24, 25, 27, 29, 31, 32,
     35, 37, 39, 40, 41, 43, 44, 45.** Not yet run.
+- **The dec1e03 run, pod report (2026-10-30 08:57; with the gripper-0 bug below; read by the rule: not yet):**
+  K **9 / 20** success on two-pick goals (env:success 9, env:fail 9, declared_complete 2: ep 23, 31). Median 9 calls,
+  median $0.46, total about $12.5 (ep 16: 33 calls $2.02, ep 17: 31 calls $1.94). `cached_tokens` 0 in every episode.
+  Results on the pod in `/workspace/cl/astra_k2pick/`, packed as `/workspace/cl/astra_k2pick_results.tar.gz`
+  (md5 728f8e71a08ce33a8b75fe22fd4d9901); not yet on the Mac. No H on these episodes, so 9 / 20 does not say whether
+  two-pick goals are hard for every arm or for K.
+- **User verdict (2026-10-30):** this run was sent while K's gripper record was wrong, so it cannot answer the question
+  and the spend was wasted. From now on every paid run gets a proofread of the exact package and a free preflight that
+  compares the model-facing text with simulator truth before the user is asked for go (HANDOFF.md, "Rules").
 
 ## K's request layout and the provider's prompt cache (2026-10-30, user request; free, no LLM call)
 Question: make K's requests cheap under the provider's prompt cache without lowering accuracy. Background: in the
