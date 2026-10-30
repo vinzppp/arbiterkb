@@ -16,7 +16,7 @@ concisely. Docs in English. For the execution-gap discussion (IK, controller des
   `--provider auto`, `--max-usd-episode`, `--layout`, `--prompt-cache`), K2 view `arbiter_kb/view_k2.py`; runbook
   `stress/POD_CLOSED_LOOP.md`. Upload = `git archive` → `pod_upload_arbiter-kb.tar.gz` (git-ignored); the pod
   checks its md5 and extracts into its own directory (`/workspace/score`), never over a running job's code.
-- **Results this round** (NOTES, bottom): Astra VideoUnmaskSwap val 0–9 H 9/10, R 6/10, K 8/10; K 38% of H's prompt
+- **Results this round** (NOTES, bottom): Astra VideoUnmaskSwap val 0–9 H 9/10, R 6/10, K 8/10 (with the gripper-0 bug); K 38% of H's prompt
   tokens but the same cost (caching); first call-outs right with memory (layer 1 is not the problem); K two-pick 9/20
   but run with the gripper-0 bug (not usable for its question); VideoPlaceOrder K not run (no phrase passes).
 - **Pod:** RunPod A40; results under `/workspace/cl/` (pilot, astra_pilot, phrase_check, callout, astra_k2pick,
