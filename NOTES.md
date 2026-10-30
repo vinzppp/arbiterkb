@@ -2013,6 +2013,25 @@ Post-hoc attribution of the read above, **$0, no LLM**: run on G train first; th
     requests); its rerun took the first 25 of 29 calls from the LLM cache (the same answers) and 4 new ones, and
     succeeded. Its first attempt's spend ($1.32) is in OpenRouter's total, not in any row.
   - K's two failures and H's one are to be read (memory wrong vs read wrong vs execution) before any claim; not done.
+  - **Why K's fewer tokens did not cost less: OpenAI's prompt caching** (pod, from the LLM cache's responses, free;
+    2026-10-30 06:14). Per arm over the pilot (cache files, so H includes the probe's ep 0 and R ep 1's aborted try):
+
+    | arm | prompt tok | cached tok | cached share | completion tok | reasoning tok | cost $ | input $ | output $ | $ / M prompt tok |
+    |---|---|---|---|---|---|---|---|---|---|
+    | H | 650,160 | 500,685 | **0.77** | 11,258 | 7,054 | 2.93 | 2.37 | 0.56 | **4.51** |
+    | R | 461,342 | 0 | 0 | 34,713 | 17,651 | 7.50 | 5.77 | 1.74 | 16.26 |
+    | K | 244,858 | 0 | 0 | 9,152 | 2,190 | 3.52 | 3.06 | 0.46 | **14.37** |
+
+    - Input dominates every arm's cost (output 13–23%), so the earlier guess "output sets the cost" was wrong.
+    - Solving the input costs: about $12.50 / M uncached (a cache write) and about $1.00 / M cached. H's request is
+      one growing conversation, so 77% of its prompt is a cached prefix; R and K send a fresh request each call with
+      the changing memory text and new frames near the start, so they pay the write price and never read it back.
+    - **K sends 38% of H's prompt tokens but pays 3.2× more per token, so the dollars come out even.** Claim 2 holds
+      on tokens; on dollars it depends on the provider's caching and on K's prompt layout.
+    - Counterfactual, not measured: with H's cached share, K's input would be about $0.89 instead of $3.06 (total
+      about $1.35 vs H's $2.93). A cache-friendly K (fixed text first, changing view and frames last, or one growing
+      conversation) is a prompt change: a new version, re-frozen, measured, never patched into these results.
+    - `llm.py` does not record `cached_tokens` per call; to add before the next paid run.
 - **Target-phrase test (VideoPlaceOrder val ep 0–4; pod report 2026-10-30 05:57; frame rows in
   `/workspace/cl/phrase_check/<phrase>_ep<e>.npz`, `summary.json`):**
 
