@@ -214,10 +214,9 @@ def went_back(steps: list, objs: dict, sequence: list[str]) -> tuple[str, str]:
     k = next((j for j in range(picks[0][1]["step"] + 1, len(acts)) if acts[j][6] > 0), None)
     if k is None:
         return "n/a", "first pick never put down"
-    put, s = acts[k][:2], objs[sequence[1]][:2]
+    put, s, rest = acts[k][:2], objs[sequence[1]][:2], acts[k + 1:]
     if np.hypot(*np.subtract(put, s)) < MAPPED:
         return "ambiguous", f"put down within {MAPPED} m of {sequence[1]}"
-    rest = acts[k + 1:]
     for h in holds([{"action": a.tolist()} for a in rest], objs):
         a = rest[h["step"]]
         if h["rise"] >= LIFTED and np.hypot(*np.subtract(a[:2], put)) < np.hypot(*np.subtract(a[:2], s)):
@@ -229,9 +228,8 @@ GO_BACK_XY = 0.05  # m: below RoboMME VideoUnmaskSwap's 5.1 cm closest container
 
 
 def went_back_free(steps: list) -> tuple[str, str]:
-    """`went_back` without object poses (NOTES "Reading the dec1e03 run"): the first pick is the first hold lifted
-    >= 5 cm after which the env stays "ongoing" (a wrong lift ends the episode env:fail in this task); P is the first
-    open after it; "yes" when a later hold lifted >= 5 cm closes within GO_BACK_XY of P."""
+    """`went_back` without object poses (NOTES, dec1e03 reading): first pick = the first hold lifted >= 5 cm that
+    the env accepts (a wrong lift ends env:fail here); P = the next open; "yes" = a later one within GO_BACK_XY."""
     rows = [s for s in steps if s.get("action") is not None]
     acts = [np.asarray(s["action"], float) for s in rows]
     hs = holds([{"action": a.tolist()} for a in acts], {"_": [9.0, 9.0, 0.0]})  # positions only; no objects needed
@@ -243,8 +241,7 @@ def went_back_free(steps: list) -> tuple[str, str]:
     k = end(first)
     if k >= len(acts):
         return "n/a", "first pick never put down"
-    put = acts[k][:2]
-    rest = acts[k + 1:]
+    put, rest = acts[k][:2], acts[k + 1:]
     for h in holds([{"action": a.tolist()} for a in rest], {"_": [9.0, 9.0, 0.0]}):
         a = rest[h["step"]]
         if h["rise"] >= LIFTED and np.hypot(*np.subtract(a[:2], put)) < GO_BACK_XY:
