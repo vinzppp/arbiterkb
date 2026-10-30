@@ -139,6 +139,7 @@ reaches an end-to-end arm (the prompt variant, the completion facts) is a stated
 apply to, and re-frozen.
 
 ## 6. To check on the pod before writing B0 (free, no LLM)
+Script: `stress/pod_checks.py` (all five; JSON report; not yet run).
 1. The actor names per task on `env.unwrapped` (cubes, bins, targets), and their yaw.
 2. Whether the agent has `is_grasping(actor)` under RoboMME's wrappers.
 3. Whether `get_state_dict` / `set_state_dict` round-trips (truth and the next step's frames identical), or the replay
