@@ -20,6 +20,9 @@ NOUNS = {"cube": "cube", "cubes": "cube", "block": "cube", "blocks": "cube", "co
          "cup": "container", "button": "button", "buttons": "button", "peg": "peg", "stick": "stick",
          "hole": "hole", "target": "target", "targets": "target", "plate": "plate", "box": "box"}
 GENERIC_SLOTS = {"container": 5, "cube": 4}  # upper bounds per generic word; the scene's true counts are not used
+# what the detector is asked for, per place word (the KB names the slots by the word: bin_<s> / target_<s>). "target."
+# does not find VideoPlaceOrder's flat discs (perception check 2026-10-30); the phrase is chosen on val (NOTES)
+PLACE_PHRASE = {"container": "container.", "target": "target."}
 
 
 def parse_task_items(goal: str) -> list[dict]:
@@ -50,7 +53,7 @@ def open_vocabulary(items: list[dict], slots: dict = GENERIC_SLOTS) -> list[str]
     """GroundingDINO phrases, one per tracker slot, each ending in '.' (GroundingDINO splits at '.')."""
     specific = [f"{it['phrase']}." for it in items if it["color"]]
     generic_rest = [f"{w}." for w, n in slots.items() if w != "container" for _ in range(n)]
-    return [f"{place_word(items)}."] * slots.get("container", 0) + specific + generic_rest
+    return [PLACE_PHRASE[place_word(items)]] * slots.get("container", 0) + specific + generic_rest
 
 
 def is_task_item(attrs: dict, cls: str, items: list[dict]) -> bool:

@@ -11,12 +11,27 @@ import numpy as np
 
 from ..relink import Relinker
 from ..sg_compat import F_HIDDEN, F_U, F_V, F_X, F_Z
+from ..task_items import PLACE_PHRASE
 from ..types import FrameObs, ObjObs
 from .perceived import MARGIN_CAP
 
 
+BASE_XY, BASE_R, FLOOR_Z = np.array([-0.615, 0.0]), 0.10, -0.02  # the robot's base (RoboMME), m
+
+
 def _seen(row: np.ndarray, s: int) -> bool:
     return bool(row[s, F_HIDDEN] == 0 and np.all(np.isfinite(row[s, F_U:F_Z + 1])))
+
+
+def not_objects(row: np.ndarray) -> np.ndarray:
+    """The row with detections that cannot be objects marked hidden: within BASE_R of the robot's base in xy (the
+    detector finds the base itself: (-0.577, -0.002, 0.054) as a cube slot and as a target slot in every
+    VideoUnmaskSwap and VideoPlaceOrder episode checked, 2026-10-30) or below the table (a target slot at z = -0.035)."""
+    out = row.copy()
+    xyz = out[:, F_X:F_Z + 1]
+    bad = np.isfinite(xyz).all(1) & ((np.linalg.norm(xyz[:, :2] - BASE_XY, axis=1) < BASE_R) | (xyz[:, 2] < FLOOR_Z))
+    out[bad, F_HIDDEN] = 1
+    return out
 
 
 def _cube(cls: str, s: int, classes: list[str]) -> tuple[str, dict]:
@@ -58,7 +73,7 @@ class Occluder:
 class OnlineObs:
     def __init__(self, classes: list[str], n_bins: int, r: float = 0.08, dz: float = 0.01, relinked: bool = True):
         self.names = [(f"bin_{s}", "container", {}) if s < n_bins else (f"target_{s}", "target", {})
-                      if c.rstrip(".").split()[-1] == "target" else (*_cube(c, s, classes)[:1], "cube", _cube(c, s, classes)[1])
+                      if c == PLACE_PHRASE["target"] or c.rstrip(".").split()[-1] == "target" else (*_cube(c, s, classes)[:1], "cube", _cube(c, s, classes)[1])
                       for s, c in enumerate(classes)]
         self.n, self.t = n_bins, 0
         self.relinker = Relinker(n_bins) if relinked else None
@@ -68,7 +83,7 @@ class OnlineObs:
         return list(self.names)
 
     def step(self, row: np.ndarray, ee_xyz, gripper_width: float, is_video: bool = False) -> FrameObs:
-        margin = np.full(self.n, np.inf)
+        margin, row = np.full(self.n, np.inf), not_objects(row)
         if self.relinker is not None:
             row, margin = self.relinker.step(row)
         occ = self.occ.step(row)

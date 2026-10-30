@@ -137,3 +137,12 @@ def test_online_cube_placed_on_a_target_is_on_it_not_inside():
     assert kb.objects["cube_red"].visibility.value == "visible" and not kb.inside("cube_red")
     from arbiter_kb.sources.online import OnlineObs as O  # a coloured target is a target, not a cube
     assert [n[:2] for n in O(["blue target.", "blue cube."], 0).objects()] == [("target_0", "target"), ("cube_blue", "cube")]
+
+
+def test_online_drops_the_robot_base_and_below_table_detections():
+    from arbiter_kb.sources.online import not_objects
+    r = np.full((3, 8), np.nan, np.float32)
+    r[:, F_HIDDEN] = 0
+    r[:, F_U:F_U + 2] = 100
+    r[0, F_X:F_Z + 1], r[1, F_X:F_Z + 1], r[2, F_X:F_Z + 1] = (-0.577, -0.002, 0.054), (-0.1, 0.0, -0.035), (0.1, 0.1, 0.02)
+    assert not_objects(r)[:, F_HIDDEN].tolist() == [1, 1, 0]
