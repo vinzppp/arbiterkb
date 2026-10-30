@@ -50,19 +50,31 @@ def yaw(q) -> float:
 
 
 def actors(u) -> dict:
-    """{name: {p, yaw}} for every attribute of the unwrapped env that has a pose (the agent excluded)."""
+    """{name: {p, yaw, attr}} for every attribute of the unwrapped env that has a pose (the agent excluded), keyed by
+    the actor's own name (cube_red_0, target_0: the colour is there, not in the attribute; layer-1 listing on the
+    pod); one actor reached through two attributes is kept once."""
     out = {}
     for name, v in vars(u).items():
         if name.startswith("_") or name == "agent":
             continue
         for k, a in ([(name, v)] if hasattr(v, "pose") else
                      [(f"{name}[{i}]", a) for i, a in enumerate(v)] if isinstance(v, (list, tuple)) else []):
+            key = getattr(a, "name", None) or k
+            if key in out:
+                continue
             try:
-                out[k] = {"p": np.round(_np(a.pose.p), 4).tolist(), "yaw": round(yaw(a.pose.q), 3),
-                          "type": type(a).__name__}
+                out[key] = {"p": np.round(_np(a.pose.p), 4).tolist(), "yaw": round(yaw(a.pose.q), 3),
+                            "type": type(a).__name__, "attr": k}
             except Exception:  # noqa: BLE001 (an attribute with a non-actor pose)
                 pass
     return out
+
+
+def resolve(u, attr: str):
+    """The actor behind an `actors` entry's attr ("spawned_bins[2]" -> u.spawned_bins[2])."""
+    base, _, idx = attr.partition("[")
+    v = getattr(u, base)
+    return v[int(idx.rstrip("]"))] if idx else v
 
 
 def truth(u) -> dict:
@@ -104,8 +116,8 @@ def check_grasp(out: dict) -> None:
     if out["has_is_grasping"]:
         out["signature"] = str(inspect.signature(agent.is_grasping))
         out["at_reset"] = {}
-        for name in actors(u):
-            a = getattr(u, name, None)
+        for name, e in actors(u).items():
+            a = resolve(u, e["attr"])
             if a is not None:
                 try:
                     out["at_reset"][name] = bool(_np(agent.is_grasping(a)).reshape(-1)[0])
@@ -156,7 +168,7 @@ def check_pick(out: dict) -> None:
         env.reset()
         u = env.unwrapped
         x, y, z, yw = truth(u)[name]
-        agent, a = getattr(u, "agent", None), getattr(u, name)
+        agent, a = getattr(u, "agent", None), resolve(u, actors(u)[name]["attr"])
         rows = []
         for wp in pick(np.array([x, y, z]), yw):
             o, _, term, trunc, info = env.step(wp)

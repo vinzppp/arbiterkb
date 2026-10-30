@@ -2096,3 +2096,60 @@ far (M4, Batch A) is synthetic text with oracle positions only. No LLM call: it 
 - **Run procedure:** the code goes to its own directory (`/workspace/score`), never over the pilot's copy; the pod is
   not touched until the target-phrase test has finished; stage 1 is `--list` only, its output comes back and the
   right objects are confirmed here before stage 2 (scoring) runs.
+- **Stage 1 listing (pod, 2026-10-30 06:21; `/workspace/cl/callout_list.txt`): unusable, right object null in all 14
+  episodes** (VideoPlaceOrder 0–3, VideoUnmaskSwap 0–9). Our bug: `pod_checks.truth` keyed objects by env attribute
+  and index (`spawned_bins[0]`, `all_cubes[0]`, `targets[2]`), so no name held the goal's colour; the colour is in the
+  actor's own name (`cube_red_0`, `target_0`, per the earlier perception check). No scoring was run.
+  - The listing also showed: VideoPlaceOrder's goals name a coloured cube ("place the red cube on the first target it
+    was previously placed on"), so the fallback rule is not triggered there; VideoPlaceOrder lists `button` and
+    `cap_link[0]` 7 mm apart (one button); every VideoUnmaskSwap cube sits under a bin at the same xy, as expected
+    after the video; **VideoUnmaskSwap val ep 9 lists two cubes at the same position** (-0.021, -0.144, 0.017),
+    unexplained so far.
+- **Rule changes after the listing, before any scoring** (the reason in each):
+  - objects are keyed by the actor's own name; one actor reached through two attributes is kept once (`pod_checks`);
+  - the ≤ 1 mm "same position" merge is gone from `objects`: with names it is not needed, and in ep 9 it would drop
+    one of two distinct cubes, perhaps the goal's;
+  - for the nearest / second-nearest distances only, actors within 1 cm (3D) are one object's parts (the button and
+    its cap_link), kept under the first name; covered objects are still left out there;
+  - the goal's cube must be an actor whose name contains both the colour and "cube" (a coloured bin cannot match).
+  - Stage 1 is rerun with these before stage 2.
+
+## Astra VideoUnmaskSwap val pilot and the target-phrase test: pod report (2026-10-30)
+Read from the pod session's report (pasted by the user); the files stay on the pod (`/workspace/cl/astra_pilot`,
+`/workspace/cl/phrase_check/`).
+- **Astra pilot, VideoUnmaskSwap val ep 0–9, every arm `openai/gpt-6-astra`:**
+
+| arm | success | endings | median calls | $ total | median $ / ep | median prompt tok / ep | median min / ep |
+|---|---|---|---|---|---|---|---|
+| H | 9 / 10 | success 9, fail 1 (ep 1) | 5 | 2.76 | 0.278 | 51,673 | 1.0 |
+| R | 6 / 10 | success 6, fail 2, env_error 2 (ep 7, 9) | 16 | 6.18 | 0.603 | 40,957 | 7.3 |
+| K | 8 / 10 | success 8, fail 2 (ep 0, 8) | 5.5 | 3.52 | 0.279 | 19,558 | 4.2 |
+
+  - R's two env_error endings are genuine planning failures (RRT* returned −1 three times each), not the zero-step
+    bug. Qwen solved 1 of 15 VideoUnmaskSwap episodes in its pilot.
+  - **ep 1 R's first attempt ended in OpenRouter HTTP 402 (credits too low for the in-flight requests)**; it left no
+    result, was rerun once and succeeded, but 25 of its 29 calls were cache replays of the aborted attempt. The run
+    spent $13.78 on OpenRouter against $12.46 in the results (the difference is that attempt).
+  - **Prompt caching (from the LLM cache's usage fields, no call made):** about 77% of H's prompt tokens were cache
+    reads (OpenAI caches H's re-sent history); K and R never hit (their fresh request per step changes the text at
+    the start). Uncached prompt tokens cost about $12.50 per million, cached about $1.00. So H's per-token cost is
+    about 3× lower than K's; **any cost comparison for claim 2 must count cached tokens and say so**.
+  - n = 10 per arm: H 9 vs K 8 vs R 6 is a direction, not a difference.
+- **Target-phrase test (rule fixed above, VideoPlaceOrder val ep 0–4; found at frame 0 / coverage per episode):**
+
+| ep | target. | container. | circle. | disc. | ring. |
+|---|---|---|---|---|---|
+| 0 | 0 / .011 | 0 / .000 | 3 / .463 | 3 / .474 | 0 / .000 |
+| 1 | 0 / .001 | 0 / .047 | 3 / .604 | 1 / .615 | 0 / .000 |
+| 2 | 0 / .000 | 0 / .013 | 3 / .741 | 1 / .402 | 0 / .218 |
+| 3 | 0 / .000 | 0 / .027 | 3 / .730 | 1 / .637 | 0 / .084 |
+| 4 | 0 / .000 | 0 / .000 | 4 / .851 | 4 / .851 | 0 / .000 |
+
+  - circle.: mean found 3.20, coverage 0.678, hijack 0, named cube found at frame 0 in 4 / 5 (missed in ep 2, as with
+    disc.). No phrase had a hijack (measured against the visible cube slots: the simulator's cube positions at frame 0
+    are not available after reset).
+  - **Under the rule as fixed, circle. is out**: "a phrase with any hijack or a lost named cube is out", and circle.
+    lost the named cube in ep 2; so is disc. The remaining phrases find 0 targets, so the rule's last line applies:
+    **VideoPlaceOrder's K arm is not run.** The pod session called circle. "clearly best", which is true of found and
+    coverage but not the rule's verdict. Changing the rule now (e.g. allowing one lost cube in five) would be a change
+    after seeing the data; it is the user's decision and would be stated as such.

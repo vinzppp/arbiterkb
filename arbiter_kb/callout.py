@@ -16,21 +16,19 @@ from .task_items import parse_task_items
 
 RIGHT_XY, UNCERTAIN_GAP = 0.03, 0.02  # m: right = nearest and closer than this; uncertain = d2 - d1 below this
 TABLE = ((-0.6, 0.6), (-0.6, 0.6), (-0.01, 0.30))
-BASE_XY, SAME = 0.10, 0.001  # m: robot-base exclusion (as online.not_objects); actors this close are one object
+BASE_XY, PART = 0.10, 0.01  # m: robot-base exclusion (as online.not_objects); actors this close are one object's parts
 NOT_OBJECT = re.compile(r"table|ground|floor|camera|wall|goal_site|robot", re.I)
 
 
 def objects(truth: dict) -> dict:
-    """The graspable scene: actors inside the table box, away from the robot base, not scene furniture; actors at the
-    same position (one actor under two attribute names) kept once, under the first name."""
+    """The scene's objects: actors inside the table box, away from the robot base, not scene furniture. Every actor is
+    kept (keyed by its own name), so the right object can be found even where two coincide."""
     out = {}
     for name, p in truth.items():
         x, y, z = (float(v) for v in p[:3])
         if NOT_OBJECT.search(name) or not all(lo <= v <= hi for v, (lo, hi) in zip((x, y, z), TABLE)):
             continue
         if np.hypot(x - BASE[0], y - BASE[1]) < BASE_XY:
-            continue
-        if any(np.linalg.norm(np.subtract(q[:3], (x, y, z))) <= SAME for q in out.values()):
             continue
         out[name] = [x, y, z]
     return out
@@ -39,12 +37,18 @@ def objects(truth: dict) -> dict:
 COVER_XY, COVER_DZ = 0.03, 0.01  # m: an object this close in xy under a higher one is covered (VideoUnmaskSwap's cube)
 
 
-def uncovered(objs: dict) -> dict:
-    """The objects a waypoint can point at: a cube under its container shares the container's xy, so it would make
-    every pick of that container "uncertain"; it still decides the right object (`right_object` gets all)."""
-    return {n: p for n, p in objs.items()
+def pointable(objs: dict) -> dict:
+    """The objects a waypoint can point at, for the nearest / second-nearest distances. Actors within 1 cm are one
+    object's parts, kept under the first name (VideoPlaceOrder's button and its cap_link, 7 mm apart). A covered
+    object (a cube under its container) shares the container's xy and would make every pick of it "uncertain"; it is
+    left out here but still decides the right object (`right_object` gets all)."""
+    one = {}
+    for n, p in objs.items():
+        if not any(np.linalg.norm(np.subtract(q, p)) < PART for q in one.values()):
+            one[n] = p
+    return {n: p for n, p in one.items()
             if not any(m != n and np.hypot(q[0] - p[0], q[1] - p[1]) < COVER_XY and q[2] - p[2] >= COVER_DZ
-                       for m, q in objs.items())}
+                       for m, q in one.items())}
 
 
 def right_object(goal: str, objs: dict) -> tuple[str | None, str]:
@@ -54,9 +58,9 @@ def right_object(goal: str, objs: dict) -> tuple[str | None, str]:
     cube = next((it for it in items if it["noun"] == "cube" and it["color"]), None)
     if cube is None:
         return None, "no coloured cube in the goal"
-    hits = [n for n in objs if cube["color"] in n.lower()]
+    hits = [n for n in objs if cube["color"] in n.lower() and "cube" in n.lower()]
     if len(hits) != 1:
-        return None, f"{len(hits)} actors named {cube['color']!r}"
+        return None, f"{len(hits)} cube actors named {cube['color']!r}"
     if not any(it["noun"] == "container" for it in items):
         return hits[0], "the goal's cube"
     bins = [n for n in objs if re.search(r"bin|container", n, re.I)]
@@ -81,7 +85,7 @@ def score(steps: list, objs: dict, right: str | None) -> dict:
     if not acts:
         return {**row, "category": "no_action"}
     d_right = float(np.hypot(*(np.subtract(objs[right][:2], acts[0][:2])))) if right else None
-    objs = uncovered(objs)
+    objs = pointable(objs)
     near = nearest(acts[0][:2], objs)
     d1, n1 = near[0] if near else (None, None)
     d2 = near[1][0] if len(near) > 1 else None

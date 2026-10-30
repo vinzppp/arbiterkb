@@ -1,5 +1,5 @@
 """arbiter_kb/callout.py: the layer-1 scoring rules of NOTES "Layer 1 on real scenes"."""
-from arbiter_kb.callout import objects, right_object, score, summarize, uncovered
+from arbiter_kb.callout import objects, pointable, right_object, score, summarize
 
 SWAP_GOAL = "pick up the container hiding the blue cube"
 TRUTH = {"bin_0": [0.0, 0.0, 0.03, 0.0], "bin_1": [0.0, 0.15, 0.03, 0.0], "bin_2": [0.0, -0.15, 0.03, 0.0],
@@ -17,9 +17,12 @@ def test_objects_filters_furniture_base_and_off_table():
     assert set(o) == {"bin_0", "bin_1", "bin_2", "cube_blue", "cube_red"}
 
 
-def test_objects_merges_one_actor_under_two_names():
-    o = objects({"cube": [0.1, 0.1, 0.02, 0], "cubes[0]": [0.1, 0.1, 0.02, 0], "bin": [0.2, 0.1, 0.03, 0]})
-    assert set(o) == {"cube", "bin"}
+def test_parts_merge_for_distances_but_every_cube_is_kept():
+    o = objects({"button": [0.12, 0.009, 0.007, 0], "cap_link": [0.12, 0.009, 0.014, 0], "bin_0": [0.2, 0.1, 0.053, 0],
+                 "cube_green_0": [0.2, 0.1, 0.017, 0], "cube_blue_0": [0.2, 0.1, 0.017, 0]})
+    assert len(o) == 5  # two cubes at one position (VideoUnmaskSwap val ep 9's listing) both stay
+    assert set(pointable(o)) == {"button", "bin_0"}
+    assert right_object("pick up the container hiding the blue cube", o)[0] == "bin_0"
 
 
 def test_right_object_is_the_hiding_container_or_the_cube():
@@ -31,7 +34,12 @@ def test_right_object_is_the_hiding_container_or_the_cube():
 
 
 def test_covered_cube_is_left_out_of_the_distances():
-    assert set(uncovered(objects(TRUTH))) == {"bin_0", "bin_1", "bin_2"}
+    assert set(pointable(objects(TRUTH))) == {"bin_0", "bin_1", "bin_2"}
+
+
+def test_colour_must_name_a_cube():
+    o = objects({"bin_red": [0.0, 0.0, 0.053, 0], "cube_red_0": [0.0, 0.0, 0.017, 0], "bin_1": [0.2, 0.0, 0.053, 0]})
+    assert right_object("pick up the container hiding the red cube", o)[0] == "bin_red"
 
 
 def test_right_wrong_uncertain_and_no_action():
