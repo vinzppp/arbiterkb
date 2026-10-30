@@ -1992,6 +1992,47 @@ Post-hoc attribution of the read above, **$0, no LLM**: run on G train first; th
 - **Decided (user, 2026-10-30): both at once.** (1) The VideoUnmaskSwap val pilot with `openai/gpt-6-astra` for every arm (H / R / K, episodes 0–9; its perception was validated on G). (2) VideoPlaceOrder's target phrase, chosen on val before any VideoPlaceOrder pilot.
 - **Robot-base filter (tests added; re-frozen, prompts 7aade10cec0b):** `online.not_objects` marks hidden any detection within 10 cm (xy) of the robot base or more than 2 cm below the table, before re-linking. The detector's phrase per place word is now `task_items.PLACE_PHRASE`, apart from the slot names.
 - **Rule for the target phrase, fixed before the measurement:** candidates "target.", "container.", "circle.", "disc.", "ring." (generic shape words; no colour, which the goal does not give). On VideoPlaceOrder val episodes 0–4, opening video, with the robot-base filter, against the simulator's target positions: **found** = targets with a place slot within 3 cm in xy (z < 0.03) at frame 0; **coverage** = mean over perceived frames of the share of targets so matched; **hijack** = place slots within 3 cm of a cube at frame 0; and the goal's named cube must still be found at frame 0. Choose the highest mean found, then coverage; a phrase with any hijack or a lost named cube is out. If no phrase finds at least 3 of 4 targets on average, VideoPlaceOrder's K arm is not run, and NOTES says so.
+- **GPT-6-Astra VideoUnmaskSwap val pilot, ep 0–9, H / R / K (finished 2026-10-30 05:24; pod report, files under
+  `/workspace/cl/astra_pilot`; OpenRouter shows $13.78 for the run):**
+
+  | arm | success | endings | median calls | total $ | median $ / ep | median prompt tok / ep | median min / ep |
+  |---|---|---|---|---|---|---|---|
+  | H | **9 / 10** | env:fail 1 (ep 1) | 5 | 2.76 | 0.278 | 51,673 | 1.0 |
+  | R | 6 / 10 | env:fail 2, env_error 2 (ep 7, 9: RRT* failed three times; not the zero-step bug) | 16 | 6.18 | 0.603 | 40,957 | 7.3 |
+  | K | **8 / 10** | env:fail 2 (ep 0, 8) | 5.5 | 3.52 | 0.279 | 19,558 | 4.2 |
+
+  - Qwen 3.6-35B had 1 success in 15 VideoUnmaskSwap pilot episodes; with Astra all arms work, so the floor effect was
+    the model's.
+  - **K against H, n = 10, a direction only:** 8 vs 9 successes (not separable at this n), **−62% prompt tokens**
+    (19.6k vs 51.7k), the same median cost per episode ($0.279 vs $0.278: K's text prompt is cheaper but it makes
+    slightly more calls; with output at $50 / M, output tokens probably dominate, not yet split per arm). Claim 2
+    shows on tokens, not yet on dollars, with this model. K's wall time is perception (4.2 vs 1.0 min).
+  - **R is the weakest and costliest** (16 calls median, 2 RRT* failures): the raw log does not give the model a
+    stable plan; the KB view does.
+  - **Caveat:** ep 1 R's first attempt ended in harness_error, OpenRouter HTTP 402 (credits low, given in-flight
+    requests); its rerun took the first 25 of 29 calls from the LLM cache (the same answers) and 4 new ones, and
+    succeeded. Its first attempt's spend ($1.32) is in OpenRouter's total, not in any row.
+  - K's two failures and H's one are to be read (memory wrong vs read wrong vs execution) before any claim; not done.
+- **Target-phrase test (VideoPlaceOrder val ep 0–4; pod report 2026-10-30 05:57; frame rows in
+  `/workspace/cl/phrase_check/<phrase>_ep<e>.npz`, `summary.json`):**
+
+  | phrase | found at frame 0 (of 4), mean | coverage | hijack | named cube found at frame 0 |
+  |---|---|---|---|---|
+  | target. | 0.00 | 0.002 | 0 | 5 / 5 |
+  | container. | 0.00 | 0.017 | 0 | 5 / 5 |
+  | circle. | **3.20** | **0.678** | 0 | **4 / 5** (lost in ep 2) |
+  | disc. | 2.00 | 0.596 | 0 | 4 / 5 (lost in ep 2) |
+  | ring. | 0.00 | 0.060 | 0 | 5 / 5 |
+
+  - **By the rule fixed before the measurement, no phrase passes:** "circle." and "disc." lose the named cube in
+    ep 2, which puts them out; the other three find no target. **So VideoPlaceOrder's K arm is not run.** "circle."
+    is the only phrase that finds the targets (3.2 of 4 at frame 0, two-thirds over the video); running it would
+    need the user to change the rule, recorded as a deviation.
+  - **Deviation in the measurement:** hijack was measured against the perceived cube slots, not the simulator's
+    cubes (their poses at frame 0 of the opening video are not available after reset). The pod saw no hijack with
+    any phrase.
+  - Not yet known: whether "circle." loses the cube in ep 2 by taking its slot or the cube is missed anyway at
+    that frame (the npz rows can tell, free).
 
 ## Layer 1 on real scenes: how accurate is the model's first call-out? The test, fixed before running (2026-10-29, user request)
 Question: on the real RoboMME scenes the closed loop already ran, does the model's first waypoint point at the right
