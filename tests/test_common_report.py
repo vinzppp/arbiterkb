@@ -1,6 +1,15 @@
 import json
 
-from scripts.common_harness_report import audit, group_summary, paired_tests
+from scripts.common_harness_report import audit, group_summary, load_rows, paired_tests
+
+
+def test_load_rows_recovers_missing_arm_from_result_directory(tmp_path):
+    path = tmp_path / "clean" / "Task_ep0_memi" / "result.json"
+    path.parent.mkdir(parents=True)
+    path.write_text('{"arm":"unknown","task":"Task","episode":0}')
+    row = load_rows(tmp_path)[0]
+    assert row["arm"] == "memi"
+    assert row["arm_recorded"] == "unknown"
 
 
 def row(arm, success, digest="same", episode=0):

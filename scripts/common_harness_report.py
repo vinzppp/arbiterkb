@@ -20,6 +20,11 @@ def load_rows(root: Path) -> list[dict]:
     rows = []
     for path in sorted(root.rglob("result.json")):
         row = json.loads(path.read_text())
+        row["arm_recorded"] = row.get("arm")
+        if row.get("arm") in (None, "", "unknown"):
+            suffix = path.parent.name.rsplit("_", 1)[-1]
+            if suffix in {"fullhist", "memi", "soft", "arbiter"}:
+                row["arm"] = suffix
         row["_path"], row["cell"] = str(path), path.parents[1].name
         rows.append(row)
     return rows

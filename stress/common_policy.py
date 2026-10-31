@@ -96,5 +96,9 @@ def make_policy(arm: str, backend: str, task: str, episode: int, settings, promp
         from memi.plan.rollout.policies import make
 
         settings.policy_prompt = prompts if arm == "memi" else ""
-        return make("memory" if arm == "memi" else "fullhist", task, episode, settings)
+        policy = make("memory" if arm == "memi" else "fullhist", task, episode, settings)
+        # MEMI's stock policies do not expose the experimental arm name.  Keep
+        # it on the adapter so result provenance matches the frozen invocation.
+        policy.arm = arm
+        return policy
     return StructuredPolicy(task, episode, settings, arm, params)
