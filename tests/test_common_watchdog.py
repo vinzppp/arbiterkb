@@ -1,11 +1,19 @@
+import importlib.util
 import json
 import sys
 import time
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from arbiter_kb.common_supervisor import supervise_cell
 from arbiter_kb.common_watchdog import WatchdogSpec, detect_loop
+
+HARNESS_SPEC = importlib.util.spec_from_file_location(
+    "common_harness_pod", Path(__file__).resolve().parents[1] / "stress/common_harness_pod.py")
+HARNESS = importlib.util.module_from_spec(HARNESS_SPEC)
+HARNESS_SPEC.loader.exec_module(HARNESS)
 
 
 def spec(**overrides):
@@ -88,3 +96,19 @@ def test_loop_detection_is_diagnostic_for_same_and_alternating_actions():
     assert same == {"kind": "same_action", "span": 3, "pattern": same["pattern"]}
     assert alternating["kind"] == "alternating_actions"
     assert alternating["span"] == 6
+
+
+def test_validation_gate_is_forwarded_to_worker(tmp_path):
+    gate = tmp_path / "smoke-summary.json"
+    args = SimpleNamespace(
+        manifest=tmp_path / "manifest.json",
+        stage="validation",
+        memi_root=tmp_path / "memi",
+        out=tmp_path / "out",
+        gate_file=gate,
+        run_id="validation-test",
+    )
+    child = HARNESS._child_args(
+        args, "Task", 1, "fullhist", {"mode": "clean"}, tmp_path / "events.jsonl")
+    assert child[child.index("--gate-file") + 1] == str(gate)
+    assert child[child.index("--run-id") + 1] == "validation-test"

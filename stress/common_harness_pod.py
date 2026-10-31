@@ -80,6 +80,8 @@ def _child_args(a, task, episode, arm, cfg, events=None):
     args = [sys.executable, __file__, "--manifest", str(a.manifest), "--stage", a.stage,
             "--memi-root", str(a.memi_root), "--out", str(a.out), "--one", task,
             str(episode), arm, "--cell", json.dumps(cfg, separators=(",", ":"))]
+    if a.gate_file:
+        args.extend(["--gate-file", str(a.gate_file)])
     if events is not None:
         args.extend(["--worker", "--events", str(events)])
         if a.run_id:
