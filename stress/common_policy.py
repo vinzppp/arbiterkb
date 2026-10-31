@@ -6,11 +6,15 @@ from collections import Counter
 from arbiter_kb.common_memory import DeterministicMemory
 
 MEMORY_NOTE = """
-At every decision you receive a MEMORY SNAPSHOT built only from the same visible
-semantic observations printed in OBSERVED STEPS. Its anonymous ids come from
-geometric visual association, never simulator actor identity. Use it as the
-episode history; the latest OBSERVED STEPS remain authoritative for what is
-visible now. Answer in the original JSON format with choice and point only.
+
+MEMORY-ARM OVERRIDE
+Each request in this arm is a fresh conversation: earlier user and assistant
+turns are not present. Instead, at every decision you receive a MEMORY SNAPSHOT
+built only from the same visible semantic observations printed in the steps.
+Its anonymous ids come from geometric visual association, never simulator
+actor identity. Use the snapshot as the episode history; the latest steps
+remain authoritative for what is visible now. Answer in the original JSON
+format with choice and point only.
 """
 
 
@@ -25,7 +29,7 @@ class StructuredPolicy:
         self.memory, self.calls, self.n = DeterministicMemory(arm, params), [], 0
 
     def start(self, task, goal, menu, has_demo=False):
-        self.task, self.goal, self.n = task, goal, 0
+        self.task, self.goal, self.n, self.has_demo = task, goal, 0, bool(has_demo)
 
     def reset_memory(self, meta):
         self.memory.reset(meta)
@@ -37,7 +41,7 @@ class StructuredPolicy:
         from memi.plan.policy_turn import parse_answer
         from memi.plan.prompts.fullhist import decide_turn
 
-        user = decide_turn(self.n, segment, menu, self.goal, demo=self.n == 0)
+        user = decide_turn(self.n, segment, menu, self.goal, demo=self.has_demo and self.n == 0)
         user += "\n\nMEMORY SNAPSHOT\n" + self.memory.text()
         text, rec = self.chat.send(self.system, [{"role": "user", "content": user}], self._purpose())
         cmd, status = parse_answer(text, menu)

@@ -35,6 +35,12 @@ def git(root: Path, *args) -> str:
     return subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True).stdout.strip()
 
 
+def source_dirty() -> bool:
+    """Generated common-harness results do not make the source tree dirty."""
+    lines = git(ROOT, "status", "--porcelain", "--untracked-files=all").splitlines()
+    return any(not line[3:].startswith("results/robomme_common/") for line in lines)
+
+
 def verify_sources(memi_root: Path, spec: dict) -> dict:
     roots = {"memi": memi_root, "robomme": memi_root / "third_party/robomme_benchmark"}
     found = {name: git(path, "rev-parse", "HEAD") for name, path in roots.items()}
@@ -125,7 +131,7 @@ def run_one(a, spec, stage, manifest_sha, sources):
         raise
     row = log.__dict__
     row["provenance"] = {"manifest_sha": manifest_sha, "arbiter_commit": git(ROOT, "rev-parse", "HEAD"),
-                         "arbiter_dirty": bool(git(ROOT, "status", "--porcelain")), "sources": sources,
+                         "arbiter_dirty": source_dirty(), "sources": sources,
                          "params_sha": params.hash(), "prompt_sha": digest(Path(prompts)),
                          "episode": episode_seed(task, episode, stage["split"])}
     path = result_path(a.out, a.stage, cell_name(cfg), task, episode, arm)
