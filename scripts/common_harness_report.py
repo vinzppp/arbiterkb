@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from arbiter_kb.paper_stats import belief_summary, holm_adjust, mcnemar_exact, rate_interval
+from arbiter_kb.experiment_manifest import load_manifest
 
 
 def load_rows(root: Path) -> list[dict]:
@@ -210,7 +211,7 @@ def main():
     ap.add_argument("--manifest", type=Path, default=ROOT / "experiments/robomme_common_v1.json")
     ap.add_argument("--out", type=Path)
     a = ap.parse_args()
-    spec, rows = json.loads(a.manifest.read_text()), load_rows(a.root)
+    (spec, manifest_sha), rows = load_manifest(a.manifest), load_rows(a.root)
     diagnostic = a.root.name == "executor_preflight"
     arms = spec["arms"][:1] if diagnostic else spec["arms"]
     audit_result = audit(
@@ -227,7 +228,7 @@ def main():
         "approved_stages": ["validation"] if gate_pass and a.root.name == "smoke" else [],
         "reason": "complete integrity audit" if gate_pass else "audit or terminal blockers remain",
     }
-    report = {"manifest_sha": __import__("hashlib").sha256(a.manifest.read_bytes()).hexdigest()[:16],
+    report = {"manifest_sha": manifest_sha,
               "diagnostic_only": diagnostic,
               "rows": len(rows), "summary": summaries(rows, spec["prices_per_million"]),
               "paired_tests": {} if diagnostic else paired_tests(rows, spec["pairwise_contrasts"]),

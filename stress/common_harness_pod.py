@@ -7,7 +7,6 @@ environment. API secrets are read only by MEMI's client and never serialized.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import importlib.util
 import json
 import os
@@ -20,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(Path(__file__).parent)]
 
 from arbiter_kb import ledger  # noqa: E402
+from arbiter_kb.experiment_manifest import digest, load_manifest  # noqa: E402
 from arbiter_kb.params import Params  # noqa: E402
 from arbiter_kb.common_supervisor import supervise_cell  # noqa: E402
 from arbiter_kb.common_watchdog import (  # noqa: E402
@@ -31,13 +31,8 @@ from arbiter_kb.common_watchdog import (  # noqa: E402
 )
 
 
-def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
-
-
 def manifest(path: Path) -> tuple[dict, str]:
-    data = json.loads(path.read_text())
-    return data, digest(path)
+    return load_manifest(path)
 
 
 def git(root: Path, *args) -> str:
