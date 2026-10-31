@@ -99,3 +99,23 @@ not return after 16:24 and was stopped without a result, so the audit correctly
 fails for an incomplete arm set. Degradation and held-out stages have not run.
 See `paper/ROBOMME_COMMON_HARNESS_REPORT_ZH.md` and
 `results/robomme_common/openrouter_v1/reproducibility_manifest.json`.
+
+## R2 watchdog v2.1
+
+The process-level watchdog protocol is frozen in
+`experiments/robomme_common_v2_1_watchdog_openrouter.json` (SHA
+`a839ccc592f8aa55`). It hash-checks and inherits the full v2 manifest. The
+first v2 hash was retired before any cell because its reset ceiling was below
+the observed v1 VideoRepick preflight reset proxy.
+
+Each v2.1 cell runs in a fresh process group and writes fsync'd JSONL phase
+events. The supervisor can terminate a blocked reset, LLM call, executor
+command, or whole episode, escalate from SIGTERM to SIGKILL, and write a
+terminal result without waiting for the blocked call to return. Timeouts are
+primary failures; infrastructure errors and incomplete cells are separate and
+fail the gate. Loop detection is diagnostic only.
+
+The four-task no-LLM simulator preflight passed 4/4 with complete result and
+event traces. The 16-cell API smoke is not started because no newly authorized
+credential is configured; the runner fails closed before creating a run or
+making a paid request. See `paper/ROBOMME_WATCHDOG_V2_REPORT_ZH.md`.

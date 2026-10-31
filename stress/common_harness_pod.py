@@ -123,6 +123,29 @@ def _write_json(path: Path, row: dict):
     temporary.replace(path)
 
 
+def _row_cost(row: dict, prices: dict) -> float:
+    usage = ((row.get("policy") or {}).get("usage") or {})
+    total, cached = int(usage.get("input_tokens", 0)), int(usage.get("cached_tokens", 0))
+    written = int(usage.get("cache_write_tokens", 0))
+    output = int(usage.get("output_tokens", 0))
+    value = ((total - cached - written) * prices["fresh_input"]
+             + cached * prices["cached_input"] + written * prices["cache_write"]
+             + output * prices["output"])
+    return value / 1e6
+
+
+def enforce_cost_budget(out: Path, spec: dict, stage: dict):
+    if stage["backend"] != "api":
+        return
+    limit = (spec.get("validation_analysis_plan") or {}).get("api_cost_stop_usd")
+    if limit is None:
+        return
+    rows = [json.loads(path.read_text()) for path in out.rglob("result.json")]
+    cost = sum(_row_cost(row, spec["prices_per_million"]) for row in rows)
+    if cost >= float(limit):
+        raise SystemExit(f"recorded API cost ${cost:.6f} reached frozen stop ${float(limit):.6f}")
+
+
 def run_supervised_one(a, spec, stage, sources, task, episode, arm, cfg):
     cell = cell_name(cfg)
     result = result_path(a.out, a.stage, cell, task, episode, arm)
@@ -130,6 +153,7 @@ def run_supervised_one(a, spec, stage, sources, task, episode, arm, cfg):
     base = base_result(a, spec, stage, task, episode, arm, cfg, sources)
     if result.exists():
         return 0
+    enforce_cost_budget(a.out, spec, stage)
     if events.exists():
         partial = read_events(events)
         row = {

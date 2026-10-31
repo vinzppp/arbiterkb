@@ -1,0 +1,55 @@
+{
+  "run_id": "preflight_20261031T1015Z",
+  "classification": "diagnostic_executor_preflight",
+  "scored_policy_run": false,
+  "manifest": {
+    "path": "experiments/robomme_common_v2_1_watchdog_openrouter.json",
+    "sha": "a839ccc592f8aa55",
+    "parent_sha": "06f1636d5e387243",
+    "parent_status": "retired_before_any_cell",
+    "freeze_commit": "4649fd9"
+  },
+  "container": {
+    "platform": "linux/amd64",
+    "tag": "arbiterkb-robomme-cpu:bb6c37c",
+    "image_id": "sha256:07424f3b53e08c0bfd27db3a97d89210de92679b040aed3a5aa49e580e059fd1",
+    "renderer": "cpu"
+  },
+  "sources": {
+    "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+    "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+    "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd",
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae"
+  },
+  "watchdog_selftest": {
+    "host": "PASS",
+    "frozen_container": "PASS",
+    "llm_hang": "terminated_as_infrastructure_error",
+    "executor_hang": "terminated_as_timeout",
+    "episode_hang": "terminated_as_timeout",
+    "alternating_loop": "detected_diagnostic_only"
+  },
+  "preflight": {
+    "expected_cells": 4,
+    "terminal_cells": 4,
+    "event_logs": 4,
+    "audit_passed": true,
+    "timeouts": 0,
+    "infrastructure_errors": 0,
+    "incomplete": 0,
+    "harness_errors": 0,
+    "model_calls": 0,
+    "api_cost_usd": 0.0
+  },
+  "api_smoke": {
+    "status": "not_started",
+    "credential_present": false,
+    "previously_shared_credential_used": false,
+    "paid_requests": 0,
+    "cost_usd": 0.0,
+    "fail_closed_probe": "PASS: refused before run directory creation"
+  },
+  "heldout_read": false,
+  "gate": "NO_GO_API_SMOKE_VALIDATION_DEGRADATION_HELDOUT"
+}
