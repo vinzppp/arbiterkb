@@ -29,3 +29,11 @@ def test_report_cost_and_leakage_audit():
 
 def test_result_rows_are_json_serializable():
     assert json.dumps(row("fullhist", True))
+
+
+def test_scripted_preflight_is_not_reported_as_policy_success():
+    one = row("fullhist", False)
+    one["policy"]["model"] = "none"
+    summary = group_summary([one], {})
+    assert summary["diagnostic_only"]
+    assert "success" not in summary

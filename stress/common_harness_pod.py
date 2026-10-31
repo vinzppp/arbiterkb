@@ -76,11 +76,12 @@ def _child_args(a, task, episode, arm, cfg):
 
 def run_parent(a, spec, stage):
     finished = 0
+    arms = spec["arms"][:1] if stage["backend"] == "scripted" else spec["arms"]
     for cfg in stage["observations"]:
         cell = cell_name(cfg)
         for task in spec["tasks"]:
             for episode in stage["episodes"]:
-                for arm in spec["arms"]:
+                for arm in arms:
                     path = result_path(a.out, a.stage, cell, task, episode, arm)
                     if path.exists():
                         finished += 1

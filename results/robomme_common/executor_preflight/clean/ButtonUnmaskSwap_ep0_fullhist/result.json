@@ -1,0 +1,93 @@
+{
+ "task": "ButtonUnmaskSwap",
+ "episode": 0,
+ "split": "val",
+ "goal": "first press both buttons on the table, then pick up the container hiding the blue cube, finally pick up another container hiding the red cube",
+ "menu": [
+  {
+   "label": "a",
+   "action": "press the first button",
+   "need_parameter": false
+  },
+  {
+   "label": "b",
+   "action": "press the second button",
+   "need_parameter": false
+  },
+  {
+   "label": "c",
+   "action": "pick up the container",
+   "need_parameter": true
+  },
+  {
+   "label": "d",
+   "action": "put down the container",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 0,
+  "chars": 0
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 0,
+   "t_to": 0,
+   "steps": 1,
+   "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [140, 117]\n  button at [63, 101], [65, 147]\n  green cube at [85, 90]\n  red cube at [100, 166]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "a",
+    "point": null
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 118,
+   "captured": 118,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 34.85
+  }
+ ],
+ "outcome": "preflight_complete",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 1,
+ "reset_batch": 1,
+ "policy": {
+  "name": "scripted_fullhist",
+  "model": "none",
+  "effort": "none",
+  "usage": {},
+  "log": []
+ },
+ "seconds": 35.4,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73001,
+  "dropout": 0.0,
+  "jitter_px": 0.0
+ },
+ "arm": "fullhist",
+ "reset_digest": "edcdb5366a02d0cf",
+ "success": false,
+ "provenance": {
+  "manifest_sha": "ec0b1fe2ff7f7027",
+  "arbiter_commit": "5c89d281952da8a7f0e136700e114309600615dc",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1070000,
+   "difficulty": "easy",
+   "episode_count": 50
+  }
+ }
+}

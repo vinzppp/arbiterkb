@@ -4,14 +4,16 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from collections import defaultdict
+import sys
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import numpy as np
 
-from arbiter_kb.paper_stats import belief_summary, holm_adjust, mcnemar_exact, rate_interval
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from arbiter_kb.paper_stats import belief_summary, holm_adjust, mcnemar_exact, rate_interval
 
 
 def load_rows(root: Path) -> list[dict]:
@@ -43,6 +45,12 @@ def _mean(values) -> float:
 
 def group_summary(rows: list[dict], prices: dict) -> dict:
     scored = [r for r in rows if r.get("outcome") != "harness_error"]
+    diagnostic = bool(scored) and all((r.get("policy") or {}).get("model") == "none" for r in scored)
+    if diagnostic:
+        return {"diagnostic_only": True, "episodes": len(scored),
+                "outcomes": dict(Counter(r.get("outcome", "") for r in scored)),
+                "harness_errors": len(rows) - len(scored),
+                "wall_s_mean": _mean(r.get("seconds", 0) for r in scored)}
     return {"success": rate_interval([bool(r.get("success")) for r in scored]),
             "episodes": len(scored), "harness_errors": len(rows) - len(scored),
             "model_calls_mean": _mean(len((r.get("policy") or {}).get("log") or []) for r in scored),
@@ -148,11 +156,15 @@ def main():
     ap.add_argument("--out", type=Path)
     a = ap.parse_args()
     spec, rows = json.loads(a.manifest.read_text()), load_rows(a.root)
+    diagnostic = a.root.name == "executor_preflight"
     report = {"manifest_sha": __import__("hashlib").sha256(a.manifest.read_bytes()).hexdigest()[:16],
+              "diagnostic_only": diagnostic,
               "rows": len(rows), "summary": summaries(rows, spec["prices_per_million"]),
-              "paired_tests": paired_tests(rows, spec["pairwise_contrasts"]),
-              "paired_resources": resource_differences(rows, spec["pairwise_contrasts"], spec["prices_per_million"]),
-              "beliefs": beliefs(rows), "audit": audit(rows, spec["arms"])}
+              "paired_tests": {} if diagnostic else paired_tests(rows, spec["pairwise_contrasts"]),
+              "paired_resources": {} if diagnostic else resource_differences(
+                  rows, spec["pairwise_contrasts"], spec["prices_per_million"]),
+              "beliefs": beliefs(rows),
+              "audit": audit(rows, spec["arms"][:1] if diagnostic else spec["arms"])}
     out = a.out or a.root / "summary.json"
     out.write_text(json.dumps(report, indent=2, allow_nan=True))
     print(json.dumps({"rows": len(rows), "audit": report["audit"], "out": str(out)}, indent=2))

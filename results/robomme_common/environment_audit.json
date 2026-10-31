@@ -1,0 +1,76 @@
+{
+  "recorded_at_utc": "2026-10-31T04:38:47Z",
+  "research_branch": "research/perception-belief-robomme",
+  "main_modified": false,
+  "manifest": {
+    "path": "experiments/robomme_common_v1.json",
+    "sha256_prefix": "ec0b1fe2ff7f7027",
+    "frozen_before_test_read": true,
+    "test_split_read": false
+  },
+  "sources": {
+    "arbiter_kb_execution": "5c89d28",
+    "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+    "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+    "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "host": {
+    "os": "macOS 15.1.1 (24B91)",
+    "kernel": "Darwin 24.1.0 arm64",
+    "gpu": "no NVIDIA CUDA device",
+    "docker": "29.7.2, Linux arm64 daemon"
+  },
+  "native_path": {
+    "python": "3.12.0",
+    "sapien": "3.0.3",
+    "pinned_mplib_available": false,
+    "mplib_spec": null,
+    "blocker": "The pinned ManiSkill source installs mplib==0.1.1 only on Linux. That release has no macOS/arm64 wheel; the exact native multi_choice motion-planning stack is therefore unavailable. A native PickHighlight reset diagnostic was terminated after it did not finish in 30 seconds.",
+    "disposition": "replaced by the exact Linux/amd64 CPU fallback, not used for scores"
+  },
+  "container_path": {
+    "image": "arbiterkb-robomme-cpu:bb6c37c",
+    "image_id": "sha256:07424f3b53e08c0bfd27db3a97d89210de92679b040aed3a5aa49e580e059fd1",
+    "platform": "linux/amd64 under Apple Silicon translation",
+    "python": "3.11",
+    "torch": "2.9.1+cpu",
+    "sapien": "3.0.3",
+    "mplib": "0.1.1",
+    "render_device": "CPU fallback",
+    "build_succeeded": true,
+    "four_task_reset_succeeded": true
+  },
+  "reset_probe": [
+    {"task": "VideoUnmaskSwap", "val_episodes": 50, "reset_seconds": 97.29},
+    {"task": "ButtonUnmaskSwap", "val_episodes": 50, "reset_seconds": 0.94},
+    {"task": "PickHighlight", "val_episodes": 50, "reset_seconds": 0.66},
+    {"task": "VideoRepick", "val_episodes": 50, "reset_seconds": 53.69}
+  ],
+  "executor_preflight": {
+    "split": "val",
+    "episode": 0,
+    "backend": "scripted_first_menu_item",
+    "model_calls": 0,
+    "paid_calls": 0,
+    "diagnostic_only": true,
+    "rows": 4,
+    "audit_passed": true,
+    "dirty_rows": 0,
+    "harness_errors": 0,
+    "results": [
+      {"task": "ButtonUnmaskSwap", "outcome": "preflight_complete", "wall_seconds": 35.4, "reset_digest": "edcdb5366a02d0cf", "seed": 1070000},
+      {"task": "PickHighlight", "outcome": "preflight_complete", "wall_seconds": 31.4, "reset_digest": "e5bfc2d7ab8100cb", "seed": 1120000},
+      {"task": "VideoUnmaskSwap", "outcome": "fail", "wall_seconds": 91.0, "reset_digest": "12507d24b522d7e9", "seed": 1050000},
+      {"task": "VideoRepick", "outcome": "fail", "wall_seconds": 253.8, "reset_digest": "00785fa8fc272f65", "seed": 1090000}
+    ],
+    "interpretation": "Both fail outcomes are terminal task outcomes from a deliberately blind first-menu action. They validate executor/error propagation and are not policy scores."
+  },
+  "model_smoke": {
+    "attempted": false,
+    "openai_api_key_present": false,
+    "openai_api_url_present": false,
+    "openrouter_api_key_present": false,
+    "blocker": "No deliberately supplied credential and endpoint capable of serving the frozen gpt-6-luna chat-completions condition were present.",
+    "closed_loop_scores_emitted": false
+  }
+}
