@@ -132,10 +132,13 @@ def memi_panel(root: Path) -> dict:
     tests = {}
     for policy in POLICIES:
         mem, full = rows[policy, "memi"], rows[policy, "fullhist"]
-        by = lambda xs: {(r["task"], int(r["episode"])): memi_success(r) for r in xs}  # noqa: E731
-        a, b = by(mem), by(full)
-        keys = sorted(set(a) & set(b))
-        tests[policy] = mcnemar_exact([a[k] for k in keys], [b[k] for k in keys])
+        tests[policy] = {}
+        for scope, task in (("all", None), ("VideoUnmaskSwap", "VideoUnmaskSwap")):
+            by = lambda xs: {(r["task"], int(r["episode"])): memi_success(r) for r in xs  # noqa: E731
+                             if task is None or r["task"] == task}
+            a, b = by(mem), by(full)
+            keys = sorted(set(a) & set(b))
+            tests[policy][scope] = mcnemar_exact([a[k] for k in keys], [b[k] for k in keys])
     return {"table": table, "memi_vs_fullhist": tests}
 
 
