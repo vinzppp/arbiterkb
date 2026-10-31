@@ -2,7 +2,7 @@
 
 **Research branch:** `research/perception-belief-robomme`  
 **Audit date:** 2026-10-30 (America/Los_Angeles)  
-**ArbiterKB comparison code:** `d77be1c`  
+**ArbiterKB comparison code:** `392de75`
 **MEMI release:** `bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0`
 
 ## Abstract
@@ -16,8 +16,9 @@ whereas the ArbiterKB panel uses noisy perception and scores memory answers offl
 
 MEMI's release reproduces exactly (`ALL MATCH`) and shows large, paired closed-loop gains on the 800-episode test set
 for every released policy. On the 90-episode perceived holdout (235 cube queries), ArbiterKB does **not** improve
-top-1 accuracy over the simple repair baselines and does not improve AURC over detector-only soft repair. Its Brier
-score is lower than deterministic re-linking, but the difference against soft repair is uncertain. The strongest
+top-1 accuracy over the simple repair baselines and does not improve AURC over detector-only soft repair. After an
+audit correction that includes the explicit `None/elsewhere` class, its Brier score is also indistinguishable from
+soft repair. The strongest
 defensible conclusion is therefore negative: the present rule-rich KB has not established an advantage over a much
 simpler belief-repair pipeline under perception noise. A direct MEMI-versus-ArbiterKB closed-loop claim remains
 unmeasured.
@@ -100,20 +101,23 @@ lower inference cost.
 | raw Bound | 80.9% [75.3, 85.4] | 19.1% | 100.0% | 0.1915 | 0.4043 | 0.1915 |
 | relink Bound | 82.1% [76.7, 86.5] | 17.9% | 100.0% | 0.1787 | 0.3787 | 0.1787 |
 | relink Soft | 82.1% [76.7, 86.5] | 16.6% | 93.6% | **0.1386** | 0.3377 | 0.1578 |
-| ArbiterKB | 81.3% [75.8, 85.7] | **15.3%** | 91.5% | 0.1435 | **0.3201** | **0.1414** |
+| ArbiterKB | 81.3% [75.8, 85.7] | **15.3%** | 91.5% | 0.1435 | **0.3370** | **0.1414** |
 
 Pairwise episode-bootstrap differences are reported as ArbiterKB minus baseline:
 
 | baseline | accuracy difference | AURC difference | Brier difference | McNemar p |
 |---|---:|---:|---:|---:|
-| raw Bound | +0.004 [-0.070, +0.081] | -0.048 [-0.122, +0.024] | -0.084 [-0.218, +0.042] | 1.000 |
-| relink Bound | -0.009 [-0.032, +0.013] | -0.035 [-0.098, +0.030] | -0.059 [-0.104, -0.018] | 0.727 |
-| relink Soft | -0.009 [-0.032, +0.013] | +0.005 [-0.048, +0.059] | -0.018 [-0.052, +0.013] | 0.727 |
+| raw Bound | +0.004 [-0.070, +0.081] | -0.048 [-0.122, +0.024] | -0.067 [-0.204, +0.062] | 1.000 |
+| relink Bound | -0.009 [-0.032, +0.013] | -0.035 [-0.098, +0.030] | -0.042 [-0.093, +0.007] | 0.727 |
+| relink Soft | -0.009 [-0.032, +0.013] | +0.005 [-0.048, +0.059] | -0.001 [-0.042, +0.040] | 0.727 |
 
 ArbiterKB's lower silent-failure count partly comes from answering fewer cases above threshold. AURC removes that
 single-threshold advantage, and the full KB is statistically indistinguishable from soft repair on AURC. The Brier
 gain over deterministic re-linking is the clearest positive signal, but it is post-hoc and one of several comparisons;
-it does not survive as a distinct advantage over the soft baseline.
+it does not survive as a distinct advantage over the soft baseline. The earlier `0.3201` ArbiterKB Brier value
+omitted `None/elsewhere` from the outcome space while allowing the KB to place probability on it. The corrected value
+is `0.3370`; code, tests, and machine results now score that class explicitly. The paired error and ablation audit in
+`paper/PAIRED_ERROR_ABLATION_AUDIT.md` gives the full mechanism-level analysis.
 
 ### 3.3 Existing ArbiterKB closed-loop logs are exploratory only
 
