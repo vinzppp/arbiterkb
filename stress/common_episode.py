@@ -5,6 +5,7 @@ from MEMI's pinned release.  Only the memory-policy hook and audit fields differ
 """
 from __future__ import annotations
 
+import json
 import time
 import traceback
 from pathlib import Path
@@ -99,6 +100,8 @@ def _decision(ep, i, timeline, bounds, demo, log, policy, env, cap, film, stream
     d = ep.Decision(index=i, t_from=start, t_to=end - 1, steps=n, segment=seg, demo_steps=shown)
     ts, before = time.time(), len(cap.exec_rows)
     d.command = policy.decide(seg, log.menu)
+    print(json.dumps({"event": "executor_command", "decision": i, "command": d.command},
+                     default=str), flush=True)
     memory = getattr(policy, "memory", None)
     if callable(getattr(memory, "beliefs", None)) and policy.calls:
         policy.calls[-1]["scored_beliefs"] = stream.score_beliefs(memory.beliefs())
