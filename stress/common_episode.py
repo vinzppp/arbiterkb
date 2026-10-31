@@ -99,8 +99,9 @@ def _decision(ep, i, timeline, bounds, demo, log, policy, env, cap, film, stream
     d = ep.Decision(index=i, t_from=start, t_to=end - 1, steps=n, segment=seg, demo_steps=shown)
     ts, before = time.time(), len(cap.exec_rows)
     d.command = policy.decide(seg, log.menu)
-    if hasattr(policy, "memory") and policy.calls:
-        policy.calls[-1]["scored_beliefs"] = stream.score_beliefs(policy.memory.beliefs())
+    memory = getattr(policy, "memory", None)
+    if callable(getattr(memory, "beliefs", None)) and policy.calls:
+        policy.calls[-1]["scored_beliefs"] = stream.score_beliefs(memory.beliefs())
     obs, _, term, trunc, info = env.step(d.command)
     film.add(obs)
     info = _classify(ep, d, obs, term, trunc, info, log.menu)

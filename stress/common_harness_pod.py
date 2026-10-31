@@ -84,8 +84,14 @@ def run_parent(a, spec, stage):
                 for arm in arms:
                     path = result_path(a.out, a.stage, cell, task, episode, arm)
                     if path.exists():
-                        finished += 1
-                        continue
+                        try:
+                            prior = json.loads(path.read_text())
+                        except (OSError, json.JSONDecodeError):
+                            prior = {}
+                        if prior.get("outcome") != "harness_error":
+                            finished += 1
+                            continue
+                        print(f"retrying harness_error: {task} ep{episode} {arm}", flush=True)
                     path.parent.mkdir(parents=True, exist_ok=True)
                     rc = subprocess.run(_child_args(a, task, episode, arm, cfg), cwd=ROOT,
                                         env={**os.environ, "PYTHONUNBUFFERED": "1"}).returncode
