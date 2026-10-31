@@ -1,0 +1,29 @@
+# Diagnostic fallback only: x86 Linux is required by mplib==0.1.1.
+FROM --platform=linux/amd64 python:3.11-slim
+
+ARG MEMI_SHA=bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0
+ARG ROBOMME_SHA=fae9f7300347f1146c2ae4844faa4eef7e38098e
+ARG MANISKILL_SHA=07be6fbc66350ddca200abfb0a11b692f078f7fd
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git libgl1 libglib2.0-0 libvulkan1 mesa-vulkan-drivers && \
+    rm -rf /var/lib/apt/lists/*
+RUN git clone --filter=blob:none https://github.com/memi-robot/memi.git /opt/memi && \
+    git -C /opt/memi checkout ${MEMI_SHA} && \
+    git -C /opt/memi submodule update --init third_party/robomme_benchmark && \
+    test "$(git -C /opt/memi/third_party/robomme_benchmark rev-parse HEAD)" = "${ROBOMME_SHA}"
+RUN git clone --filter=blob:none https://github.com/YinpeiDai/ManiSkill.git /opt/ManiSkill && \
+    git -C /opt/ManiSkill checkout ${MANISKILL_SHA}
+
+RUN python -m pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
+    torch==2.9.1 torchvision==0.24.1
+RUN python -m pip install --no-cache-dir -e /opt/ManiSkill && \
+    python -m pip install --no-cache-dir --no-deps -e /opt/memi/third_party/robomme_benchmark && \
+    python -m pip install --no-cache-dir -e /opt/memi \
+    opencv-python==4.11.0.86 setuptools==80.9.0
+
+ENV SAPIEN_RENDER_DEVICE=cpu
+ENV MPLCONFIGDIR=/tmp/matplotlib
+ENV PYTHONUNBUFFERED=1
+WORKDIR /workspace/ArbiterKB
+CMD ["python", "stress/robomme_cpu_preflight.py"]
