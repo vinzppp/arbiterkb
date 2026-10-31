@@ -48,8 +48,10 @@ def sha256(path: Path) -> str:
 
 
 def brier_set(probs: dict, truth_ids: list[str], bins: list[str]) -> float:
+    """Multiclass Brier over containers plus the explicit elsewhere/unknown class."""
     target = 1 / len(truth_ids)
-    return sum((float(probs.get(k, 0.0)) - (target if k in truth_ids else 0.0)) ** 2 for k in bins)
+    keys = list(dict.fromkeys([*bins, None]))
+    return sum((float(probs.get(k, 0.0)) - (target if k in truth_ids else 0.0)) ** 2 for k in keys)
 
 
 def system_rows(src: PerceivedSource, make_system, split: str) -> list[dict]:

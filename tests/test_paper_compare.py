@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from paper_compare import memi_records, memi_summary  # noqa: E402
+from paper_compare import brier_set, memi_records, memi_summary  # noqa: E402
 
 
 def test_memi_plan_reader_and_summary(tmp_path):
@@ -23,3 +23,9 @@ def test_memi_plan_reader_and_summary(tmp_path):
     summary = memi_summary(got)
     assert summary["success"][-2:] == [1, 2]
     assert summary["input_tokens_median"] == 15
+
+
+def test_brier_scores_explicit_elsewhere_mass():
+    bins = ["a", "b"]
+    assert brier_set({"a": 1.0}, ["a"], bins) == 0.0
+    assert brier_set({None: 1.0}, ["a"], bins) == 2.0

@@ -80,6 +80,35 @@ def paired_bootstrap(a: list[dict], b: list[dict], metric: str, n_boot: int = 50
     return [float(point), float(lo), float(hi)]
 
 
+def paired_randomization(a: list[dict], b: list[dict], metric: str, n_perm: int = 5000,
+                         seed: int = 0) -> float:
+    """Two-sided paired randomization p-value, swapping whole episodes between methods."""
+    key: Callable[[dict], tuple] = lambda r: (r["ep"], r["cube"])
+    aa, bb = {key(r): r for r in a}, {key(r): r for r in b}
+    if set(aa) != set(bb):
+        raise ValueError("paired rows differ")
+    eps = sorted({k[0] for k in aa})
+    by_ep = {ep: [k for k in aa if k[0] == ep] for ep in eps}
+    observed = abs(_metric(list(aa.values()), metric) - _metric(list(bb.values()), metric))
+    rng, extreme = np.random.default_rng(seed), 0
+    for _ in range(n_perm):
+        swapped = {ep: bool(v) for ep, v in zip(eps, rng.integers(0, 2, len(eps)))}
+        xa = [bb[k] if swapped[k[0]] else aa[k] for ep in eps for k in by_ep[ep]]
+        xb = [aa[k] if swapped[k[0]] else bb[k] for ep in eps for k in by_ep[ep]]
+        extreme += abs(_metric(xa, metric) - _metric(xb, metric)) >= observed - 1e-15
+    return float((extreme + 1) / (n_perm + 1))
+
+
+def holm_adjust(p_values: dict[str, float]) -> dict[str, float]:
+    """Holm family-wise-error adjusted p-values, preserving the input keys."""
+    ordered = sorted(p_values, key=p_values.get)
+    adjusted, running, total = {}, 0.0, len(ordered)
+    for rank, name in enumerate(ordered):
+        running = max(running, min(1.0, (total - rank) * p_values[name]))
+        adjusted[name] = running
+    return {name: adjusted[name] for name in p_values}
+
+
 def paired_correct(a: list[dict], b: list[dict]) -> tuple[list[bool], list[bool]]:
     """Aligned correctness vectors for a paired test."""
     key = lambda r: (r["ep"], r["cube"])  # noqa: E731

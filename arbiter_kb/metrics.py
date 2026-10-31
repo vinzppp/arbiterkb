@@ -33,10 +33,12 @@ def aurc(rows: list[dict]) -> float:
     not depend on a threshold, so a system cannot win by uniformly lowering its confidence."""
     if not rows:
         return math.nan
-    ps = sorted({r["p_max"] for r in rows}, reverse=True)
+    groups = defaultdict(list)
+    for row in rows:
+        groups[row["p_max"]].append(row)
     risk, n_seen, err_seen, total = 0.0, 0, 0, len(rows)
-    for p in ps:
-        g = [r for r in rows if r["p_max"] == p]
+    for p in sorted(groups, reverse=True):
+        g = groups[p]
         n_seen, err_seen = n_seen + len(g), err_seen + sum(1 for r in g if not r["correct"])
         risk += len(g) * err_seen / n_seen
     return risk / total
@@ -44,9 +46,11 @@ def aurc(rows: list[dict]) -> float:
 
 def risk_coverage(rows: list[dict]) -> list[tuple[float, float]]:
     """[(coverage, risk)] at each distinct confidence, most confident first (for the figure)."""
-    out, n, err = [], 0, 0
-    for p in sorted({r["p_max"] for r in rows}, reverse=True):
-        g = [r for r in rows if r["p_max"] == p]
+    out, n, err, groups = [], 0, 0, defaultdict(list)
+    for row in rows:
+        groups[row["p_max"]].append(row)
+    for p in sorted(groups, reverse=True):
+        g = groups[p]
         n, err = n + len(g), err + sum(1 for r in g if not r["correct"])
         out.append((n / len(rows), err / n))
     return out

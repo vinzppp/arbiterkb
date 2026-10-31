@@ -1,6 +1,6 @@
 import pytest
 
-from arbiter_kb.paper_stats import mcnemar_exact, paired_bootstrap, rate_interval
+from arbiter_kb.paper_stats import holm_adjust, mcnemar_exact, paired_bootstrap, paired_randomization, rate_interval
 
 
 def test_mcnemar_exact_balanced_and_one_sided():
@@ -23,3 +23,11 @@ def test_paired_bootstrap_resamples_episodes_not_rows():
     got = paired_bootstrap(a, b, "accuracy", n_boot=100, seed=4)
     assert got[0] == pytest.approx(2 / 3)
     assert got[1] <= got[0] <= got[2]
+
+
+def test_randomization_and_holm_are_deterministic():
+    a = [{"ep": f"e{i}", "cube": "c", "correct": True, "p_max": 0.9, "brier": 0.01}
+         for i in range(8)]
+    b = [{**r, "correct": False, "p_max": 0.9, "brier": 1.0} for r in a]
+    assert paired_randomization(a, b, "brier", n_perm=199, seed=4) < 0.05
+    assert holm_adjust({"a": 0.01, "b": 0.04, "c": 0.5}) == {"a": 0.03, "b": 0.08, "c": 0.5}
