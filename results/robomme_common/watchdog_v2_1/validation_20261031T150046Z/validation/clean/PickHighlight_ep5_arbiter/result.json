@@ -1,0 +1,245 @@
+{
+ "task": "PickHighlight",
+ "episode": 5,
+ "split": "val",
+ "goal": "first press the button, then pick up all cubes that have been highlighteted with white areas on the table",
+ "menu": [
+  {
+   "label": "a",
+   "action": "press button",
+   "need_parameter": false
+  },
+  {
+   "label": "b",
+   "action": "pick up the highlighted cube",
+   "need_parameter": true
+  },
+  {
+   "label": "c",
+   "action": "place the cube onto the table",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 0,
+  "chars": 0
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 0,
+   "t_to": 0,
+   "steps": 1,
+   "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  red cube at [97, 128]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "a",
+    "point": null
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 124,
+   "captured": 124,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 36.32
+  },
+  {
+   "index": 1,
+   "t_from": 1,
+   "t_to": 124,
+   "steps": 8,
+   "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  highlighted area at [103, 153]\n  red cube at [97, 128]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  highlighted area at [103, 153]\n  red cube at [97, 128]\nt=48\n  gripper at [25, 131]  height 0.157  fingers 100% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  highlighted area at [103, 153]\n  red cube at [97, 128]\nt=64\n  gripper at [30, 131]  height 0.143  fingers 0% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  highlighted area at [103, 153]\n  red cube at [97, 128]\nt=80\n  gripper at [60, 130]  height 0.030  fingers 0% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  highlighted area at [103, 153]\n  red cube at [97, 128]\nt=96\n  gripper at [60, 131]  height 0.028  fingers 0% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  highlighted area at [103, 153]\n  red cube at [97, 128]\nt=112\n  gripper at [39, 131]  height 0.114  fingers 0% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  red cube at [97, 128]\nt=124\n  gripper at [29, 131]  height 0.150  fingers 0% open\n  blue cube at [112, 84]\n  button at [61, 129]\n  green cube at [99, 154]\n  red cube at [97, 128]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "b",
+    "point": [
+     99,
+     154
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 99,
+   "captured": 99,
+   "terminated": true,
+   "status": "success",
+   "seconds": 33.74
+  }
+ ],
+ "outcome": "success",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 1,
+ "reset_batch": 1,
+ "policy": {
+  "name": "arbiter",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "calls": {
+   "decide": 2
+  },
+  "statuses": {
+   "valid": 2
+  },
+  "usage": {
+   "input_tokens": 3526,
+   "cached_tokens": 1088,
+   "output_tokens": 74,
+   "reasoning_tokens": 36,
+   "latency": 3.722
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"a\",\"point\":null}",
+    "command": {
+     "choice": "a",
+     "point": null
+    },
+    "beliefs": [
+     {
+      "cube": "cube_blue",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     },
+     {
+      "cube": "cube_green",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     },
+     {
+      "cube": "cube_red",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     }
+    ],
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 1485,
+    "cached_tokens": 0,
+    "output_tokens": 33,
+    "reasoning_tokens": 15,
+    "error": "",
+    "cache_write_tokens": 1482,
+    "finish_reason": "stop",
+    "latency": 1.641,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 1.474,
+    "ttft_s": 1.491,
+    "stream_s": 1.616,
+    "scored_beliefs": []
+   },
+   {
+    "kind": "decide",
+    "index": 1,
+    "status": "valid",
+    "raw": "{\"choice\":\"b\",\"point\":[99,154]}",
+    "command": {
+     "choice": "b",
+     "point": [
+      99,
+      154
+     ]
+    },
+    "beliefs": [
+     {
+      "cube": "cube_blue",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     },
+     {
+      "cube": "cube_green",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     },
+     {
+      "cube": "cube_red",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     }
+    ],
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2041,
+    "cached_tokens": 1088,
+    "output_tokens": 41,
+    "reasoning_tokens": 21,
+    "error": "",
+    "cache_write_tokens": 950,
+    "finish_reason": "stop",
+    "latency": 2.081,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 1.902,
+    "ttft_s": 1.952,
+    "stream_s": 2.062,
+    "scored_beliefs": []
+   }
+  ]
+ },
+ "seconds": 70.6,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73011,
+  "dropout": 0.0,
+  "jitter_px": 0.0
+ },
+ "arm": "arbiter",
+ "reset_digest": "a713d2054a97e000",
+ "success": true,
+ "run_id": "validation_20261031T150046Z",
+ "provenance": {
+  "manifest_sha": "a839ccc592f8aa55",
+  "arbiter_commit": "5ab7fb7f99150c48dbec234e986c05803d366498",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1120500,
+   "difficulty": "easy",
+   "episode_count": 50
+  }
+ },
+ "terminal": {
+  "status": "success",
+  "reason": "environment_success",
+  "phase": "environment",
+  "primary_eligible": true,
+  "primary_success": true,
+  "elapsed_s": 70.6
+ },
+ "watchdog": {
+  "triggered": false
+ },
+ "event_log": "/workspace/ArbiterKB/results/robomme_common/watchdog_v2_1/validation_20261031T150046Z/validation/clean/PickHighlight_ep5_arbiter/events.jsonl"
+}

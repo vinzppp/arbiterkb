@@ -1,0 +1,251 @@
+{
+ "task": "ButtonUnmaskSwap",
+ "episode": 5,
+ "split": "val",
+ "goal": "first press both buttons on the table, then pick up the container hiding the blue cube",
+ "menu": [
+  {
+   "label": "a",
+   "action": "press the first button",
+   "need_parameter": false
+  },
+  {
+   "label": "b",
+   "action": "press the second button",
+   "need_parameter": false
+  },
+  {
+   "label": "c",
+   "action": "pick up the container",
+   "need_parameter": true
+  },
+  {
+   "label": "d",
+   "action": "put down the container",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 0,
+  "chars": 0
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 0,
+   "t_to": 0,
+   "steps": 1,
+   "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [130, 122]\n  button at [62, 151], [65, 108]\n  green cube at [109, 180]\n  red cube at [88, 83]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "a",
+    "point": null
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 110,
+   "captured": 110,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 36.8
+  },
+  {
+   "index": 1,
+   "t_from": 1,
+   "t_to": 110,
+   "steps": 7,
+   "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [130, 122]\n  button at [62, 151], [65, 108]\n  green cube at [109, 180]\n  red cube at [88, 83]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 182], [128, 122]\nt=48\n  gripper at [31, 105]  height 0.155  fingers 100% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 182], [128, 122]\nt=64\n  gripper at [38, 106]  height 0.130  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 182], [128, 122]\nt=80\n  gripper at [65, 108]  height 0.024  fingers 1% open\n  button at [62, 151]\n  button at [68, 108] is pressed down\n  container at [84, 82], [111, 132], [122, 176]\nt=96\n  gripper at [56, 107]  height 0.066  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [101, 155], [137, 150]\nt=110\n  gripper at [34, 104]  height 0.148  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [106, 179], [129, 125]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "b",
+    "point": null
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 94,
+   "captured": 94,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 41.43
+  },
+  {
+   "index": 2,
+   "t_from": 111,
+   "t_to": 204,
+   "steps": 7,
+   "segment": "t=112\n  gripper at [34, 104]  height 0.148  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 181], [129, 125]\nt=128\n  gripper at [31, 138]  height 0.150  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 181], [128, 123]\nt=144\n  gripper at [29, 156]  height 0.151  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 181], [128, 123]\nt=160\n  gripper at [50, 153]  height 0.080  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 181], [128, 123]\nt=176\n  gripper at [62, 152]  height 0.027  fingers 0% open\n  button at [65, 108], [65, 150]\n  container at [84, 82], [107, 181], [128, 123]\nt=192\n  gripper at [41, 156]  height 0.115  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 181], [128, 123]\nt=204\n  gripper at [30, 157]  height 0.150  fingers 0% open\n  button at [62, 151], [65, 108]\n  container at [84, 82], [107, 181], [128, 123]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "c",
+    "point": [
+     128,
+     123
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 107,
+   "captured": 107,
+   "terminated": true,
+   "status": "fail",
+   "seconds": 105.45
+  }
+ ],
+ "outcome": "fail",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 1,
+ "reset_batch": 1,
+ "policy": {
+  "name": "fullhist",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "system_sha": "c00b548a489e",
+  "calls": {
+   "decide": 3
+  },
+  "models_returned": [
+   "openai/gpt-6-luna"
+  ],
+  "statuses": {
+   "valid": 3
+  },
+  "usage": {
+   "input_tokens": 5103,
+   "cached_tokens": 2856,
+   "output_tokens": 416,
+   "reasoning_tokens": 360,
+   "latency": 10.384,
+   "retries": 0
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"a\",\"point\":null}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 1161,
+    "cached_tokens": 0,
+    "output_tokens": 46,
+    "reasoning_tokens": 28,
+    "error": "",
+    "cache_write_tokens": 1158,
+    "finish_reason": "stop",
+    "reasoning": "**Deciding button sequence**\n\nI need to press both buttons before selecting a container. The menu buttons labeled \"first\" and \"second\" seem to indicate a sequential order\u2014so I'm thinking it\u2019s best to choose \"a\" first, and then \"b.\" It's interesting how the labeling suggests I'm making a decision with steps! I just want to make sure I'm following the right procedure to get the container I need. Let's do this methodically!",
+    "latency": 2.495,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 1.718,
+    "ttft_s": 2.377,
+    "stream_s": 2.445,
+    "command": {
+     "choice": "a",
+     "point": null
+    },
+    "turns": 2
+   },
+   {
+    "kind": "decide",
+    "index": 1,
+    "status": "valid",
+    "raw": "{\"choice\":\"b\",\"point\":null}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 1701,
+    "cached_tokens": 1158,
+    "output_tokens": 138,
+    "reasoning_tokens": 120,
+    "error": "",
+    "cache_write_tokens": 540,
+    "finish_reason": "stop",
+    "latency": 2.955,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 2.724,
+    "ttft_s": 2.757,
+    "stream_s": 2.914,
+    "command": {
+     "choice": "b",
+     "point": null
+    },
+    "turns": 4
+   },
+   {
+    "kind": "decide",
+    "index": 2,
+    "status": "valid",
+    "raw": "{\"choice\":\"c\",\"point\":[128,123]}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2241,
+    "cached_tokens": 1698,
+    "output_tokens": 232,
+    "reasoning_tokens": 212,
+    "error": "",
+    "cache_write_tokens": 540,
+    "finish_reason": "stop",
+    "latency": 4.934,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 4.417,
+    "ttft_s": 4.497,
+    "stream_s": 4.541,
+    "command": {
+     "choice": "c",
+     "point": [
+      128,
+      123
+     ]
+    },
+    "turns": 6
+   }
+  ],
+  "turns": 6
+ },
+ "seconds": 184.3,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73011,
+  "dropout": 0.0,
+  "jitter_px": 0.0
+ },
+ "arm": "fullhist",
+ "reset_digest": "62cd9dde4c84beb8",
+ "success": false,
+ "run_id": "validation_20261031T150046Z",
+ "provenance": {
+  "manifest_sha": "a839ccc592f8aa55",
+  "arbiter_commit": "5ab7fb7f99150c48dbec234e986c05803d366498",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1070500,
+   "difficulty": "easy",
+   "episode_count": 50
+  }
+ },
+ "terminal": {
+  "status": "task_failure",
+  "reason": "fail",
+  "phase": "environment",
+  "primary_eligible": true,
+  "primary_success": false,
+  "elapsed_s": 184.3
+ },
+ "watchdog": {
+  "triggered": false
+ },
+ "event_log": "/workspace/ArbiterKB/results/robomme_common/watchdog_v2_1/validation_20261031T150046Z/validation/clean/ButtonUnmaskSwap_ep5_fullhist/events.jsonl"
+}

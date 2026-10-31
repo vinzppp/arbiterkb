@@ -1,0 +1,157 @@
+{
+ "task": "VideoUnmaskSwap",
+ "episode": 2,
+ "split": "val",
+ "goal": "watch the video carefully, then pick up the container hiding the green cube",
+ "menu": [
+  {
+   "label": "a",
+   "action": "pick up the container",
+   "need_parameter": true
+  },
+  {
+   "label": "b",
+   "action": "put down the container",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 9,
+  "chars": 1087
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 114,
+   "t_to": 114,
+   "steps": 1,
+   "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [79, 108]\n  green cube at [108, 99]\n  red cube at [126, 165]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [79, 108]\n  green cube at [108, 99]\n  red cube at [126, 165]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 108], [84, 159], [105, 99], [124, 166]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 108], [84, 159], [105, 99], [124, 166]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 108], [84, 159], [105, 99], [124, 166]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 108], [92, 173], [105, 99], [115, 151]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 108], [96, 145], [105, 99], [111, 180]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 108], [84, 159], [105, 99], [124, 167]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 108], [84, 159], [105, 99], [124, 167]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 108], [84, 159], [105, 99], [124, 167]",
+   "demo_steps": 9,
+   "command": {
+    "choice": "A",
+    "point": [
+     105,
+     99
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 105,
+   "captured": 105,
+   "terminated": true,
+   "status": "success",
+   "seconds": 46.1
+  }
+ ],
+ "outcome": "success",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 115,
+ "reset_batch": 115,
+ "policy": {
+  "name": "memory",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "system_sha": "0e5025552561",
+  "calls": {
+   "decide": 1
+  },
+  "models_returned": [
+   "openai/gpt-6-luna"
+  ],
+  "statuses": {
+   "valid": 1
+  },
+  "usage": {
+   "input_tokens": 2878,
+   "cached_tokens": 0,
+   "output_tokens": 409,
+   "reasoning_tokens": 367,
+   "latency": 6.589,
+   "retries": 0
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"A\",\"point\":[105,99],\"memory_updates\":[{\"field\":\"remaining_targets\",\"value\":\"[[105,99]]\"}],\"used_fields\":[]}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2878,
+    "cached_tokens": 0,
+    "output_tokens": 409,
+    "reasoning_tokens": 367,
+    "error": "",
+    "cache_write_tokens": 2875,
+    "finish_reason": "stop",
+    "reasoning": "**Tracking demo swap positions**\n\nI need to track the demo swap. The corners have specific mappings: blue at [75,108], green at [105,99], red at [124,166], and extra at [84,159]. As positions change, there are intervals like t64 to t112. I\u2019m observing movements at different times, with branches forming and paths likely curving around a midpoint of approximately [104,162]. The trajectories emphasize exchange, and it looks like the positions end up returning to their original identities. This all seems to follow a specific policy for completion.**Assessing green target**\n\nThe green target at [105,99] is stationary and unaffected. I have a requested container positioned over it, and the target list is simply [[105,99]]. It's time to select that point. I notice that my memory is absent, so I need to initialize it while showing the demo. It looks like I'm not using any fields, indicating that the remaining_targets memory is being set, though the used_fields are empty, which I inferred from the demonstration and my goal.",
+    "latency": 6.589,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 4.163,
+    "ttft_s": 6.077,
+    "stream_s": 6.246,
+    "memory_before": "remaining_targets=",
+    "memory_after": "remaining_targets=[[105,99]]",
+    "memory_updates": {
+     "remaining_targets": "[[105,99]]"
+    },
+    "command": {
+     "choice": "A",
+     "point": [
+      105,
+      99
+     ]
+    }
+   }
+  ],
+  "policy_prompt": "/opt/memi/artifacts/gpt/policy_prompts/optimized_luna.json",
+  "memory": {
+   "remaining_targets": "[[105,99]]"
+  },
+  "memory_line": "remaining_targets=[[105,99]]"
+ },
+ "seconds": 85.7,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73011,
+  "dropout": 0.0,
+  "jitter_px": 0.0
+ },
+ "arm": "memi",
+ "reset_digest": "df56ef39b2400d10",
+ "success": true,
+ "run_id": "validation_20261031T150046Z",
+ "provenance": {
+  "manifest_sha": "a839ccc592f8aa55",
+  "arbiter_commit": "5ab7fb7f99150c48dbec234e986c05803d366498",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1050200,
+   "difficulty": "medium",
+   "episode_count": 50
+  }
+ },
+ "terminal": {
+  "status": "success",
+  "reason": "environment_success",
+  "phase": "environment",
+  "primary_eligible": true,
+  "primary_success": true,
+  "elapsed_s": 85.7
+ },
+ "watchdog": {
+  "triggered": false
+ },
+ "event_log": "/workspace/ArbiterKB/results/robomme_common/watchdog_v2_1/validation_20261031T150046Z/validation/clean/VideoUnmaskSwap_ep2_memi/events.jsonl"
+}

@@ -1,0 +1,347 @@
+{
+ "task": "VideoUnmaskSwap",
+ "episode": 8,
+ "split": "val",
+ "goal": "watch the video carefully, then pick up the container hiding the red cube, finally pick up another container hiding the green cube",
+ "menu": [
+  {
+   "label": "a",
+   "action": "pick up the container",
+   "need_parameter": true
+  },
+  {
+   "label": "b",
+   "action": "put down the container",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 9,
+  "chars": 1002
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 114,
+   "t_to": 114,
+   "steps": 1,
+   "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [89, 92]\n  green cube at [78, 138]\n  red cube at [123, 135]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [89, 92]\n  green cube at [78, 138]\n  red cube at [123, 135]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 138], [86, 90], [120, 136]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 138], [86, 90], [120, 136]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 138], [86, 90], [120, 136]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [76, 99], [86, 132], [120, 136]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [69, 121], [94, 110], [120, 136]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 137], [87, 92], [120, 136]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 137], [86, 90], [120, 136]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 137], [86, 90], [120, 136]",
+   "demo_steps": 9,
+   "command": {
+    "choice": "a",
+    "point": [
+     120,
+     136
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 109,
+   "captured": 109,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 31.74
+  },
+  {
+   "index": 1,
+   "t_from": 115,
+   "t_to": 223,
+   "steps": 7,
+   "segment": "t=128\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 137], [86, 90], [120, 136]\nt=144\n  gripper at [2, 140]  height 0.308  fingers 100% open\n  container at [75, 137], [86, 90], [120, 136]\nt=160\n  gripper at [81, 142]  height 0.192  fingers 100% open\n  container at [77, 138], [86, 90], [120, 136]\nt=176\n  gripper at [89, 141]  height 0.171  fingers 100% open\n  container at [83, 138], [86, 90], [120, 136]\nt=192\n  gripper at [116, 137]  height 0.058  fingers 100% open\n  container at [86, 90], [126, 136]\nt=208\n  gripper at [110, 138]  height 0.092  fingers 46% open\n  container at [120, 137] is held in the gripper\n  container at [86, 90]\nt=223\n  gripper at [80, 142]  height 0.203  fingers 46% open\n  container at [73, 131], [86, 90]\n  container at [92, 141] is held in the gripper\n  red cube at [125, 135]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "b",
+    "point": null
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 47,
+   "captured": 47,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 16.24
+  },
+  {
+   "index": 2,
+   "t_from": 224,
+   "t_to": 270,
+   "steps": 4,
+   "segment": "t=224\n  gripper at [80, 142]  height 0.202  fingers 46% open\n  container at [73, 131], [86, 90]\n  container at [92, 141] is held in the gripper\n  red cube at [125, 135]\nt=240\n  gripper at [110, 138]  height 0.085  fingers 46% open\n  container at [119, 137] is held in the gripper\n  container at [86, 90]\n  red cube at [128, 135]\nt=256\n  gripper at [113, 138]  height 0.067  fingers 99% open\n  container at [86, 90], [124, 136]\nt=270\n  gripper at [96, 140]  height 0.145  fingers 100% open\n  container at [86, 90], [121, 136]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "a",
+    "point": [
+     86,
+     90
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 97,
+   "captured": 97,
+   "terminated": true,
+   "status": "success",
+   "seconds": 30.23
+  }
+ ],
+ "outcome": "success",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 115,
+ "reset_batch": 115,
+ "policy": {
+  "name": "arbiter",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "calls": {
+   "decide": 3
+  },
+  "statuses": {
+   "valid": 3
+  },
+  "usage": {
+   "input_tokens": 7931,
+   "cached_tokens": 2176,
+   "output_tokens": 246,
+   "reasoning_tokens": 188,
+   "latency": 6.053
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"a\",\"point\":[120,136]}",
+    "command": {
+     "choice": "a",
+     "point": [
+      120,
+      136
+     ]
+    },
+    "beliefs": [
+     {
+      "cube": "cube_blue",
+      "answer": "bin_2",
+      "p_max": 0.9894755188663139,
+      "probs": {
+       "bin_2": 0.9894755188663139,
+       "null": 0.01,
+       "bin_0": 0.0005244811336861469
+      }
+     },
+     {
+      "cube": "cube_green",
+      "answer": "bin_0",
+      "p_max": 0.9894755188663139,
+      "probs": {
+       "bin_0": 0.9894755188663139,
+       "null": 0.01,
+       "bin_2": 0.0005244811336861469
+      }
+     },
+     {
+      "cube": "cube_red",
+      "answer": "bin_1",
+      "p_max": 0.99,
+      "probs": {
+       "bin_1": 0.99,
+       "null": 0.01
+      }
+     }
+    ],
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2616,
+    "cached_tokens": 0,
+    "output_tokens": 35,
+    "reasoning_tokens": 15,
+    "error": "",
+    "cache_write_tokens": 2613,
+    "finish_reason": "stop",
+    "latency": 1.379,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 1.229,
+    "ttft_s": 1.24,
+    "stream_s": 1.354,
+    "scored_beliefs": []
+   },
+   {
+    "kind": "decide",
+    "index": 1,
+    "status": "valid",
+    "raw": "{\"choice\":\"b\",\"point\":null}",
+    "command": {
+     "choice": "b",
+     "point": null
+    },
+    "beliefs": [
+     {
+      "cube": "cube_blue",
+      "answer": "bin_2",
+      "p_max": 0.9894755188663139,
+      "probs": {
+       "bin_2": 0.9894755188663139,
+       "null": 0.01,
+       "bin_0": 0.0005244811336861469
+      }
+     },
+     {
+      "cube": "cube_green",
+      "answer": "bin_0",
+      "p_max": 0.9894755188663139,
+      "probs": {
+       "bin_0": 0.9894755188663139,
+       "null": 0.01,
+       "bin_2": 0.0005244811336861469
+      }
+     },
+     {
+      "cube": "cube_red",
+      "answer": "bin_1",
+      "p_max": 0.99,
+      "probs": {
+       "bin_1": 0.99,
+       "null": 0.01
+      }
+     }
+    ],
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2665,
+    "cached_tokens": 1088,
+    "output_tokens": 164,
+    "reasoning_tokens": 146,
+    "error": "",
+    "cache_write_tokens": 1574,
+    "finish_reason": "stop",
+    "latency": 2.619,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 2.462,
+    "ttft_s": 2.467,
+    "stream_s": 2.592,
+    "scored_beliefs": []
+   },
+   {
+    "kind": "decide",
+    "index": 2,
+    "status": "valid",
+    "raw": "{\"choice\":\"a\",\"point\":[86,90]}",
+    "command": {
+     "choice": "a",
+     "point": [
+      86,
+      90
+     ]
+    },
+    "beliefs": [
+     {
+      "cube": "cube_blue",
+      "answer": "bin_2",
+      "p_max": 0.9894755188663139,
+      "probs": {
+       "bin_2": 0.9894755188663139,
+       "null": 0.01,
+       "bin_0": 0.0005244811336861469
+      }
+     },
+     {
+      "cube": "cube_green",
+      "answer": "bin_0",
+      "p_max": 0.9894755188663139,
+      "probs": {
+       "bin_0": 0.9894755188663139,
+       "null": 0.01,
+       "bin_2": 0.0005244811336861469
+      }
+     },
+     {
+      "cube": "cube_red",
+      "answer": "bin_1",
+      "p_max": 0.99,
+      "probs": {
+       "bin_1": 0.99,
+       "null": 0.01
+      }
+     }
+    ],
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2650,
+    "cached_tokens": 1088,
+    "output_tokens": 47,
+    "reasoning_tokens": 27,
+    "error": "",
+    "cache_write_tokens": 1559,
+    "finish_reason": "stop",
+    "reasoning": "**Planning container pickup**\n\nI need to focus on picking up another container that's hiding in green, specifically bin0 at coordinates [86,90]. This seems to be based on the latest information I have. I\u2019ll make sure to follow the menu instructions for the pickup. It\u2019s important to keep track of these details, and I want to make sure I get it right. There\u2019s a clear step here that I need to tackle!",
+    "latency": 2.055,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 1.311,
+    "ttft_s": 1.89,
+    "stream_s": 2.012,
+    "scored_beliefs": [
+     {
+      "cube": "cube_red",
+      "answer": "bin_1",
+      "p_max": 0.99,
+      "probs": {
+       "bin_1": 0.99,
+       "null": 0.01
+      },
+      "truth": "bin_1",
+      "correct": true,
+      "brier": 0.00010000000000000018
+     }
+    ]
+   }
+  ]
+ },
+ "seconds": 105.5,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73011,
+  "dropout": 0.0,
+  "jitter_px": 0.0
+ },
+ "arm": "arbiter",
+ "reset_digest": "ebf002140251710c",
+ "success": true,
+ "run_id": "validation_20261031T150046Z",
+ "provenance": {
+  "manifest_sha": "a839ccc592f8aa55",
+  "arbiter_commit": "5ab7fb7f99150c48dbec234e986c05803d366498",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1050800,
+   "difficulty": "easy",
+   "episode_count": 50
+  }
+ },
+ "terminal": {
+  "status": "success",
+  "reason": "environment_success",
+  "phase": "environment",
+  "primary_eligible": true,
+  "primary_success": true,
+  "elapsed_s": 105.5
+ },
+ "watchdog": {
+  "triggered": false
+ },
+ "event_log": "/workspace/ArbiterKB/results/robomme_common/watchdog_v2_1/validation_20261031T150046Z/validation/clean/VideoUnmaskSwap_ep8_arbiter/events.jsonl"
+}

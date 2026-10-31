@@ -38,6 +38,12 @@ def terminal_status(row: dict) -> str:
     if row.get("outcome") == "harness_error":
         return "infrastructure_error"
     return "success" if row.get("success") else "task_failure"
+def reset_digest(row: dict):
+    if row.get("reset_digest") is not None:
+        return row["reset_digest"]
+    resets = (e for e in reversed(row.get("partial_events") or [])
+              if e.get("event") == "phase_end" and e.get("phase") == "reset")
+    return next(resets, {}).get("reset_digest")
 def primary_eligible(row: dict) -> bool:
     terminal = row.get("terminal") or {}
     return bool(terminal.get("primary_eligible")) if terminal else row.get("outcome") != "harness_error"
@@ -54,8 +60,6 @@ def dollars(row: dict, prices: dict) -> float:
 def _mean(values) -> float:
     values = list(values)
     return float(np.mean(values)) if values else math.nan
-
-
 def group_summary(rows: list[dict], prices: dict) -> dict:
     scored = [r for r in rows if primary_eligible(r)]
     statuses = Counter(terminal_status(row) for row in rows)
@@ -107,6 +111,7 @@ def paired_tests(rows: list[dict], contrasts: list[list[str]]) -> dict:
             av, bv, keys = _paired(sample, a, b)
             name = f"{a}_vs_{b}"
             tests[name] = {**mcnemar_exact(av, bv), "n_paired": len(keys)}
+            tests[name]["risk_difference"] = paired_mean_ci(sample, a, b, primary_success)
             raw[name] = tests[name]["p_exact"]
         adjusted = holm_adjust(raw)
         for name in tests:
@@ -177,7 +182,7 @@ def audit(rows: list[dict], arms: list[str], expected_model: str | None = None,
     for key, group in groups.items():
         if {r["arm"] for r in group} != set(arms):
             issues.append(f"{key}: incomplete arms")
-        if len({r.get("reset_digest") for r in group}) != 1:
+        if len({reset_digest(r) for r in group}) != 1:
             issues.append(f"{key}: reset digest differs")
         if len({json.dumps((r.get("provenance") or {}).get("episode"), sort_keys=True) for r in group}) != 1:
             issues.append(f"{key}: episode seed differs")

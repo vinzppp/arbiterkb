@@ -1,6 +1,6 @@
 import json
 
-from scripts.common_harness_report import audit, group_summary, load_rows, paired_tests
+from scripts.common_harness_report import audit, group_summary, load_rows, paired_tests, reset_digest
 
 
 def test_load_rows_recovers_missing_arm_from_result_directory(tmp_path):
@@ -24,6 +24,7 @@ def test_report_pairs_outcomes_and_applies_holm():
     rows = [row("fullhist", False), row("memi", True), row("soft", False), row("arbiter", True)]
     out = paired_tests(rows, [["memi", "fullhist"], ["arbiter", "soft"]])
     assert out["clean/ALL"]["memi_vs_fullhist"]["n_paired"] == 1
+    assert out["clean/ALL"]["memi_vs_fullhist"]["risk_difference"] == [1.0, 1.0, 1.0]
     assert out["clean/ALL"]["memi_vs_fullhist"]["p_holm"] == 1.0
 
 
@@ -46,3 +47,15 @@ def test_scripted_preflight_is_not_reported_as_policy_success():
     summary = group_summary([one], {})
     assert summary["diagnostic_only"]
     assert "success" not in summary
+
+
+def test_timeout_reset_digest_is_recovered_from_durable_events():
+    timeout = row("soft", False)
+    timeout.pop("reset_digest")
+    timeout["partial_events"] = [
+        {"event": "phase_end", "phase": "reset", "reset_digest": "same"},
+        {"event": "phase_start", "phase": "llm"},
+    ]
+    rows = [row("fullhist", False), row("memi", False), timeout, row("arbiter", False)]
+    assert reset_digest(timeout) == "same"
+    assert audit(rows, ["fullhist", "memi", "soft", "arbiter"])["passed"]
