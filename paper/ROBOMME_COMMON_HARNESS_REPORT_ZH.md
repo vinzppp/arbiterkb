@@ -1,126 +1,105 @@
-# ArbiterKB × MEMI：RoboMME common-harness 阶段报告
+# ArbiterKB × MEMI：RoboMME common-harness validation 报告
 
-日期：2026-10-30（America/Los_Angeles）
+日期：2026-10-31（America/Los_Angeles）
 
-研究分支：`research/perception-belief-robomme`
+研究分支：`research/perception-belief-robomme`（未修改 `main`）
 
-冻结清单：`robomme-common-harness-v1`，SHA `ec0b1fe2ff7f7027`
+冻结清单：`robomme-common-harness-v1-openrouter`，SHA `507cbdd26bf429e7`
 
 ## 结论先行
 
-本轮把研究从“离线 perception / belief 对照”推进到了**可执行的同环境
-RoboMME closed-loop harness**，并在本机真实运行了四个冻结任务的 reset、语义
-观测、官方 `multi_choice` wrapper、运动规划和一个完整高层动作。模拟器不是当前
-阻塞项；Apple Silicon 上的 Linux/amd64 CPU fallback 可运行，只是视频任务很慢。
+本轮首次真实运行了同一 RoboMME closed-loop harness 下的 FullHist、官方 MEMI、
+soft identity repair 和完整 ArbiterKB。四个冻结 val episode 0 任务中，15/16 个
+arm-task 格得到可评分结果；所有返回模型均为 `openai/gpt-6-luna`，使用同一官方
+`multi_choice` executor、reset、观测、seed 和任务菜单。
 
-但是，本轮**没有产生 MEMI-vs-ArbiterKB closed-loop 成功率**。原因不是 GPU 或
-Vulkan，而是环境中没有明确提供可服务冻结条件 `gpt-6-luna` 的
-`OPENAI_API_KEY` / `OPENAI_API_URL`；也没有把此前分享的 OpenRouter 密钥读出、
-打印、转存或用于付费调用。因此四臂 API smoke、受控观测退化和 held-out test
-均未启动。任何把下面的脚本预检结果写成策略分数的做法都会是错误的。
+当前闸门判定是 **NO-GO 进入 observation degradation，更不读取 held-out test**。
+原因不是策略胜率，而是 `ButtonUnmaskSwap/soft` 在冻结计分运行中持续 16 分 24 秒
+未返回，且协议只冻结了单次 LLM timeout，没有冻结 episode/executor wall-clock
+终止语义。该格没有结果文件，也没有被伪造成失败。独立、不计分的诊断复现运行了
+12 分钟、下发 22 个均可返回的 A/B 按钮动作，但策略持续振荡，证明 episode 可以
+产生极长尾；诊断结果没有回填计分表。
 
-当前 go/no-go 判定：
+在 15 个完成格上，MEMI 为 3/4，FullHist 为 2/4，ArbiterKB 为 2/4，soft 为
+2/3（另 1 格缺失）。样本只有每任务一个 episode，且 soft 不完整；所有预注册
+paired exact McNemar 检验的 Holm 校正后 `p=1.0`。这些数值只能证明 harness 已经
+跑通并暴露了真实负结果，不能支持任何 arm 优于另一 arm 的论文结论。
 
-- **GO：** common observation、四臂 policy adapter、官方 planner / executor、
-  固定 episode reset、记录与统计管线已经具备继续运行的条件。
-- **NO-GO：** 在没有刻意提供兼容凭据与 endpoint 前，不启动付费四臂 smoke；
-  在 smoke 与 val degradation 通过前，不读取 held-out test。
+## 冻结 clean smoke 结果
 
-## 已实现的共同评测条件
+下表成本按冻结清单中的 Luna 单价从完成行 token 估算，仅含已落盘的模型调用。
 
-四个正式 arm 是：
+| 任务 | arm | outcome | 调用 | 墙钟 | 估算成本 |
+|---|---|---|---:|---:|---:|
+| VideoUnmaskSwap | FullHist | success | 1 | 85.1 s | $0.000196 |
+| VideoUnmaskSwap | MEMI | success | 1 | 100.1 s | $0.000443 |
+| VideoUnmaskSwap | soft | success | 1 | 98.8 s | $0.000194 |
+| VideoUnmaskSwap | ArbiterKB | success | 1 | 94.4 s | $0.000289 |
+| ButtonUnmaskSwap | FullHist | fail | 3 | 105.7 s | $0.000408 |
+| ButtonUnmaskSwap | MEMI | fail | 3 | 109.9 s | $0.001445 |
+| ButtonUnmaskSwap | soft | **unscored / incomplete** | — | >984 s | 未落盘 |
+| ButtonUnmaskSwap | ArbiterKB | fail | 3 | 120.0 s | $0.000634 |
+| PickHighlight | FullHist | success | 2 | 84.3 s | $0.000227 |
+| PickHighlight | MEMI | success | 2 | 77.6 s | $0.000560 |
+| PickHighlight | soft | success | 4 | 118.1 s | $0.000501 |
+| PickHighlight | ArbiterKB | success | 2 | 68.0 s | $0.000298 |
+| VideoRepick | FullHist | fail | 1 | 140.9 s | $0.000269 |
+| VideoRepick | MEMI | success | 3 | 198.8 s | $0.001332 |
+| VideoRepick | soft | fail | 1 | 135.4 s | $0.000324 |
+| VideoRepick | ArbiterKB | fail | 3 | 187.3 s | $0.000573 |
 
-1. 官方 FullHist；
-2. 官方 MEMI（使用锁定 release 的 `optimized_luna.json`）；
-3. soft identity repair；
-4. full ArbiterKB。
+15 个完成格合计 68,829 input tokens、4,453 output tokens、92.019 秒模型延迟、
+1,724.4 秒端到端墙钟，计分行估算成本 $0.007694。被中止的计分运行和诊断运行
+没有完成行，因而不在该成本估算中，不能声称这是 OpenRouter 实际总扣费。
 
-共同条件如下：
+## 可辩护的观察与负结果
 
-- MEMI `bb6c37c`、RoboMME `fae9f73`、ManiSkill `07be6fb`；
-- 同一 `gpt-6-luna`、low effort、32,768 completion token 上限；
-- 同一 val/test episode、RoboMME seed、reset、可见语义记录、菜单、
-  `multi_choice` executor 与最多 20 次决策预算；
-- 同一四任务集合：VideoUnmaskSwap、ButtonUnmaskSwap、PickHighlight、
-  VideoRepick；锁定版本中 VideoRepick 确实可用；
-- val episode 0 做 clean smoke，val 1--9 才做 clean / 15% record dropout /
-  4 px centroid jitter，之后才允许 test 0--49；
-- 预先声明六个 paired contrasts，不根据 test 结果改比较对象。
+- VideoUnmaskSwap 四臂都成功，无法区分 memory 方案。
+- ButtonUnmaskSwap 的三个完成臂全部失败；完整 KB 没有修复该任务。
+- PickHighlight 四臂都成功；ArbiterKB 在这一个 episode 上墙钟最短，但单例不能
+  形成速度优势结论。
+- VideoRepick 只有 MEMI 成功；这是对 ArbiterKB 不利但必须保留的负结果。
+- MEMI 的完成行平均模型延迟和成本最高；相对 ArbiterKB，配对均值差为
+  +6.518 秒模型延迟、+$0.000496/episode，但只有 4 对，不能做推广性结论。
+- 当前结果没有任何 belief score，因为这些完成调用没有产生可评分的
+  `scored_beliefs`；不能用 task success 反推 belief quality。
 
-FullHist 和 MEMI 直接从官方 checkout 导入。soft 与 ArbiterKB 使用同一个
-FullHist 动作 JSON scaffold，但历史由 deterministic memory snapshot 取代。
-snapshot 只接收同一批可见 semantic records；同类物体靠 2D/3D 几何连续性形成
-匿名 track，不接收 simulator actor identity。目标文字中明确出现而当前被遮住的
-彩色 cube 会被预声明，避免“没看见就不存在”的词表缺失。
+## 公平性、复现与泄漏审计
 
-原始 actor identity 只在决策之后用于 belief truth / Brier 评分，不进入模型提示或
-KB 更新。每个正式 row 还会核对四臂的 `reset_digest`、RoboMME seed/difficulty、
-源码 SHA、参数 SHA、prompt SHA、commit 与 dirty 状态；不一致即审计失败。
+- 固定源码：MEMI `bb6c37c`、RoboMME `fae9f73`、ManiSkill `07be6fb`；固定镜像
+  `sha256:07424f3b53e08c0bfd27db3a97d89210de92679b040aed3a5aa49e580e059fd1`。
+- 固定模型与 transport：请求和返回均为 `openai/gpt-6-luna`，OpenRouter
+  chat-completions endpoint；密钥只从环境读取，仓库 secret scan 无命中。
+- 四任务 seed/difficulty 与 reset digest 在已完成的共同格中一致：
+  `12507d24b522d7e9`、`edcdb5366a02d0cf`、`e5bfc2d7ab8100cb`、
+  `00785fa8fc272f65`。
+- 15 行均为 `arbiter_dirty=false`，参数 SHA `fe4e94112a74`、prompt SHA
+  `307eaf7ff479aeae`。首个 FullHist 行来自冻结后 commit `4a888c3`；其余 14 行
+  来自仅修复 structured belief hook 的 `e8d5785`。该修复不改变 FullHist policy、
+  观测、executor 或评分，且没有重跑/替换首行。
+- 官方 FullHist/MEMI policy 原先不暴露实验 arm，导致原始 JSON 的 `arm` 为
+  `unknown`。报告器现在只在该字段为空/unknown 时从不可歧义的结果目录后缀恢复，
+  并保留 `arm_recorded`；原始结果未改写。
+- actor identity 仍只允许在决策后 truth scoring 使用，不进入模型 prompt 或 memory。
+  本轮没有新增 RoboMME test split 读取，`results/test_reads.log` 也没有 test READ。
 
-## 运行环境与现实设置路径
+报告审计的唯一 issue 是 `ButtonUnmaskSwap` 缺少 soft 行；无 dirty row、无
+`harness_error`。API、Docker 或人工中止均未被计为策略失败。
 
-原生 macOS 路径被完整检查：SAPIEN 3.0.3 可以导入，但固定 ManiSkill 的运动
-规划依赖是 `mplib==0.1.1`，该版本没有 macOS/arm64 wheel；原生 venv 中
-`mplib` 不存在。直接换新版 mplib 会改变 benchmark stack，不能作为论文对照。
+## 阻塞与下一闸门
 
-随后构建了固定 Linux/amd64 CPU 镜像：
+冻结 v1 协议无法一致地处理“策略持续给出合法动作但 episode 极长”与“单次
+executor 永不返回”。直接把缺失格算失败、重跑到成功、或只给 soft 加 timeout，
+都会引入后验偏差。
 
-- image id：`sha256:07424f3b...59fd1`；
-- Python 3.11，Torch 2.9.1 CPU，SAPIEN 3.0.3，mplib 0.1.1；
-- Docker daemon 29.7.2；
-- Apple Silicon 上用 x86 转译和 CPU renderer。
+进入 degradation 前需要新版本协议，并重新跑完整 clean smoke：
 
-四个任务都完成 reset，并各报告 50 个 val episodes。首次 reset 诊断耗时分别为
-97.29、0.94、0.66、53.69 秒；视频任务的首次加载明显更慢。
+1. 在看到任何 held-out 前预注册统一的 episode wall-clock watchdog；
+2. 明确定义 `executor_timeout` / `episode_timeout` 是否作为任务失败，以及资源统计
+   如何截尾；四臂必须完全相同；
+3. 每次 executor 调用前输出非敏感的 choice/point 进度，超时仍能精确定位；
+4. 用新 manifest hash 写入 ledger，重跑 16/16 clean 格并要求 audit pass；
+5. 只有该 gate 通过，才运行 val 1--9 的 clean/dropout/jitter；之后仍需独立
+   go/no-go 才能读取 test 0--49。
 
-## 冻结四任务执行器预检
-
-预检使用无 LLM 的 blind policy，只选择菜单第一项，并且只执行一个高层动作。
-其目的仅是验证从观测到 point / choice，再到官方 motion planner、逐帧采集、终止
-状态和日志的完整链路。
-
-| 任务 | val seed | 结果 | 墙钟时间 | reset digest |
-|---|---:|---|---:|---|
-| ButtonUnmaskSwap | 1070000 | preflight_complete | 35.4 s | `edcdb5366a02d0cf` |
-| PickHighlight | 1120000 | preflight_complete | 31.4 s | `e5bfc2d7ab8100cb` |
-| VideoUnmaskSwap | 1050000 | fail | 91.0 s | `12507d24b522d7e9` |
-| VideoRepick | 1090000 | fail | 253.8 s | `00785fa8fc272f65` |
-
-四行均来自 commit `5c89d28`，`arbiter_dirty=false`，模型调用 0，付费 0，
-harness error 0。两项 `fail` 是 blind first-menu action 被任务判定为终局失败，
-不是模拟器或 harness 崩溃，更不是 FullHist 的成功率。报告器已把该 stage 标记为
-`diagnostic_only`，不会计算伪造的 paired policy statistics。
-
-## 统计、成本与泄漏控制
-
-正式 stage 的报告器已经实现：
-
-- 每 arm / task / observation cell 的 Wilson success interval；
-- exact paired McNemar 与 Holm correction；
-- 成本、模型 latency、调用次数的 10,000 次 paired bootstrap interval；
-- belief accuracy、Brier、ECE；
-- incomplete arm、跨 arm reset digest、episode seed、dirty tree、harness error 审计。
-
-API 失败不会写成失败 episode；它会停止 stage，避免把基础设施错误当策略错误。
-凭据只由官方 client 从环境读取，不写入 result、trace、manifest 或报告。本轮环境
-变量检查只记录 present/absent，未显示任何密钥内容。
-
-冻结清单已经于 `2026-10-31T04:38:47Z` 写入 append-only ledger。到本报告为止
-没有读取 RoboMME test split，因此没有 test-set tuning。
-
-## 当前精确阻塞与下一闸门
-
-唯一阻止四臂 clean smoke 的条件是：没有刻意提供能服务冻结
-`gpt-6-luna` chat-completions 请求的凭据与 endpoint。旧 OpenRouter key 即使存在，
-也不能在未验证模型别名、reasoning 参数、stream usage 与计费一致性的情况下被
-自动替代进官方条件；那会同时引入花费和不可比性。
-
-凭据条件满足后，下一步不需要再改规则或设计 protocol，直接运行：
-
-1. 四任务 × 四 arm × val episode 0 clean smoke；
-2. 审计 16 行的共同 reset、无泄漏、API model id、成本和 latency；
-3. 仅 smoke 通过后运行 val 1--9 的三种 observation cells；
-4. 保持 manifest 不变，根据预先门槛做一次 go/no-go；
-5. 只有 go 才读取冻结的 test 0--49，并如实保留所有负结果。
-
-这意味着下一次工作应当是**运行**，而不是继续扩展 KB 规则。
+因此下一步仍然是修复和冻结评测终止语义，而不是扩展 KB 规则。

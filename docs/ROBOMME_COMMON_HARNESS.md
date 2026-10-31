@@ -89,3 +89,13 @@ Holm adjustment, paired bootstrap intervals for cost/latency/calls, belief
 accuracy/Brier/ECE where truth is observable, incomplete-arm and reset-digest
 audits, dirty-tree rows, and harness errors. A no-LLM preflight outcome is an
 executor diagnostic, not a closed-loop policy score.
+
+## Validation status (2026-10-31)
+
+The transport-only OpenRouter amendment is frozen in
+`experiments/robomme_common_v1_openrouter.json` (SHA `507cbdd26bf429e7`).
+The clean validation produced 15/16 scored rows. `ButtonUnmaskSwap/soft` did
+not return after 16:24 and was stopped without a result, so the audit correctly
+fails for an incomplete arm set. Degradation and held-out stages have not run.
+See `paper/ROBOMME_COMMON_HARNESS_REPORT_ZH.md` and
+`results/robomme_common/openrouter_v1/reproducibility_manifest.json`.

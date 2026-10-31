@@ -1,0 +1,141 @@
+{
+ "task": "VideoRepick",
+ "episode": 0,
+ "split": "val",
+ "goal": "watch the video carefully, then pick up the same block that was previously picked up again, finally put it down and press the button to stop",
+ "menu": [
+  {
+   "label": "a",
+   "action": "pick up the cube",
+   "need_parameter": true
+  },
+  {
+   "label": "b",
+   "action": "put it down",
+   "need_parameter": false
+  },
+  {
+   "label": "c",
+   "action": "press the button to finish",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 21,
+  "chars": 2731
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 315,
+   "t_to": 315,
+   "steps": 1,
+   "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [102, 159], [117, 109]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [102, 159], [117, 109]\nt=32\n  gripper at [34, 165]  height 0.244  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [102, 159], [117, 109]\nt=48\n  gripper at [72, 169]  height 0.151  fingers 100% open\n  button at [56, 136]\n  cube at [78, 117], [102, 159], [117, 109]\nt=64\n  gripper at [95, 162]  height 0.059  fingers 100% open\n  button at [56, 136]\n  cube at [78, 117], [102, 159], [117, 109]\nt=80\n  gripper at [102, 160]  height 0.021  fingers 46% open\n  button at [56, 136]\n  cube at [78, 117], [105, 160], [117, 109]\nt=96\n  gripper at [76, 170]  height 0.138  fingers 46% open\n  button at [56, 136]\n  cube at [78, 117], [117, 109]\n  cube at [80, 173] is held in the gripper\nt=112\n  gripper at [91, 165]  height 0.077  fingers 46% open\n  button at [56, 136]\n  cube at [78, 117], [117, 109]\n  cube at [93, 167] is held in the gripper\nt=128\n  gripper at [100, 161]  height 0.028  fingers 93% open\n  button at [56, 136]\n  cube at [78, 117], [103, 162], [117, 109]\nt=144\n  gripper at [84, 166]  height 0.103  fingers 100% open\n  button at [56, 136]\n  cube at [78, 117], [101, 161], [117, 109]\nt=160\n  gripper at [69, 166]  height 0.155  fingers 100% open\n  button at [56, 136]\n  cube at [78, 117], [101, 161], [117, 109]\nt=176\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [101, 161], [117, 109]\nt=192\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [101, 161], [117, 109]\nt=208\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [100, 120], [118, 153]\nt=224\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [95, 143], [124, 127]\nt=240\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [100, 160], [117, 109]\nt=256\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [87, 127], [100, 160], [106, 98]\nt=272\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [87, 101], [100, 160], [104, 128]\nt=288\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 116], [100, 160], [116, 110]\nt=304\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 116], [100, 160], [116, 110]\nt=314\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 116], [100, 160], [116, 110]\nEXECUTION STEPS\nt=315\n  gripper raised out of the frame  fingers 100% open\n  button at [56, 138]\n  cube at [78, 116], [100, 160], [116, 110]",
+   "demo_steps": 21,
+   "command": {
+    "choice": "a",
+    "point": [
+     100,
+     160
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 100,
+   "captured": 100,
+   "terminated": true,
+   "status": "fail",
+   "seconds": 34.06
+  }
+ ],
+ "outcome": "fail",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 316,
+ "reset_batch": 316,
+ "policy": {
+  "name": "fullhist",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "system_sha": "c00b548a489e",
+  "calls": {
+   "decide": 1
+  },
+  "models_returned": [
+   "openai/gpt-6-luna"
+  ],
+  "statuses": {
+   "valid": 1
+  },
+  "usage": {
+   "input_tokens": 2358,
+   "cached_tokens": 0,
+   "output_tokens": 67,
+   "reasoning_tokens": 47,
+   "latency": 2.732,
+   "retries": 0
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"a\",\"point\":[100,160]}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2358,
+    "cached_tokens": 0,
+    "output_tokens": 67,
+    "reasoning_tokens": 47,
+    "error": "",
+    "cache_write_tokens": 2355,
+    "finish_reason": "stop",
+    "reasoning": "**Clarifying cube movement**\n\nI need to identify the cube I picked at coordinates [102,159] initially, which I lifted and then placed back at approximately [100,160]. My goal now is to pick up the same block again and put it down after pressing. The current target for picking is set to [100,160]. I think I should stay focused on the specific movements to ensure I achieve my goal correctly!",
+    "latency": 2.732,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 1.932,
+    "ttft_s": 2.539,
+    "stream_s": 2.688,
+    "command": {
+     "choice": "a",
+     "point": [
+      100,
+      160
+     ]
+    },
+    "turns": 2
+   }
+  ],
+  "turns": 2
+ },
+ "seconds": 140.9,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73001,
+  "dropout": 0.0,
+  "jitter_px": 0.0
+ },
+ "arm": "unknown",
+ "reset_digest": "00785fa8fc272f65",
+ "success": false,
+ "provenance": {
+  "manifest_sha": "507cbdd26bf429e7",
+  "arbiter_commit": "e8d57855f662958d852f26dbcafe637c1fcd5867",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1090000,
+   "difficulty": "easy",
+   "episode_count": 50
+  }
+ }
+}
