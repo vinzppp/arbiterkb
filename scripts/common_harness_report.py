@@ -28,12 +28,21 @@ def load_rows(root: Path) -> list[dict]:
         row["_path"], row["cell"] = str(path), path.parents[1].name
         rows.append(row)
     return rows
-
-
 def usage(row: dict) -> dict:
     return ((row.get("policy") or {}).get("usage") or {})
-
-
+def terminal_status(row: dict) -> str:
+    status = (row.get("terminal") or {}).get("status")
+    if status:
+        return str(status)
+    if row.get("outcome") == "harness_error":
+        return "infrastructure_error"
+    return "success" if row.get("success") else "task_failure"
+def primary_eligible(row: dict) -> bool:
+    terminal = row.get("terminal") or {}
+    return bool(terminal.get("primary_eligible")) if terminal else row.get("outcome") != "harness_error"
+def primary_success(row: dict) -> bool:
+    terminal = row.get("terminal") or {}
+    return bool(terminal.get("primary_success")) if terminal else bool(row.get("success"))
 def dollars(row: dict, prices: dict) -> float:
     u = usage(row)
     total, cached = int(u.get("input_tokens", 0)), int(u.get("cached_tokens", 0))
@@ -41,23 +50,25 @@ def dollars(row: dict, prices: dict) -> float:
     value = ((total - cached - written) * prices["fresh_input"] + cached * prices["cached_input"]
              + written * prices["cache_write"] + output * prices["output"])
     return value / 1e6
-
-
 def _mean(values) -> float:
     values = list(values)
     return float(np.mean(values)) if values else math.nan
 
 
 def group_summary(rows: list[dict], prices: dict) -> dict:
-    scored = [r for r in rows if r.get("outcome") != "harness_error"]
+    scored = [r for r in rows if primary_eligible(r)]
+    statuses = Counter(terminal_status(row) for row in rows)
     diagnostic = bool(scored) and all((r.get("policy") or {}).get("model") == "none" for r in scored)
     if diagnostic:
         return {"diagnostic_only": True, "episodes": len(scored),
                 "outcomes": dict(Counter(r.get("outcome", "") for r in scored)),
-                "harness_errors": len(rows) - len(scored),
+                "terminal_statuses": dict(statuses),
                 "wall_s_mean": _mean(r.get("seconds", 0) for r in scored)}
-    return {"success": rate_interval([bool(r.get("success")) for r in scored]),
-            "episodes": len(scored), "harness_errors": len(rows) - len(scored),
+    return {"success": rate_interval([primary_success(r) for r in scored]),
+            "episodes": len(scored), "total_cells": len(rows),
+            "terminal_statuses": dict(statuses),
+            "infrastructure_errors": statuses["infrastructure_error"],
+            "incomplete": statuses["incomplete"], "timeouts": statuses["timeout"],
             "model_calls_mean": _mean(len((r.get("policy") or {}).get("log") or []) for r in scored),
             "input_tokens_mean": _mean(usage(r).get("input_tokens", 0) for r in scored),
             "output_tokens_mean": _mean(usage(r).get("output_tokens", 0) for r in scored),
@@ -77,9 +88,9 @@ def summaries(rows: list[dict], prices: dict) -> dict:
 
 
 def _paired(rows: list[dict], a: str, b: str) -> tuple[list[bool], list[bool], list[tuple]]:
-    valid = [r for r in rows if r.get("outcome") != "harness_error"]
-    aa = {(r["task"], r["episode"]): bool(r.get("success")) for r in valid if r["arm"] == a}
-    bb = {(r["task"], r["episode"]): bool(r.get("success")) for r in valid if r["arm"] == b}
+    valid = [r for r in rows if primary_eligible(r)]
+    aa = {(r["task"], r["episode"]): primary_success(r) for r in valid if r["arm"] == a}
+    bb = {(r["task"], r["episode"]): primary_success(r) for r in valid if r["arm"] == b}
     keys = sorted(set(aa) & set(bb))
     return [aa[k] for k in keys], [bb[k] for k in keys], keys
 
@@ -104,8 +115,10 @@ def paired_tests(rows: list[dict], contrasts: list[list[str]]) -> dict:
 
 
 def paired_mean_ci(rows: list[dict], a: str, b: str, field, seed: int = 0) -> list[float]:
-    aa = {(r["task"], r["episode"]): field(r) for r in rows if r["arm"] == a and r.get("outcome") != "harness_error"}
-    bb = {(r["task"], r["episode"]): field(r) for r in rows if r["arm"] == b and r.get("outcome") != "harness_error"}
+    aa = {(r["task"], r["episode"]): field(r) for r in rows
+          if r["arm"] == a and primary_eligible(r)}
+    bb = {(r["task"], r["episode"]): field(r) for r in rows
+          if r["arm"] == b and primary_eligible(r)}
     values = np.asarray([aa[k] - bb[k] for k in sorted(set(aa) & set(bb))], float)
     if not len(values):
         return [math.nan, math.nan, math.nan]
@@ -137,11 +150,29 @@ def beliefs(rows: list[dict], tau: float = .8) -> dict:
     return {"/".join(key): belief_summary(value, tau) for key, value in sorted(groups.items())}
 
 
-def audit(rows: list[dict], arms: list[str]) -> dict:
+def _cell_name(cfg: dict) -> str:
+    return cfg["mode"] if cfg["mode"] == "clean" else (
+        f"dropout{cfg['dropout']:.2f}" if cfg["mode"] == "dropout"
+        else f"jitter{cfg['jitter_px']:.1f}px")
+
+
+def expected_stage_keys(spec: dict, stage_name: str, arms: list[str]) -> set[tuple] | None:
+    stage = (spec.get("stages") or {}).get(stage_name)
+    if not stage:
+        return None
+    return {(_cell_name(cfg), task, episode) for cfg in stage["observations"]
+            for task in spec["tasks"] for episode in stage["episodes"]}
+
+
+def audit(rows: list[dict], arms: list[str], expected_model: str | None = None,
+          expected_keys: set[tuple] | None = None, require_terminal: bool = False) -> dict:
     groups = defaultdict(list)
     for row in rows:
         groups[(row["cell"], row["task"], row["episode"])].append(row)
     issues = []
+    if expected_keys is not None:
+        missing = sorted(expected_keys - set(groups))
+        issues.extend(f"{key}: missing cell" for key in missing)
     for key, group in groups.items():
         if {r["arm"] for r in group} != set(arms):
             issues.append(f"{key}: incomplete arms")
@@ -149,8 +180,27 @@ def audit(rows: list[dict], arms: list[str]) -> dict:
             issues.append(f"{key}: reset digest differs")
         if len({json.dumps((r.get("provenance") or {}).get("episode"), sort_keys=True) for r in group}) != 1:
             issues.append(f"{key}: episode seed differs")
+    if require_terminal:
+        issues.extend(f"{row['_path']}: missing terminal status" for row in rows
+                      if not (row.get("terminal") or {}).get("status"))
+    wrong_model = []
+    if expected_model:
+        for row in rows:
+            returned = {call.get("model_returned") for call in (row.get("policy") or {}).get("log") or []
+                        if call.get("model_returned")}
+            if returned and returned != {expected_model}:
+                wrong_model.append(row["_path"])
+        issues.extend(f"{path}: wrong returned model" for path in wrong_model)
     dirty = [r["_path"] for r in rows if (r.get("provenance") or {}).get("arbiter_dirty")]
+    statuses = Counter(terminal_status(row) for row in rows)
+    illegal = [r["_path"] for r in rows if any(
+        decision.get("result") == "api_error" for decision in r.get("decisions") or [])]
     return {"passed": not issues and not dirty, "issues": issues, "dirty_rows": dirty,
+            "terminal_statuses": dict(statuses),
+            "infrastructure_errors": [r["_path"] for r in rows
+                                      if terminal_status(r) == "infrastructure_error"],
+            "incomplete": [r["_path"] for r in rows if terminal_status(r) == "incomplete"],
+            "wrong_model": wrong_model, "illegal_or_rejected_actions": illegal,
             "harness_errors": [r["_path"] for r in rows if r.get("outcome") == "harness_error"]}
 
 
@@ -162,6 +212,21 @@ def main():
     a = ap.parse_args()
     spec, rows = json.loads(a.manifest.read_text()), load_rows(a.root)
     diagnostic = a.root.name == "executor_preflight"
+    arms = spec["arms"][:1] if diagnostic else spec["arms"]
+    audit_result = audit(
+        rows,
+        arms,
+        expected_model=(spec.get("transport") or {}).get("wire_model") or spec.get("model"),
+        expected_keys=expected_stage_keys(spec, a.root.name, arms),
+        require_terminal=int(spec.get("schema_version", 1)) >= 2,
+    )
+    terminal_blockers = audit_result["infrastructure_errors"] + audit_result["incomplete"]
+    gate_pass = audit_result["passed"] and not terminal_blockers and not audit_result["harness_errors"]
+    gate = {
+        "decision": "GO" if gate_pass else "NO_GO",
+        "approved_stages": ["validation"] if gate_pass and a.root.name == "smoke" else [],
+        "reason": "complete integrity audit" if gate_pass else "audit or terminal blockers remain",
+    }
     report = {"manifest_sha": __import__("hashlib").sha256(a.manifest.read_bytes()).hexdigest()[:16],
               "diagnostic_only": diagnostic,
               "rows": len(rows), "summary": summaries(rows, spec["prices_per_million"]),
@@ -169,7 +234,7 @@ def main():
               "paired_resources": {} if diagnostic else resource_differences(
                   rows, spec["pairwise_contrasts"], spec["prices_per_million"]),
               "beliefs": beliefs(rows),
-              "audit": audit(rows, spec["arms"][:1] if diagnostic else spec["arms"])}
+              "audit": audit_result, "gate": gate}
     out = a.out or a.root / "summary.json"
     out.write_text(json.dumps(report, indent=2, allow_nan=True))
     print(json.dumps({"rows": len(rows), "audit": report["audit"], "out": str(out)}, indent=2))

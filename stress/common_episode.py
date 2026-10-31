@@ -5,12 +5,12 @@ from MEMI's pinned release.  Only the memory-policy hook and audit fields differ
 """
 from __future__ import annotations
 
-import json
 import time
 import traceback
 from pathlib import Path
 
 from common_scene import SceneStream, degraded
+from arbiter_kb.common_watchdog import EventSink, detect_loop
 
 
 def _episode_imports():
@@ -33,7 +33,8 @@ def _start(task, episode, split, policy, video_path):
     return ep, no_record, log, env, cap, film
 
 
-def _reset(ep, no_record, log, env, cap, film, task, episode, split, policy, cfg):
+def _reset(ep, no_record, log, env, cap, film, task, episode, split, policy, cfg, events):
+    events.emit("phase_start", phase="reset")
     if not ep.follow_wrapper_rule(env):
         cap._note("no planner wrapper found; need_parameter may disagree")
     cap.install()
@@ -58,6 +59,8 @@ def _reset(ep, no_record, log, env, cap, film, task, episode, split, policy, cfg
         policy.observe(frames)
     cap.start_execution()
     log.demo_rows, log.reset_batch = len(demo), n_reset
+    events.emit("phase_end", phase="reset", reset_digest=stream.digest,
+                goal=log.goal, menu=log.menu, reset_batch=n_reset)
     return obs, info, video, first, rows, stream
 
 
@@ -90,7 +93,19 @@ def _classify(ep, d, obs, term, trunc, info, menu):
     return info
 
 
-def _decision(ep, i, timeline, bounds, demo, log, policy, env, cap, film, stream, cfg):
+def _memory_snapshot(policy):
+    memory = getattr(policy, "memory", None)
+    if isinstance(memory, dict):
+        return dict(memory)
+    text = getattr(memory, "text", None)
+    beliefs = getattr(memory, "beliefs", None)
+    if callable(text):
+        return {"text": text(), "beliefs": beliefs() if callable(beliefs) else []}
+    return None
+
+
+def _decision(ep, i, timeline, bounds, demo, log, policy, env, cap, film, stream, cfg,
+              events, commands, loop_cfg, emitted_loops):
     start, end, demo_seg, demo_n = bounds
     seg, n = timeline.text(start, end) if end > start else timeline.text(end - 1, end)
     shown = demo_n if i == 0 else 0
@@ -99,13 +114,27 @@ def _decision(ep, i, timeline, bounds, demo, log, policy, env, cap, film, stream
         seg = segments.with_demo(demo_seg, seg)
     d = ep.Decision(index=i, t_from=start, t_to=end - 1, steps=n, segment=seg, demo_steps=shown)
     ts, before = time.time(), len(cap.exec_rows)
+    memory_before = _memory_snapshot(policy)
+    events.emit("phase_start", phase="llm", decision=i, memory_before=memory_before)
     d.command = policy.decide(seg, log.menu)
-    print(json.dumps({"event": "executor_command", "decision": i, "command": d.command},
-                     default=str), flush=True)
+    calls = getattr(policy, "calls", [])
+    events.emit("phase_end", phase="llm", decision=i,
+                policy_call=calls[-1] if calls else None,
+                memory_after_decide=_memory_snapshot(policy))
+    commands.append(d.command)
+    loop = detect_loop(commands, loop_cfg["same_action_repeats"], loop_cfg["alternating_cycles"])
+    if loop:
+        signature = (loop["kind"], tuple(loop["pattern"]))
+        if signature not in emitted_loops:
+            emitted_loops.add(signature)
+            events.emit("loop_detected", decision=i, diagnostic_only=True, **loop)
+    events.emit("executor_command", decision=i, command=d.command)
     memory = getattr(policy, "memory", None)
     if callable(getattr(memory, "beliefs", None)) and policy.calls:
         policy.calls[-1]["scored_beliefs"] = stream.score_beliefs(memory.beliefs())
+    events.emit("phase_start", phase="executor", decision=i, command=d.command)
     obs, _, term, trunc, info = env.step(d.command)
+    events.emit("phase_end", phase="executor", decision=i)
     film.add(obs)
     info = _classify(ep, d, obs, term, trunc, info, log.menu)
     raw = cap.exec_rows[before:]
@@ -113,6 +142,7 @@ def _decision(ep, i, timeline, bounds, demo, log, policy, env, cap, film, stream
     frames = stream.feed(rows)
     if hasattr(policy, "observe"):
         policy.observe(frames)
+    events.emit("memory_transition", decision=i, memory_after_observe=_memory_snapshot(policy))
     d.captured = len(raw)
     start, end = timeline.extend(rows, demo=False)
     d.seconds = round(time.time() - ts, 2)
@@ -121,18 +151,27 @@ def _decision(ep, i, timeline, bounds, demo, log, policy, env, cap, film, stream
 
 
 def run_episode(task: str, episode: int, split: str, policy, cfg: dict,
-                video_path: Path | None = None):
+                video_path: Path | None = None, event_sink: EventSink | None = None,
+                max_decisions: int | None = None, loop_detection: dict | None = None):
     ep, no_record, log, env, cap, film = _start(task, episode, split, policy, video_path)
     t0, stream = time.time(), None
+    events = event_sink or EventSink(None)
+    loop_cfg = loop_detection or {"same_action_repeats": 6, "alternating_cycles": 3}
+    commands, emitted_loops = [], set()
+    events.emit("episode_start", task=task, episode=episode, split=split,
+                arm=getattr(policy, "arm", "unknown"))
     try:
-        reset = _reset(ep, no_record, log, env, cap, film, task, episode, split, policy, cfg)
+        reset = _reset(ep, no_record, log, env, cap, film, task, episode, split,
+                       policy, cfg, events)
         _, _, video, _, rows, stream = reset
         timeline, start, end, demo_seg, demo_n = _timeline(ep, task, rows, len(video))
         log.demo = {"steps": demo_n, "chars": len(demo_seg)}
         bounds = (start, end, demo_seg, demo_n)
-        decision_budget = getattr(policy, "max_decisions", ep.MAX_DECISIONS)
+        frozen_budget = ep.MAX_DECISIONS if max_decisions is None else int(max_decisions)
+        decision_budget = min(getattr(policy, "max_decisions", frozen_budget), frozen_budget)
         for i in range(decision_budget):
-            d, bounds = _decision(ep, i, timeline, bounds, video, log, policy, env, cap, film, stream, cfg)
+            d, bounds = _decision(ep, i, timeline, bounds, video, log, policy, env, cap,
+                                  film, stream, cfg, events, commands, loop_cfg, emitted_loops)
             log.decisions.append(d.__dict__)
             if d.result in ("api_error", "planner_error", "harness_error"):
                 log.outcome = d.result
@@ -158,4 +197,6 @@ def run_episode(task: str, episode: int, split: str, policy, cfg: dict,
             env.close()
         except Exception:
             pass
+        events.emit("episode_end", outcome=log.outcome, success=log.success,
+                    seconds=log.seconds, decisions=len(log.decisions))
     return log
