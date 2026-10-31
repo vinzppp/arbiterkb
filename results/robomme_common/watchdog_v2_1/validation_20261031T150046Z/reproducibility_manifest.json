@@ -1,0 +1,119 @@
+{
+  "run_id": "validation_20261031T150046Z",
+  "classification": "frozen_clean_validation",
+  "result_commit": "d2ba092aa9b604ea0420e6f25727aab408bc42f7",
+  "research_branch": "research/perception-belief-robomme",
+  "main_ref_during_run": "069beb7688fe1b853dd1fcc09ba6e3e481372f87",
+  "protocol": {
+    "manifest": "experiments/robomme_common_v2_1_watchdog_openrouter.json",
+    "manifest_sha": "a839ccc592f8aa55",
+    "manifest_sha256": "a839ccc592f8aa554aa6b4b809c3968b0ec30d1bfff870f47ae7fad3ca28be09",
+    "result_provenance_commit": "5ab7fb7f99150c48dbec234e986c05803d366498",
+    "split": "val",
+    "episodes": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "tasks": ["VideoUnmaskSwap", "ButtonUnmaskSwap", "PickHighlight", "VideoRepick"],
+    "arms": ["fullhist", "memi", "soft", "arbiter"],
+    "observation": "clean",
+    "model": "openai/gpt-6-luna",
+    "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+    "effort": "low",
+    "prompt_sha": "307eaf7ff479aeae",
+    "params_sha": "fe4e94112a74"
+  },
+  "container": {
+    "platform": "linux/amd64",
+    "tag": "arbiterkb-robomme-cpu:bb6c37c",
+    "image_id": "sha256:07424f3b53e08c0bfd27db3a97d89210de92679b040aed3a5aa49e580e059fd1",
+    "renderer": "cpu"
+  },
+  "sources": {
+    "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+    "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+    "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "authorization": {
+    "credential_source": "macOS Keychain service ArbiterKB-OpenRouter, injected into the runner environment",
+    "credential_persisted_in_repository_or_results": false,
+    "previously_exposed_credentials_used_or_recovered": false,
+    "endpoint_probe": {
+      "status": "passed_before_smoke",
+      "http_status": 200,
+      "requested_model": "openai/gpt-6-luna",
+      "returned_model": "openai/gpt-6-luna",
+      "total_tokens": 15,
+      "cost_usd": 0.0000035,
+      "raw_response_retained": false
+    }
+  },
+  "gate_chain": {
+    "smoke_run_id": "smoke_20261031T142402Z",
+    "smoke_cells": 16,
+    "smoke_audit": "PASS",
+    "smoke_cost_usd": 0.00851439,
+    "failed_validation_run_id": "validation_20261031T145940Z",
+    "failed_validation_disposition": "preserved; first cell infrastructure_error before any API call; not merged or selectively rerun",
+    "failed_validation_cost_usd": 0.0,
+    "successful_validation_run_id": "validation_20261031T150046Z"
+  },
+  "integrity": {
+    "expected_cells": 144,
+    "terminal_cells": 144,
+    "result_files": 144,
+    "event_logs": 144,
+    "event_lines": 4039,
+    "task_episode_groups": 36,
+    "four_arms_per_group": true,
+    "seed_match_across_arms": true,
+    "reset_digest_match_across_arms": true,
+    "unique_episode_seeds": 36,
+    "unique_reset_digests": 36,
+    "dirty_rows": 0,
+    "wrong_model_calls": 0,
+    "invalid_calls": 0,
+    "api_errors": 0,
+    "retries": 0,
+    "infrastructure_errors": 0,
+    "incomplete": 0,
+    "harness_errors": 0,
+    "terminal_statuses": {"success": 65, "task_failure": 74, "timeout": 5},
+    "raw_result_set_sha256": "1f9aba181041b319df7ae5e39e970794ab8150f85e8e681f50597ad37fe59cf5",
+    "raw_result_set_hash_definition": "SHA-256 over sorted relative path, NUL, file bytes, NUL for the 288 result.json/events.jsonl files",
+    "summary_sha256": "e4997492d9cb32d1fc8c21368e0b6c355eb0efc7789b794d4429874cdddf428e"
+  },
+  "usage": {
+    "model_calls": 577,
+    "input_tokens": 1292873,
+    "cached_tokens": 429442,
+    "cache_write_tokens": 98660,
+    "output_tokens": 81217,
+    "reasoning_tokens": 67390,
+    "model_latency_s": 1918.113,
+    "sum_episode_wall_s": 22275.7,
+    "serial_event_window_s": 23989.568796,
+    "validation_cost_usd": 0.13371252,
+    "authorized_probe_smoke_validation_cost_usd": 0.14223041,
+    "validation_cost_stop_usd": 0.5
+  },
+  "analysis": {
+    "summary": "summary.json",
+    "method": "Wilson intervals; paired success risk difference with 10000 deterministic bootstrap draws; exact paired McNemar with Holm correction over six frozen contrasts",
+    "audit": "PASS",
+    "automatic_report_gate": "GO_COMPLETE_INTEGRITY_AUDIT",
+    "research_decision": "NO_GO_HELDOUT_OR_OBSERVATION_DEGRADATION",
+    "reason": "Validation is technically reliable, but ArbiterKB did not beat FullHist or MEMI and failed all VideoRepick episodes; only MEMI versus soft survived the frozen multiplicity correction."
+  },
+  "leakage": {
+    "heldout_read": false,
+    "observation_degradation_started": false,
+    "test_split_rows": 0,
+    "test_read_ledger_entries_added_by_run": 0,
+    "test_set_tuning": false
+  },
+  "verification": {
+    "pytest": "278 passed",
+    "quality": "134 files, 0 problems; PASS",
+    "selftest": "16 PASS, 0 FAIL, 1 SKIPPED (real oracle replays unavailable)",
+    "secret_scan": "no OpenRouter key pattern in repository artifacts"
+  },
+  "reproduce_report": ".venv/bin/python scripts/common_harness_report.py results/robomme_common/watchdog_v2_1/validation_20261031T150046Z/validation --manifest experiments/robomme_common_v2_1_watchdog_openrouter.json --out results/robomme_common/watchdog_v2_1/validation_20261031T150046Z/summary.json"
+}

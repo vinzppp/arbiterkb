@@ -5,6 +5,17 @@
 The requested pre-existing branch/R1c ref was not present locally. This branch was reconstructed from the latest
 auditable source commit `069beb7`; the original source repository and `main` were not modified.
 
+### Frozen RoboMME v2.1 update (2026-10-31)
+
+The direct common-harness comparison is no longer unrun. The process-level watchdog, simulator preflight, authorized
+16-cell smoke, and preregistered 144-cell clean validation all completed on the independent branch. The successful
+validation is `validation_20261031T150046Z` at result commit `d2ba092`: 144/144 terminal cells, integrity audit PASS,
+and no test/degradation read. MEMI scored 24/36, FullHist 17/36, ArbiterKB 15/36, and soft repair 9/36. Only MEMI
+versus soft survived the six frozen Holm-corrected contrasts. ArbiterKB scored 0/9 on VideoRepick and did not beat
+FullHist or MEMI, so the research gate is **NO-GO for held-out and observation degradation**. See
+`paper/ROBOMME_V2_1_VALIDATION_REPORT_ZH.md` and the machine-readable artifacts under
+`results/robomme_common/watchdog_v2_1/validation_20261031T150046Z/`.
+
 Implemented and run:
 
 - `arbiter_kb/paper_stats.py`: Wilson intervals, exact McNemar, episode-paired bootstrap;
@@ -22,12 +33,12 @@ MEMI was cloned temporarily at commit `bb6c37c`; `python -m memi.report` ended w
 The local RoboMME simulator preflight cannot start (`robomme` absent; macOS/no NVIDIA), recorded in
 `results/latest/paper_comparison/local_environment_audit.json`.
 
-## Result in one sentence
+## Earlier perceived-trace result
 
 MEMI's released closed-loop gains reproduce, but on ArbiterKB's held-out perceived identity benchmark the full KB does
 not beat causal re-linking plus detector-only soft repair on accuracy, AURC, or corrected Brier. R6 improves Brier
 inside the KB, but R1 loses one net anchor decision, R6 loses one further top-1, sparse R5 amplifies `None`, and R4 is
-inactive. A direct closed-loop comparison remains unrun and must not be claimed.
+inactive. This was the state before the v2.1 direct closed-loop validation above.
 
 ## Reproduce
 
