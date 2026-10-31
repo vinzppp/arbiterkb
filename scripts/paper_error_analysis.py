@@ -166,13 +166,13 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=ROOT / "results/latest/paper_error_analysis/summary.json")
     ap.add_argument("--resamples", type=int, default=5000)
-    args, params = ap.parse_args(), load_params()
+    args, params, state = ap.parse_args(), load_params(), git_state()
     ledger.record("READ", params.hash(), "G perceived test, paper_error_analysis.py post-hoc diagnosis; no tuning")
     result = {"schema": 1, "design": {"status": "post-hoc", "unit": "episode", "resamples": args.resamples,
                                       "multiplicity": "Holm across 8 contrasts x 3 metrics per split"},
               "train": run_split(params, "train", args.resamples),
               "test": run_split(params, "test", args.resamples),
-              "provenance": {"git": git_state(), "params_hash": params.hash(),
+              "provenance": {"git_before_read": state, "params_hash": params.hash(),
                              "data_train": data_manifest("train"), "data_test": data_manifest("test"),
                              "script_commit_base": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()}}
     args.out.parent.mkdir(parents=True, exist_ok=True)
