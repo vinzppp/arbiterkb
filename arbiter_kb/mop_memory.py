@@ -6,16 +6,22 @@ options per type; demonstration events in a separate block labelled "demonstrati
 recommendation and no task progress beyond counts of what was executed.
 
 M-KB: the frozen ArbiterKB through the phase-safe adapter (demo-inclusive progress removed), with an
-execution-only action count line in place of the removed progress line.
+execution-only action count line in place of the removed progress line. Only cubes, containers and
+targets enter the KB's rules (the types they were written for); every other type the bridge passes is
+listed beside the KB view with its last pixel and visibility. Demonstration manipulation lines stay,
+under a DEMONSTRATION heading; execution ones are replaced by the counts.
 """
 from __future__ import annotations
 
+import dataclasses
+import re
 from collections import Counter
 
 import numpy as np
 
 from .detectors import Detectors
-from .factorial_memory import NormalizedTaskState, phase_safe_arbiter_view
+from .common_observation import CORE_CLASSES
+from .factorial_memory import MANIPULATION_PHRASES, NormalizedTaskState
 from .params import Params
 from .systems.arbiter_kb import ArbiterKBSystem
 from .types import EpisodeMeta, FrameObs
@@ -63,6 +69,7 @@ class PreregLedger:
     def _step(self, frame: FrameObs) -> None:
         self.frame = frame
         for oid, obj in frame.objects.items():
+            self.objects.setdefault(oid, {"cls": obj.cls, "uv": None, "t": None, "xyz": None})
             if obj.visible and obj.uv is not None:
                 self.objects[oid].update(uv=np.asarray(obj.uv, float).copy(), t=frame.t,
                                          xyz=None if obj.xyz is None else np.asarray(obj.xyz, float).copy())
@@ -89,11 +96,12 @@ class PreregLedger:
 
     def _demo_line(self, event, frame: FrameObs) -> str:
         ee = np.asarray(event.data.get("ee", frame.ee_xyz), float)
-        near = [(float(np.linalg.norm(np.asarray(o["xyz"]) - ee)), oid) for oid, o in self.objects.items()
+        near = [(float(np.linalg.norm(np.asarray(o["xyz"])[:2] - ee[:2])), float(np.linalg.norm(np.asarray(o["xyz"]) - ee)),
+                 oid) for oid, o in self.objects.items()
                 if o["xyz"] is not None and o["cls"] not in TRACE_CLASSES]
         side = f" ({event.data['side']} side)" if "side" in event.data else ""
-        where = f"; nearest object {min(near)[1]}" if near else ""
-        return f"t={frame.t} {event.kind.replace('_', ' ')}{side}, hand at {_xyz(ee)}{where}"
+        where = f"; nearest object {min(near)[2]}" if near else ""
+        return f"t={frame.t} {event.kind.replace('_', ' ')}{side}, hand at {_xyz(ee)}{where} (horizontal distance, then 3D)"
 
     def chose(self, command: dict, menu: list) -> None:
         """Called with each command before it executes (choice and point as sent)."""
@@ -107,7 +115,8 @@ class PreregLedger:
         if self.pending is None:
             return
         label, text = self.pending
-        self.counts[text.split(" at [")[0]] += 1
+        if result == "executed":
+            self.counts[text.split(" at [")[0]] += 1
         self.log.append(f"{len(self.log) + 1}. {text} -> {result}" + (f", status {status}" if status else ""))
         self.pending = None
 
@@ -140,15 +149,26 @@ class KBMemory:
         self.system, self.counts = ArbiterKBSystem(params), NormalizedTaskState(params)
 
     def reset(self, meta: EpisodeMeta) -> None:
-        self.system.reset(meta)
-        self.counts.reset(meta)
+        self.core = {oid for oid, cls, _ in meta.objects if cls in CORE_CLASSES}
+        core_meta = dataclasses.replace(meta, objects=[o for o in meta.objects if o[0] in self.core])
+        self.system.reset(core_meta)
+        self.counts.reset(core_meta)
         self.frame: FrameObs | None = None
+        self.other: dict[str, dict] = {}
+        self.demo_last_t = -1
 
     def feed(self, frames: list[FrameObs]) -> None:
         for frame in frames:
-            self.counts.step(frame)
-            self.system.step(frame)
+            core = dataclasses.replace(frame, objects={k: v for k, v in frame.objects.items() if k in self.core})
+            self.counts.step(core)
+            self.system.step(core)
             self.frame = frame
+            self.demo_last_t = frame.t if frame.is_video else self.demo_last_t
+            for oid, obj in frame.objects.items():
+                if oid not in self.core:
+                    row = self.other.setdefault(oid, {"cls": obj.cls, "uv": None, "t": None})
+                    if obj.visible and obj.uv is not None:
+                        row.update(uv=np.asarray(obj.uv, float).copy(), t=frame.t)
 
     def chose(self, command: dict, menu: list) -> None:
         pass
@@ -156,11 +176,35 @@ class KBMemory:
     def executed(self, result: str, status: str) -> None:
         pass
 
+    def _view(self) -> tuple[list[str], list[str]]:
+        kept, demo = [], []
+        for line in controller_view(self.system.kb).splitlines():
+            if line.strip().startswith(("Progress:", "Goal progress:")):
+                continue
+            if any(token in line for token in MANIPULATION_PHRASES):
+                t = re.search(r"\bt=(\d+)", line)
+                if t and int(t.group(1)) <= self.demo_last_t:
+                    demo.append(line)
+                continue
+            kept.append(line)
+        return kept, demo
+
     def text(self) -> str:
         c = self.counts.counts()
-        head = ("EXECUTION COUNTS (execution phase only; the demonstration is not counted): "
-                f"pick-ups {c['pick_up']}, releases {c['release']}, button presses {c['press']}, "
-                f"holds {c['hold_above']}.")
-        body = phase_safe_arbiter_view(controller_view(self.system.kb)).replace(
-            "use the normalized state above", "use the execution counts above")
-        return "\n".join([head, body, "Visible object-to-pixel lookup:", *_lookup(self.frame)])
+        kept, demo = self._view()
+        lines = ["EXECUTION COUNTS (execution phase only; the demonstration is not counted): "
+                 f"pick-ups {c['pick_up']}, releases {c['release']}, button presses {c['press']}, "
+                 f"holds {c['hold_above']}.",
+                 "WORLD MEMORY (task progress is intentionally omitted; use the execution counts above)", *kept,
+                 "DEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):",
+                 *(demo or ["  none"]),
+                 "Other observed objects (types outside the KB's rule ontology; last observed pixel [y, x]):"]
+        for oid, row in self.other.items():
+            now = self.frame.objects.get(oid) if self.frame is not None else None
+            state = (f"visible at pixel {_px(now.uv)}" if now is not None and now.visible and now.uv is not None
+                     else f"not visible now; last seen t={row['t']} at pixel {_px(row['uv'])}" if row["uv"] is not None
+                     else "never observed")
+            lines.append(f"  [{oid}] {row['cls']}: {state}")
+        if not self.other:
+            lines.append("  none")
+        return "\n".join([*lines, "Visible object-to-pixel lookup:", *_lookup(self.frame)])

@@ -24,6 +24,13 @@ def _point(frame: FrameObs | None, oid: str) -> str:
     return f"pixel [{obj.uv[1]:.0f}, {obj.uv[0]:.0f}]"
 
 
+MANIPULATION_PHRASES = (
+    " event grasp(", " event place(", " picked up an object ",
+    " placed it down ", " set it down ", " released it from above ",
+    " held it up", " held the object up on the robot's ", " pressed down with the closed gripper",
+)
+
+
 def phase_safe_arbiter_view(text: str) -> str:
     """Remove the legacy mixed-phase task ledger from an Arbiter world view.
 
@@ -37,11 +44,7 @@ def phase_safe_arbiter_view(text: str) -> str:
     This is an isolated adapter repair.  It does not rewrite the KB, old traces,
     or the default controller view used by frozen experiments.
     """
-    manipulation = (
-        " event grasp(", " event place(", " picked up an object ",
-        " placed it down ", " set it down ", " released it from above ",
-        " held it up", " held the object up on the robot's ", " pressed down with the closed gripper",
-    )
+    manipulation = MANIPULATION_PHRASES
     kept = []
     for line in text.splitlines():
         stripped = line.strip()

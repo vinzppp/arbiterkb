@@ -40,6 +40,13 @@ answers []. Answer with JSON only:
 {"choice": "<label>", "point": [y, x] or null, "memory_updates": [{"field": "...", "value": "..."}]}
 """
 MEMORY_NOTES = {"fh": "", "ld": MEMORY_NOTE, "kb": MEMORY_NOTE, "mm": MM_NOTE}
+ANSWER_HEAD = "\n\nAnswer with "
+# The last line of a fresh-call turn: MEMI's own for ld / kb; for mm the same with memory_updates, so the
+# turn and the system note ask for one format.
+ANSWER_LINES = {"ld": 'Answer with {"choice": "<label>", "point": [y, x] or null}.',
+                "kb": 'Answer with {"choice": "<label>", "point": [y, x] or null}.',
+                "mm": 'Answer with {"choice": "<label>", "point": [y, x] or null, '
+                      '"memory_updates": [{"field": "...", "value": "..."}]}.'}
 
 
 def policy_text(task: str, policy: str) -> str:
@@ -151,7 +158,9 @@ class MopPolicy:
             goal = "" if self.messages else self.goal
             self.messages.append({"role": "user", "content": decide_turn(self.n, segment, menu, goal, demo=demo)})
             return list(self.messages)
-        user = decide_turn(self.n, segment, menu, self.goal, demo=demo) + MEMORY_HEAD + self.memory.text()
+        turn = decide_turn(self.n, segment, menu, self.goal, demo=demo)
+        body = turn[:turn.rindex(ANSWER_HEAD)]
+        user = body + MEMORY_HEAD + self.memory.text() + "\n\n" + ANSWER_LINES[self.memory_kind]
         return [{"role": "user", "content": user}]
 
     def decide(self, segment, menu):

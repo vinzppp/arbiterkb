@@ -50,7 +50,7 @@ def _reset(ep, no_record, log, env, cap, film, task, episode, split, policy, cfg
         first = [cap.record(env.unwrapped.get_obs(), info, 0, False)]
     raw = video + first
     rows = degraded(raw, cfg["mode"], cfg["seed"], cfg["dropout"], cfg["jitter_px"])
-    stream = SceneStream(task, rows, log.goal, episode, split)
+    stream = SceneStream(task, rows, log.goal, episode, split, cfg.get("bridge", "core"))
     policy.start(task=task, goal=log.goal, menu=log.menu, has_demo=bool(video))
     if hasattr(policy, "reset_memory"):
         policy.reset_memory(stream.meta)

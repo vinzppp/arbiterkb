@@ -9,6 +9,9 @@ import numpy as np
 from arbiter_kb.common_observation import Detection, VisualTracks, scene_digest
 
 
+BRIDGES = ("core", "memi_named")
+
+
 def _memi_name(name: str, task: str) -> str:
     """The actor name after MEMI's own per-task rename (VideoRepick builds cubes as bin_<i>)."""
     from memi.plan.rollout.segments import _RENAMED
@@ -17,17 +20,26 @@ def _memi_name(name: str, task: str) -> str:
     return rule[0].sub(rule[1], name) if rule else name
 
 
-def _label(record: dict, task: str) -> tuple[str, str] | None:
-    """(label, class) as MEMI's observation text names the object; None for what MEMI leaves unnamed.
+def _label(record: dict, task: str, bridge: str = "core", row: dict | None = None,
+           targets: frozenset = frozenset()) -> tuple[str, str] | None:
+    """(label, class) of one captured record, or None if the bridge drops it.
 
-    Every type MEMI's capture names is kept (buttons, waypoints, highlights, pegs, ...). Cubes,
-    containers and targets keep the classes the frozen KB rules use; any other type is its own class.
+    core: cubes, containers and targets only (the frozen v1/v2/factorial behaviour).
+    memi_named: every type MEMI's observation text names (buttons, waypoints, highlights, pegs, ...), with
+    highlights named as MEMI names them (scene._covers). Cubes, containers and targets keep the classes the
+    frozen KB rules use; any other type is its own class.
     """
-    from memi.plan.rollout.scene import classify_object_type
+    from memi.plan.rollout.scene import HIGHLIGHTS, _covers, classify_object_type
 
     label = classify_object_type(_memi_name(str(record.get("actor_name", "")), task), task)
     if label is None:
         return None
+    if bridge == "core":
+        return (label, "cube" if label.endswith("cube") else label) if label in ("container", "target") \
+            or label.endswith("cube") else None
+    if label in HIGHLIGHTS:
+        cur = {x.get("actor_name"): x for x in (row or {}).get("visible_object_records") or []}
+        label = _covers(record, cur, task, targets)
     return label, "cube" if label.endswith("cube") else label
 
 
@@ -46,10 +58,13 @@ def _front_only(records: list[dict], task: str) -> list[dict]:
     return keep + list(best.values())
 
 
-def detections(row: dict, task: str) -> list[Detection]:
+def detections(row: dict, task: str, bridge: str = "core", targets: frozenset = frozenset()) -> list[Detection]:
+    if bridge not in BRIDGES:
+        raise ValueError(f"unknown bridge {bridge!r}")
+    records = row.get("visible_object_records") or []
     out = []
-    for record in _front_only(row.get("visible_object_records") or [], task):
-        kind = _label(record, task)
+    for record in (_front_only(records, task) if bridge == "memi_named" else records):
+        kind = _label(record, task, bridge, row, targets)
         xyz = (record.get("actor_pose") or {}).get("xyz")
         yx = record.get("visible_centroid_yx")
         if kind and xyz and len(xyz) >= 3 and yx and len(yx) >= 2:
@@ -77,13 +92,25 @@ def degraded(rows: list[dict], mode: str, seed: int, dropout: float, jitter_px: 
     return out
 
 
+def target_spots(rows: list[dict], task: str, spots: frozenset = frozenset()) -> frozenset:
+    """Every pixel a target has held so far (MEMI's describe uses them to name a highlight over a target)."""
+    from memi.plan.rollout.scene import classify_object_type
+
+    new = {tuple(r.get("visible_centroid_yx", [0, 0])) for row in rows for r in row.get("visible_object_records") or []
+           if classify_object_type(_memi_name(str(r.get("actor_name", "")), task), task) == "target"}
+    return spots | frozenset(new)
+
+
 class SceneStream:
-    def __init__(self, task: str, reset_rows: list[dict], goal: str, episode: int, split: str):
-        self.task = task
-        samples = [detections(row, task) for row in reset_rows]
+    def __init__(self, task: str, reset_rows: list[dict], goal: str, episode: int, split: str, bridge: str = "core"):
+        self.task, self.bridge, self.targets = task, bridge, frozenset()
+        samples = []
+        for row in reset_rows:
+            self.targets = target_spots([row], task, self.targets) if bridge == "memi_named" else self.targets
+            samples.append(detections(row, task, bridge, self.targets))
         expected = [(f"{color} cube", "cube") for color in ("red", "blue", "green")
                     if re.search(rf"\b{color}\s+(?:cube|block)\b", goal.lower())]
-        self.tracks = VisualTracks(samples, expected)
+        self.tracks = VisualTracks(samples, expected, grow=bridge == "memi_named")
         self.meta = self.tracks.meta(task, episode, split, goal)
         self.digest = scene_digest(samples)
         self.raw_to_track, self.inside, self.previous_raw = {}, {}, {}
@@ -92,7 +119,9 @@ class SceneStream:
         frames = []
         for row in rows:
             arm = row.get("arm") or {}
-            ds = detections(row, self.task)
+            if self.bridge == "memi_named":
+                self.targets = target_spots([row], self.task, self.targets)
+            ds = detections(row, self.task, self.bridge, self.targets)
             self._cover_update(row)
             frame = self.tracks.step(ds, arm.get("xyz", [0, 0, 0]), arm.get("opening", .08),
                                      bool(row.get("is_video_demo")))

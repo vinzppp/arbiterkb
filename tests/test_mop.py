@@ -61,10 +61,16 @@ def test_kb_memory_counts_execution_only_and_keeps_buttons():
     kb = KBMemory(Params())
     kb.reset(META)
     kb.feed(grasp(0, video=True))
+    kb.feed([frame(4, (0.0, 0.0, 0.017), False, ee=(0.0, 0.0, 0.017), width=0.08)])
+    kb.feed(grasp(5, video=False))
     text = kb.text()
-    assert text.startswith("EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0")
-    assert "\nProgress:" not in text and "picked up an object" not in text
-    assert "[button_0] button at pixel [40, 30]" in text
+    world, rest = text.split("DEMONSTRATION")
+    demo, other = rest.split("Other observed objects (types outside")
+    assert text.startswith("EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1,")
+    assert "\nProgress:" not in text and "picked up an object" not in world
+    assert demo.count("picked up an object") == 1 and "(pick-up #1)" in demo
+    assert "[button_0] button: visible at pixel [40, 30]" in other
+    assert "button_0" not in kb.system.kb.objects
 
 
 def _fairness():
@@ -81,12 +87,12 @@ def _probe(fairness, mutate=None):
     for mem in ("fh", "ld", "mm", "kb"):
         for pol in ("g", "m"):
             system = scaffold + notes[mem] + fairness.POLICY_HEAD + fairness.policy_text(task, pol)
-            user = "turn " + fairness.ANSWER + '...}.' + (fairness.MEMORY_HEAD + f"payload {mem}" if mem != "fh" else "")
+            user = "turn" + (fairness.MEMORY_HEAD + f"payload {mem}" if mem != "fh" else "") + fairness.ANSWER + "{...}."
             prompts[f"{mem}_{pol}"] = [{"system": system, "messages": [{"role": "user", "content": user}]}]
     prompts["memi"] = [{"system": "stock", "messages": []}]
     if mutate:
         mutate(prompts)
-    return {"task": task, "prompts": prompts}
+    return {"task": task, "prompts": prompts, "stock_memi_system_ok": True}
 
 
 def test_fairness_passes_identical_parts_and_catches_each_violation():
@@ -101,7 +107,8 @@ def test_fairness_passes_identical_parts_and_catches_each_violation():
 
     def recommends(p):
         for arm in ("kb_g", "kb_m"):
-            p[arm][0]["messages"][0]["content"] += " choose A next"
+            content = p[arm][0]["messages"][0]["content"]
+            p[arm][0]["messages"][0]["content"] = content.replace("payload kb", "payload kb; pick bin_2 next")
 
     assert any(f.startswith("M1") for f in fairness.audit_task(_probe(fairness, memory_differs))["fails"])
     assert any(f.startswith("P1") for f in fairness.audit_task(_probe(fairness, policy_differs))["fails"])

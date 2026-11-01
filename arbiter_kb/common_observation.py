@@ -77,10 +77,25 @@ def _match(names: list[str], previous: dict[str, ObjObs], detections: list[Detec
 
 
 class VisualTracks:
-    """Nearest-neighbour visual tracks with a fixed object vocabulary."""
+    """Nearest-neighbour visual tracks. The vocabulary is fixed from the reset samples unless `grow`, in which
+    case a type first seen later gets new tracks, and so does an extra copy of a non-core type."""
 
-    def __init__(self, samples: list[list[Detection]], expected: list[tuple[str, str]] | None = None):
-        self.by_group, self.previous, self.t = _ids(samples, expected), {}, 0
+    def __init__(self, samples: list[list[Detection]], expected: list[tuple[str, str]] | None = None,
+                 grow: bool = False):
+        self.by_group, self.previous, self.t, self.grow = _ids(samples, expected), {}, 0, grow
+
+    def _extend(self, grouped: dict[tuple[str, str], list[Detection]]) -> None:
+        used = {name for names in self.by_group.values() for name in names}
+        for key, found in sorted(grouped.items()):
+            names = self.by_group.setdefault(key, [])
+            if names and key[1] in CORE_CLASSES:
+                continue
+            base, i = _base_id(*key), len(names)
+            while len(names) < len(found):
+                while f"{base}_{i}" in used:
+                    i += 1
+                names.append(f"{base}_{i}")
+                used.add(names[-1])
 
     def objects(self) -> list[tuple[str, str, dict]]:
         out = []
@@ -96,6 +111,8 @@ class VisualTracks:
         grouped: dict[tuple[str, str], list[Detection]] = {}
         for d in detections:
             grouped.setdefault((d.label, d.cls), []).append(d)
+        if self.grow:
+            self._extend(grouped)
         visible = {name: d for key, names in self.by_group.items()
                    for name, d in _match(names, self.previous, grouped.get(key, [])).items()}
         objects = self._objects(visible)

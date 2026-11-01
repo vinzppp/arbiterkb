@@ -80,9 +80,13 @@ def main():
     from common_episode import run_episode
 
     probe = MopProbe(a.task, a.episode, a.memi_root, a.max_decisions)
-    cfg = {"mode": "clean", "seed": 0, "dropout": 0.0, "jitter_px": 0.0}
+    cfg = {"mode": "clean", "seed": 0, "dropout": 0.0, "jitter_px": 0.0, "bridge": "memi_named"}
     log = run_episode(a.task, a.episode, "val", probe, cfg, max_decisions=a.max_decisions)
+    from memi.plan.prompts import POLICY_SYSTEM
+
+    stock = probe.arms["memi"].chat.prompts
     out = {"task": a.task, "episode": a.episode, "outcome": log.outcome, "commands": probe.commands,
+           "stock_memi_system_ok": bool(stock) and all(p["system"] == POLICY_SYSTEM for p in stock),
            "objects": probe.meta_objects,
            "prompts": {arm: policy.chat.prompts for arm, policy in probe.arms.items()}}
     a.out.mkdir(parents=True, exist_ok=True)

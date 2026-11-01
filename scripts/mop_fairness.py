@@ -8,6 +8,7 @@ Checks, at every decision of every task:
       ld / mm / kb, the whole conversation for fh) is byte-identical across the two policies, per memory;
   S1  every factorial arm's system starts with MEMI's FullHist scaffold (fh_g's text before TASK POLICY);
   D1  the decision turn before MEMORY is byte-identical across ld / mm / kb;
+  S2  the memi arm sends MEMI's own POLICY_SYSTEM (stock), as recorded by the probe;
   R1  no deterministic memory payload (ld, kb) contains a recommendation word; hits in mm (MEMI's own
       field descriptions and the model's values) are counted and reported, not failed.
 Free; reads files only.
@@ -31,9 +32,11 @@ _SPEC.loader.exec_module(_MOP)
 MEMORIES, MEMORY_HEAD, POLICIES, POLICY_HEAD, policy_text = (
     _MOP.MEMORIES, _MOP.MEMORY_HEAD, _MOP.POLICIES, _MOP.POLICY_HEAD, _MOP.policy_text)
 
-RECOMMEND = re.compile(r"\b(choose|choosing|select|selecting|recommend\w*|should|next (?:action|step|option)|"
-                       r"you must|do not|don't)\b", re.IGNORECASE)
-ANSWER = 'Answer with {"choice"'
+# Imperative / advisory wording. A word list cannot prove the absence of advice; it is the mechanical
+# part of the check, and the probe prompts are also read by hand at the orchestrator's preflight.
+RECOMMEND = re.compile(r"\b(choose|choosing|select|selecting|recommend\w*|should|next|must|do not|don't|"
+                       r"need to|instead|prefer\w*|try|avoid|go to|now (?:pick|press|put|move))\b", re.IGNORECASE)
+ANSWER = _MOP.ANSWER_HEAD
 
 
 def sha(text: str) -> str:
@@ -47,9 +50,10 @@ def parts(arm: str, call: dict) -> dict:
         return {"pre_policy": system[:cut], "policy": system[cut + len(POLICY_HEAD):],
                 "payload": json.dumps(call["messages"]), "turn": None}
     user = call["messages"][-1]["content"]
-    at = user.index(MEMORY_HEAD, user.rindex(ANSWER))
+    end = user.rindex(ANSWER)
+    at = user.rindex(MEMORY_HEAD, 0, end)
     return {"pre_policy": system[:cut], "policy": system[cut + len(POLICY_HEAD):],
-            "payload": user[at + len(MEMORY_HEAD):], "turn": user[:at]}
+            "payload": user[at + len(MEMORY_HEAD):end] + user[end:], "turn": user[:at]}
 
 
 def audit_task(probe: dict) -> dict:
@@ -81,6 +85,8 @@ def audit_task(probe: dict) -> dict:
                 hits.setdefault(mem, []).extend(found)
                 fails.append(f"R1 {task} decision {i} {mem}: recommendation words {sorted(set(found))}")
         mm_hits += len(RECOMMEND.findall(p["mm_g"]["payload"]))
+    if not probe.get("stock_memi_system_ok"):
+        fails.append(f"S2 {task}: the memi arm's system is not MEMI's POLICY_SYSTEM")
     return {"task": task, "decisions": n, "fails": fails, "recommendation_hits": hits,
             "mm_payload_recommendation_words": mm_hits,
             "policy_sha": {pol: sha(policy_text(task, pol)) for pol in POLICIES},
