@@ -40,7 +40,7 @@ def phase_safe_arbiter_view(text: str) -> str:
     manipulation = (
         " event grasp(", " event place(", " picked up an object ",
         " placed it down ", " set it down ", " released it from above ",
-        " held it up", " pressed down with the closed gripper",
+        " held it up", " held the object up on the robot's ", " pressed down with the closed gripper",
     )
     kept = []
     for line in text.splitlines():

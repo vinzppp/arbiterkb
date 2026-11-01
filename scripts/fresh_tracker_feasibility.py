@@ -183,29 +183,32 @@ def write_blocked_outputs(out: Path) -> None:
     })
 
 
+REPRO_SOURCES = [
+    "experiments/fresh_tracker_error_acquisition_v1.json",
+    "scripts/fresh_tracker_feasibility.py",
+    "stress/perceive.py",
+    "arbiter_kb/relink.py",
+    "scripts/canonical_identifiability.py",
+    "params.json",
+    "paper/FRESH_TRACKER_ERROR_REPLAY_PROTOCOL_ZH.md",
+    "paper/FRESH_TRACKER_ERROR_REPLAY_REPORT_ZH.md",
+    "paper/ROBOMME_CANONICAL_MEMORY_IDENTIFIABILITY_ZH.md",
+    "paper/ROBOMME_CANONICAL_MEMORY_PROTOCOL_ZH.md",
+    "paper/ROBOMME_V2_1_FAILURE_FORENSICS_ZH.md",
+    "paper/ROBOMME_MEMORY_POLICY_FACTORIAL_PILOT_ZH.md",
+]
+REPRO_OUTPUTS = [
+    "phase0_feasibility_audit.json",
+    "perception_tracking_error_stats.json",
+    "paired_memory_action_comparison.json",
+    "episode_cluster_uncertainty.json",
+    "runtime_cost.json",
+    "validation.json",
+]
+
+
 def write_repro(out: Path, branch: str, head: str, main_ref: str) -> None:
-    sources = [
-        "experiments/fresh_tracker_error_acquisition_v1.json",
-        "scripts/fresh_tracker_feasibility.py",
-        "stress/perceive.py",
-        "arbiter_kb/relink.py",
-        "scripts/canonical_identifiability.py",
-        "params.json",
-        "paper/FRESH_TRACKER_ERROR_REPLAY_PROTOCOL_ZH.md",
-        "paper/FRESH_TRACKER_ERROR_REPLAY_REPORT_ZH.md",
-        "paper/ROBOMME_CANONICAL_MEMORY_IDENTIFIABILITY_ZH.md",
-        "paper/ROBOMME_CANONICAL_MEMORY_PROTOCOL_ZH.md",
-        "paper/ROBOMME_V2_1_FAILURE_FORENSICS_ZH.md",
-        "paper/ROBOMME_MEMORY_POLICY_FACTORIAL_PILOT_ZH.md",
-    ]
-    outputs = [
-        "phase0_feasibility_audit.json",
-        "perception_tracking_error_stats.json",
-        "paired_memory_action_comparison.json",
-        "episode_cluster_uncertainty.json",
-        "runtime_cost.json",
-        "validation.json",
-    ]
+    sources, outputs = REPRO_SOURCES, REPRO_OUTPUTS
     write_json(out / "reproducibility_manifest.json", {
         "schema": 1,
         "protocol": "fresh-tracker-error-replay-v1-phase0",

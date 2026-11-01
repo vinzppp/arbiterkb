@@ -107,3 +107,31 @@ def test_arbiter_adapter_suppresses_demo_progress_from_legacy_view():
     assert "Execution progress: pick-ups 0" in fixed
     assert "\nProgress:" not in fixed
     assert "picked up an object" not in fixed
+
+
+def _lift_and_hold_left(t0, video):
+    """Grasp at the robot's left (+y), lift above z_hold and pause: one pick_up, one unmerged hold_above."""
+    frames, t = [], t0
+    for width in (0.08, 0.03, 0.0366, 0.0366, 0.0366):
+        frames.append(frame(t, (0.0, 0.2, 0.017), ee=(0.0, 0.2, 0.017), width=width, video=video))
+        t += 1
+    for z in (0.05, 0.1, 0.15) + (0.2,) * 9:
+        frames.append(frame(t, None, ee=(0.0, 0.2, z), width=0.0366, video=video))
+        t += 1
+    return frames, t
+
+
+def test_arbiter_adapter_hides_demo_numbered_hold_lines():
+    """G0 regression: a standalone hold line is numbered over demo + execution ("left hold #2")."""
+    memory = FactorialMemory("arbiter", Params())
+    memory.reset(META)
+    demo, t = _lift_and_hold_left(0, video=True)
+    execution, _ = _lift_and_hold_left(t, video=False)
+    memory.feed(demo + execution)
+
+    from arbiter_kb.views import controller_view
+    assert "left hold #2" in controller_view(memory.world.kb)
+    fixed = memory.text()
+    assert "Execution progress: pick-ups 1, releases 0, button presses 0, holds 1." in fixed
+    assert "hold #" not in fixed
+    assert "held the object up" not in fixed
