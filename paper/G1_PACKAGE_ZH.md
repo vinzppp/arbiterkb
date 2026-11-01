@@ -49,7 +49,12 @@ G0 报告 `paper/G0_MEMORY_OR_POLICY_ZH.md`；orchestrator 2026-11-01 的决定�
 | 公平 diff（5 任务，每次决策：同一策略在 4 个记忆臂间逐字节相同；同一记忆在 2 个策略间逐字节相同；fresh 臂的决策回合相同；ld / kb 记忆里无建议性用词；memi 臂是 MEMI 原版 POLICY_SYSTEM） | `results/memory_or_policy/g1_prep/fairness.json`，输入 `probe/*.json`（每臂每次决策的完整 prompt） | 通过（见 fairness.json） |
 | 脚本化执行器 preflight（经真实 runner、manifest、watchdog） | 已在 Mac 上试跑 5/5 有终态（`results/robomme_common/memory_or_policy_g1/g1_executor_preflight_test/`，未提交） | 通过 |
 | gate 脚本 | `scripts/g1_gate.py`：manifest 已冻结、臂/任务/episode/225 格、$2、endpoint probe 返回精确模型、fairness 通过且用的是 manifest 里的 matched 文本、preflight 无阻断、分支干净 | 已写，待冻结后运行 |
-| code-reviewer | 第一次 FAIL（0ce4de1），修复见 bec54dd 及之后提交；复审结论见本文 §5 | — |
+| code-reviewer | 第一次 FAIL（0ce4de1：后出现的物体类型被丢、mm 两种回答格式、KB 丢 demo 抓取、新类型进 KB 规则等）；修复 bec54dd、9404e52；复审 **PASS-WITH-NOTES**，其中新发现的 N1（RouteStick 的「never observed」幽灵轨迹）与 N2（标题措辞）已在下一提交修掉 | 通过 |
+
+**静态轨迹门限的局限（复审 N3）：** memi_named 模式下，目标和按钮只在离上次位置 15 px 内匹配；若部分遮挡让
+可见质心移动超过 15 px，会多出一条轨迹、原轨迹显示为不可见。5 个 probe 里没出现；G1 只用 clean 观测。
+**不要在加噪（jitter / dropout）阶段沿用 memi_named 而不重新检查。** 预检时可核对：每个静态类的轨迹数不超过
+MEMI 同时显示的最大数（RouteStick 为 5）。
 
 **probe 的局限：** VUS、VR、RS 的脚本化选择第一步就结束 episode，所以这三个任务只检查了第 1 次决策；多步路径
 （执行日志、KB 计数、mm 记忆延续）只在 StopCube（3 步）和 SwingXtimes（4 步）上检查过，另有单元测试。

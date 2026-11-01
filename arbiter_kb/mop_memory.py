@@ -198,7 +198,8 @@ class KBMemory:
                  "WORLD MEMORY (task progress is intentionally omitted; use the execution counts above)", *kept,
                  "DEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):",
                  *(demo or ["  none"]),
-                 "Other observed objects (types outside the KB's rule ontology; last observed pixel [y, x]):"]
+                 "Other observed objects (outside the KB's reset vocabulary of cubes, containers and targets; "
+                 "last observed pixel [y, x]):"]
         for oid, row in self.other.items():
             now = self.frame.objects.get(oid) if self.frame is not None else None
             state = (f"visible at pixel {_px(now.uv)}" if now is not None and now.visible and now.uv is not None

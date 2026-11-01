@@ -103,11 +103,11 @@ def target_spots(rows: list[dict], task: str, spots: frozenset = frozenset()) ->
 
 class SceneStream:
     def __init__(self, task: str, reset_rows: list[dict], goal: str, episode: int, split: str, bridge: str = "core"):
-        self.task, self.bridge, self.targets = task, bridge, frozenset()
-        samples = []
-        for row in reset_rows:
-            self.targets = target_spots([row], task, self.targets) if bridge == "memi_named" else self.targets
-            samples.append(detections(row, task, bridge, self.targets))
+        self.task, self.bridge = task, bridge
+        # MEMI's describe names highlights with the target spots of every row it is given; the reset rows are
+        # given together (and fed again through feed with the same spots), so label them the same way here.
+        self.targets = target_spots(reset_rows, task) if bridge == "memi_named" else frozenset()
+        samples = [detections(row, task, bridge, self.targets) for row in reset_rows]
         expected = [(f"{color} cube", "cube") for color in ("red", "blue", "green")
                     if re.search(rf"\b{color}\s+(?:cube|block)\b", goal.lower())]
         self.tracks = VisualTracks(samples, expected, grow=bridge == "memi_named")

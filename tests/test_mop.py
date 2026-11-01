@@ -65,7 +65,7 @@ def test_kb_memory_counts_execution_only_and_keeps_buttons():
     kb.feed(grasp(5, video=False))
     text = kb.text()
     world, rest = text.split("DEMONSTRATION")
-    demo, other = rest.split("Other observed objects (types outside")
+    demo, other = rest.split("Other observed objects (outside")
     assert text.startswith("EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1,")
     assert "\nProgress:" not in text and "picked up an object" not in world
     assert demo.count("picked up an object") == 1 and "(pick-up #1)" in demo

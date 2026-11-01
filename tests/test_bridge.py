@@ -106,3 +106,11 @@ def test_growing_static_tracks_do_not_jump_to_another_target():
     assert sum(o.visible for o in later.objects.values()) == 4 and len(later.objects) == 5
     hidden = [n for n, o in later.objects.items() if not o.visible]
     assert hidden == [n for n, x in at.items() if x == 100.0]
+
+
+@needs_memi
+def test_reset_highlight_seen_before_its_target_is_labelled_once(scene):
+    reset = [{"visible_object_records": [rec("highlight_disk_0", (94, 86), (0.1, 0.0, 0.0))]},
+             {"visible_object_records": [rec("target_0", (94, 86), (0.1, 0.0, 0.0))]}]
+    stream = scene.SceneStream("RouteStick", reset, "unit goal", 0, "val", "memi_named")
+    assert sorted(cls for _, cls, _ in stream.meta.objects) == ["highlighted target", "target"]
