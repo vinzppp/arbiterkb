@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "name": "fresh-tracker-error-replay-acquisition-v1",
+  "status": "frozen-awaiting-acquisition",
+  "frozen": true,
+  "frozen_at": "2026-11-01",
+  "research_branch": "research/perception-belief-robomme",
+  "main_ref_must_remain": "069beb7688fe1b853dd1fcc09ba6e3e481372f87",
+  "purpose": "Prospective development evaluation of strong deterministic ledger versus frozen ArbiterKB on fresh visual tracker errors.",
+  "phase0_gate": {
+    "requires_fresh_visual_recordings": true,
+    "requires_actual_detector_tracker_outputs": true,
+    "requires_ground_truth_hidden_from_memory": true,
+    "requires_zero_overlap_with_g_train_g_test_and_prior_robomme_evaluations": true,
+    "on_failure": "stop_before_comparative_scoring"
+  },
+  "source": {
+    "method": "new fixed-camera RGB-D recordings; independently staged after this manifest is frozen",
+    "existing_repository_data_allowed_for_scoring": false,
+    "stage_a_technical_episode_ids": [
+      "FTER-A-001",
+      "FTER-A-002",
+      "FTER-A-003",
+      "FTER-A-004",
+      "FTER-A-005",
+      "FTER-A-006"
+    ],
+    "stage_b_scored_episode_ids": [
+      "FTER-B-001", "FTER-B-002", "FTER-B-003", "FTER-B-004", "FTER-B-005",
+      "FTER-B-006", "FTER-B-007", "FTER-B-008", "FTER-B-009", "FTER-B-010",
+      "FTER-B-011", "FTER-B-012", "FTER-B-013", "FTER-B-014", "FTER-B-015",
+      "FTER-B-016", "FTER-B-017", "FTER-B-018", "FTER-B-019", "FTER-B-020",
+      "FTER-B-021", "FTER-B-022", "FTER-B-023", "FTER-B-024", "FTER-B-025",
+      "FTER-B-026", "FTER-B-027", "FTER-B-028", "FTER-B-029", "FTER-B-030"
+    ],
+    "selection": "record every planned episode in ID order; do not retain or reject based on tracker or memory outcome",
+    "stage_a_use": "pipeline and annotation validation only; never part of the scored comparison",
+    "stage_b_use": "prospective development comparison only; not held-out test evidence"
+  },
+  "scene": {
+    "objects": "three visually identical opaque containers, one target item, one distractor item, and a fixed legal-pick menu",
+    "backgrounds": ["plain-light", "plain-dark", "moderate-clutter"],
+    "camera": "one fixed, calibrated RGB-D task camera at 10 Hz or faster; aligned RGB/depth, intrinsics, extrinsics, timestamps, and no auto-reframing",
+    "ground_truth_camera": "optional independent overhead camera or concealed identity marker stream; never exposed to detector, tracker, ledger, or ArbiterKB",
+    "viewpoint_schedule": "two preregistered fixed task-camera poses, alternated by episode ID parity",
+    "scenario_strata": {
+      "single_occlusion": 10,
+      "single_close_pass_or_swap": 10,
+      "repeated_occlusion_and_swap": 10
+    },
+    "label": "controlled scenarios with naturally occurring tracker errors"
+  },
+  "recording": {
+    "minimum_resolution": [640, 480],
+    "minimum_fps": 10,
+    "required_streams": ["rgb", "aligned_depth", "camera_intrinsics", "camera_extrinsics", "timestamps", "ground_truth_identity"],
+    "episode_structure": "identity initialization, scripted occlusion/swap, reappearance, then exactly two identity-critical legal-pick decision points",
+    "randomization_seed": 20261101,
+    "operator_script": "fixed trajectory cards chosen from the scenario stratum before recording; no adaptive restaging after tracker inspection",
+    "raw_data_rule": "write-once; SHA-256 every stream immediately after capture"
+  },
+  "perception": {
+    "pipeline": "frozen stress/perceive.py GroundingDINO -> SAM -> Cutie adapter",
+    "required_runtime": "pinned sg_pilot environment and model weights recorded by content hash",
+    "vocabulary": "open, task-derived vocabulary only; no simulator scene counts, colours, object IDs, oracle poses, or future frames",
+    "threshold_rule": "all detector, mask, tracker, relink, and occlusion thresholds frozen after Stage A and before any Stage B memory comparison",
+    "common_stream": "one serialized observation trace per episode is supplied byte-identically to both memory arms",
+    "captured_fields": [
+      "track_id", "candidate_class", "bbox", "mask_reference", "detection_confidence",
+      "missing_interval", "association_event", "reappearance_event", "raw_timestamp"
+    ]
+  },
+  "annotation": {
+    "identity_source": "independent ground-truth stream or concealed markers not visible in task-camera RGB",
+    "procedure": "two annotators independently label object identity at every decision and on both sides of each occlusion/pass; disagreements are adjudicated without memory outputs",
+    "blindness": "annotators may see raw recordings and tracker output for error taxonomy, but never ledger/Arbiter comparative outcomes",
+    "quality_gate": "100% agreement after adjudication at decision points and >=0.95 pre-adjudication identity agreement",
+    "leakage_rule": "ground truth is joined only after both memory states and legal actions are serialized"
+  },
+  "exclusions": {
+    "allowed": [
+      "missing or corrupt required stream",
+      "camera moved from calibrated pose",
+      "timestamp drift exceeds one frame",
+      "ground-truth identity cannot be adjudicated",
+      "scripted episode was not completed"
+    ],
+    "forbidden": [
+      "no tracker error occurred",
+      "ledger was correct",
+      "ArbiterKB was wrong",
+      "methods agreed",
+      "effect estimate became smaller"
+    ],
+    "timing": "technical exclusions are signed before comparative scoring"
+  },
+  "separation_and_leakage": {
+    "g_train": "never eligible",
+    "g_test": "never open or eligible",
+    "public_robomme_revision_92796abb": "never eligible",
+    "prior_cl_pod_episodes": "never eligible",
+    "duplicate_check": "SHA-256 exact match plus perceptual video hash against all allowed historical development media before processing",
+    "development_test_policy": "this 30-episode batch is development evidence; any later test set requires a new sealed manifest and independent recordings"
+  },
+  "memory_and_decision": {
+    "primary_arms": ["strong_deterministic_ledger", "frozen_arbiterkb"],
+    "shared_progress_layer": true,
+    "arm_identity_available_to_rule": false,
+    "decision_rule": "existing canonical legal-pick projection: choose the visible legal target with highest identity mass; deterministic stable menu-order tie break; no abstain, verify, or re-observe action",
+    "pre_score_fixtures": [
+      "identical canonical states produce identical actions",
+      "arm label alone cannot alter an action",
+      "a valid probability ordering change can alter a legal pick"
+    ],
+    "primary_outcome": "episode-clustered paired correct-target legal-action rate over all eligible decision points",
+    "minimum_meaningful_effect": 0.10,
+    "secondary_outcomes": [
+      "wrong-target action rate", "paired action disagreement", "action regret",
+      "identity top-1 accuracy", "Brier score", "log loss", "error persistence", "recovery time"
+    ],
+    "multiplicity": "primary outcome unadjusted; Holm adjustment across the frozen secondary hypothesis family",
+    "sampling_unit": "episode",
+    "bootstrap": {"draws": 10000, "seed": 20261101, "unit": "episode"}
+  },
+  "size_and_gate": {
+    "stage_a_episodes": 6,
+    "stage_b_episodes": 30,
+    "decision_points_per_stage_b_episode": 2,
+    "stage_b_is_confirmatory": false,
+    "precision_note": "with discordance 0.30, 30 episodes gives an approximate 95% half-width of 0.196 for an episode-level paired difference; about 116 episodes are needed for 0.10 half-width under that variance assumption, and 385 under the worst case",
+    "stage_a_pass": "all required streams valid, tracker runs on 6/6, annotations pass, zero leakage, and at least one naturally produced association or occlusion-recovery error is measurable",
+    "stage_b_stop": "preserve every episode; stop only for the fixed cost/safety gate or a systematic pipeline defect that invalidates all comparisons"
+  },
+  "cost": {
+    "paid_gpu_or_cloud": "forbidden without separate authorization",
+    "frontier_model_calls": "not required",
+    "api_cap_usd": 0.10,
+    "robomme_scored_rollouts": "forbidden"
+  },
+  "hash_rule": "manifest_sha256 is SHA-256 of canonical compact JSON after removing the manifest_sha256 field",
+  "manifest_sha256": "439b7497e498339736d822c1a3a08313272a0e9aaa77120082b0fb1d42e97ba7"
+}
