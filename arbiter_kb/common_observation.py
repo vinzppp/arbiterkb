@@ -12,6 +12,8 @@ import numpy as np
 from .types import EpisodeMeta, FrameObs, ObjObs
 
 CORE_CLASSES = {"container", "cube", "target"}  # classes the frozen KB rules reason about; others are kept as-is
+STATIC_CLASSES = {"target", "button"}  # never move in RoboMME (MEMI scene.py: "Targets do not move")
+STATIC_GATE_PX = 15.0  # growing tracks: a static track never takes a detection farther than this from where it was
 
 
 @dataclass(frozen=True)
@@ -66,9 +68,22 @@ def _distance(track: ObjObs | None, detection: Detection) -> float:
     return float(np.linalg.norm(track.uv - detection.uv) + 50 * np.linalg.norm(track.xyz - detection.xyz))
 
 
-def _match(names: list[str], previous: dict[str, ObjObs], detections: list[Detection]) -> dict[str, Detection]:
-    pairs = sorted((_distance(previous.get(name), d), name, i)
-                   for name in names for i, d in enumerate(detections))
+def _static_cost(track: ObjObs | None, detection: Detection) -> float:
+    """A static object's last seen place is where it still is: far from it, the detection is another object."""
+    if track is None or track.uv is None:
+        return 1e9
+    if float(np.linalg.norm(track.uv - detection.uv)) > STATIC_GATE_PX:
+        return 2e9
+    return _distance(track, detection)
+
+
+def _match(names: list[str], previous: dict[str, ObjObs], detections: list[Detection],
+           last: dict[str, ObjObs] | None = None) -> dict[str, Detection]:
+    """Greedy nearest assignment. With `last` (growing tracks, static class), costs come from each track's last
+    sighting and a jump beyond STATIC_GATE_PX costs more than starting a fresh track."""
+    cost = (lambda name, d: _static_cost(last.get(name), d)) if last is not None else (
+        lambda name, d: _distance(previous.get(name), d))
+    pairs = sorted((cost(name, d), name, i) for name in names for i, d in enumerate(detections))
     assigned, seen_names, seen_detections = {}, set(), set()
     for _, name, i in pairs:
         if name not in seen_names and i not in seen_detections:
@@ -83,19 +98,35 @@ class VisualTracks:
     def __init__(self, samples: list[list[Detection]], expected: list[tuple[str, str]] | None = None,
                  grow: bool = False):
         self.by_group, self.previous, self.t, self.grow = _ids(samples, expected), {}, 0, grow
+        self.last: dict[str, ObjObs] = {}
 
     def _extend(self, grouped: dict[tuple[str, str], list[Detection]]) -> None:
         used = {name for names in self.by_group.values() for name in names}
         for key, found in sorted(grouped.items()):
-            names = self.by_group.setdefault(key, [])
+            names, base = self.by_group.setdefault(key, []), _base_id(*key)
+            if key[1] in STATIC_CLASSES:
+                self._extend_static(names, found, base, used)
             if names and key[1] in CORE_CLASSES:
                 continue
-            base, i = _base_id(*key), len(names)
+            i = len(names)
             while len(names) < len(found):
                 while f"{base}_{i}" in used:
                     i += 1
                 names.append(f"{base}_{i}")
                 used.add(names[-1])
+
+    def _extend_static(self, names: list[str], found: list[Detection], base: str, used: set) -> None:
+        """Enough tracks for every static detection that is far from all places this type was seen."""
+        spots = [self.last[n].uv for n in names if n in self.last]
+        fresh = [n for n in names if n not in self.last]
+        far = sum(all(float(np.linalg.norm(d.uv - s)) > STATIC_GATE_PX for s in spots) for d in found)
+        i = len(names)
+        while len(fresh) < far:
+            while f"{base}_{i}" in used:
+                i += 1
+            names.append(f"{base}_{i}")
+            used.add(names[-1])
+            fresh.append(names[-1])
 
     def objects(self) -> list[tuple[str, str, dict]]:
         out = []
@@ -114,8 +145,10 @@ class VisualTracks:
         if self.grow:
             self._extend(grouped)
         visible = {name: d for key, names in self.by_group.items()
-                   for name, d in _match(names, self.previous, grouped.get(key, [])).items()}
+                   for name, d in _match(names, self.previous, grouped.get(key, []),
+                                         self.last if self.grow and key[1] in STATIC_CLASSES else None).items()}
         objects = self._objects(visible)
+        self.last.update({name: obj for name, obj in objects.items() if obj.visible})
         frame = FrameObs(self.t, objects, np.asarray(ee_xyz, float), float(gripper_width), is_video)
         self.previous, self.t = objects, self.t + 1
         return frame

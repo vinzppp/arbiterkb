@@ -85,4 +85,24 @@ def test_tracks_grow_only_when_asked():
     later = [det("target", "target", 0.3), det("button", "button", 0.1), det("target", "target", 0.5)]
     assert set(fixed.step(later, (0, 0, 0), 0.08, False).objects) == {"target_0"}
     objects = grow.step(later, (0, 0, 0), 0.08, False).objects
-    assert set(objects) == {"target_0", "button_0"} and objects["button_0"].cls == "button"
+    assert set(objects) == {"target_0", "target_1", "button_0"} and objects["button_0"].cls == "button"
+    assert float(objects["target_0"].uv[0]) == 30.0 and float(objects["target_1"].uv[0]) == 50.0
+
+
+def test_growing_static_tracks_do_not_jump_to_another_target():
+    """RouteStick: 5 targets, at most 4 visible; when one is hidden its track must not take another target."""
+    def tgt(x):
+        return Detection("target", "target", np.array([x, 0.0, 0.01]), np.array([x * 1000, 50.0]))
+
+    xs = [0.10, 0.15, 0.20, 0.25, 0.30]
+    reset = [[tgt(x) for x in xs[:4]]]
+    tracks = VisualTracks(reset, grow=True)
+    first = tracks.step([tgt(x) for x in xs[:4]], (0, 0, 0), 0.08, True)
+    at = {name: float(o.uv[0]) for name, o in first.objects.items()}
+    later = tracks.step([tgt(x) for x in xs[1:]], (0, 0, 0), 0.08, True)
+    for name, o in later.objects.items():
+        if name in at and o.visible:
+            assert abs(float(o.uv[0]) - at[name]) <= 15.0
+    assert sum(o.visible for o in later.objects.values()) == 4 and len(later.objects) == 5
+    hidden = [n for n, o in later.objects.items() if not o.visible]
+    assert hidden == [n for n, x in at.items() if x == 100.0]
