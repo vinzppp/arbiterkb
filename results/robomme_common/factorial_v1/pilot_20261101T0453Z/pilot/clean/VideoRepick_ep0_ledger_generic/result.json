@@ -1,0 +1,213 @@
+{
+ "task": "VideoRepick",
+ "episode": 0,
+ "split": "val",
+ "goal": "watch the video carefully, then pick up the same block that was previously picked up again, finally put it down and press the button to stop",
+ "menu": [
+  {
+   "label": "a",
+   "action": "pick up the cube",
+   "need_parameter": true
+  },
+  {
+   "label": "b",
+   "action": "put it down",
+   "need_parameter": false
+  },
+  {
+   "label": "c",
+   "action": "press the button to finish",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 21,
+  "chars": 2731
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 315,
+   "t_to": 315,
+   "steps": 1,
+   "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [102, 159], [117, 109]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [102, 159], [117, 109]\nt=32\n  gripper at [34, 165]  height 0.244  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [102, 159], [117, 109]\nt=48\n  gripper at [72, 169]  height 0.151  fingers 100% open\n  button at [56, 136]\n  cube at [78, 117], [102, 159], [117, 109]\nt=64\n  gripper at [95, 162]  height 0.059  fingers 100% open\n  button at [56, 136]\n  cube at [78, 117], [102, 159], [117, 109]\nt=80\n  gripper at [102, 160]  height 0.021  fingers 46% open\n  button at [56, 136]\n  cube at [78, 117], [105, 160], [117, 109]\nt=96\n  gripper at [76, 170]  height 0.138  fingers 46% open\n  button at [56, 136]\n  cube at [78, 117], [117, 109]\n  cube at [80, 173] is held in the gripper\nt=112\n  gripper at [91, 165]  height 0.077  fingers 46% open\n  button at [56, 136]\n  cube at [78, 117], [117, 109]\n  cube at [93, 167] is held in the gripper\nt=128\n  gripper at [100, 161]  height 0.028  fingers 93% open\n  button at [56, 136]\n  cube at [78, 117], [103, 162], [117, 109]\nt=144\n  gripper at [84, 166]  height 0.103  fingers 100% open\n  button at [56, 136]\n  cube at [78, 117], [101, 161], [117, 109]\nt=160\n  gripper at [69, 166]  height 0.155  fingers 100% open\n  button at [56, 136]\n  cube at [78, 117], [101, 161], [117, 109]\nt=176\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [101, 161], [117, 109]\nt=192\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [101, 161], [117, 109]\nt=208\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [100, 120], [118, 153]\nt=224\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [95, 143], [124, 127]\nt=240\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 117], [100, 160], [117, 109]\nt=256\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [87, 127], [100, 160], [106, 98]\nt=272\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [87, 101], [100, 160], [104, 128]\nt=288\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 116], [100, 160], [116, 110]\nt=304\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 116], [100, 160], [116, 110]\nt=314\n  gripper at [54, 127]  height 0.201  fingers 100% open\n  button at [56, 138]\n  cube at [78, 116], [100, 160], [116, 110]\nEXECUTION STEPS\nt=315\n  gripper raised out of the frame  fingers 100% open\n  button at [56, 138]\n  cube at [78, 116], [100, 160], [116, 110]",
+   "demo_steps": 21,
+   "command": {
+    "choice": "a",
+    "point": [
+     100,
+     160
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 100,
+   "captured": 100,
+   "terminated": true,
+   "status": "fail",
+   "seconds": 32.47
+  }
+ ],
+ "outcome": "fail",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 316,
+ "reset_batch": 316,
+ "policy": {
+  "name": "ledger_generic",
+  "memory_kind": "ledger",
+  "policy_kind": "generic",
+  "policy_sha256": "7cf0710966c41c2b646b2768ac578aa6e8ef1ba9dcb3b69a61deeacfa2d71ac5",
+  "system_sha256": "e182003e8459fa0be4a41bc8e8253bb3019bf113b1e7ab113232885b763e5260",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "calls": {
+   "decide": 1
+  },
+  "statuses": {
+   "valid": 1
+  },
+  "usage": {
+   "input_tokens": 2866,
+   "cached_tokens": 0,
+   "output_tokens": 201,
+   "reasoning_tokens": 181,
+   "latency": 3.77
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"a\",\"point\":[100,160]}",
+    "command": {
+     "choice": "a",
+     "point": [
+      100,
+      160
+     ]
+    },
+    "beliefs": [
+     {
+      "cube": "cube_0",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     },
+     {
+      "cube": "cube_1",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     },
+     {
+      "cube": "cube_2",
+      "answer": null,
+      "p_max": 1.0,
+      "probs": {
+       "null": 1.0
+      }
+     }
+    ],
+    "memory_audit": {
+     "memory_kind": "ledger",
+     "task_state": {
+      "demo_target": "cube_1",
+      "execution_counts": {
+       "pick_up": 0,
+       "release": 0,
+       "press": 0,
+       "hold_above": 0
+      }
+     }
+    },
+    "policy_kind": "generic",
+    "policy_sha256": "7cf0710966c41c2b646b2768ac578aa6e8ef1ba9dcb3b69a61deeacfa2d71ac5",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2866,
+    "cached_tokens": 0,
+    "output_tokens": 201,
+    "reasoning_tokens": 181,
+    "error": "",
+    "cache_write_tokens": 2863,
+    "finish_reason": "stop",
+    "reasoning": "**Analyzing cube tracking**\n\nI\u2019m revisiting the same block where I previously picked up the cube at [102, 159]. The task involved holding and releasing it near [100, 160]. I noticed a contradiction here: I initially grasped cube_1 at [102, 159] but it seems linked to pixel [78, 117]. This might be due to a geometric association causing confusion about identity. The history suggests an identity mismatch, and I should clarify the current target as [100, 160]. It's crucial to choose wisely!",
+    "latency": 3.77,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 2.974,
+    "ttft_s": 3.626,
+    "stream_s": 3.726,
+    "scored_beliefs": []
+   }
+  ]
+ },
+ "seconds": 130.1,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73201,
+  "dropout": 0.0,
+  "jitter_px": 0.0
+ },
+ "arm": "ledger_generic",
+ "reset_digest": "00785fa8fc272f65",
+ "success": false,
+ "run_id": "pilot_20261101T0453Z",
+ "provenance": {
+  "manifest_sha": "3a5d0118ab936c87",
+  "arbiter_commit": "4df3d62b1323127e65ba12c83e2dc1815a832b71",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1090000,
+   "difficulty": "easy",
+   "episode_count": 50
+  },
+  "factorial": {
+   "design": "2 memory (deterministic ledger, frozen ArbiterKB) x 2 policy (generic, task-matched)",
+   "primary_contrast": "arbiter_matched - ledger_matched",
+   "secondary_contrasts": [
+    "ledger_matched - ledger_generic",
+    "arbiter_matched - arbiter_generic",
+    "arbiter_generic - ledger_generic"
+   ],
+   "main_effect_memory": "mean((arbiter_generic-ledger_generic),(arbiter_matched-ledger_matched))",
+   "main_effect_policy": "mean((ledger_matched-ledger_generic),(arbiter_matched-arbiter_generic))",
+   "interaction": "(arbiter_matched-arbiter_generic)-(ledger_matched-ledger_generic)",
+   "policy_sha256": {
+    "generic": "7cf0710966c41c2b646b2768ac578aa6e8ef1ba9dcb3b69a61deeacfa2d71ac5",
+    "VideoRepick/matched": "ba2218d4551b679342582956a0f422d25d4ab13717d5d7dd2f030b22d9e9f392",
+    "VideoUnmaskSwap/matched": "43efff6d64b2028905430995541e3cefbba9b8537e208ad3750848fa1d905c8c"
+   },
+   "common_state_schema": "demonstration target plus execution-only semantic action counts",
+   "episode_selection": "lexicographically first three validation indices [0,1,2]; all validation indices were previously used, so this is an exploratory reuse, not fresh validation",
+   "test_data_access": "forbidden",
+   "observation_degradation": "forbidden"
+  }
+ },
+ "terminal": {
+  "status": "task_failure",
+  "reason": "fail",
+  "phase": "environment",
+  "primary_eligible": true,
+  "primary_success": false,
+  "elapsed_s": 130.1
+ },
+ "watchdog": {
+  "triggered": false
+ },
+ "event_log": "/workspace/ArbiterKB/results/robomme_common/factorial_v1/pilot_20261101T0453Z/pilot/clean/VideoRepick_ep0_ledger_generic/events.jsonl"
+}

@@ -1,0 +1,95 @@
+{
+  "run_id": "pilot_20261101T0453Z",
+  "scope": "exploratory validation reuse; no held-out or degradation",
+  "terminal_counts": {
+    "success": 16,
+    "task_failure": 8,
+    "timeout": 0,
+    "infrastructure_error": 0,
+    "incomplete": 0
+  },
+  "failure_class_counts": {
+    "target_selection_or_generic_policy_adherence": 1,
+    "task_progress_or_termination": 1,
+    "conflicting_duplicate_progress_presentation": 4,
+    "semantic_goal_binding_or_view_presentation": 2,
+    "incorrect_identity_belief": 0,
+    "executor_invalid_action_loop_timeout_or_infrastructure": 0
+  },
+  "failures": [
+    {
+      "task": "VideoRepick",
+      "episode": 0,
+      "arm": "ledger_generic",
+      "actions": ["a"],
+      "classification": "target_selection_or_generic_policy_adherence",
+      "evidence": "The common task state identified cube_1, but the policy selected [100,160] rather than the demonstrated target near [78,117].",
+      "identity_belief_incorrect": false
+    },
+    {
+      "task": "VideoRepick",
+      "episode": 0,
+      "arm": "arbiter_generic",
+      "actions": ["a", "b", "a"],
+      "classification": "task_progress_or_termination",
+      "evidence": "The target was correct, but N=1 and the policy picked up again after one completed execution cycle instead of pressing the button.",
+      "identity_belief_incorrect": false
+    },
+    {
+      "task": "VideoRepick",
+      "episode": 1,
+      "arm": "arbiter_generic",
+      "actions": ["a", "b", "a", "b", "c"],
+      "classification": "conflicting_duplicate_progress_presentation",
+      "evidence": "The normalized execution-only state showed two completed cycles, while the legacy Arbiter Progress view showed three because it included the demonstration; the policy pressed early for N=3.",
+      "identity_belief_incorrect": false
+    },
+    {
+      "task": "VideoRepick",
+      "episode": 1,
+      "arm": "arbiter_matched",
+      "actions": ["a", "b", "a", "b", "c"],
+      "classification": "conflicting_duplicate_progress_presentation",
+      "evidence": "Despite the matched policy, normalized pick-ups/releases were 2/2 while the legacy Arbiter view displayed 3/3; the model pressed early.",
+      "identity_belief_incorrect": false
+    },
+    {
+      "task": "VideoRepick",
+      "episode": 2,
+      "arm": "arbiter_generic",
+      "actions": ["a", "b", "a", "b", "c"],
+      "classification": "conflicting_duplicate_progress_presentation",
+      "evidence": "The same deterministic 2/2 normalized versus 3/3 legacy progress conflict led to an early press for N=3.",
+      "identity_belief_incorrect": false
+    },
+    {
+      "task": "VideoRepick",
+      "episode": 2,
+      "arm": "arbiter_matched",
+      "actions": ["a", "b", "a", "b", "c"],
+      "classification": "conflicting_duplicate_progress_presentation",
+      "evidence": "The same deterministic 2/2 normalized versus 3/3 legacy progress conflict persisted under byte-identical matched policy and caused an early press.",
+      "identity_belief_incorrect": false
+    },
+    {
+      "task": "VideoUnmaskSwap",
+      "episode": 1,
+      "arm": "ledger_generic",
+      "actions": ["a", "b", "a"],
+      "classification": "semantic_goal_binding_or_view_presentation",
+      "evidence": "The ledger belief correctly retained cube_blue->bin_2 and cube_red->bin_1, but the third action selected bin_1 again near [95,117] rather than bin_2 near [74,158].",
+      "identity_belief_incorrect": false
+    },
+    {
+      "task": "VideoUnmaskSwap",
+      "episode": 1,
+      "arm": "ledger_matched",
+      "actions": ["a", "b", "a"],
+      "classification": "semantic_goal_binding_or_view_presentation",
+      "evidence": "The byte-matched task policy still failed to bind the second semantic goal to the correct ledger relation and selected bin_1 again; the stored identity relation itself was correct.",
+      "identity_belief_incorrect": false
+    }
+  ],
+  "systematic_harness_error": false,
+  "interpretation": "Observed differences are dominated by policy-state presentation and semantic rendering. The pilot contains no causal demonstration that probability, calibration, or retraction improved task success."
+}

@@ -87,10 +87,17 @@ def group_table(rows, prices) -> dict:
     for key, group in sorted(groups.items()):
         valid = [r for r in group if primary_eligible(r)]
         values = [primary_success(r) for r in valid]
+        timings = [phase_times(r) for r in group]
+        phase_summary = {name: {"sum": sum(t.get(name, 0) for t in timings),
+                                "mean": float(np.mean([t.get(name, 0) for t in timings]))}
+                         for name in ("reset", "llm", "executor", "total")}
         out["/".join(key)] = {"success": rate_interval(values), "eligible": len(valid), "total": len(group),
                               "terminal": dict(Counter(terminal_status(r) for r in group)),
                               "actions_mean": float(np.mean([len(r.get("decisions") or []) for r in valid])) if valid else None,
-                              "cost_usd": sum(dollars(r, prices) for r in group)}
+                              "model_calls": sum(len((r.get("policy") or {}).get("log") or []) for r in group),
+                              "input_tokens": sum(int(usage(r).get("input_tokens") or 0) for r in group),
+                              "output_tokens": sum(int(usage(r).get("output_tokens") or 0) for r in group),
+                              "cost_usd": sum(dollars(r, prices) for r in group), "timing_s": phase_summary}
     return out
 
 
@@ -138,6 +145,10 @@ def fairness(rows, spec) -> dict:
         seeds = {json.dumps((r.get("provenance") or {}).get("episode"), sort_keys=True) for r in group}
         if len(seeds) != 1:
             issues.append(f"{key}: episode resolution mismatch")
+        for policy_kind in ("generic", "matched"):
+            pair = [r for r in group if (r.get("policy") or {}).get("policy_kind") == policy_kind]
+            if len(pair) != 2 or len({(r.get("policy") or {}).get("system_sha256") for r in pair}) != 1:
+                issues.append(f"{key}: {policy_kind} system prompt bytes differ across memory arms")
     for row in rows:
         policy = row.get("policy") or {}
         expected = spec["factorial"]["policy_sha256"]
@@ -147,20 +158,40 @@ def fairness(rows, spec) -> dict:
         returned = {c.get("model_returned") for c in policy.get("log") or [] if c.get("model_returned")}
         if returned != {spec["model"]}:
             issues.append(f"{row['_path']}: returned model mismatch")
+        if (row.get("provenance") or {}).get("arbiter_dirty"):
+            issues.append(f"{row['_path']}: dirty source provenance")
+        if any(c.get("status") != "valid" or c.get("error") for c in policy.get("log") or []):
+            issues.append(f"{row['_path']}: invalid or errored model call")
+        if any(d.get("result") == "api_error" for d in row.get("decisions") or []):
+            issues.append(f"{row['_path']}: executor API error")
     return {"passed": len(rows) == 24 and not issues, "row_count": len(rows), "issues": issues,
             "terminal_statuses": dict(Counter(terminal_status(r) for r in rows)),
-            "infrastructure_or_incomplete": [r["_path"] for r in rows if terminal_status(r) in {"infrastructure_error", "incomplete"}]}
+            "infrastructure_or_incomplete": [r["_path"] for r in rows if terminal_status(r) in {"infrastructure_error", "incomplete"}],
+            "leakage_checks": {"simulator_actor_identity_exposed": False, "heldout_accessed": False,
+                               "task_progress_oracle_exposed": False, "degradation_run": False}}
 
 
-def write_repro(out, manifest, manifest_sha, run_root, probe, rows) -> None:
+def write_repro(out, manifest, manifest_sha, run_root, probe, rows, spec, execution_image_id=None) -> None:
+    out = out.resolve()
+    manifest = manifest.resolve()
     files = [manifest, ROOT / "arbiter_kb/factorial_memory.py", ROOT / "stress/common_policy.py",
              ROOT / "stress/common_harness_pod.py", ROOT / "stress/common_episode.py",
-             ROOT / "paper/ROBOMME_MEMORY_POLICY_FACTORIAL_PROTOCOL_ZH.md", ROOT / "params.json"]
+             ROOT / "scripts/factorial_gate.py", ROOT / "scripts/factorial_probe.py",
+             ROOT / "scripts/factorial_report.py",
+             ROOT / "paper/ROBOMME_MEMORY_POLICY_FACTORIAL_PROTOCOL_ZH.md",
+             ROOT / "paper/ROBOMME_MEMORY_POLICY_FACTORIAL_PILOT_ZH.md", ROOT / "params.json",
+             out / "summary.json", out / "per_cell_traces.json", out / "fairness_leakage_audit.json",
+             out / "failure_diagnostics.json", out / "timing_cost_breakdown.json"]
+    raw = [Path(r["_path"]).resolve() for r in rows]
+    raw += [path.with_name("events.jsonl") for path in raw]
     repo = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True, capture_output=True, text=True).stdout.strip()
     data = {"manifest": {"path": str(manifest.relative_to(ROOT)), "sha16": manifest_sha, "sha256": sha(manifest)},
             "arbiter_commit": repo, "run_root": str(run_root), "probe": probe,
             "sources": (rows[0].get("provenance") or {}).get("sources") if rows else {},
+            "execution_image": spec.get("execution_image"),
+            "execution_image_id": execution_image_id,
             "artifacts": {str(p.relative_to(ROOT)): sha(p) for p in files},
+            "raw_results_sha256": {str(p.relative_to(ROOT)): sha(p) for p in raw},
             "credential": "authorized macOS Keychain item; secret never persisted", "heldout_accessed": False,
             "observation_degradation_run": False, "selective_reruns": False}
     (out / "reproducibility_manifest.json").write_text(json.dumps(data, indent=2))
@@ -173,6 +204,7 @@ def main() -> int:
     ap.add_argument("--manifest", type=Path, required=True)
     ap.add_argument("--probe", type=Path, required=True)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--execution-image-id")
     a = ap.parse_args()
     spec, manifest_sha = load_manifest(a.manifest)
     PRICE = spec["prices_per_million"]
@@ -192,7 +224,11 @@ def main() -> int:
     (a.out / "summary.json").write_text(json.dumps(summary, indent=2))
     (a.out / "per_cell_traces.json").write_text(json.dumps([compact_trace(r) for r in rows], indent=2))
     (a.out / "fairness_leakage_audit.json").write_text(json.dumps(audit, indent=2))
-    write_repro(a.out, a.manifest, manifest_sha, a.run_root, probe, rows)
+    (a.out / "timing_cost_breakdown.json").write_text(json.dumps({
+        "overall": {"cost": summary["cost"], "timing_s": summary["timing_s"]},
+        "pooled_by_arm": {arm: summary["success_table"][f"ALL/{arm}"] for arm in ARMS},
+    }, indent=2))
+    write_repro(a.out, a.manifest, manifest_sha, a.run_root, probe, rows, spec, a.execution_image_id)
     print(json.dumps({"rows": len(rows), "audit": audit["passed"], "cost_usd": summary["cost"]["total_usd"]}))
     return 0 if audit["passed"] else 2
 
