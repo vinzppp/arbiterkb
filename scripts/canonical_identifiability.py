@@ -11,6 +11,7 @@ import hashlib
 import json
 import math
 import re
+import subprocess
 import sys
 from collections import Counter
 from pathlib import Path
@@ -310,6 +311,36 @@ def main() -> int:
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "summary.json").write_text(json.dumps(summary, indent=2))
     (args.out / "rows.json").write_text(json.dumps(rows, indent=2))
+    tracked = [
+        "arbiter_kb/canonical_probe.py", "arbiter_kb/factorial_memory.py",
+        "scripts/canonical_identifiability.py", "scripts/canonical_timing.py",
+        "tests/test_canonical_probe.py", "tests/test_factorial.py", "params.json",
+    ]
+    manifest = {
+        "protocol": "canonical-memory-v2-zero-cost-identifiability",
+        "source_commit": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+        "main_ref": subprocess.check_output(
+            ["git", "rev-parse", "main"], cwd=ROOT, text=True).strip(),
+        "source_dirty_before_output": bool(summary["git"]["dirty"]),
+        "sources": {
+            "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+            "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+            "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd",
+        },
+        "artifacts_sha256": {path: sha256(ROOT / path) for path in tracked},
+        "g_train_files_sha256": data["files"],
+        "execution": {
+            "new_simulator_rollouts": 0, "new_llm_calls": 0,
+            "new_api_cost_usd": 0.0, "heldout_records_opened": False,
+            "observation_degradation_run": False, "selective_reruns": False,
+        },
+        "reproduce": (
+            "PYTHONPATH=.:scripts .venv/bin/python scripts/canonical_identifiability.py "
+            "--out results/robomme_common/canonical_memory_v2/identifiability"
+        ),
+    }
+    (args.out / "reproducibility_manifest.json").write_text(json.dumps(manifest, indent=2))
     print(json.dumps({"rows": len(rows), "episodes": data["episodes"],
                       "top1_disagreement": summary["pairs"]["arbiterkb_vs_strong_ledger"]["top1_disagreement"],
                       "both_legal_different_pick": summary["pairs"]["arbiterkb_vs_strong_ledger"]["both_legal_different_pick"],

@@ -49,11 +49,16 @@ def summarize(name: str, base: Path) -> dict:
         utc.extend(times)
         start = next((e for e in events if e.get("event") == "episode_start"), None)
         end = next((e for e in reversed(events) if e.get("event") == "episode_end"), None)
+        result_path = path.with_name("result.json")
+        result = json.loads(result_path.read_text()) if result_path.exists() else {}
+        episode_s = result.get("seconds")
+        if episode_s is None and end is not None:
+            episode_s = end.get("seconds")
         phases = phase_times(events)
         cells.append({
             "cell": path.parent.name,
             "initialization_proxy_s": float(start["elapsed_s"]) if start else None,
-            "episode_s": float(end["seconds"]) if end and end.get("seconds") is not None else None,
+            "episode_s": float(episode_s) if episode_s is not None else None,
             **{f"{k}_s": v for k, v in phases.items()},
             "post_executor_observation_and_memory_s": memory_after_executor(events),
         })
