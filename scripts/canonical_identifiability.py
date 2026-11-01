@@ -178,6 +178,41 @@ def pair_summary(rows: list[dict], left: str, right: str) -> dict:
     }
 
 
+def episode_cluster_bootstrap(rows: list[dict], left: str, right: str,
+                              draws: int = 10_000, seed: int = 20261101) -> dict:
+    """Paired uncertainty with episode, rather than query, as the resampling unit."""
+    groups = {episode: [r for r in rows if r["episode"] == episode]
+              for episode in sorted({r["episode"] for r in rows})}
+    episodes = list(groups)
+    rng = np.random.default_rng(seed)
+    observed, samples = {}, {"top1_accuracy": [], "mean_brier": [], "mean_log_loss": []}
+
+    def diffs(selected: list[dict]) -> dict[str, float]:
+        return {
+            "top1_accuracy": float(np.mean([r["states"][left]["correct"] for r in selected]) -
+                                   np.mean([r["states"][right]["correct"] for r in selected])),
+            "mean_brier": float(np.mean([r["states"][left]["brier"] for r in selected]) -
+                                np.mean([r["states"][right]["brier"] for r in selected])),
+            "mean_log_loss": float(np.mean([r["states"][left]["log_loss"] for r in selected]) -
+                                  np.mean([r["states"][right]["log_loss"] for r in selected])),
+        }
+
+    observed = diffs(rows)
+    for _ in range(draws):
+        picked = rng.choice(episodes, size=len(episodes), replace=True)
+        selected = [row for episode in picked for row in groups[str(episode)]]
+        for metric, value in diffs(selected).items():
+            samples[metric].append(value)
+    return {
+        "unit": "G-train episode", "episodes": len(episodes), "draws": draws, "seed": seed,
+        "contrast": f"{left} minus {right}",
+        "metrics": {metric: {"estimate": observed[metric],
+                              "percentile_95_interval": [float(np.percentile(values, 2.5)),
+                                                         float(np.percentile(values, 97.5))]}
+                    for metric, values in samples.items()},
+    }
+
+
 def _runs(flags: list[bool]) -> list[tuple[int, int]]:
     out, start = [], None
     for i, value in enumerate([*flags, False]):
@@ -300,6 +335,8 @@ def main() -> int:
             "arbiterkb_vs_strong_ledger": pair_summary(rows, "arbiterkb", "strong_ledger"),
             "arbiterkb_vs_factorial_ledger": pair_summary(rows, "arbiterkb", "factorial_ledger"),
         },
+        "paired_episode_cluster_bootstrap": episode_cluster_bootstrap(
+            rows, "arbiterkb", "strong_ledger"),
         "tracker_errors": tracker_error_audit(),
         "recorded_factorial_progress_conflicts": progress_conflicts(),
         "identifiability": {
