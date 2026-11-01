@@ -23,6 +23,9 @@ SPLIT_DIR = ROOT / "results/memory_or_policy/g0/memi_split"
 MEMORIES, POLICIES = ("fh", "ld", "mm", "kb"), ("g", "m")
 ARMS = tuple(f"{m}_{p}" for m in MEMORIES for p in POLICIES) + ("memi",)
 POLICY_HEAD = "\n\nTASK POLICY\n"
+# P-generic = factorial P0 with one phrase changed (orchestrator ruling 2026-11-01): FullHist has no snapshot.
+assert GENERIC_FACTORIAL_POLICY.count("the memory snapshot") == 1
+GENERIC_POLICY = GENERIC_FACTORIAL_POLICY.replace("the memory snapshot", "the memory given to you")
 MEMORY_HEAD = "\n\nMEMORY\n"
 
 MM_NOTE = """
@@ -50,9 +53,9 @@ ANSWER_LINES = {"ld": 'Answer with {"choice": "<label>", "point": [y, x] or null
 
 
 def policy_text(task: str, policy: str) -> str:
-    """P-generic (factorial P0) or P-matched (MEMI's subgoal text, split rules 1-2, G0 output)."""
+    """P-generic (factorial P0, one phrase changed) or P-matched (MEMI's subgoal text, split rules 1-2, G0 output)."""
     if policy == "g":
-        return GENERIC_FACTORIAL_POLICY
+        return GENERIC_POLICY
     if policy == "m":
         return (SPLIT_DIR / task / "policy_matched.txt").read_text()
     raise ValueError(policy)

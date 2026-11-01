@@ -10,13 +10,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(ROOT)]
+sys.path[:0] = [str(ROOT), str(ROOT / "stress")]
 
 from arbiter_kb.experiment_manifest import load_manifest  # noqa: E402
 
@@ -39,6 +40,11 @@ def terminal(row: dict) -> str:
 
 def matched_shas(spec: dict) -> list[str]:
     issues = []
+    spec_mop = importlib.util.spec_from_file_location("mop_policy", ROOT / "stress/mop_policy.py")
+    mop = importlib.util.module_from_spec(spec_mop)
+    spec_mop.loader.exec_module(mop)
+    if hashlib.sha256(mop.GENERIC_POLICY.encode()).hexdigest() != spec["memory_policy"]["generic_policy_sha256"]:
+        issues.append("generic policy text changed")
     for task, want in spec["memory_policy"]["matched_policy_sha256"].items():
         text = (ROOT / f"results/memory_or_policy/g0/memi_split/{task}/policy_matched.txt").read_bytes()
         if hashlib.sha256(text).hexdigest() != want:
@@ -67,6 +73,8 @@ def audit(spec: dict, probe: dict, fairness: dict, rows: list[dict]) -> list[str
         want = spec["memory_policy"]["matched_policy_sha256"].get(row["task"], "")
         if row["policy_sha"]["m"] != want[:16]:
             issues.append(f"fairness audit of {row['task']} used a different matched policy text")
+        if row["policy_sha"]["g"] != spec["memory_policy"]["generic_policy_sha256"][:16]:
+            issues.append(f"fairness audit of {row['task']} used a different generic policy text")
     if {r.get("task") for r in rows} != set(TASKS) or any(terminal(r) in {"missing", "infrastructure_error",
                                                                           "incomplete"} for r in rows):
         issues.append("scripted executor preflight incomplete or blocked")

@@ -9,7 +9,7 @@ Checks, at every decision of every task:
   S1  every factorial arm's system starts with MEMI's FullHist scaffold (fh_g's text before TASK POLICY);
   D1  the decision turn before MEMORY is byte-identical across ld / mm / kb;
   S2  the memi arm sends MEMI's own POLICY_SYSTEM (stock), as recorded by the probe;
-  R1  no deterministic memory payload (ld, kb) contains a recommendation word; hits in mm (MEMI's own
+  R1  no memory payload of fh, ld or kb contains a recommendation word (orchestrator ruling 2026-11-01); hits in mm (MEMI's own
       field descriptions and the model's values) are counted and reported, not failed.
 Free; reads files only.
 """
@@ -79,7 +79,7 @@ def audit_task(probe: dict) -> dict:
         turns = {x["turn"] for arm, x in p.items() if not arm.startswith("fh")}
         if len(turns) != 1:
             fails.append(f"D1 {task} decision {i}: decision turns differ across fresh-call arms")
-        for mem in ("ld", "kb"):
+        for mem in ("fh", "ld", "kb"):
             found = RECOMMEND.findall(p[f"{mem}_g"]["payload"])
             if found:
                 hits.setdefault(mem, []).extend(found)

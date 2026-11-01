@@ -58,7 +58,7 @@
  },
  "memory_policy": {
   "policy_text": {
-   "g": "stress/common_policy.py GENERIC_FACTORIAL_POLICY (factorial P0), sha256 7cf0710966c41c2b646b2768ac578aa6e8ef1ba9dcb3b69a61deeacfa2d71ac5",
+   "g": "stress/mop_policy.py GENERIC_POLICY = factorial P0 with 'the memory snapshot' -> 'the memory given to you' (orchestrator ruling 2026-11-01), sha256 64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
    "m": "results/memory_or_policy/g0/memi_split/<Task>/policy_matched.txt (split rules 1-2, G0)"
   },
   "matched_policy_sha256": {
@@ -75,8 +75,10 @@
    "kb": "arbiter_kb/mop_memory.py KBMemory (frozen ArbiterKB, phase-safe view)"
   },
   "reference": "memi = stock MEMI, optimized_luna.json unchanged",
-  "fairness_audit": "scripts/mop_fairness.py on stress/mop_probe.py outputs; must pass before the pilot",
-  "memi_prompts_sha256": "307eaf7ff479aeae6bc5704dce5dccb0524b139aa22fe39216f0bb2a426fda54"
+  "fairness_audit": "scripts/mop_fairness.py on stress/mop_probe.py outputs; must pass before the pilot; recommendation words fail fh / ld / kb and are only counted for mm (ruling 2026-11-01)",
+  "memi_prompts_sha256": "307eaf7ff479aeae6bc5704dce5dccb0524b139aa22fe39216f0bb2a426fda54",
+  "generic_policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+  "mm_caveat": "H2 MM-m - LD-m: by MEMI's design MM's memory may encode actions (its fields map observations to menu options)."
  },
  "stages": {
   "executor_preflight": {

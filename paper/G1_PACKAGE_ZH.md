@@ -27,7 +27,8 @@ G0 报告 `paper/G0_MEMORY_OR_POLICY_ZH.md`；orchestrator 2026-11-01 的决定�
 - system = MEMI FullHist 的 scaffold + 记忆说明（随记忆变）+ `TASK POLICY` + 策略文本（随策略变）。
 - fh：MEMI 的一局一对话历史；ld / mm / kb：每次新请求，MEMI 的决策回合 + `MEMORY` 块 + 回答格式行
   （mm 的格式行多要 `memory_updates`）。
-- P-generic：factorial P0（sha256 `7cf07109…`）；P-matched：G0 拆分得到的 `policy_matched.txt`（manifest 里有
+- P-generic：factorial P0 把「the memory snapshot」换成「the memory given to you」，其余逐字不变（orchestrator
+  2026-11-01 裁定；sha256 `64e4a1f3…`）；P-matched：G0 拆分得到的 `policy_matched.txt`（manifest 里有
   5 个 sha256）。
 - ld：`arbiter_kb/mop_memory.py::PreregLedger`；kb：`KBMemory`（冻结 KB 只接 cube / container / target，
   其他类型列在旁边；demo 操作行放在 DEMONSTRATION 下，执行进度只给 execution-only 计数）；mm：MEMI 的 fields，
@@ -84,24 +85,25 @@ OPENAI_API_KEY="$(security find-generic-password -s ArbiterKB-OpenRouter -w)" .v
 ```
 
 ```bash
-# 5 G1 pilot（13–27 h；$2 停止）
-export OPENAI_API_KEY="$(security find-generic-password -s ArbiterKB-OpenRouter -w)" OPENAI_API_URL=https://openrouter.ai/api/v1/chat/completions && caffeinate -i docker run --rm --platform linux/amd64 -e OPENAI_API_KEY -e OPENAI_API_URL -v "$PWD:/workspace/ArbiterKB" -w /workspace/ArbiterKB arbiterkb-robomme-cpu:bb6c37c python stress/common_harness_pod.py --manifest experiments/memory_or_policy_g1_v1.json --stage pilot --memi-root /opt/memi --out /workspace/ArbiterKB/results/robomme_common/memory_or_policy_g1 --run-id g1_$(date -u +%Y%m%dT%H%MZ) --gate-file /workspace/ArbiterKB/results/robomme_common/memory_or_policy_g1/gate.json
+# 5 G1 pilot（13–27 h；$2 停止）。key 只传给这一条命令，不 export
+OPENAI_API_KEY="$(security find-generic-password -s ArbiterKB-OpenRouter -w)" OPENAI_API_URL=https://openrouter.ai/api/v1/chat/completions caffeinate -i docker run --rm --platform linux/amd64 -e OPENAI_API_KEY -e OPENAI_API_URL -v "$PWD:/workspace/ArbiterKB" -w /workspace/ArbiterKB arbiterkb-robomme-cpu:bb6c37c python stress/common_harness_pod.py --manifest experiments/memory_or_policy_g1_v1.json --stage pilot --memi-root /opt/memi --out /workspace/ArbiterKB/results/robomme_common/memory_or_policy_g1 --run-id g1_$(date -u +%Y%m%dT%H%MZ) --gate-file /workspace/ArbiterKB/results/robomme_common/memory_or_policy_g1/gate.json
 ```
 
 runner 遇到第一个 infrastructure_error / incomplete 就停（G1 不重跑；预注册的「最多重跑 2 次」用于正式验证）。
 中断后用同一 run id 重跑会跳过已完成的格。
 
-## 5. 需要 orchestrator 裁定的两点（未改文本，均为预注册内的冲突）
+## 5. orchestrator 的裁定（2026-11-01，预检后）
 
-1. **P-generic 提到「memory snapshot」。** factorial P0 原文：「Use only the current observation interval, the memory
-   snapshot, and execution feedback … Do not invent object identity when memory says unknown.」fh 臂没有 snapshot，
-   其 scaffold 说「Use the whole history」。文本在各臂间逐字节相同，但含义随记忆变：可能只让 FH-g 吃亏，从而抬高
-   H1（matched − generic）和 H3 的分母（MEMI − FH-g）。选项：换成与记忆无关的措辞（新的带日期 NOTES 小节），
-   或保持并在每张表注明。
-2. **MEMI 的 fields 含观测→菜单字母的映射。** 例如 RouteStick `remaining_path`、SwingXtimes「Use the resulting
-   count both to select the next subgoal」。拆分规则 1 要求 fields 原样，所以 mm 臂的记忆说明含建议性内容，和
-   「任何记忆不含推荐动作」冲突。fairness 只对 ld / kb 判失败，mm 的建议性用词只计数（每任务 6–32 个）。需要一个
-   带日期的裁定，并在 H2（MM-m − LD-m）上注明。
+1. **P-generic：** 「the memory snapshot」换成「the memory given to you」，其余逐字不变（`stress/mop_policy.py`
+   `GENERIC_POLICY`，sha256 `64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4`，已写进 manifest
+   与 gate）。factorial pilot 的冻结常量不变。5 个任务的 probe 与 fairness 已重跑，全部通过。
+2. **MEMI fields 保持原样。** 「记忆里不许出现推荐动作」对 fh / ld / kb 判失败（fairness R1 已扩到 fh）；mm 的
+   建议性用词只计数，按任务报告（RouteStick 9、StopCube 6、SwingXtimes 32、VideoRepick 8、VideoUnmaskSwap 9，
+   fairness.json `mm_payload_recommendation_words`）。H2 的 MM-m − LD-m 注明：「MM 的记忆按 MEMI 的设计可能编码了动作」。
+
+**未跟踪的结果目录：** `results/robomme_common/` 下的运行结果不算源码改动；runner（`source_dirty`）和
+`scripts/g1_gate.py` 的「分支干净」检查都跳过这个前缀，所以 `results/robomme_common/memory_or_policy_g1/` 未跟踪
+不会让 gate 失败。
 
 另外，供参考：MEMI 的 subgoal 文本里有两句针对 MEMI **train** episode 的事实（RouteStick-09「B for episode 0,
 A for episode 19, …」，SwingXtimes-09「episode 72's first right target …」）。prompt 里不出现 episode 编号，
