@@ -4,7 +4,8 @@ from pathlib import Path
 
 import numpy as np
 
-from arbiter_kb.factorial_memory import DeterministicWorldLedger, NormalizedTaskState
+from arbiter_kb.factorial_memory import (DeterministicWorldLedger, FactorialMemory,
+                                         NormalizedTaskState)
 from arbiter_kb.params import Params
 from arbiter_kb.types import EpisodeMeta, FrameObs, ObjObs
 
@@ -87,3 +88,22 @@ def test_normalized_task_state_excludes_demo_from_execution_progress():
         state.step(frame(t, (0.0, 0.0, 0.017), ee=(0.0, 0.0, 0.017), width=width, video=False))
     assert state.counts()["pick_up"] == 1
     assert state.audit()["demo_target"] == "cube_red"
+
+
+def test_arbiter_adapter_suppresses_demo_progress_from_legacy_view():
+    """Regression for the mixed demo/execution progress path present on main."""
+    memory = FactorialMemory("arbiter", Params())
+    memory.reset(META)
+    demo = [frame(t, (0.0, 0.0, 0.017), ee=(0.0, 0.0, 0.017), width=width, video=True)
+            for t, width in enumerate((0.08, 0.03, 0.0366, 0.0366))]
+    memory.feed(demo)
+
+    # The frozen KB path has one detector for both phases and therefore counts
+    # the demonstration action.  The research adapter must expose only the
+    # shared execution-only count.
+    from arbiter_kb.views import controller_view
+    assert "pick-ups 1" in controller_view(memory.world.kb)
+    fixed = memory.text()
+    assert "Execution progress: pick-ups 0" in fixed
+    assert "\nProgress:" not in fixed
+    assert "picked up an object" not in fixed

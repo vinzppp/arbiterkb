@@ -24,6 +24,38 @@ def _point(frame: FrameObs | None, oid: str) -> str:
     return f"pixel [{obj.uv[1]:.0f}, {obj.uv[0]:.0f}]"
 
 
+def phase_safe_arbiter_view(text: str) -> str:
+    """Remove the legacy mixed-phase task ledger from an Arbiter world view.
+
+    ``ArbiterKBSystem`` intentionally keeps demonstration evidence because it is
+    needed for object memory.  Its historical controller view, however, also
+    presents demonstration grasps/releases as task progress.  In the factorial
+    adapter the shared ``NormalizedTaskState`` is the sole progress authority,
+    so the duplicate progress line and demo manipulation transcript must not be
+    exposed a second time.  Cover/swap/world-state evidence is retained.
+
+    This is an isolated adapter repair.  It does not rewrite the KB, old traces,
+    or the default controller view used by frozen experiments.
+    """
+    manipulation = (
+        " event grasp(", " event place(", " picked up an object ",
+        " placed it down ", " set it down ", " released it from above ",
+        " held it up", " pressed down with the closed gripper",
+    )
+    kept = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(("Progress:", "Goal progress:")):
+            continue
+        if any(token in line for token in manipulation):
+            continue
+        kept.append(line)
+    return "\n".join([
+        "WORLD MEMORY (task progress is intentionally omitted; use the normalized state above)",
+        *kept,
+    ])
+
+
 class NormalizedTaskState:
     """Task-neutral state exposed with an identical schema to both memory arms."""
 
@@ -169,7 +201,8 @@ class FactorialMemory:
             self.frame = frame
 
     def text(self) -> str:
-        body = self.world.text() if self.kind == "ledger" else controller_view(self.world.kb)
+        body = (self.world.text() if self.kind == "ledger" else
+                phase_safe_arbiter_view(controller_view(self.world.kb)))
         points = [f"  [{oid}] {obj.cls} at pixel [{obj.uv[1]:.0f}, {obj.uv[0]:.0f}]"
                   for oid, obj in (self.frame.objects.items() if self.frame else [])
                   if obj.visible and obj.uv is not None]
