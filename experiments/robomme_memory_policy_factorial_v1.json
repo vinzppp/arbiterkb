@@ -1,0 +1,69 @@
+{
+  "schema_version": 3,
+  "name": "robomme-memory-policy-factorial-pilot-v1",
+  "frozen": true,
+  "extends": "robomme_common_v2_1_watchdog_openrouter.json",
+  "parent_manifest_sha": "a839ccc592f8aa55",
+  "research_branch": "research/perception-belief-robomme",
+  "execution_image": "arbiterkb-robomme-cpu:bb6c37c",
+  "arms": ["ledger_generic", "ledger_matched", "arbiter_generic", "arbiter_matched"],
+  "tasks": ["VideoRepick", "VideoUnmaskSwap"],
+  "optional_tasks": [],
+  "pairwise_contrasts": [
+    ["arbiter_matched", "ledger_matched"],
+    ["ledger_matched", "ledger_generic"],
+    ["arbiter_matched", "arbiter_generic"],
+    ["arbiter_generic", "ledger_generic"]
+  ],
+  "factorial": {
+    "design": "2 memory (deterministic ledger, frozen ArbiterKB) x 2 policy (generic, task-matched)",
+    "primary_contrast": "arbiter_matched - ledger_matched",
+    "secondary_contrasts": [
+      "ledger_matched - ledger_generic",
+      "arbiter_matched - arbiter_generic",
+      "arbiter_generic - ledger_generic"
+    ],
+    "main_effect_memory": "mean((arbiter_generic-ledger_generic),(arbiter_matched-ledger_matched))",
+    "main_effect_policy": "mean((ledger_matched-ledger_generic),(arbiter_matched-arbiter_generic))",
+    "interaction": "(arbiter_matched-arbiter_generic)-(ledger_matched-ledger_generic)",
+    "policy_sha256": {
+      "generic": "7cf0710966c41c2b646b2768ac578aa6e8ef1ba9dcb3b69a61deeacfa2d71ac5",
+      "VideoRepick/matched": "ba2218d4551b679342582956a0f422d25d4ab13717d5d7dd2f030b22d9e9f392",
+      "VideoUnmaskSwap/matched": "43efff6d64b2028905430995541e3cefbba9b8537e208ad3750848fa1d905c8c"
+    },
+    "common_state_schema": "demonstration target plus execution-only semantic action counts",
+    "episode_selection": "lexicographically first three validation indices [0,1,2]; all validation indices were previously used, so this is an exploratory reuse, not fresh validation",
+    "test_data_access": "forbidden",
+    "observation_degradation": "forbidden"
+  },
+  "validation_analysis_plan": {
+    "episodes_per_task": 3,
+    "episode_indices": [0, 1, 2],
+    "total_scored_cells": 24,
+    "primary_effect": "paired success risk difference arbiter_matched minus ledger_matched, pooled over six task-episode blocks",
+    "minimum_practical_effect": 0.10,
+    "uncertainty": "Wilson intervals per arm; deterministic 10000-draw paired cluster bootstrap intervals for effects",
+    "tests": "two-sided exact paired McNemar for the four frozen pairwise contrasts",
+    "multiplicity": "Holm adjustment across four pooled pairwise contrasts; task-level n=3 is descriptive only",
+    "interaction": "paired block contrast (D-C)-(B-A), bootstrap interval, descriptive",
+    "api_cost_stop_usd": 0.10,
+    "reruns": "none within this frozen run; every timeout, failure, and infrastructure error is preserved",
+    "go_gate": "all 24 cells have protocol-compliant terminal status, no systematic harness error, exact model, matched reset/seed/executor settings, and total recorded cost below stop",
+    "interpretation": "exploratory pilot only because episodes 0-2 were used in prior common-harness work; no held-out claim"
+  },
+  "stages": {
+    "executor_preflight": {
+      "split": "val",
+      "episodes": [0],
+      "backend": "scripted",
+      "observations": [{"mode": "clean", "seed": 73201, "dropout": 0.0, "jitter_px": 0.0}]
+    },
+    "pilot": {
+      "split": "val",
+      "episodes": [0, 1, 2],
+      "backend": "api",
+      "requires_gate": "factorial_preflight_and_fairness_pass",
+      "observations": [{"mode": "clean", "seed": 73201, "dropout": 0.0, "jitter_px": 0.0}]
+    }
+  }
+}

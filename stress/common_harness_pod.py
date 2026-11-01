@@ -102,6 +102,7 @@ def row_provenance(a, spec, stage, task, episode, sources):
         "params_sha": params.hash(),
         "prompt_sha": digest(prompts),
         "episode": episode_seed(task, episode, stage["split"]),
+        "factorial": spec.get("factorial"),
     }
 
 
@@ -285,6 +286,7 @@ def run_one(a, spec, stage, manifest_sha, sources):
         "params_sha": params.hash(),
         "prompt_sha": digest(Path(prompts)),
         "episode": episode_seed(task, episode, stage["split"]),
+        "factorial": spec.get("factorial"),
     }
     row["terminal"] = terminal_for_outcome(log.outcome, log.seconds)
     row["watchdog"] = {"triggered": False}
@@ -300,7 +302,7 @@ def args():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", type=Path, default=ROOT / "experiments/robomme_common_v1.json")
     ap.add_argument("--stage", required=True,
-                    choices=("executor_preflight", "smoke", "validation", "degradation", "heldout"))
+                    choices=("executor_preflight", "smoke", "validation", "pilot", "degradation", "heldout"))
     ap.add_argument("--memi-root", type=Path, required=True)
     ap.add_argument("--out", type=Path, default=Path("/workspace/robomme_common"))
     ap.add_argument("--run-id")
@@ -366,6 +368,8 @@ def main():
     if branch in ("main", "master") or branch != spec["research_branch"]:
         raise SystemExit(f"refusing branch {branch!r}; expected {spec['research_branch']!r}")
     stage, sources = spec["stages"][a.stage], verify_sources(a.memi_root, spec)
+    if a.stage == "pilot" and source_dirty():
+        raise SystemExit("factorial pilot refuses a dirty source tree; commit the frozen protocol first")
     os.environ.setdefault("SAPIEN_RENDER_DEVICE", "cpu")
     verify_stage_gate(a, stage, manifest_sha)
     verify_api_transport(spec, stage)
