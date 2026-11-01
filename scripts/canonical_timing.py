@@ -38,30 +38,29 @@ def memory_after_executor(events: list[dict]) -> float:
     return total
 
 
-def summarize(name: str, base: Path) -> dict:
-    files = sorted(base.glob("**/events.jsonl"))
-    cells, utc = [], []
-    for path in files:
-        events = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-        if not events:
-            continue
-        times = [parse_utc(e["utc"]) for e in events if e.get("utc")]
-        utc.extend(times)
-        start = next((e for e in events if e.get("event") == "episode_start"), None)
-        end = next((e for e in reversed(events) if e.get("event") == "episode_end"), None)
-        result_path = path.with_name("result.json")
-        result = json.loads(result_path.read_text()) if result_path.exists() else {}
-        episode_s = result.get("seconds")
-        if episode_s is None and end is not None:
-            episode_s = end.get("seconds")
-        phases = phase_times(events)
-        cells.append({
-            "cell": path.parent.name,
+def read_cell(path: Path) -> tuple[dict | None, list[datetime]]:
+    events = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    if not events:
+        return None, []
+    times = [parse_utc(e["utc"]) for e in events if e.get("utc")]
+    start = next((e for e in events if e.get("event") == "episode_start"), None)
+    end = next((e for e in reversed(events) if e.get("event") == "episode_end"), None)
+    result_path = path.with_name("result.json")
+    result = json.loads(result_path.read_text()) if result_path.exists() else {}
+    episode_s = result.get("seconds", end.get("seconds") if end else None)
+    phases = phase_times(events)
+    cell = {"cell": path.parent.name,
             "initialization_proxy_s": float(start["elapsed_s"]) if start else None,
             "episode_s": float(episode_s) if episode_s is not None else None,
             **{f"{k}_s": v for k, v in phases.items()},
-            "post_executor_observation_and_memory_s": memory_after_executor(events),
-        })
+            "post_executor_observation_and_memory_s": memory_after_executor(events)}
+    return cell, times
+
+
+def summarize(name: str, base: Path) -> dict:
+    read = [read_cell(path) for path in sorted(base.glob("**/events.jsonl"))]
+    cells = [cell for cell, _ in read if cell is not None]
+    utc = [stamp for _, times in read for stamp in times]
     def stats(key: str) -> dict:
         vals = np.asarray([c[key] for c in cells if c.get(key) is not None], float)
         return {"n": int(len(vals)), "sum": float(vals.sum()), "mean": float(vals.mean()),
