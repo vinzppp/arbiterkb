@@ -137,6 +137,8 @@ def _decision(ep, i, timeline, bounds, demo, log, policy, env, cap, film, stream
     events.emit("phase_end", phase="executor", decision=i)
     film.add(obs)
     info = _classify(ep, d, obs, term, trunc, info, log.menu)
+    if hasattr(policy, "executed"):
+        policy.executed(d.command, d.result, getattr(d, "status", ""))
     raw = cap.exec_rows[before:]
     rows = degraded(raw, cfg["mode"], cfg["seed"] + i + 1, cfg["dropout"], cfg["jitter_px"])
     frames = stream.feed(rows)

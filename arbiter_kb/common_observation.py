@@ -11,7 +11,7 @@ import numpy as np
 
 from .types import EpisodeMeta, FrameObs, ObjObs
 
-CORE_CLASSES = {"container", "cube", "target"}
+CORE_CLASSES = {"container", "cube", "target"}  # classes the frozen KB rules reason about; others are kept as-is
 
 
 @dataclass(frozen=True)
@@ -29,6 +29,8 @@ def _base_id(label: str, cls: str) -> str:
         return "bin"
     if cls == "target":
         return "target"
+    if cls not in CORE_CLASSES:
+        return "_".join(words)
     color = next((x for x in ("red", "blue", "green") if x in words), None)
     return f"cube_{color}" if color else "cube"
 
@@ -40,9 +42,8 @@ def _groups(samples: list[list[Detection]], expected: list[tuple[str, str]] | No
     for detections in samples:
         now: dict[tuple[str, str], int] = {}
         for d in detections:
-            if d.cls in CORE_CLASSES:
-                key = (d.label, d.cls)
-                now[key] = now.get(key, 0) + 1
+            key = (d.label, d.cls)
+            now[key] = now.get(key, 0) + 1
         for key, n in now.items():
             counts[key] = max(counts.get(key, 0), n)
     return counts
@@ -94,8 +95,7 @@ class VisualTracks:
     def step(self, detections: list[Detection], ee_xyz, gripper_width: float, is_video: bool) -> FrameObs:
         grouped: dict[tuple[str, str], list[Detection]] = {}
         for d in detections:
-            if d.cls in CORE_CLASSES:
-                grouped.setdefault((d.label, d.cls), []).append(d)
+            grouped.setdefault((d.label, d.cls), []).append(d)
         visible = {name: d for key, names in self.by_group.items()
                    for name, d in _match(names, self.previous, grouped.get(key, [])).items()}
         objects = self._objects(visible)

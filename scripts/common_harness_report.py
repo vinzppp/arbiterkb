@@ -167,7 +167,7 @@ def expected_stage_keys(spec: dict, stage_name: str, arms: list[str]) -> set[tup
     if not stage:
         return None
     return {(_cell_name(cfg), task, episode) for cfg in stage["observations"]
-            for task in spec["tasks"] for episode in stage["episodes"]}
+            for task in spec["tasks"] for episode in (stage.get("episodes_by_task") or {}).get(task, stage["episodes"])}
 
 
 def audit(rows: list[dict], arms: list[str], expected_model: str | None = None,

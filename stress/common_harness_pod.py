@@ -63,6 +63,11 @@ def verify_sources(memi_root: Path, spec: dict) -> dict:
     return found
 
 
+def stage_episodes(stage: dict, task: str) -> list[int]:
+    """The stage's episodes for `task`: a per-task list when the manifest gives one, else the shared list."""
+    return list((stage.get("episodes_by_task") or {}).get(task, stage.get("episodes", [])))
+
+
 def result_path(out: Path, stage: str, cell: str, task: str, episode: int, arm: str) -> Path:
     return out / stage / cell / f"{task}_ep{episode}_{arm}" / "result.json"
 
@@ -189,7 +194,7 @@ def run_parent(a, spec, stage, sources):
     for cfg in stage["observations"]:
         cell = cell_name(cfg)
         for task in spec["tasks"]:
-            for episode in stage["episodes"]:
+            for episode in stage_episodes(stage, task):
                 for arm in arms:
                     path = result_path(a.out, a.stage, cell, task, episode, arm)
                     if path.exists():

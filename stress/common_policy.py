@@ -201,4 +201,8 @@ def make_policy(arm: str, backend: str, task: str, episode: int, settings, promp
         return policy
     if arm in {"ledger_generic", "ledger_matched", "arbiter_generic", "arbiter_matched"}:
         return FactorialPolicy(task, episode, settings, arm, params)
+    from mop_policy import ARMS as MOP_ARMS, MopPolicy
+
+    if arm in MOP_ARMS:
+        return MopPolicy(task, episode, settings, arm, params, prompts)
     return StructuredPolicy(task, episode, settings, arm, params)
