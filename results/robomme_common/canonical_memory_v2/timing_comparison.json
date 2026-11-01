@@ -1,0 +1,1646 @@
+{
+  "schema": 1,
+  "source": "recorded events only; no reruns",
+  "factorial": {
+    "name": "factorial_24_cell",
+    "cells": 24,
+    "recorded_utc_first": "2026-11-01T04:48:41.735556+00:00",
+    "recorded_utc_last": "2026-11-01T05:52:02.439713+00:00",
+    "experiment_event_span_s": 3800.704157,
+    "components": {
+      "initialization_proxy_s": {
+        "n": 24,
+        "sum": 233.04296399999998,
+        "mean": 9.7101235,
+        "median": 9.342456,
+        "p90": 10.7915235
+      },
+      "reset_s": {
+        "n": 24,
+        "sum": 1533.7846489999997,
+        "mean": 63.90769370833332,
+        "median": 63.7207655,
+        "p90": 95.6902754
+      },
+      "llm_s": {
+        "n": 24,
+        "sum": 185.5655990000001,
+        "mean": 7.731899958333337,
+        "median": 7.166095500000008,
+        "p90": 15.276864300000017
+      },
+      "executor_s": {
+        "n": 24,
+        "sum": 1797.2216290000001,
+        "mean": 74.88423454166667,
+        "median": 66.7119645,
+        "p90": 146.9320746
+      },
+      "post_executor_observation_and_memory_s": {
+        "n": 24,
+        "sum": 3.627630000000053,
+        "mean": 0.1511512500000022,
+        "median": 0.07914450000000528,
+        "p90": 0.43216270000001195
+      },
+      "episode_s": {
+        "n": 24,
+        "sum": 3523.6000000000004,
+        "mean": 146.8166666666667,
+        "median": 123.19999999999999,
+        "p90": 252.42
+      }
+    },
+    "definitions": {
+      "initialization_proxy_s": "worker/EventSink start to episode_start; includes imports, simulator/env construction and process overhead",
+      "reset_s": "phase_start(reset) to phase_end(reset); includes env reset, demo capture, observation conversion, and initial memory feed",
+      "llm_s": "recorded LLM phase; close to API latency but also includes prompt/response handling",
+      "executor_s": "env.step(multi_choice), including privileged motion planning and execution",
+      "post_executor_observation_and_memory_s": "executor phase end to memory_transition; combines capture, degradation, conversion, and memory update",
+      "episode_s": "episode log seconds after environment construction; excludes initialization proxy",
+      "experiment_event_span_s": "first to last recorded event; includes sequential gaps but omits pre-first-event startup"
+    },
+    "cells_detail": [
+      {
+        "cell": "VideoRepick_ep0_arbiter_generic",
+        "initialization_proxy_s": 9.362688,
+        "episode_s": 172.4,
+        "reset_s": 95.743469,
+        "llm_s": 7.137087000000022,
+        "executor_s": 69.32497999999997,
+        "post_executor_observation_and_memory_s": 0.07679700000002754
+      },
+      {
+        "cell": "VideoRepick_ep0_arbiter_matched",
+        "initialization_proxy_s": 8.982158,
+        "episode_s": 186.0,
+        "reset_s": 95.495146,
+        "llm_s": 7.930249000000018,
+        "executor_s": 82.39613099999997,
+        "post_executor_observation_and_memory_s": 0.09488300000001004
+      },
+      {
+        "cell": "VideoRepick_ep0_ledger_generic",
+        "initialization_proxy_s": 11.909566,
+        "episode_s": 130.1,
+        "reset_s": 97.621794,
+        "llm_s": 3.7732790000000023,
+        "executor_s": 28.645145000000014,
+        "post_executor_observation_and_memory_s": 0.02392399999999384
+      },
+      {
+        "cell": "VideoRepick_ep0_ledger_matched",
+        "initialization_proxy_s": 9.322224,
+        "episode_s": 184.6,
+        "reset_s": 94.500948,
+        "llm_s": 8.22333700000003,
+        "executor_s": 81.671156,
+        "post_executor_observation_and_memory_s": 0.07346699999999373
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_generic",
+        "initialization_proxy_s": 10.686947,
+        "episode_s": 205.9,
+        "reset_s": 82.272781,
+        "llm_s": 14.149179000000018,
+        "executor_s": 108.79349199999997,
+        "post_executor_observation_and_memory_s": 0.5612690000000242
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_matched",
+        "initialization_proxy_s": 10.120316,
+        "episode_s": 203.9,
+        "reset_s": 82.186246,
+        "llm_s": 11.304986999999983,
+        "executor_s": 109.74064700000001,
+        "post_executor_observation_and_memory_s": 0.49957400000002394
+      },
+      {
+        "cell": "VideoRepick_ep1_ledger_generic",
+        "initialization_proxy_s": 9.281359,
+        "episode_s": 253.5,
+        "reset_s": 81.473761,
+        "llm_s": 24.00542399999999,
+        "executor_s": 147.69732900000002,
+        "post_executor_observation_and_memory_s": 0.1407249999999891
+      },
+      {
+        "cell": "VideoRepick_ep1_ledger_matched",
+        "initialization_proxy_s": 11.355208,
+        "episode_s": 249.9,
+        "reset_s": 88.405763,
+        "llm_s": 15.887413999999978,
+        "executor_s": 145.14648099999994,
+        "post_executor_observation_and_memory_s": 0.13848300000003633
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_generic",
+        "initialization_proxy_s": 10.51308,
+        "episode_s": 220.4,
+        "reset_s": 93.905652,
+        "llm_s": 11.852190999999976,
+        "executor_s": 114.10850800000001,
+        "post_executor_observation_and_memory_s": 0.3486589999999694
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_matched",
+        "initialization_proxy_s": 8.730632,
+        "episode_s": 221.6,
+        "reset_s": 93.688793,
+        "llm_s": 10.314680000000052,
+        "executor_s": 116.92475599999999,
+        "post_executor_observation_and_memory_s": 0.4679500000000303
+      },
+      {
+        "cell": "VideoRepick_ep2_ledger_generic",
+        "initialization_proxy_s": 10.116357,
+        "episode_s": 263.1,
+        "reset_s": 96.42190599999999,
+        "llm_s": 15.760158000000018,
+        "executor_s": 150.19869700000004,
+        "post_executor_observation_and_memory_s": 0.16547799999997892
+      },
+      {
+        "cell": "VideoRepick_ep2_ledger_matched",
+        "initialization_proxy_s": 10.346313,
+        "episode_s": 262.6,
+        "reset_s": 95.56615699999999,
+        "llm_s": 12.163234000000031,
+        "executor_s": 154.02329100000006,
+        "post_executor_observation_and_memory_s": 0.16832299999995826
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep0_arbiter_generic",
+        "initialization_proxy_s": 9.18123,
+        "episode_s": 77.7,
+        "reset_s": 45.96777,
+        "llm_s": 2.2073269999999994,
+        "executor_s": 29.404638999999996,
+        "post_executor_observation_and_memory_s": 0.05629400000000828
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep0_arbiter_matched",
+        "initialization_proxy_s": 8.957186,
+        "episode_s": 69.7,
+        "reset_s": 39.595441,
+        "llm_s": 2.0722809999999967,
+        "executor_s": 27.903721000000004,
+        "post_executor_observation_and_memory_s": 0.05933199999999772
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep0_ledger_generic",
+        "initialization_proxy_s": 9.709651,
+        "episode_s": 72.0,
+        "reset_s": 41.304547,
+        "llm_s": 2.2368299999999977,
+        "executor_s": 28.364939,
+        "post_executor_observation_and_memory_s": 0.03038600000000713
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep0_ledger_matched",
+        "initialization_proxy_s": 9.258218,
+        "episode_s": 70.3,
+        "reset_s": 40.284667999999996,
+        "llm_s": 1.7582870000000028,
+        "executor_s": 28.216164999999997,
+        "post_executor_observation_and_memory_s": 0.029962000000011813
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep1_arbiter_generic",
+        "initialization_proxy_s": 8.93407,
+        "episode_s": 112.5,
+        "reset_s": 39.733878,
+        "llm_s": 6.421705000000003,
+        "executor_s": 66.09518299999999,
+        "post_executor_observation_and_memory_s": 0.13754100000001301
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep1_arbiter_matched",
+        "initialization_proxy_s": 10.836342,
+        "episode_s": 116.3,
+        "reset_s": 40.606565,
+        "llm_s": 8.130053999999994,
+        "executor_s": 67.32874600000001,
+        "post_executor_observation_and_memory_s": 0.1456579999999832
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep1_ledger_generic",
+        "initialization_proxy_s": 9.036777,
+        "episode_s": 111.0,
+        "reset_s": 39.698415,
+        "llm_s": 7.1951039999999935,
+        "executor_s": 64.022556,
+        "post_executor_observation_and_memory_s": 0.07456000000000529
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep1_ledger_matched",
+        "initialization_proxy_s": 8.762239,
+        "episode_s": 108.3,
+        "reset_s": 40.485071000000005,
+        "llm_s": 5.720602999999997,
+        "executor_s": 61.99516100000002,
+        "post_executor_observation_and_memory_s": 0.08149199999998302
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep2_arbiter_generic",
+        "initialization_proxy_s": 9.123895,
+        "episode_s": 57.1,
+        "reset_s": 27.072551000000004,
+        "llm_s": 1.1434700000000007,
+        "executor_s": 28.744791999999997,
+        "post_executor_observation_and_memory_s": 0.0709319999999991
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep2_arbiter_matched",
+        "initialization_proxy_s": 9.151192,
+        "episode_s": 57.7,
+        "reset_s": 27.307065,
+        "llm_s": 1.9543339999999958,
+        "executor_s": 28.357440999999994,
+        "post_executor_observation_and_memory_s": 0.07333100000001025
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep2_ledger_generic",
+        "initialization_proxy_s": 9.449976,
+        "episode_s": 58.1,
+        "reset_s": 27.044538999999997,
+        "llm_s": 2.0679060000000007,
+        "executor_s": 28.876877999999998,
+        "post_executor_observation_and_memory_s": 0.06357500000000016
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep2_ledger_matched",
+        "initialization_proxy_s": 9.91534,
+        "episode_s": 58.9,
+        "reset_s": 27.401722999999997,
+        "llm_s": 2.1564789999999974,
+        "executor_s": 29.240795000000006,
+        "post_executor_observation_and_memory_s": 0.045034999999998604
+      }
+    ]
+  },
+  "validation": {
+    "name": "v2_1_144_cell",
+    "cells": 144,
+    "recorded_utc_first": "2026-10-31T15:01:13.319147+00:00",
+    "recorded_utc_last": "2026-10-31T21:41:02.887943+00:00",
+    "experiment_event_span_s": 23989.568796,
+    "components": {
+      "initialization_proxy_s": {
+        "n": 144,
+        "sum": 1464.1475580000001,
+        "mean": 10.167691375,
+        "median": 9.2900705,
+        "p90": 13.023177500000001
+      },
+      "reset_s": {
+        "n": 144,
+        "sum": 4461.40097,
+        "mean": 30.981951180555555,
+        "median": 14.7904195,
+        "p90": 93.7107278
+      },
+      "llm_s": {
+        "n": 144,
+        "sum": 1920.9268669999997,
+        "mean": 13.33976990972222,
+        "median": 7.661013999999998,
+        "p90": 24.93224820000003
+      },
+      "executor_s": {
+        "n": 144,
+        "sum": 15659.816136000001,
+        "mean": 108.74872316666668,
+        "median": 73.417001,
+        "p90": 191.79609110000047
+      },
+      "post_executor_observation_and_memory_s": {
+        "n": 144,
+        "sum": 30.10047699999987,
+        "mean": 0.2090310902777769,
+        "median": 0.08460200000000029,
+        "p90": 0.6876764000000914
+      },
+      "episode_s": {
+        "n": 144,
+        "sum": 22275.7,
+        "mean": 154.69236111111113,
+        "median": 117.25,
+        "p90": 254.73000000000008
+      }
+    },
+    "definitions": {
+      "initialization_proxy_s": "worker/EventSink start to episode_start; includes imports, simulator/env construction and process overhead",
+      "reset_s": "phase_start(reset) to phase_end(reset); includes env reset, demo capture, observation conversion, and initial memory feed",
+      "llm_s": "recorded LLM phase; close to API latency but also includes prompt/response handling",
+      "executor_s": "env.step(multi_choice), including privileged motion planning and execution",
+      "post_executor_observation_and_memory_s": "executor phase end to memory_transition; combines capture, degradation, conversion, and memory update",
+      "episode_s": "episode log seconds after environment construction; excludes initialization proxy",
+      "experiment_event_span_s": "first to last recorded event; includes sequential gaps but omits pre-first-event startup"
+    },
+    "cells_detail": [
+      {
+        "cell": "ButtonUnmaskSwap_ep1_arbiter",
+        "initialization_proxy_s": 10.174948,
+        "episode_s": 96.3,
+        "reset_s": 0.6194350000000011,
+        "llm_s": 7.854686999999997,
+        "executor_s": 87.669579,
+        "post_executor_observation_and_memory_s": 0.07924400000000276
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep1_fullhist",
+        "initialization_proxy_s": 9.59424,
+        "episode_s": 122.0,
+        "reset_s": 0.49589399999999983,
+        "llm_s": 10.987409,
+        "executor_s": 110.39312500000001,
+        "post_executor_observation_and_memory_s": 0.08039899999999278
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep1_memi",
+        "initialization_proxy_s": 9.14585,
+        "episode_s": 181.6,
+        "reset_s": 0.4750319999999988,
+        "llm_s": 32.971732000000024,
+        "executor_s": 147.89437100000004,
+        "post_executor_observation_and_memory_s": 0.16210299999999478
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep1_soft",
+        "initialization_proxy_s": 10.031472,
+        "episode_s": 579.6,
+        "reset_s": 0.6044010000000011,
+        "llm_s": 54.294163999999924,
+        "executor_s": 522.092823,
+        "post_executor_observation_and_memory_s": 1.5385290000001675
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep2_arbiter",
+        "initialization_proxy_s": 17.891069,
+        "episode_s": 116.2,
+        "reset_s": 0.724731000000002,
+        "llm_s": 9.261620999999984,
+        "executor_s": 105.91286800000002,
+        "post_executor_observation_and_memory_s": 0.12787199999998222
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep2_fullhist",
+        "initialization_proxy_s": 10.28146,
+        "episode_s": 95.1,
+        "reset_s": 0.7629619999999999,
+        "llm_s": 6.377493999999995,
+        "executor_s": 87.78648000000001,
+        "post_executor_observation_and_memory_s": 0.08418200000000553
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep2_memi",
+        "initialization_proxy_s": 10.938949,
+        "episode_s": 145.0,
+        "reset_s": 0.538252,
+        "llm_s": 24.26799299999999,
+        "executor_s": 119.991068,
+        "post_executor_observation_and_memory_s": 0.11629700000001719
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep2_soft",
+        "initialization_proxy_s": 16.265446,
+        "episode_s": 467.4,
+        "reset_s": 1.053763,
+        "llm_s": 44.80786199999996,
+        "executor_s": 420.20422199999985,
+        "post_executor_observation_and_memory_s": 0.6014650000000259
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep3_arbiter",
+        "initialization_proxy_s": 10.415518,
+        "episode_s": 98.4,
+        "reset_s": 0.5577369999999995,
+        "llm_s": 10.418058000000006,
+        "executor_s": 87.293338,
+        "post_executor_observation_and_memory_s": 0.11672299999998614
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep3_fullhist",
+        "initialization_proxy_s": 14.006663,
+        "episode_s": 94.1,
+        "reset_s": 0.532883,
+        "llm_s": 7.267699999999998,
+        "executor_s": 86.134723,
+        "post_executor_observation_and_memory_s": 0.09052600000001121
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep3_memi",
+        "initialization_proxy_s": 9.022077,
+        "episode_s": 184.5,
+        "reset_s": 0.5185499999999994,
+        "llm_s": 28.74851500000001,
+        "executor_s": 154.894982,
+        "post_executor_observation_and_memory_s": 0.19086699999999723
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep3_soft",
+        "initialization_proxy_s": 9.124098,
+        "episode_s": 600.5,
+        "reset_s": 0.5020509999999998,
+        "llm_s": 52.13674200000013,
+        "executor_s": 524.8043250000001,
+        "post_executor_observation_and_memory_s": 0.785240000000087
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep4_arbiter",
+        "initialization_proxy_s": 14.46475,
+        "episode_s": 118.0,
+        "reset_s": 0.8357749999999999,
+        "llm_s": 11.176261,
+        "executor_s": 105.761579,
+        "post_executor_observation_and_memory_s": 0.17099600000001658
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep4_fullhist",
+        "initialization_proxy_s": 8.813605,
+        "episode_s": 103.0,
+        "reset_s": 0.5485480000000003,
+        "llm_s": 7.185772000000005,
+        "executor_s": 95.07401100000001,
+        "post_executor_observation_and_memory_s": 0.08244499999999277
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep4_memi",
+        "initialization_proxy_s": 9.80114,
+        "episode_s": 100.8,
+        "reset_s": 1.3166219999999988,
+        "llm_s": 10.389420999999997,
+        "executor_s": 88.993504,
+        "post_executor_observation_and_memory_s": 0.08393899999999377
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep4_soft",
+        "initialization_proxy_s": 9.248463,
+        "episode_s": 600.7,
+        "reset_s": 0.5469739999999987,
+        "llm_s": 53.38722099999997,
+        "executor_s": 482.7206220000001,
+        "post_executor_observation_and_memory_s": 1.1475529999999239
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep5_arbiter",
+        "initialization_proxy_s": 14.250203,
+        "episode_s": 130.4,
+        "reset_s": 0.6223159999999996,
+        "llm_s": 10.198653000000004,
+        "executor_s": 119.45832200000001,
+        "post_executor_observation_and_memory_s": 0.08965499999999338
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep5_fullhist",
+        "initialization_proxy_s": 11.628296,
+        "episode_s": 184.3,
+        "reset_s": 0.5547790000000017,
+        "llm_s": 10.413163999999998,
+        "executor_s": 172.19912000000002,
+        "post_executor_observation_and_memory_s": 0.17952499999999105
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep5_memi",
+        "initialization_proxy_s": 20.047397,
+        "episode_s": 600.4,
+        "reset_s": 2.615447000000003,
+        "llm_s": 97.6191950000001,
+        "executor_s": 454.5718240000001,
+        "post_executor_observation_and_memory_s": 0.45787799999996537
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep5_soft",
+        "initialization_proxy_s": 14.511472,
+        "episode_s": 600.6,
+        "reset_s": 0.6110939999999996,
+        "llm_s": 64.38930699999983,
+        "executor_s": 507.72337900000014,
+        "post_executor_observation_and_memory_s": 1.2967349999998845
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep6_arbiter",
+        "initialization_proxy_s": 9.66929,
+        "episode_s": 370.0,
+        "reset_s": 0.53519,
+        "llm_s": 58.85639399999997,
+        "executor_s": 309.39500300000003,
+        "post_executor_observation_and_memory_s": 0.7310019999999469
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep6_fullhist",
+        "initialization_proxy_s": 14.691978,
+        "episode_s": 126.8,
+        "reset_s": 0.9838939999999994,
+        "llm_s": 9.996512999999991,
+        "executor_s": 115.70268100000001,
+        "post_executor_observation_and_memory_s": 0.09213699999999392
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep6_memi",
+        "initialization_proxy_s": 13.90273,
+        "episode_s": 128.5,
+        "reset_s": 0.6611229999999999,
+        "llm_s": 17.60177000000001,
+        "executor_s": 109.97853900000003,
+        "post_executor_observation_and_memory_s": 0.13162799999997787
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep6_soft",
+        "initialization_proxy_s": 12.96257,
+        "episode_s": 548.9,
+        "reset_s": 1.060986999999999,
+        "llm_s": 68.40003100000004,
+        "executor_s": 477.750645,
+        "post_executor_observation_and_memory_s": 0.6945380000001293
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep7_arbiter",
+        "initialization_proxy_s": 9.916708,
+        "episode_s": 101.1,
+        "reset_s": 0.525913000000001,
+        "llm_s": 10.815895,
+        "executor_s": 89.55965499999999,
+        "post_executor_observation_and_memory_s": 0.10166699999999906
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep7_fullhist",
+        "initialization_proxy_s": 8.733758,
+        "episode_s": 142.4,
+        "reset_s": 0.5330099999999991,
+        "llm_s": 13.131634999999985,
+        "executor_s": 128.53208800000004,
+        "post_executor_observation_and_memory_s": 0.13988699999998033
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep7_memi",
+        "initialization_proxy_s": 8.563983,
+        "episode_s": 153.5,
+        "reset_s": 0.49044499999999935,
+        "llm_s": 23.360993999999994,
+        "executor_s": 129.46834499999997,
+        "post_executor_observation_and_memory_s": 0.11881100000002931
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep7_soft",
+        "initialization_proxy_s": 8.778026,
+        "episode_s": 573.0,
+        "reset_s": 0.49259900000000023,
+        "llm_s": 94.73160299999996,
+        "executor_s": 475.5732370000001,
+        "post_executor_observation_and_memory_s": 1.023707999999985
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep8_arbiter",
+        "initialization_proxy_s": 9.965698,
+        "episode_s": 95.3,
+        "reset_s": 0.5904519999999991,
+        "llm_s": 7.812527000000003,
+        "executor_s": 86.80651900000001,
+        "post_executor_observation_and_memory_s": 0.08502199999999505
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep8_fullhist",
+        "initialization_proxy_s": 8.977944,
+        "episode_s": 97.2,
+        "reset_s": 0.4864259999999998,
+        "llm_s": 6.6621270000000035,
+        "executor_s": 89.89401599999998,
+        "post_executor_observation_and_memory_s": 0.07804999999999751
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep8_memi",
+        "initialization_proxy_s": 9.27188,
+        "episode_s": 106.6,
+        "reset_s": 0.5062699999999989,
+        "llm_s": 17.176186000000005,
+        "executor_s": 88.80077799999998,
+        "post_executor_observation_and_memory_s": 0.06737199999999888
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep8_soft",
+        "initialization_proxy_s": 8.764445,
+        "episode_s": 600.3,
+        "reset_s": 0.546850000000001,
+        "llm_s": 57.666557999999824,
+        "executor_s": 513.943608,
+        "post_executor_observation_and_memory_s": 0.8552549999999428
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep9_arbiter",
+        "initialization_proxy_s": 8.719183,
+        "episode_s": 93.3,
+        "reset_s": 0.5078680000000002,
+        "llm_s": 9.368501000000002,
+        "executor_s": 83.33543500000002,
+        "post_executor_observation_and_memory_s": 0.07035599999998965
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep9_fullhist",
+        "initialization_proxy_s": 9.305057,
+        "episode_s": 91.5,
+        "reset_s": 0.5098679999999991,
+        "llm_s": 7.849682000000003,
+        "executor_s": 83.03740300000001,
+        "post_executor_observation_and_memory_s": 0.07539399999999574
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep9_memi",
+        "initialization_proxy_s": 8.410973,
+        "episode_s": 105.3,
+        "reset_s": 0.47010599999999947,
+        "llm_s": 21.49713899999999,
+        "executor_s": 83.26893999999999,
+        "post_executor_observation_and_memory_s": 0.07089900000000426
+      },
+      {
+        "cell": "ButtonUnmaskSwap_ep9_soft",
+        "initialization_proxy_s": 9.709606,
+        "episode_s": 580.4,
+        "reset_s": 0.48931600000000053,
+        "llm_s": 60.40006000000006,
+        "executor_s": 517.7208700000001,
+        "post_executor_observation_and_memory_s": 0.9221860000000106
+      },
+      {
+        "cell": "PickHighlight_ep1_arbiter",
+        "initialization_proxy_s": 9.620722,
+        "episode_s": 63.6,
+        "reset_s": 0.5134139999999991,
+        "llm_s": 3.605330999999996,
+        "executor_s": 59.42798599999999,
+        "post_executor_observation_and_memory_s": 0.06604100000001267
+      },
+      {
+        "cell": "PickHighlight_ep1_fullhist",
+        "initialization_proxy_s": 8.432879,
+        "episode_s": 61.9,
+        "reset_s": 0.5241589999999992,
+        "llm_s": 2.9998069999999952,
+        "executor_s": 58.288101,
+        "post_executor_observation_and_memory_s": 0.051338000000001216
+      },
+      {
+        "cell": "PickHighlight_ep1_memi",
+        "initialization_proxy_s": 8.278727,
+        "episode_s": 64.3,
+        "reset_s": 0.470362999999999,
+        "llm_s": 4.390825000000001,
+        "executor_s": 59.351032000000004,
+        "post_executor_observation_and_memory_s": 0.04762699999999853
+      },
+      {
+        "cell": "PickHighlight_ep1_soft",
+        "initialization_proxy_s": 9.154761,
+        "episode_s": 62.6,
+        "reset_s": 0.556298,
+        "llm_s": 3.335699,
+        "executor_s": 58.55028200000001,
+        "post_executor_observation_and_memory_s": 0.0919190000000043
+      },
+      {
+        "cell": "PickHighlight_ep2_arbiter",
+        "initialization_proxy_s": 8.654844,
+        "episode_s": 99.1,
+        "reset_s": 0.5117150000000006,
+        "llm_s": 9.221322000000008,
+        "executor_s": 89.15374200000001,
+        "post_executor_observation_and_memory_s": 0.11285099999999915
+      },
+      {
+        "cell": "PickHighlight_ep2_fullhist",
+        "initialization_proxy_s": 8.388427,
+        "episode_s": 116.5,
+        "reset_s": 0.4591150000000006,
+        "llm_s": 10.204826999999993,
+        "executor_s": 105.646042,
+        "post_executor_observation_and_memory_s": 0.12417099999999692
+      },
+      {
+        "cell": "PickHighlight_ep2_memi",
+        "initialization_proxy_s": 8.527505,
+        "episode_s": 119.4,
+        "reset_s": 0.5268250000000005,
+        "llm_s": 13.566543999999991,
+        "executor_s": 105.11593699999999,
+        "post_executor_observation_and_memory_s": 0.10552100000000308
+      },
+      {
+        "cell": "PickHighlight_ep2_soft",
+        "initialization_proxy_s": 8.873609,
+        "episode_s": 129.0,
+        "reset_s": 0.49741000000000035,
+        "llm_s": 11.14858399999999,
+        "executor_s": 117.081843,
+        "post_executor_observation_and_memory_s": 0.17798699999998746
+      },
+      {
+        "cell": "PickHighlight_ep3_arbiter",
+        "initialization_proxy_s": 9.236796,
+        "episode_s": 125.5,
+        "reset_s": 0.49938900000000075,
+        "llm_s": 11.073627999999994,
+        "executor_s": 113.60551199999999,
+        "post_executor_observation_and_memory_s": 0.2037870000000126
+      },
+      {
+        "cell": "PickHighlight_ep3_fullhist",
+        "initialization_proxy_s": 8.59032,
+        "episode_s": 176.4,
+        "reset_s": 0.501021999999999,
+        "llm_s": 17.873837000000016,
+        "executor_s": 157.424434,
+        "post_executor_observation_and_memory_s": 0.48484199999999333
+      },
+      {
+        "cell": "PickHighlight_ep3_memi",
+        "initialization_proxy_s": 8.620563,
+        "episode_s": 179.3,
+        "reset_s": 0.5403029999999998,
+        "llm_s": 21.00630799999999,
+        "executor_s": 157.04999099999998,
+        "post_executor_observation_and_memory_s": 0.5396709999999842
+      },
+      {
+        "cell": "PickHighlight_ep3_soft",
+        "initialization_proxy_s": 10.49381,
+        "episode_s": 223.3,
+        "reset_s": 0.5141869999999997,
+        "llm_s": 21.577008000000006,
+        "executor_s": 200.19479299999998,
+        "post_executor_observation_and_memory_s": 0.7452670000000552
+      },
+      {
+        "cell": "PickHighlight_ep4_arbiter",
+        "initialization_proxy_s": 8.899886,
+        "episode_s": 66.1,
+        "reset_s": 0.49701400000000007,
+        "llm_s": 5.199943999999997,
+        "executor_s": 60.32478,
+        "post_executor_observation_and_memory_s": 0.06402200000000846
+      },
+      {
+        "cell": "PickHighlight_ep4_fullhist",
+        "initialization_proxy_s": 8.489036,
+        "episode_s": 74.1,
+        "reset_s": 0.4793430000000001,
+        "llm_s": 2.8680129999999977,
+        "executor_s": 70.68593100000001,
+        "post_executor_observation_and_memory_s": 0.06711699999998899
+      },
+      {
+        "cell": "PickHighlight_ep4_memi",
+        "initialization_proxy_s": 9.647687,
+        "episode_s": 70.4,
+        "reset_s": 0.5574860000000008,
+        "llm_s": 6.648711000000002,
+        "executor_s": 63.146302,
+        "post_executor_observation_and_memory_s": 0.05454400000000703
+      },
+      {
+        "cell": "PickHighlight_ep4_soft",
+        "initialization_proxy_s": 9.06663,
+        "episode_s": 66.5,
+        "reset_s": 0.5755130000000008,
+        "llm_s": 4.245854000000001,
+        "executor_s": 61.524709,
+        "post_executor_observation_and_memory_s": 0.07607600000000048
+      },
+      {
+        "cell": "PickHighlight_ep5_arbiter",
+        "initialization_proxy_s": 10.693653,
+        "episode_s": 70.6,
+        "reset_s": 0.5204959999999996,
+        "llm_s": 3.730247999999998,
+        "executor_s": 66.25445699999999,
+        "post_executor_observation_and_memory_s": 0.060335000000002026
+      },
+      {
+        "cell": "PickHighlight_ep5_fullhist",
+        "initialization_proxy_s": 8.964458,
+        "episode_s": 70.5,
+        "reset_s": 0.4962919999999986,
+        "llm_s": 4.727664999999998,
+        "executor_s": 65.13296199999999,
+        "post_executor_observation_and_memory_s": 0.0674629999999965
+      },
+      {
+        "cell": "PickHighlight_ep5_memi",
+        "initialization_proxy_s": 9.185856,
+        "episode_s": 71.8,
+        "reset_s": 0.5218179999999997,
+        "llm_s": 5.572127999999996,
+        "executor_s": 65.61070999999998,
+        "post_executor_observation_and_memory_s": 0.05649100000000118
+      },
+      {
+        "cell": "PickHighlight_ep5_soft",
+        "initialization_proxy_s": 9.051633,
+        "episode_s": 97.5,
+        "reset_s": 0.48872800000000005,
+        "llm_s": 7.683750000000002,
+        "executor_s": 89.12672,
+        "post_executor_observation_and_memory_s": 0.14699699999999183
+      },
+      {
+        "cell": "PickHighlight_ep6_arbiter",
+        "initialization_proxy_s": 9.417674,
+        "episode_s": 98.8,
+        "reset_s": 0.5390040000000003,
+        "llm_s": 7.994590999999996,
+        "executor_s": 90.089349,
+        "post_executor_observation_and_memory_s": 0.107092999999999
+      },
+      {
+        "cell": "PickHighlight_ep6_fullhist",
+        "initialization_proxy_s": 9.059793,
+        "episode_s": 106.4,
+        "reset_s": 0.48035800000000073,
+        "llm_s": 9.48867900000001,
+        "executor_s": 96.285618,
+        "post_executor_observation_and_memory_s": 0.08873400000000231
+      },
+      {
+        "cell": "PickHighlight_ep6_memi",
+        "initialization_proxy_s": 9.20958,
+        "episode_s": 121.6,
+        "reset_s": 0.5097570000000005,
+        "llm_s": 13.052744999999987,
+        "executor_s": 107.80728200000001,
+        "post_executor_observation_and_memory_s": 0.11379799999998852
+      },
+      {
+        "cell": "PickHighlight_ep6_soft",
+        "initialization_proxy_s": 10.125042,
+        "episode_s": 255.9,
+        "reset_s": 0.7225600000000014,
+        "llm_s": 24.980307000000032,
+        "executor_s": 229.500888,
+        "post_executor_observation_and_memory_s": 0.42246900000002086
+      },
+      {
+        "cell": "PickHighlight_ep7_arbiter",
+        "initialization_proxy_s": 9.072412,
+        "episode_s": 127.7,
+        "reset_s": 0.4663719999999998,
+        "llm_s": 11.502329999999992,
+        "executor_s": 115.433231,
+        "post_executor_observation_and_memory_s": 0.23378600000000915
+      },
+      {
+        "cell": "PickHighlight_ep7_fullhist",
+        "initialization_proxy_s": 8.944408,
+        "episode_s": 175.4,
+        "reset_s": 0.5002570000000013,
+        "llm_s": 16.332251000000014,
+        "executor_s": 158.226902,
+        "post_executor_observation_and_memory_s": 0.2260920000000013
+      },
+      {
+        "cell": "PickHighlight_ep7_memi",
+        "initialization_proxy_s": 9.997879,
+        "episode_s": 181.1,
+        "reset_s": 0.5383510000000005,
+        "llm_s": 20.427431000000013,
+        "executor_s": 159.486181,
+        "post_executor_observation_and_memory_s": 0.5301650000000038
+      },
+      {
+        "cell": "PickHighlight_ep7_soft",
+        "initialization_proxy_s": 9.470195,
+        "episode_s": 262.4,
+        "reset_s": 0.5026609999999998,
+        "llm_s": 24.820111000000015,
+        "executor_s": 236.026971,
+        "post_executor_observation_and_memory_s": 0.7493299999999792
+      },
+      {
+        "cell": "PickHighlight_ep8_arbiter",
+        "initialization_proxy_s": 9.450885,
+        "episode_s": 66.6,
+        "reset_s": 0.537427000000001,
+        "llm_s": 4.603177999999998,
+        "executor_s": 61.310556999999996,
+        "post_executor_observation_and_memory_s": 0.0605679999999964
+      },
+      {
+        "cell": "PickHighlight_ep8_fullhist",
+        "initialization_proxy_s": 9.273189,
+        "episode_s": 67.0,
+        "reset_s": 0.4913760000000007,
+        "llm_s": 4.614932999999995,
+        "executor_s": 61.806377000000005,
+        "post_executor_observation_and_memory_s": 0.06154799999999483
+      },
+      {
+        "cell": "PickHighlight_ep8_memi",
+        "initialization_proxy_s": 9.505913,
+        "episode_s": 69.0,
+        "reset_s": 0.5156609999999997,
+        "llm_s": 4.648252000000005,
+        "executor_s": 63.805263000000004,
+        "post_executor_observation_and_memory_s": 0.04707299999999748
+      },
+      {
+        "cell": "PickHighlight_ep8_soft",
+        "initialization_proxy_s": 9.226566,
+        "episode_s": 68.4,
+        "reset_s": 0.5193629999999985,
+        "llm_s": 4.7596459999999965,
+        "executor_s": 63.02689800000001,
+        "post_executor_observation_and_memory_s": 0.07239799999998553
+      },
+      {
+        "cell": "PickHighlight_ep9_arbiter",
+        "initialization_proxy_s": 9.154184,
+        "episode_s": 64.2,
+        "reset_s": 0.472353,
+        "llm_s": 4.793655999999999,
+        "executor_s": 58.88396900000001,
+        "post_executor_observation_and_memory_s": 0.0582069999999959
+      },
+      {
+        "cell": "PickHighlight_ep9_fullhist",
+        "initialization_proxy_s": 8.805057,
+        "episode_s": 62.5,
+        "reset_s": 0.4706299999999999,
+        "llm_s": 3.016388000000001,
+        "executor_s": 58.91479999999999,
+        "post_executor_observation_and_memory_s": 0.049903000000000475
+      },
+      {
+        "cell": "PickHighlight_ep9_memi",
+        "initialization_proxy_s": 8.849135,
+        "episode_s": 64.8,
+        "reset_s": 0.5387229999999992,
+        "llm_s": 5.626444000000003,
+        "executor_s": 58.58109800000001,
+        "post_executor_observation_and_memory_s": 0.04916699999998997
+      },
+      {
+        "cell": "PickHighlight_ep9_soft",
+        "initialization_proxy_s": 9.295545,
+        "episode_s": 63.6,
+        "reset_s": 0.502381999999999,
+        "llm_s": 3.8531219999999955,
+        "executor_s": 59.096456,
+        "post_executor_observation_and_memory_s": 0.07793799999999607
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter",
+        "initialization_proxy_s": 9.671547,
+        "episode_s": 201.7,
+        "reset_s": 83.335475,
+        "llm_s": 11.23727799999999,
+        "executor_s": 106.550267,
+        "post_executor_observation_and_memory_s": 0.4419500000000056
+      },
+      {
+        "cell": "VideoRepick_ep1_fullhist",
+        "initialization_proxy_s": 9.032134,
+        "episode_s": 119.9,
+        "reset_s": 84.81763,
+        "llm_s": 3.6449909999999903,
+        "executor_s": 31.365733000000006,
+        "post_executor_observation_and_memory_s": 0.023919000000006463
+      },
+      {
+        "cell": "VideoRepick_ep1_memi",
+        "initialization_proxy_s": 9.126803,
+        "episode_s": 252.0,
+        "reset_s": 84.53208699999999,
+        "llm_s": 23.979317999999992,
+        "executor_s": 142.92714699999993,
+        "post_executor_observation_and_memory_s": 0.14231400000005578
+      },
+      {
+        "cell": "VideoRepick_ep1_soft",
+        "initialization_proxy_s": 9.025779,
+        "episode_s": 125.7,
+        "reset_s": 82.900836,
+        "llm_s": 2.758150999999998,
+        "executor_s": 39.90197900000001,
+        "post_executor_observation_and_memory_s": 0.04423799999997868
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter",
+        "initialization_proxy_s": 8.473302,
+        "episode_s": 217.5,
+        "reset_s": 93.707932,
+        "llm_s": 9.575802999999965,
+        "executor_s": 113.67796700000001,
+        "post_executor_observation_and_memory_s": 0.38382400000000416
+      },
+      {
+        "cell": "VideoRepick_ep2_fullhist",
+        "initialization_proxy_s": 8.660362,
+        "episode_s": 128.6,
+        "reset_s": 93.26759700000001,
+        "llm_s": 2.96963199999999,
+        "executor_s": 32.25018299999999,
+        "post_executor_observation_and_memory_s": 0.027764000000018996
+      },
+      {
+        "cell": "VideoRepick_ep2_memi",
+        "initialization_proxy_s": 8.527429,
+        "episode_s": 134.1,
+        "reset_s": 93.73473700000001,
+        "llm_s": 7.643518,
+        "executor_s": 32.70112300000001,
+        "post_executor_observation_and_memory_s": 0.026711000000005924
+      },
+      {
+        "cell": "VideoRepick_ep2_soft",
+        "initialization_proxy_s": 8.56856,
+        "episode_s": 129.6,
+        "reset_s": 94.051381,
+        "llm_s": 2.8115860000000055,
+        "executor_s": 32.612279000000015,
+        "post_executor_observation_and_memory_s": 0.039338999999984026
+      },
+      {
+        "cell": "VideoRepick_ep3_arbiter",
+        "initialization_proxy_s": 10.452444,
+        "episode_s": 218.5,
+        "reset_s": 61.087338,
+        "llm_s": 8.699900000000028,
+        "executor_s": 147.44257400000004,
+        "post_executor_observation_and_memory_s": 0.9779709999999824
+      },
+      {
+        "cell": "VideoRepick_ep3_fullhist",
+        "initialization_proxy_s": 8.890165,
+        "episode_s": 219.2,
+        "reset_s": 60.71191,
+        "llm_s": 13.221103999999968,
+        "executor_s": 144.10562100000004,
+        "post_executor_observation_and_memory_s": 0.8391459999999995
+      },
+      {
+        "cell": "VideoRepick_ep3_memi",
+        "initialization_proxy_s": 8.746857,
+        "episode_s": 282.1,
+        "reset_s": 60.207279,
+        "llm_s": 19.017399000000026,
+        "executor_s": 201.100241,
+        "post_executor_observation_and_memory_s": 1.3192009999999783
+      },
+      {
+        "cell": "VideoRepick_ep3_soft",
+        "initialization_proxy_s": 11.464798,
+        "episode_s": 99.8,
+        "reset_s": 61.584354,
+        "llm_s": 3.0242700000000013,
+        "executor_s": 34.908399,
+        "post_executor_observation_and_memory_s": 0.1802459999999968
+      },
+      {
+        "cell": "VideoRepick_ep4_arbiter",
+        "initialization_proxy_s": 10.851139,
+        "episode_s": 162.5,
+        "reset_s": 91.791514,
+        "llm_s": 5.260310000000004,
+        "executor_s": 65.304242,
+        "post_executor_observation_and_memory_s": 0.07908099999997376
+      },
+      {
+        "cell": "VideoRepick_ep4_fullhist",
+        "initialization_proxy_s": 10.131726,
+        "episode_s": 184.6,
+        "reset_s": 95.294142,
+        "llm_s": 5.329604999999987,
+        "executor_s": 83.77986300000002,
+        "post_executor_observation_and_memory_s": 0.0752939999999569
+      },
+      {
+        "cell": "VideoRepick_ep4_memi",
+        "initialization_proxy_s": 10.975745,
+        "episode_s": 129.1,
+        "reset_s": 92.535983,
+        "llm_s": 6.7799969999999945,
+        "executor_s": 29.750417,
+        "post_executor_observation_and_memory_s": 0.019737999999989597
+      },
+      {
+        "cell": "VideoRepick_ep4_soft",
+        "initialization_proxy_s": 11.039423,
+        "episode_s": 168.7,
+        "reset_s": 92.418918,
+        "llm_s": 8.609993999999986,
+        "executor_s": 67.38234599999998,
+        "post_executor_observation_and_memory_s": 0.10123400000000515
+      },
+      {
+        "cell": "VideoRepick_ep5_arbiter",
+        "initialization_proxy_s": 10.10166,
+        "episode_s": 193.5,
+        "reset_s": 101.849526,
+        "llm_s": 9.64708300000001,
+        "executor_s": 81.80318799999999,
+        "post_executor_observation_and_memory_s": 0.08745100000001571
+      },
+      {
+        "cell": "VideoRepick_ep5_fullhist",
+        "initialization_proxy_s": 10.394676,
+        "episode_s": 135.8,
+        "reset_s": 100.75091,
+        "llm_s": 2.845189000000005,
+        "executor_s": 32.176731000000004,
+        "post_executor_observation_and_memory_s": 0.029083999999983234
+      },
+      {
+        "cell": "VideoRepick_ep5_memi",
+        "initialization_proxy_s": 10.087966,
+        "episode_s": 139.3,
+        "reset_s": 100.599258,
+        "llm_s": 6.216397999999998,
+        "executor_s": 32.45212400000001,
+        "post_executor_observation_and_memory_s": 0.025656999999995378
+      },
+      {
+        "cell": "VideoRepick_ep5_soft",
+        "initialization_proxy_s": 10.636447,
+        "episode_s": 134.8,
+        "reset_s": 99.747453,
+        "llm_s": 2.474160999999995,
+        "executor_s": 32.490978999999996,
+        "post_executor_observation_and_memory_s": 0.04210900000001061
+      },
+      {
+        "cell": "VideoRepick_ep6_arbiter",
+        "initialization_proxy_s": 8.538544,
+        "episode_s": 164.9,
+        "reset_s": 94.37003,
+        "llm_s": 5.544185999999968,
+        "executor_s": 64.815336,
+        "post_executor_observation_and_memory_s": 0.08588099999997212
+      },
+      {
+        "cell": "VideoRepick_ep6_fullhist",
+        "initialization_proxy_s": 9.604961,
+        "episode_s": 132.5,
+        "reset_s": 100.79783,
+        "llm_s": 2.2349200000000025,
+        "executor_s": 29.429750999999982,
+        "post_executor_observation_and_memory_s": 0.03455300000001671
+      },
+      {
+        "cell": "VideoRepick_ep6_memi",
+        "initialization_proxy_s": 8.453203,
+        "episode_s": 178.5,
+        "reset_s": 93.711926,
+        "llm_s": 9.95880600000001,
+        "executor_s": 74.66763500000002,
+        "post_executor_observation_and_memory_s": 0.06239999999996826
+      },
+      {
+        "cell": "VideoRepick_ep6_soft",
+        "initialization_proxy_s": 8.640858,
+        "episode_s": 129.5,
+        "reset_s": 96.41875900000001,
+        "llm_s": 2.420071000000007,
+        "executor_s": 30.55404999999999,
+        "post_executor_observation_and_memory_s": 0.0367920000000197
+      },
+      {
+        "cell": "VideoRepick_ep7_arbiter",
+        "initialization_proxy_s": 8.609319,
+        "episode_s": 147.6,
+        "reset_s": 53.477507,
+        "llm_s": 8.117730999999992,
+        "executor_s": 85.49633200000002,
+        "post_executor_observation_and_memory_s": 0.3729859999999974
+      },
+      {
+        "cell": "VideoRepick_ep7_fullhist",
+        "initialization_proxy_s": 8.926626,
+        "episode_s": 185.3,
+        "reset_s": 53.601997,
+        "llm_s": 9.935275999999988,
+        "executor_s": 120.82443000000002,
+        "post_executor_observation_and_memory_s": 0.6716660000000019
+      },
+      {
+        "cell": "VideoRepick_ep7_memi",
+        "initialization_proxy_s": 8.759545,
+        "episode_s": 191.7,
+        "reset_s": 52.908373,
+        "llm_s": 16.71905199999997,
+        "executor_s": 121.19896499999999,
+        "post_executor_observation_and_memory_s": 0.627104999999986
+      },
+      {
+        "cell": "VideoRepick_ep7_soft",
+        "initialization_proxy_s": 8.833671,
+        "episode_s": 173.6,
+        "reset_s": 53.604736,
+        "llm_s": 12.620916999999999,
+        "executor_s": 106.288906,
+        "post_executor_observation_and_memory_s": 0.7924659999999903
+      },
+      {
+        "cell": "VideoRepick_ep8_arbiter",
+        "initialization_proxy_s": 8.400476,
+        "episode_s": 220.9,
+        "reset_s": 95.513059,
+        "llm_s": 9.79350500000001,
+        "executor_s": 115.28632800000003,
+        "post_executor_observation_and_memory_s": 0.1313499999999692
+      },
+      {
+        "cell": "VideoRepick_ep8_fullhist",
+        "initialization_proxy_s": 8.436406,
+        "episode_s": 131.3,
+        "reset_s": 96.101539,
+        "llm_s": 2.394292000000007,
+        "executor_s": 32.69886799999999,
+        "post_executor_observation_and_memory_s": 0.028963000000004513
+      },
+      {
+        "cell": "VideoRepick_ep8_memi",
+        "initialization_proxy_s": 8.5123,
+        "episode_s": 267.6,
+        "reset_s": 95.43059500000001,
+        "llm_s": 19.67545500000007,
+        "executor_s": 151.91869499999999,
+        "post_executor_observation_and_memory_s": 0.15065199999997958
+      },
+      {
+        "cell": "VideoRepick_ep8_soft",
+        "initialization_proxy_s": 9.003082,
+        "episode_s": 130.9,
+        "reset_s": 96.41595000000001,
+        "llm_s": 2.1778739999999885,
+        "executor_s": 32.18255099999999,
+        "post_executor_observation_and_memory_s": 0.038873000000023694
+      },
+      {
+        "cell": "VideoRepick_ep9_arbiter",
+        "initialization_proxy_s": 8.837092,
+        "episode_s": 220.2,
+        "reset_s": 78.620018,
+        "llm_s": 78.42179199999998,
+        "executor_s": 62.98692600000001,
+        "post_executor_observation_and_memory_s": 0.05107999999998469
+      },
+      {
+        "cell": "VideoRepick_ep9_fullhist",
+        "initialization_proxy_s": 9.690398,
+        "episode_s": 112.6,
+        "reset_s": 79.82723800000001,
+        "llm_s": 2.528273999999996,
+        "executor_s": 30.145112999999995,
+        "post_executor_observation_and_memory_s": 0.02586100000000613
+      },
+      {
+        "cell": "VideoRepick_ep9_memi",
+        "initialization_proxy_s": 9.33055,
+        "episode_s": 114.0,
+        "reset_s": 79.041448,
+        "llm_s": 4.768737999999999,
+        "executor_s": 30.122958999999994,
+        "post_executor_observation_and_memory_s": 0.024837000000005105
+      },
+      {
+        "cell": "VideoRepick_ep9_soft",
+        "initialization_proxy_s": 8.464873,
+        "episode_s": 112.2,
+        "reset_s": 79.655468,
+        "llm_s": 2.208593999999991,
+        "executor_s": 30.251839000000004,
+        "post_executor_observation_and_memory_s": 0.04572699999999941
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep1_arbiter",
+        "initialization_proxy_s": 16.063165,
+        "episode_s": 129.6,
+        "reset_s": 44.059267,
+        "llm_s": 6.935340999999994,
+        "executor_s": 78.225115,
+        "post_executor_observation_and_memory_s": 0.15547300000001485
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep1_fullhist",
+        "initialization_proxy_s": 18.952537,
+        "episode_s": 100.1,
+        "reset_s": 60.533840999999995,
+        "llm_s": 4.122219000000001,
+        "executor_s": 35.33420699999999,
+        "post_executor_observation_and_memory_s": 0.024226999999996224
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep1_memi",
+        "initialization_proxy_s": 29.747367,
+        "episode_s": 142.4,
+        "reset_s": 51.562850999999995,
+        "llm_s": 13.02250699999999,
+        "executor_s": 76.60794700000002,
+        "post_executor_observation_and_memory_s": 0.07004099999998914
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep1_soft",
+        "initialization_proxy_s": 15.699218,
+        "episode_s": 136.9,
+        "reset_s": 43.892479,
+        "llm_s": 7.361418999999991,
+        "executor_s": 85.196792,
+        "post_executor_observation_and_memory_s": 0.2973740000000191
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep2_arbiter",
+        "initialization_proxy_s": 11.080469,
+        "episode_s": 68.4,
+        "reset_s": 28.544031,
+        "llm_s": 2.188095000000004,
+        "executor_s": 37.51574900000001,
+        "post_executor_observation_and_memory_s": 0.08978899999999612
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep2_fullhist",
+        "initialization_proxy_s": 13.002363,
+        "episode_s": 70.2,
+        "reset_s": 29.18365,
+        "llm_s": 1.5272449999999935,
+        "executor_s": 39.207133000000006,
+        "post_executor_observation_and_memory_s": 0.05928799999999512
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep2_memi",
+        "initialization_proxy_s": 14.910714,
+        "episode_s": 85.7,
+        "reset_s": 39.512909,
+        "llm_s": 6.602378000000002,
+        "executor_s": 39.397690000000004,
+        "post_executor_observation_and_memory_s": 0.05096399999999335
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep2_soft",
+        "initialization_proxy_s": 13.032098,
+        "episode_s": 64.5,
+        "reset_s": 29.898967,
+        "llm_s": 1.6717739999999992,
+        "executor_s": 32.747139999999995,
+        "post_executor_observation_and_memory_s": 0.09877199999999675
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep3_arbiter",
+        "initialization_proxy_s": 9.359249,
+        "episode_s": 120.2,
+        "reset_s": 50.848130999999995,
+        "llm_s": 6.182355999999999,
+        "executor_s": 62.92319899999999,
+        "post_executor_observation_and_memory_s": 0.14383100000000582
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep3_fullhist",
+        "initialization_proxy_s": 10.847742,
+        "episode_s": 87.4,
+        "reset_s": 51.84397,
+        "llm_s": 3.3908429999999967,
+        "executor_s": 32.07360100000001,
+        "post_executor_observation_and_memory_s": 0.03441599999999312
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep3_memi",
+        "initialization_proxy_s": 10.00643,
+        "episode_s": 135.5,
+        "reset_s": 51.292884,
+        "llm_s": 15.818395000000002,
+        "executor_s": 68.225906,
+        "post_executor_observation_and_memory_s": 0.08073799999998243
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep3_soft",
+        "initialization_proxy_s": 11.307124,
+        "episode_s": 122.9,
+        "reset_s": 52.261773,
+        "llm_s": 6.895748999999995,
+        "executor_s": 63.43277499999999,
+        "post_executor_observation_and_memory_s": 0.1860550000000103
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep4_arbiter",
+        "initialization_proxy_s": 9.633436,
+        "episode_s": 70.5,
+        "reset_s": 39.290620000000004,
+        "llm_s": 1.6913259999999966,
+        "executor_s": 29.394693000000004,
+        "post_executor_observation_and_memory_s": 0.05389099999999303
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep4_fullhist",
+        "initialization_proxy_s": 9.287639,
+        "episode_s": 72.8,
+        "reset_s": 39.879388,
+        "llm_s": 3.5685319999999976,
+        "executor_s": 29.344554999999993,
+        "post_executor_observation_and_memory_s": 0.024878000000001066
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep4_memi",
+        "initialization_proxy_s": 8.745883,
+        "episode_s": 79.7,
+        "reset_s": 40.232226000000004,
+        "llm_s": 11.899709999999999,
+        "executor_s": 27.482740999999997,
+        "post_executor_observation_and_memory_s": 0.023454000000000974
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep4_soft",
+        "initialization_proxy_s": 9.011153,
+        "episode_s": 72.5,
+        "reset_s": 39.54748,
+        "llm_s": 2.850633000000002,
+        "executor_s": 29.972639000000008,
+        "post_executor_observation_and_memory_s": 0.06816999999999496
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep5_arbiter",
+        "initialization_proxy_s": 9.195481,
+        "episode_s": 72.2,
+        "reset_s": 39.827776,
+        "llm_s": 1.6030500000000032,
+        "executor_s": 30.62079,
+        "post_executor_observation_and_memory_s": 0.06471600000000421
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep5_fullhist",
+        "initialization_proxy_s": 9.442761,
+        "episode_s": 75.2,
+        "reset_s": 39.613038,
+        "llm_s": 3.116558999999995,
+        "executor_s": 32.370808000000004,
+        "post_executor_observation_and_memory_s": 0.028137000000000967
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep5_memi",
+        "initialization_proxy_s": 9.845451,
+        "episode_s": 79.5,
+        "reset_s": 40.586051,
+        "llm_s": 7.851928999999998,
+        "executor_s": 30.954672000000002,
+        "post_executor_observation_and_memory_s": 0.025745000000000573
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep5_soft",
+        "initialization_proxy_s": 9.636432,
+        "episode_s": 72.4,
+        "reset_s": 40.564728,
+        "llm_s": 1.1958200000000048,
+        "executor_s": 30.550189999999994,
+        "post_executor_observation_and_memory_s": 0.07302300000000628
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep6_arbiter",
+        "initialization_proxy_s": 9.703078,
+        "episode_s": 70.0,
+        "reset_s": 40.2494,
+        "llm_s": 1.5150900000000007,
+        "executor_s": 28.116345000000003,
+        "post_executor_observation_and_memory_s": 0.06646099999998967
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep6_fullhist",
+        "initialization_proxy_s": 8.791801,
+        "episode_s": 73.4,
+        "reset_s": 40.76987199999999,
+        "llm_s": 3.1240689999999987,
+        "executor_s": 29.419415,
+        "post_executor_observation_and_memory_s": 0.027667999999991366
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep6_memi",
+        "initialization_proxy_s": 9.144748,
+        "episode_s": 73.4,
+        "reset_s": 39.692906,
+        "llm_s": 6.925474999999999,
+        "executor_s": 26.73039,
+        "post_executor_observation_and_memory_s": 0.026572000000001594
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep6_soft",
+        "initialization_proxy_s": 9.323295,
+        "episode_s": 69.5,
+        "reset_s": 39.978769,
+        "llm_s": 1.4517039999999994,
+        "executor_s": 27.965279999999993,
+        "post_executor_observation_and_memory_s": 0.08173100000000488
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep7_arbiter",
+        "initialization_proxy_s": 9.443996,
+        "episode_s": 100.7,
+        "reset_s": 39.442209999999996,
+        "llm_s": 4.250996000000008,
+        "executor_s": 56.782781,
+        "post_executor_observation_and_memory_s": 0.12437599999999804
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep7_fullhist",
+        "initialization_proxy_s": 9.216263,
+        "episode_s": 72.8,
+        "reset_s": 39.763209,
+        "llm_s": 3.0577439999999996,
+        "executor_s": 29.863048,
+        "post_executor_observation_and_memory_s": 0.04044199999999876
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep7_memi",
+        "initialization_proxy_s": 9.296559,
+        "episode_s": 77.3,
+        "reset_s": 39.462419999999995,
+        "llm_s": 7.109182000000004,
+        "executor_s": 30.640421000000003,
+        "post_executor_observation_and_memory_s": 0.026252999999996973
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep7_soft",
+        "initialization_proxy_s": 9.249916,
+        "episode_s": 111.9,
+        "reset_s": 39.407399999999996,
+        "llm_s": 5.923549000000001,
+        "executor_s": 66.34382400000001,
+        "post_executor_observation_and_memory_s": 0.18855400000001055
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep8_arbiter",
+        "initialization_proxy_s": 10.322664,
+        "episode_s": 105.5,
+        "reset_s": 27.229943,
+        "llm_s": 6.081440999999991,
+        "executor_s": 71.95332199999999,
+        "post_executor_observation_and_memory_s": 0.14329200000001663
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep8_fullhist",
+        "initialization_proxy_s": 9.60716,
+        "episode_s": 92.7,
+        "reset_s": 27.150887000000004,
+        "llm_s": 5.621262999999999,
+        "executor_s": 59.848288000000004,
+        "post_executor_observation_and_memory_s": 0.05281800000000203
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep8_memi",
+        "initialization_proxy_s": 9.047255,
+        "episode_s": 110.4,
+        "reset_s": 27.040035000000003,
+        "llm_s": 11.055215000000025,
+        "executor_s": 72.220934,
+        "post_executor_observation_and_memory_s": 0.04863799999999685
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep8_soft",
+        "initialization_proxy_s": 9.869969,
+        "episode_s": 93.9,
+        "reset_s": 27.213947000000005,
+        "llm_s": 5.5324389999999966,
+        "executor_s": 60.932149,
+        "post_executor_observation_and_memory_s": 0.1380359999999996
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep9_arbiter",
+        "initialization_proxy_s": 8.980261,
+        "episode_s": 100.9,
+        "reset_s": 27.771511,
+        "llm_s": 6.173075000000011,
+        "executor_s": 66.77178600000002,
+        "post_executor_observation_and_memory_s": 0.1295249999999868
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep9_fullhist",
+        "initialization_proxy_s": 9.170256,
+        "episode_s": 60.8,
+        "reset_s": 27.692956000000002,
+        "llm_s": 3.248110000000004,
+        "executor_s": 29.833802999999996,
+        "post_executor_observation_and_memory_s": 0.023049999999997794
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep9_memi",
+        "initialization_proxy_s": 9.292502,
+        "episode_s": 114.4,
+        "reset_s": 26.965391999999998,
+        "llm_s": 12.743272000000005,
+        "executor_s": 74.613068,
+        "post_executor_observation_and_memory_s": 0.06042199999998843
+      },
+      {
+        "cell": "VideoUnmaskSwap_ep9_soft",
+        "initialization_proxy_s": 9.250053,
+        "episode_s": 102.4,
+        "reset_s": 27.185632,
+        "llm_s": 7.678509999999996,
+        "executor_s": 67.33072,
+        "post_executor_observation_and_memory_s": 0.14977300000001037
+      }
+    ]
+  },
+  "interpretation_limits": [
+    "reset does not isolate simulator reset from initial memory processing",
+    "post-executor memory timing combines observation capture/conversion with memory update",
+    "no GPU utilization or planner-internal timing was logged",
+    "event span is not a scheduler-independent benchmark"
+  ]
+}

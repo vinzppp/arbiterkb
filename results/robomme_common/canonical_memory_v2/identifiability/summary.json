@@ -1,0 +1,2957 @@
+{
+  "schema": 1,
+  "scope": "G-train only plus previously recorded factorial traces",
+  "zero_cost": true,
+  "new_simulator_rollouts": 0,
+  "new_llm_calls": 0,
+  "heldout_records_opened": false,
+  "params_hash": "fe4e94112a74",
+  "git": {
+    "commit": "a04a193",
+    "dirty": false
+  },
+  "data": {
+    "episodes": 90,
+    "files": {
+      "cam_left_ep000.npz": "c2c6fd59b276227516d4130a1f2f011001d17db0f1519a6124cc27dae9aa1167",
+      "cam_left_ep001.npz": "7d09654c79682d0abe090b193a6bfb75a28d8259c092621f3d6367587b349b2e",
+      "cam_left_ep002.npz": "b6c493ee1395cd75f4d8af1999e6f421c307c133562afd042bc8fc5c51a934d0",
+      "cam_left_ep003.npz": "f8c95bb4b5f5fc3accc1e27e8dde88751022efd038188bd31bf5cde67e249ffa",
+      "cam_left_ep004.npz": "a96c28da4fa5e89bcc385d93824dfb313f93fe6613f875b88997001225040b5c",
+      "cam_left_ep005.npz": "dbe180dbcc031ec66e30f9c71008ceec2fe0e2eee1ee362b2b996afbc00e165c",
+      "cam_left_ep006.npz": "93f8dc67462b9039422af0c05f0f532efb674db1dea12268604f88a6b18a6587",
+      "cam_left_ep007.npz": "5fc70b7b7eb5970b0c16a94df9fe904894e033ab45b4874c7ede958b92e17790",
+      "cam_left_ep008.npz": "d46c2059f7d12cfb051c7e05e09781f4c44bbc655b949e76f415e92313d62f86",
+      "cam_left_ep009.npz": "2d9b604a585ed1f7d8080e31b981e4b588efee2f373b4ebcccefa63d4de6a921",
+      "cam_right_ep000.npz": "22e1be1671c3aeaf8d2eb0f21f7c68e4423e47d6a4c20ce0b91ed6a0a2e3dc82",
+      "cam_right_ep001.npz": "e58608ec6205ded5677080e584c5c98d7847103df0cddab92a52530ab1ede4e5",
+      "cam_right_ep002.npz": "c047cda1537b888cc14fdb971bfb3d9225efabf5a3cddacd601e73467d50e20e",
+      "cam_right_ep003.npz": "f262af51c072f132ddb022dd6fd15e24f02b168f01a6f8a749143e59cc336f2a",
+      "cam_right_ep004.npz": "ac2720dac732a502f8194701342a1566a4f0cfb0f6beb71d05a350abdf804fd7",
+      "cam_right_ep005.npz": "d038418306c0d2fb91fc64017ae23026168d242ba96f79b13d882ef6ecb8ce15",
+      "cam_right_ep006.npz": "d066b65bbcfdf412c9801011b864f24f292b760436e055d2822593525b591632",
+      "cam_right_ep007.npz": "407ef71815251af1c72b81d25db7de1cbf88e1e7bee29d92043e59a7f0a35604",
+      "cam_right_ep008.npz": "718e49fb677b65c3211ac04354e3b4209072db4aa6224b16863758fe6d32dd0f",
+      "cam_right_ep009.npz": "40bd049b9679eb29a6965c29ff755e687313bf07edf00525aad0f3c73f885d7f",
+      "close_ep000.npz": "7c130c2654615d432015e4aaca68e0a6dc9003f74de824dc5de7bf6eeac5864a",
+      "close_ep001.npz": "30ac316ec4476755c955dfa0c485ea1f53975c76bf457033cd489a2647369e22",
+      "close_ep002.npz": "ae2a1db3d3911d3c50f07d329cd6d308b84ff7f6d1be24a4e18b047dc363937c",
+      "close_ep003.npz": "fe5aad64539fb6b4613e74fc33a3dae25f3963bb39f073cde3dae9d3d01052cb",
+      "close_ep004.npz": "c7aedb3e9fd8774cff8cbcc61d13799ca6fa0a65c2e8790de6146ff14327b237",
+      "close_ep005.npz": "8ec7b8be8c0c171838db97851d9ed74cb3a98e6d135d8678c49fe955811aeb2e",
+      "close_ep006.npz": "5021b5a90552b8e9113c42a13e2756f9cf37bc0d26897c7098bb4dd0ae5376b6",
+      "close_ep007.npz": "41e0c39c257c60a72798275be55b129d543e6ca4ad6282a37888a9013e634fdd",
+      "close_ep008.npz": "413d65d6dd219899c9f7e70d32b2a67495342c9d6f6d3028b290514684c8ae85",
+      "close_ep009.npz": "50613ee79ef5514376d08db428035c8f3428e624daba30b5cef1df0e24c2b0b0",
+      "fast_close_3swaps_ep000.npz": "f48d5dbac90515409118610b903c559a26429bd3eb6f3fd3e28b4e561783840f",
+      "fast_close_3swaps_ep001.npz": "06b3d6b877bd7470cb3bdf906c2ae0fb159c8bc78590089830ef1a6b32bdc5ab",
+      "fast_close_3swaps_ep002.npz": "472f909b964c4fd9ef6252b7bedb1501dcd412b6e7ca81c34191499a6a512559",
+      "fast_close_3swaps_ep003.npz": "a70b51402cde496d760f7df0932af862bf345fb09f169813bf4f32d59384e1cd",
+      "fast_close_3swaps_ep004.npz": "94b33878b126df31cdbd040f18d45aed2805acc6a22b96a51efd544c337c4100",
+      "fast_close_3swaps_ep005.npz": "c405f30b018c4ef25a275433008398f9100fd622cc4899480602919affac13ee",
+      "fast_close_3swaps_ep006.npz": "1d7c88604ac75c6eb628d117b669d1cf8399caaa8abe39a9addfe5b3d7716b88",
+      "fast_close_3swaps_ep007.npz": "1a3e0f00cb49b7167d88db656f7e923894f727f7f726698ad8cad874e8f604d9",
+      "fast_close_3swaps_ep008.npz": "679f2250a99ad3f7a26140b00dc99dca794e6abbbe866e859ef72ec08967f399",
+      "fast_close_3swaps_ep009.npz": "4c882db1c8930badb8a582cc5305ce5be9e240848411cab4c0f412f2a8153b93",
+      "fast_close_ep000.npz": "9880ae4bf9eb80b58b7f1c3eee52d4c3bf0f070d04c4a6b9abb421a44076745e",
+      "fast_close_ep001.npz": "36bc82f5656750a11f36b3307a9ace9362bb787f5ecd8891037da61740cd630d",
+      "fast_close_ep002.npz": "24043fde796af8d7d4e4238e5a73d6b3b18e9886760cdf4c745df707ffdbb1a9",
+      "fast_close_ep003.npz": "602e753cbbf67d43751086cda666f296d1e74ed63ea6899e334e56064092996b",
+      "fast_close_ep004.npz": "073e2093cf6a2d05d318cf89bbe4e006e655d2616881edb5dca29ee4a9b74f97",
+      "fast_close_ep005.npz": "1ab2d58cf998587d618fcbf9748a107971831f942b7a93f1f7a3da6e70f33fc1",
+      "fast_close_ep006.npz": "5f1e8859f63cbb5068d4d3aec776d9529aefbab5ea6723cd6217e75e2ce0bbdb",
+      "fast_close_ep007.npz": "22ce2c62f8ae9deb30d9c19eae19fed7e4a18b8765827b9254b72b62ab2f4102",
+      "fast_close_ep008.npz": "12b88a6cf3efb35b367682741b64afa1ce8b2fdd7a184b64d91bfe7518e14da5",
+      "fast_close_ep009.npz": "2c8253a022ff1367f4709e5c0063b7cacc0bb0d953f5a60703946e24f0171cae",
+      "fast_ep000.npz": "d1bd782ab1b46d2b948900d376f93f67ab7aeb44133cfff8931bc8d60ede29d2",
+      "fast_ep001.npz": "44e235a06a66f5887573c2a3e2fd21a1b316281d49c8363c82f965f16ffc41db",
+      "fast_ep002.npz": "4f62f7fda969f637799f9bcb8488ad38bf331f9165d22e8ac0f7c9febd0e7f9a",
+      "fast_ep003.npz": "bdb0a6a2e54ac439537e8b060ed518b04c673791ed57f297f6a9701318708351",
+      "fast_ep004.npz": "ee375aaaf5e7757775eda2b4957458f8ea21b5f3558933d28a050cc5592d4025",
+      "fast_ep005.npz": "f4ce71176a697ebf777315c736992b74666d16b3d7019e58f963c3c40f60caab",
+      "fast_ep006.npz": "1dae17f521fb06d0c48e186fbf7cb46f63822e51c2305f7406cc610569ca5d1d",
+      "fast_ep007.npz": "fc093cc4407831b1ac8c518a87aa4485d2872211b79902ce778f3d51c0e433ce",
+      "fast_ep008.npz": "67eb5cd41cd099a7be250952d3988411ebc5bea7ebc9aa3b40772c371894d942",
+      "fast_ep009.npz": "74247a836b7fcb464f941c8b40f07c8fd2fa73b9735908e9e0f50671cd532e1d",
+      "fast_lane03_ep000.npz": "37bb350b2f21a596e5207ff929e392b4af10514c7e864655d016e7441edbd8b0",
+      "fast_lane03_ep001.npz": "bfa5df2cffc2c28611291c26c6434edc9e02787939909237e4eeacc3c047e29a",
+      "fast_lane03_ep002.npz": "6c2d2efdf44ce7e706840ce817e720ef2080adbd066339950a4a35aa3f31579d",
+      "fast_lane03_ep003.npz": "702fee078a6d462778141f93a6b99a9fe74364c605e582a7f4a0d871669b21b5",
+      "fast_lane03_ep004.npz": "7d3fd2794a0d40a890d261c5133fd9bf8de7ee58b350fb7377f58392bfa798f8",
+      "fast_lane03_ep005.npz": "67ab120c0f40f99cbbb3becc620035b063a189d53a4b5cdd49e4b51589e143fa",
+      "fast_lane03_ep006.npz": "4c4189f7b7f9877c078094278b9aec73b68a5ade9e91040778d27509bc52c746",
+      "fast_lane03_ep007.npz": "ed58b03129f176fdeb8be91e750476c2e4e883a4b13c761c3f5e3dc7a76d8618",
+      "fast_lane03_ep008.npz": "c8f9675e17d386ca38db8cae80f3e2719d604334fbcd6580285793b316829328",
+      "fast_lane03_ep009.npz": "ba639738c6f89c88d357d731c4997f657916e65784461befd710839d1e90c89a",
+      "fast_lane045_ep000.npz": "c8d0da3720ac1ebb398c0e91ba6875002212f98976c52543710aa59794baa1ab",
+      "fast_lane045_ep001.npz": "31d4cb892efddbc85a4f27cb415ad67f7aa6d3965188fa16bfb3984f2adb6f4e",
+      "fast_lane045_ep002.npz": "943161d84ac598a104d8cc47598f76a07ab1ec9f3655426c0c427d2275ae6ae2",
+      "fast_lane045_ep003.npz": "753b1795a381874efea1ffdc8aacd537a98da91368da0e889f88799795823ec6",
+      "fast_lane045_ep004.npz": "cc087764e18958a0c6a15ba8992a9e90b45102fa5b5096c5620b577c3867dd9d",
+      "fast_lane045_ep005.npz": "8cb4421f0f7362525ecf4d119bfb6e883ff0475b8b6fb87b1bea3be3bfdafee1",
+      "fast_lane045_ep006.npz": "eea2a1e27aa999b3ff7fc4eb756da92286a355707dc747683e3e7eb5e4f72094",
+      "fast_lane045_ep007.npz": "4d5a0f89730cf2bd5b24d046a0e5f382cf7d51ea8e5e3b8ff6194ae68aa13763",
+      "fast_lane045_ep008.npz": "99bf35583451a181cfbbcc72e114d41185637fb9e2a7593b8a6234763f367c5a",
+      "fast_lane045_ep009.npz": "35f473fcc4cb2395f133e7cf0526156ee8570fae1a139890c788ffaa467d93a6",
+      "stock_ep000.npz": "6f2dc05f2c61543f242bff34dfad2af1389c46ef6b28f54fc1fd5782b2c8ed60",
+      "stock_ep001.npz": "f39db02c574836e61abe98f8a7ffe58b33a7429ad36ee5050df498169c02b505",
+      "stock_ep002.npz": "7fbb4d8914846808bd263a6a1495a03e8ab31d75ad49012b5378eca4cb316ee0",
+      "stock_ep003.npz": "7157bfa626d996ddbaebfd1d6df3c0eb3b97a15cf8c86c758b9bd022eec0e57f",
+      "stock_ep004.npz": "c5b49526be408f13c0363cb59aad67207495007631202a4bcb097097e6f76603",
+      "stock_ep005.npz": "a54f367502be2e0549325d101112d45a864d69e5143a3894d4bc02044e69948b",
+      "stock_ep006.npz": "f0de5967d49e53ec86065a9815be839041bd8d4e3e1f63b228dd70dbdea89b40",
+      "stock_ep007.npz": "c47ff2dd1ff3c86aae8340f3d48549a033213ecbaf9c4d2e2c6b7c91e20c62ca",
+      "stock_ep008.npz": "e705d8e4d377f777e4e23bedd6c519c6a6d5bfca794d07cf2074ca35b1946951",
+      "stock_ep009.npz": "fbda404e716aa322af9cb95de5dd40bf37f01f5373fe0f5d4a78472adf78b771"
+    },
+    "occlusion": {
+      "r": 0.08,
+      "dz": 0.01
+    },
+    "relinked": true
+  },
+  "state_metrics": {
+    "strong_ledger": {
+      "n": 241,
+      "top1_accuracy": 0.8340248962655602,
+      "mean_brier": 0.3381742738589212,
+      "mean_log_loss": 4.586061596004738,
+      "ece_10_bin": 0.1659751037344398,
+      "mean_p_max": 1.0,
+      "unknown_top1": 0
+    },
+    "arbiterkb": {
+      "n": 241,
+      "top1_accuracy": 0.8340248962655602,
+      "mean_brier": 0.3013079016345293,
+      "mean_log_loss": 2.189923982473874,
+      "ece_10_bin": 0.10708381455497733,
+      "mean_p_max": 0.9411087108205374,
+      "unknown_top1": 7
+    },
+    "factorial_ledger": {
+      "n": 241,
+      "top1_accuracy": 0.8257261410788381,
+      "mean_brier": 0.3506224066390041,
+      "mean_log_loss": 4.815364675804975,
+      "ece_10_bin": 0.17427385892116187,
+      "mean_p_max": 1.0,
+      "unknown_top1": 15
+    }
+  },
+  "pairs": {
+    "arbiterkb_vs_strong_ledger": {
+      "n": 241,
+      "top1_disagreement": 13,
+      "top1_disagreement_rate": 0.05394190871369295,
+      "unknown_disagreement": 7,
+      "both_legal_different_pick": 4,
+      "hard_actionability_disagreement": 7,
+      "threshold_actionability_disagreement": 19,
+      "different_correctness": 6,
+      "left_only_correct": 3,
+      "right_only_correct": 3,
+      "mean_abs_pmax_difference": 0.05889128917946262,
+      "disagreement_on_measured_swap": 1,
+      "disagreement_on_no_measured_swap": 8,
+      "disagreement_swap_unknown": 4,
+      "disagreement_rows": [
+        {
+          "episode": "cam_right_ep003",
+          "cube": "cube_red",
+          "truth": [
+            "bin_0"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 32,
+            "support": [
+              "e4"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "strong_ledger": {
+            "top1": "bin_1",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 1.0,
+              "bin_2": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 114,
+            "support": [
+              "o114:bin_1"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  122.7777099609375,
+                  152.01376342773438
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  122.7777099609375,
+                  152.01376342773438
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "cam_right_ep004",
+          "cube": "cube_red",
+          "truth": [
+            "bin_3"
+          ],
+          "tracker_swapped": null,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 0.9900990099009901,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.009900990099009901,
+              "bin_3": 0.0,
+              "unknown": 0.9900990099009901
+            },
+            "evidence_t": 32,
+            "support": [
+              "e7",
+              "e8",
+              "e9",
+              "o32:bin_0",
+              "o32:bin_2"
+            ],
+            "correct": false,
+            "brier": 1.9803940790118615,
+            "log_loss": 27.631021115928547
+          },
+          "strong_ledger": {
+            "top1": "bin_2",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 1.0,
+              "bin_3": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 114,
+            "support": [
+              "o114:bin_2"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.9900990099009901
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.9900990099009901
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  78.81483459472656,
+                  174.8375244140625
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  78.81483459472656,
+                  174.8375244140625
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "cam_right_ep005",
+          "cube": "cube_blue",
+          "truth": [
+            "bin_3"
+          ],
+          "tracker_swapped": null,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.4835519751487105,
+              "bin_2": 0.00014582886097533652,
+              "bin_3": 0.016302195990314218,
+              "unknown": 0.5
+            },
+            "evidence_t": 213,
+            "support": [
+              "e10",
+              "e19",
+              "e31",
+              "e56",
+              "e73",
+              "o51:bin_1"
+            ],
+            "correct": false,
+            "brier": 1.451483903549754,
+            "log_loss": 4.116455456911633
+          },
+          "strong_ledger": {
+            "top1": "bin_1",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 1.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 216,
+            "support": [
+              "o216:bin_1"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  88.5969467163086,
+                  114.80715942382812
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  88.5969467163086,
+                  114.80715942382812
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "cam_right_ep006",
+          "cube": "cube_red",
+          "truth": [
+            "bin_2"
+          ],
+          "tracker_swapped": null,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 32,
+            "support": [
+              "e4"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "strong_ledger": {
+            "top1": "bin_2",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 1.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 114,
+            "support": [
+              "o114:bin_2"
+            ],
+            "correct": true,
+            "brier": 0.0,
+            "log_loss": -0.0
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  107.29624938964844,
+                  176.360107421875
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  107.29624938964844,
+                  176.360107421875
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_3swaps_ep005",
+          "cube": "cube_blue",
+          "truth": [
+            "bin_2"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_3",
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.5,
+              "unknown": 0.5
+            },
+            "evidence_t": 98,
+            "support": [
+              "e61",
+              "o98:bin_3"
+            ],
+            "correct": false,
+            "brier": 1.5,
+            "log_loss": 27.631021115928547
+          },
+          "strong_ledger": {
+            "top1": "bin_1",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 1.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 126,
+            "support": [
+              "o126:bin_1"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_3",
+                "point": [
+                  121.39154815673828,
+                  109.19126892089844
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "ambiguous_no_legal_information_action",
+                "confidence": 0.5
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  92.11158752441406,
+                  104.38174438476562
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  92.11158752441406,
+                  104.38174438476562
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_3swaps_ep009",
+          "cube": "cube_blue",
+          "truth": [
+            "bin_0"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_0",
+            "p_max": 0.8632384356688239,
+            "probabilities": {
+              "bin_0": 0.8632384356688239,
+              "bin_1": 0.0,
+              "bin_2": 0.12676156433117622,
+              "unknown": 0.01
+            },
+            "evidence_t": 118,
+            "support": [
+              "e8",
+              "e87",
+              "e93",
+              "o32:bin_0"
+            ],
+            "correct": true,
+            "brier": 0.03487221966999736,
+            "log_loss": 0.14706433907303887
+          },
+          "strong_ledger": {
+            "top1": "bin_2",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 1.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 126,
+            "support": [
+              "o126:bin_2"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  88.1329116821289,
+                  106.12152099609375
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.8632384356688239
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  88.1329116821289,
+                  106.12152099609375
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.8632384356688239
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_ep003",
+          "cube": "cube_red",
+          "truth": [
+            "bin_0"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_1",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.99,
+              "bin_2": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 81,
+            "support": [
+              "e39",
+              "o81:bin_1"
+            ],
+            "correct": false,
+            "brier": 1.9802,
+            "log_loss": 27.631021115928547
+          },
+          "strong_ledger": {
+            "top1": "bin_0",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 1.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 84,
+            "support": [
+              "o84:bin_0"
+            ],
+            "correct": true,
+            "brier": 0.0,
+            "log_loss": -0.0
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.99
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  81.22349548339844,
+                  88.37366485595703
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  81.22349548339844,
+                  88.37366485595703
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_ep005",
+          "cube": "cube_blue",
+          "truth": [
+            "bin_2"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_3",
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.5,
+              "unknown": 0.5
+            },
+            "evidence_t": 98,
+            "support": [
+              "e61",
+              "o98:bin_3"
+            ],
+            "correct": false,
+            "brier": 1.5,
+            "log_loss": 27.631021115928547
+          },
+          "strong_ledger": {
+            "top1": "bin_1",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 1.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 126,
+            "support": [
+              "o126:bin_1"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_3",
+                "point": [
+                  121.39154815673828,
+                  109.19126892089844
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "ambiguous_no_legal_information_action",
+                "confidence": 0.5
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  92.11158752441406,
+                  104.38174438476562
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  92.11158752441406,
+                  104.38174438476562
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_ep003",
+          "cube": "cube_blue",
+          "truth": [
+            "bin_2"
+          ],
+          "tracker_swapped": null,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.00038650896909618165,
+              "bin_2": 0.4996134910309038,
+              "unknown": 0.5
+            },
+            "evidence_t": 79,
+            "support": [
+              "e33",
+              "e42",
+              "o74:bin_2"
+            ],
+            "correct": false,
+            "brier": 0.5003868077474626,
+            "log_loss": 0.6939204974305675
+          },
+          "strong_ledger": {
+            "top1": "bin_2",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 1.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 84,
+            "support": [
+              "o84:bin_2"
+            ],
+            "correct": true,
+            "brier": 0.0,
+            "log_loss": -0.0
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  80.77688598632812,
+                  158.1870880126953
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  80.77688598632812,
+                  158.1870880126953
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_ep007",
+          "cube": "cube_green",
+          "truth": [
+            "bin_1"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_1",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.99,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 32,
+            "support": [
+              "e9",
+              "o32:bin_1"
+            ],
+            "correct": true,
+            "brier": 0.0002000000000000002,
+            "log_loss": 0.01005033585350145
+          },
+          "strong_ledger": {
+            "top1": "bin_0",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 1.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 108,
+            "support": [
+              "o108:bin_0"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  106.09790802001953,
+                  80.94071197509766
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  106.09790802001953,
+                  80.94071197509766
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  121.69158935546875,
+                  126.36259460449219
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  121.69158935546875,
+                  126.36259460449219
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_lane03_ep004",
+          "cube": "cube_green",
+          "truth": [
+            "bin_3"
+          ],
+          "tracker_swapped": true,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.008355145430541921,
+              "bin_3": 0.49164485456945806,
+              "unknown": 0.5
+            },
+            "evidence_t": 78,
+            "support": [
+              "e35",
+              "e37",
+              "o77:bin_3"
+            ],
+            "correct": false,
+            "brier": 0.508494762340873,
+            "log_loss": 0.7099986634479626
+          },
+          "strong_ledger": {
+            "top1": "bin_2",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 1.0,
+              "bin_3": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 84,
+            "support": [
+              "o84:bin_2"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_lane03_ep007",
+          "cube": "cube_green",
+          "truth": [
+            "bin_1"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_1",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.99,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 92,
+            "support": [
+              "e41",
+              "o92:bin_1"
+            ],
+            "correct": true,
+            "brier": 0.0002000000000000002,
+            "log_loss": 0.01005033585350145
+          },
+          "strong_ledger": {
+            "top1": "bin_0",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 1.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 108,
+            "support": [
+              "o108:bin_0"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  105.51213073730469,
+                  78.22407531738281
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  105.51213073730469,
+                  78.22407531738281
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  121.1293716430664,
+                  124.53453063964844
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  121.1293716430664,
+                  124.53453063964844
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_lane045_ep001",
+          "cube": "cube_red",
+          "truth": [
+            "bin_3"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.001488002134197519,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.49851199786580247,
+              "unknown": 0.5
+            },
+            "evidence_t": 97,
+            "support": [
+              "e43",
+              "e55",
+              "o79:bin_3"
+            ],
+            "correct": false,
+            "brier": 0.5014924304349003,
+            "log_loss": 0.696127621934461
+          },
+          "strong_ledger": {
+            "top1": "bin_1",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 1.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 108,
+            "support": [
+              "o108:bin_1"
+            ],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              }
+            },
+            "strong_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "arbiterkb_vs_factorial_ledger": {
+      "n": 241,
+      "top1_disagreement": 14,
+      "top1_disagreement_rate": 0.058091286307053944,
+      "unknown_disagreement": 14,
+      "both_legal_different_pick": 0,
+      "hard_actionability_disagreement": 13,
+      "threshold_actionability_disagreement": 19,
+      "different_correctness": 8,
+      "left_only_correct": 5,
+      "right_only_correct": 3,
+      "mean_abs_pmax_difference": 0.05889128917946262,
+      "disagreement_on_measured_swap": 2,
+      "disagreement_on_no_measured_swap": 11,
+      "disagreement_swap_unknown": 1,
+      "disagreement_rows": [
+        {
+          "episode": "fast_close_3swaps_ep003",
+          "cube": "cube_red",
+          "truth": [
+            "bin_0",
+            "bin_1"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_0",
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.5,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "unknown": 0.5
+            },
+            "evidence_t": 121,
+            "support": [
+              "e108",
+              "o121:bin_0"
+            ],
+            "correct": true,
+            "brier": 0.5,
+            "log_loss": 0.6931471805599453
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 126,
+            "support": [],
+            "correct": false,
+            "brier": 1.5,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  115.25994873046875,
+                  127.83905792236328
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "ambiguous_no_legal_information_action",
+                "confidence": 0.5
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_3swaps_ep005",
+          "cube": "cube_blue",
+          "truth": [
+            "bin_2"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_3",
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.5,
+              "unknown": 0.5
+            },
+            "evidence_t": 98,
+            "support": [
+              "e61",
+              "o98:bin_3"
+            ],
+            "correct": false,
+            "brier": 1.5,
+            "log_loss": 27.631021115928547
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 126,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_3",
+                "point": [
+                  121.39154815673828,
+                  109.19126892089844
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "ambiguous_no_legal_information_action",
+                "confidence": 0.5
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_3swaps_ep007",
+          "cube": "cube_green",
+          "truth": [
+            "bin_1"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_1",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.99,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 118,
+            "support": [
+              "e85",
+              "o118:bin_1"
+            ],
+            "correct": true,
+            "brier": 0.0002000000000000002,
+            "log_loss": 0.01005033585350145
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 126,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  120.14600372314453,
+                  116.84781646728516
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  120.14600372314453,
+                  116.84781646728516
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_ep003",
+          "cube": "cube_red",
+          "truth": [
+            "bin_0"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_1",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.99,
+              "bin_2": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 81,
+            "support": [
+              "e39",
+              "o81:bin_1"
+            ],
+            "correct": false,
+            "brier": 1.9802,
+            "log_loss": 27.631021115928547
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 84,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.99
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_ep005",
+          "cube": "cube_blue",
+          "truth": [
+            "bin_2"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_3",
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.5,
+              "unknown": 0.5
+            },
+            "evidence_t": 98,
+            "support": [
+              "e61",
+              "o98:bin_3"
+            ],
+            "correct": false,
+            "brier": 1.5,
+            "log_loss": 27.631021115928547
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 126,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_3",
+                "point": [
+                  121.39154815673828,
+                  109.19126892089844
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "ambiguous_no_legal_information_action",
+                "confidence": 0.5
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_close_ep007",
+          "cube": "cube_green",
+          "truth": [
+            "bin_0"
+          ],
+          "tracker_swapped": true,
+          "arbiterkb": {
+            "top1": "bin_1",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.99,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 96,
+            "support": [
+              "e54",
+              "o96:bin_1"
+            ],
+            "correct": false,
+            "brier": 1.9802,
+            "log_loss": 27.631021115928547
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 108,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  121.83837127685547,
+                  125.34107971191406
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  121.83837127685547,
+                  125.34107971191406
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_ep003",
+          "cube": "cube_blue",
+          "truth": [
+            "bin_2"
+          ],
+          "tracker_swapped": null,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.00038650896909618165,
+              "bin_2": 0.4996134910309038,
+              "unknown": 0.5
+            },
+            "evidence_t": 79,
+            "support": [
+              "e33",
+              "e42",
+              "o74:bin_2"
+            ],
+            "correct": false,
+            "brier": 0.5003868077474626,
+            "log_loss": 0.6939204974305675
+          },
+          "factorial_ledger": {
+            "top1": "bin_2",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 1.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 84,
+            "support": [],
+            "correct": true,
+            "brier": 0.0,
+            "log_loss": -0.0
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  80.77688598632812,
+                  158.1870880126953
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  80.77688598632812,
+                  158.1870880126953
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_ep004",
+          "cube": "cube_green",
+          "truth": [
+            "bin_2"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_2",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.99,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 32,
+            "support": [
+              "e8",
+              "o32:bin_2"
+            ],
+            "correct": true,
+            "brier": 0.0002000000000000002,
+            "log_loss": 0.01005033585350145
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 84,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  78.07157135009766,
+                  156.84283447265625
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_2",
+                "point": [
+                  78.07157135009766,
+                  156.84283447265625
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_ep007",
+          "cube": "cube_green",
+          "truth": [
+            "bin_1"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_1",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.99,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 32,
+            "support": [
+              "e9",
+              "o32:bin_1"
+            ],
+            "correct": true,
+            "brier": 0.0002000000000000002,
+            "log_loss": 0.01005033585350145
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 108,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  106.09790802001953,
+                  80.94071197509766
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  106.09790802001953,
+                  80.94071197509766
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_lane03_ep004",
+          "cube": "cube_green",
+          "truth": [
+            "bin_3"
+          ],
+          "tracker_swapped": true,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.008355145430541921,
+              "bin_3": 0.49164485456945806,
+              "unknown": 0.5
+            },
+            "evidence_t": 78,
+            "support": [
+              "e35",
+              "e37",
+              "o77:bin_3"
+            ],
+            "correct": false,
+            "brier": 0.508494762340873,
+            "log_loss": 0.7099986634479626
+          },
+          "factorial_ledger": {
+            "top1": "bin_3",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 1.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 84,
+            "support": [],
+            "correct": true,
+            "brier": 0.0,
+            "log_loss": -0.0
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_3",
+                "point": [
+                  88.48861694335938,
+                  167.02276611328125
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_3",
+                "point": [
+                  88.48861694335938,
+                  167.02276611328125
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_lane03_ep007",
+          "cube": "cube_green",
+          "truth": [
+            "bin_1"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_1",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.99,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 92,
+            "support": [
+              "e41",
+              "o92:bin_1"
+            ],
+            "correct": true,
+            "brier": 0.0002000000000000002,
+            "log_loss": 0.01005033585350145
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 108,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  105.51213073730469,
+                  78.22407531738281
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_1",
+                "point": [
+                  105.51213073730469,
+                  78.22407531738281
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_lane045_ep001",
+          "cube": "cube_red",
+          "truth": [
+            "bin_3"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": null,
+            "p_max": 0.5,
+            "probabilities": {
+              "bin_0": 0.001488002134197519,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.49851199786580247,
+              "unknown": 0.5
+            },
+            "evidence_t": 97,
+            "support": [
+              "e43",
+              "e55",
+              "o79:bin_3"
+            ],
+            "correct": false,
+            "brier": 0.5014924304349003,
+            "log_loss": 0.696127621934461
+          },
+          "factorial_ledger": {
+            "top1": "bin_3",
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 1.0,
+              "unknown": 0.0
+            },
+            "evidence_t": 108,
+            "support": [],
+            "correct": true,
+            "brier": 0.0,
+            "log_loss": -0.0
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 0.5
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_3",
+                "point": [
+                  93.18132781982422,
+                  152.68035888671875
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_3",
+                "point": [
+                  93.18132781982422,
+                  152.68035888671875
+                ],
+                "reason": "top1_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "fast_lane045_ep007",
+          "cube": "cube_green",
+          "truth": [
+            "bin_1"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_0",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.99,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 100,
+            "support": [
+              "e40",
+              "o100:bin_0"
+            ],
+            "correct": false,
+            "brier": 1.9802,
+            "log_loss": 27.631021115928547
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 108,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  121.61607360839844,
+                  123.94711303710938
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  121.61607360839844,
+                  123.94711303710938
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        },
+        {
+          "episode": "stock_ep007",
+          "cube": "cube_green",
+          "truth": [
+            "bin_1"
+          ],
+          "tracker_swapped": false,
+          "arbiterkb": {
+            "top1": "bin_0",
+            "p_max": 0.99,
+            "probabilities": {
+              "bin_0": 0.99,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 0.01
+            },
+            "evidence_t": 166,
+            "support": [
+              "e102",
+              "o166:bin_0"
+            ],
+            "correct": false,
+            "brier": 1.9802,
+            "log_loss": 27.631021115928547
+          },
+          "factorial_ledger": {
+            "top1": null,
+            "p_max": 1.0,
+            "probabilities": {
+              "bin_0": 0.0,
+              "bin_1": 0.0,
+              "bin_2": 0.0,
+              "bin_3": 0.0,
+              "unknown": 1.0
+            },
+            "evidence_t": 168,
+            "support": [],
+            "correct": false,
+            "brier": 2.0,
+            "log_loss": 27.631021115928547
+          },
+          "actions": {
+            "arbiterkb": {
+              "hard": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  121.60853576660156,
+                  125.88612365722656
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              },
+              "threshold_0_8": {
+                "legal": true,
+                "choice": "a",
+                "target": "bin_0",
+                "point": [
+                  121.60853576660156,
+                  125.88612365722656
+                ],
+                "reason": "top1_visible",
+                "confidence": 0.99
+              }
+            },
+            "factorial_ledger": {
+              "hard": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              },
+              "threshold_0_8": {
+                "legal": false,
+                "choice": null,
+                "target": null,
+                "point": null,
+                "reason": "unknown_or_not_visible",
+                "confidence": 1.0
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "paired_episode_cluster_bootstrap": {
+    "unit": "G-train episode",
+    "episodes": 90,
+    "draws": 10000,
+    "seed": 20261101,
+    "contrast": "arbiterkb minus strong_ledger",
+    "metrics": {
+      "top1_accuracy": {
+        "estimate": 0.0,
+        "percentile_95_interval": [
+          -0.020576131687242705,
+          0.020578257320681546
+        ]
+      },
+      "mean_brier": {
+        "estimate": -0.036866372224391875,
+        "percentile_95_interval": [
+          -0.08305985606692581,
+          0.007908532858278652
+        ]
+      },
+      "mean_log_loss": {
+        "estimate": -2.396137613530864,
+        "percentile_95_interval": [
+          -3.6038058578100993,
+          -1.2758264909938548
+        ]
+      }
+    }
+  },
+  "tracker_errors": {
+    "episodes": 90,
+    "pass_count": 150,
+    "swap_count": 61,
+    "swap_rate_per_pass": 0.4066666666666667,
+    "swap_kind_counts": {
+      "exchange": 39,
+      "merge": 12,
+      "lost": 10
+    },
+    "mean_episode_identity_accuracy": 0.9179025100392185,
+    "container_missed_detection_rate": 0.08432193905285709,
+    "container_missed_frames": 2637,
+    "container_oracle_visible_frames": 31273,
+    "false_association_rate_when_track_visible": 0.08555664198910462,
+    "false_association_frames": 2450,
+    "visible_association_frames": 28636,
+    "unmatched_visible_rate": 0.0,
+    "wrong_identity_runs": 176,
+    "recovered_wrong_identity_runs": 65,
+    "recovery_rate": 0.3693181818181818,
+    "inferred_cube_occlusion_runs": 306,
+    "inferred_cube_occlusion_duration_frames": {
+      "median": 68.0,
+      "p90": 137.0,
+      "max": 185
+    },
+    "definitions": {
+      "swap": "episode_passes: a tracker slot ends on the other oracle container after a simultaneous-motion pass",
+      "missed_detection": "the initially assigned tracker slot is absent while its oracle container is visible",
+      "false_association": "a visible slot is within 25 px of an oracle container other than its initial assignment",
+      "recovery": "after a contiguous false-association run, the slot is later associated with its initial container"
+    }
+  },
+  "recorded_factorial_progress_conflicts": {
+    "decisions_with_both_views": 28,
+    "conflicts": 26,
+    "rows": [
+      {
+        "cell": "VideoRepick_ep0_arbiter_generic",
+        "decision": 0,
+        "normalized_pick_release": [
+          0,
+          0
+        ],
+        "legacy_pick_release": [
+          1,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep0_arbiter_generic",
+        "decision": 1,
+        "normalized_pick_release": [
+          1,
+          0
+        ],
+        "legacy_pick_release": [
+          2,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep0_arbiter_generic",
+        "decision": 2,
+        "normalized_pick_release": [
+          1,
+          1
+        ],
+        "legacy_pick_release": [
+          2,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep0_arbiter_matched",
+        "decision": 0,
+        "normalized_pick_release": [
+          0,
+          0
+        ],
+        "legacy_pick_release": [
+          1,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep0_arbiter_matched",
+        "decision": 1,
+        "normalized_pick_release": [
+          1,
+          0
+        ],
+        "legacy_pick_release": [
+          2,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep0_arbiter_matched",
+        "decision": 2,
+        "normalized_pick_release": [
+          1,
+          1
+        ],
+        "legacy_pick_release": [
+          2,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_generic",
+        "decision": 0,
+        "normalized_pick_release": [
+          0,
+          0
+        ],
+        "legacy_pick_release": [
+          1,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_generic",
+        "decision": 1,
+        "normalized_pick_release": [
+          1,
+          0
+        ],
+        "legacy_pick_release": [
+          2,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_generic",
+        "decision": 2,
+        "normalized_pick_release": [
+          1,
+          1
+        ],
+        "legacy_pick_release": [
+          2,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_generic",
+        "decision": 3,
+        "normalized_pick_release": [
+          2,
+          1
+        ],
+        "legacy_pick_release": [
+          3,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_generic",
+        "decision": 4,
+        "normalized_pick_release": [
+          2,
+          2
+        ],
+        "legacy_pick_release": [
+          3,
+          3
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_matched",
+        "decision": 0,
+        "normalized_pick_release": [
+          0,
+          0
+        ],
+        "legacy_pick_release": [
+          1,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_matched",
+        "decision": 1,
+        "normalized_pick_release": [
+          1,
+          0
+        ],
+        "legacy_pick_release": [
+          2,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_matched",
+        "decision": 2,
+        "normalized_pick_release": [
+          1,
+          1
+        ],
+        "legacy_pick_release": [
+          2,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_matched",
+        "decision": 3,
+        "normalized_pick_release": [
+          2,
+          1
+        ],
+        "legacy_pick_release": [
+          3,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep1_arbiter_matched",
+        "decision": 4,
+        "normalized_pick_release": [
+          2,
+          2
+        ],
+        "legacy_pick_release": [
+          3,
+          3
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_generic",
+        "decision": 0,
+        "normalized_pick_release": [
+          0,
+          0
+        ],
+        "legacy_pick_release": [
+          1,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_generic",
+        "decision": 1,
+        "normalized_pick_release": [
+          1,
+          0
+        ],
+        "legacy_pick_release": [
+          2,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_generic",
+        "decision": 2,
+        "normalized_pick_release": [
+          1,
+          1
+        ],
+        "legacy_pick_release": [
+          2,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_generic",
+        "decision": 3,
+        "normalized_pick_release": [
+          2,
+          1
+        ],
+        "legacy_pick_release": [
+          3,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_generic",
+        "decision": 4,
+        "normalized_pick_release": [
+          2,
+          2
+        ],
+        "legacy_pick_release": [
+          3,
+          3
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_matched",
+        "decision": 0,
+        "normalized_pick_release": [
+          0,
+          0
+        ],
+        "legacy_pick_release": [
+          1,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_matched",
+        "decision": 1,
+        "normalized_pick_release": [
+          1,
+          0
+        ],
+        "legacy_pick_release": [
+          2,
+          1
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_matched",
+        "decision": 2,
+        "normalized_pick_release": [
+          1,
+          1
+        ],
+        "legacy_pick_release": [
+          2,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_matched",
+        "decision": 3,
+        "normalized_pick_release": [
+          2,
+          1
+        ],
+        "legacy_pick_release": [
+          3,
+          2
+        ],
+        "conflict": true
+      },
+      {
+        "cell": "VideoRepick_ep2_arbiter_matched",
+        "decision": 4,
+        "normalized_pick_release": [
+          2,
+          2
+        ],
+        "legacy_pick_release": [
+          3,
+          3
+        ],
+        "conflict": true
+      }
+    ]
+  },
+  "identifiability": {
+    "hard_state_action_identifiable": true,
+    "calibration_closed_loop_identifiable": false,
+    "reason": "G-train contains different legal pick targets, but RoboMME exposes no legal abstain or information-gathering action; confidence alone can only block, not choose a recovery action."
+  }
+}
