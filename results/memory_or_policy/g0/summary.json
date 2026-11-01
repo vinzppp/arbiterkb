@@ -1,0 +1,1879 @@
+{
+ "gate": "G0, main NOTES 7327cf1; nothing paid, no LLM, no test content",
+ "status": {
+  "1_episode_supply": "PASS; train only 0-99 (all in MEMI data, not used); val unused RS/SX/SC 49, VR 40, VUS strict 0 / 20 if goal-text-only reads allowed (user decision for G1); test 0-49 usable for all 5",
+  "2_tasks_run": "PASS with gaps; 5/5 through capture, executor and the FullHist/MEMI/ledger/KB prompt paths; bridge drops button/waypoint/highlight classes; 5 of 9 arms not implemented yet",
+  "3_memi_split": "SCRIPT PASS (two implementations byte-identical, reruns identical); rule-5 hand split and rule-4 two-coder labels OPEN (human)",
+  "4_kb_fix": "PASS after G0 patch 5bc1df4 (demo-numbered hold lines); regression tests in tests/test_factorial.py",
+  "5_compute": "Mac measured; pod measurement OPEN (user starts the pod)",
+  "6_g2": "DONE; 0/35 final-frame decisions change target (0/4276 all frames) on G train stock; below 2%: perception axis dropped"
+ },
+ "episode_supply": {
+  "memi_decisions": {
+   "BinFill": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "ButtonUnmask": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "ButtonUnmaskSwap": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "InsertPeg": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "MoveCube": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "PatternLock": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "PickHighlight": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "PickXtimes": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "RouteStick": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "StopCube": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "SwingXtimes": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "VideoPlaceButton": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "dev": 10,
+     "train": 90
+    }
+   },
+   "VideoPlaceOrder": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "VideoRepick": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "VideoUnmask": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   },
+   "VideoUnmaskSwap": {
+    "episodes": 100,
+    "min": 0,
+    "max": 99,
+    "contiguous": true,
+    "duplicates": 0,
+    "memi_split": {
+     "train": 90,
+     "dev": 10
+    }
+   }
+  },
+  "split_sizes": {
+   "BinFill": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "ButtonUnmask": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "ButtonUnmaskSwap": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "InsertPeg": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "MoveCube": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "PatternLock": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "PickHighlight": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "PickXtimes": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "RouteStick": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "StopCube": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "SwingXtimes": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "VideoPlaceButton": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "VideoPlaceOrder": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "VideoRepick": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "VideoUnmask": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   },
+   "VideoUnmaskSwap": {
+    "train": 100,
+    "val": 50,
+    "test": 50
+   }
+  },
+  "seed_overlap_across_splits": {
+   "BinFill": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "ButtonUnmask": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "ButtonUnmaskSwap": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "InsertPeg": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "MoveCube": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "PatternLock": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "PickHighlight": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "PickXtimes": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "RouteStick": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "StopCube": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "SwingXtimes": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "VideoPlaceButton": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "VideoPlaceOrder": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "VideoRepick": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "VideoUnmask": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   },
+   "VideoUnmaskSwap": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+   }
+  },
+  "train_beyond_0_99": {},
+  "tasks": {
+   "RouteStick": {
+    "val_total": 50,
+    "val_run_before": [],
+    "val_goal_text_read_only": [],
+    "val_used_by_g0_preflight": [
+     49
+    ],
+    "val_unused_strict": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48
+    ],
+    "val_unused_if_goal_reads_allowed": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48
+    ],
+    "pilot_g1_strict": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "pilot_g1_lenient": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "test_0_49_metadata_complete": true,
+    "test_run_or_read_before": [],
+    "test_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    },
+    "val_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    }
+   },
+   "SwingXtimes": {
+    "val_total": 50,
+    "val_run_before": [],
+    "val_goal_text_read_only": [],
+    "val_used_by_g0_preflight": [
+     49
+    ],
+    "val_unused_strict": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48
+    ],
+    "val_unused_if_goal_reads_allowed": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48
+    ],
+    "pilot_g1_strict": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "pilot_g1_lenient": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "test_0_49_metadata_complete": true,
+    "test_run_or_read_before": [],
+    "test_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    },
+    "val_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    }
+   },
+   "VideoUnmaskSwap": {
+    "val_total": 50,
+    "val_run_before": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     11,
+     15,
+     16,
+     17,
+     19,
+     23,
+     24,
+     25,
+     27,
+     29,
+     31,
+     32,
+     35,
+     37,
+     39,
+     40,
+     41,
+     43,
+     44,
+     45
+    ],
+    "val_goal_text_read_only": [
+     10,
+     12,
+     13,
+     14,
+     18,
+     20,
+     21,
+     22,
+     26,
+     28,
+     30,
+     33,
+     34,
+     36,
+     38,
+     42,
+     46,
+     47,
+     48,
+     49
+    ],
+    "val_used_by_g0_preflight": [],
+    "val_unused_strict": [],
+    "val_unused_if_goal_reads_allowed": [
+     10,
+     12,
+     13,
+     14,
+     18,
+     20,
+     21,
+     22,
+     26,
+     28,
+     30,
+     33,
+     34,
+     36,
+     38,
+     42,
+     46,
+     47,
+     48,
+     49
+    ],
+    "pilot_g1_strict": [],
+    "pilot_g1_lenient": [
+     10,
+     12,
+     13,
+     14,
+     18
+    ],
+    "test_0_49_metadata_complete": true,
+    "test_run_or_read_before": [],
+    "test_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    },
+    "val_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    }
+   },
+   "StopCube": {
+    "val_total": 50,
+    "val_run_before": [],
+    "val_goal_text_read_only": [],
+    "val_used_by_g0_preflight": [
+     49
+    ],
+    "val_unused_strict": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48
+    ],
+    "val_unused_if_goal_reads_allowed": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48
+    ],
+    "pilot_g1_strict": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "pilot_g1_lenient": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "test_0_49_metadata_complete": true,
+    "test_run_or_read_before": [],
+    "test_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    },
+    "val_difficulty": {
+     "easy": 26,
+     "medium": 11,
+     "hard": 13
+    }
+   },
+   "VideoRepick": {
+    "val_total": 50,
+    "val_run_before": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "val_goal_text_read_only": [],
+    "val_used_by_g0_preflight": [],
+    "val_unused_strict": [
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48,
+     49
+    ],
+    "val_unused_if_goal_reads_allowed": [
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48,
+     49
+    ],
+    "pilot_g1_strict": [
+     10,
+     11,
+     12,
+     13,
+     14
+    ],
+    "pilot_g1_lenient": [
+     10,
+     11,
+     12,
+     13,
+     14
+    ],
+    "test_0_49_metadata_complete": true,
+    "test_run_or_read_before": [],
+    "test_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    },
+    "val_difficulty": {
+     "easy": 26,
+     "medium": 12,
+     "hard": 12
+    }
+   }
+  },
+  "branch_val_runs_all_tasks": {
+   "ButtonUnmaskSwap/val": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "PickHighlight/val": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "VideoRepick/val": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "VideoUnmaskSwap/val": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ]
+  },
+  "main_used_sources": {
+   "VideoUnmaskSwap/val/run": "main NOTES 'GPT-6-Astra VideoUnmaskSwap val pilot' (ep 0-9) and data/cl_pod/pod_backup_2026-10-30/POD_STATE.md 'Astra K on two-pick goals'",
+   "VideoUnmaskSwap/val/goal_read": "main data/cl_pod/pod_backup_2026-10-30/cl/goals.jsonl (ep 10-59 reset, goal text listed; 50-59 do not exist in val)",
+   "VideoPlaceOrder/val/run": "main NOTES 'Perception check' / phrase test (not a study task)"
+  }
+ },
+ "preflight_serial": {
+  "RouteStick": {
+   "episode": "val 49",
+   "outcome": "fail",
+   "decisions": 1,
+   "decision_results": [
+    "executed"
+   ],
+   "episode_wall_s": 178.39,
+   "episode_cpu_s": 266.83,
+   "cpu_cores": 1.496,
+   "start_s": 12.43,
+   "reset_s": 147.1,
+   "executor_s": [
+    18.61
+   ],
+   "capture_object_types": {
+    "cube": 804,
+    "highlighted target": 209,
+    "target": 796,
+    "waypoint": 3759
+   },
+   "bridge_classes": {
+    "cube": 804,
+    "target": 796
+   },
+   "dropped_by_bridge": [
+    "highlighted target",
+    "waypoint"
+   ],
+   "prompt_chars": {
+    "fullhist": [
+     7582
+    ],
+    "memi": [
+     15588
+    ],
+    "ledger": [
+     10208
+    ],
+    "arbiter": [
+     10491
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: nothing yet"
+    ]
+   ]
+  },
+  "StopCube": {
+   "episode": "val 49",
+   "outcome": "fail",
+   "decisions": 3,
+   "decision_results": [
+    "executed",
+    "executed",
+    "executed"
+   ],
+   "episode_wall_s": 66.57,
+   "episode_cpu_s": 108.59,
+   "cpu_cores": 1.631,
+   "start_s": 10.91,
+   "reset_s": 0.51,
+   "executor_s": [
+    14.2,
+    14.21,
+    26.54
+   ],
+   "capture_object_types": {
+    "None": 176,
+    "button": 176,
+    "cube": 176,
+    "target": 176
+   },
+   "bridge_classes": {
+    "cube": 176,
+    "target": 176
+   },
+   "dropped_by_bridge": [
+    "button"
+   ],
+   "prompt_chars": {
+    "fullhist": [
+     4762,
+     5584,
+     6407
+    ],
+    "memi": [
+     13844,
+     14245,
+     14246
+    ],
+    "ledger": [
+     6694,
+     7066,
+     7066
+    ],
+    "arbiter": [
+     6774,
+     7149,
+     7154
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: nothing yet"
+    ],
+    [
+     "Progress: nothing yet"
+    ],
+    [
+     "Progress: nothing yet"
+    ]
+   ]
+  },
+  "SwingXtimes": {
+   "episode": "val 49",
+   "outcome": "fail",
+   "decisions": 4,
+   "decision_results": [
+    "executed",
+    "executed",
+    "executed",
+    "executed"
+   ],
+   "episode_wall_s": 106.48,
+   "episode_cpu_s": 168.15,
+   "cpu_cores": 1.579,
+   "start_s": 11.51,
+   "reset_s": 0.53,
+   "executor_s": [
+    42.22,
+    11.58,
+    9.18,
+    31.25
+   ],
+   "capture_object_types": {
+    "None": 331,
+    "button": 331,
+    "red cube": 331,
+    "target": 524,
+    "highlighted area": 138
+   },
+   "bridge_classes": {
+    "cube": 331,
+    "target": 524
+   },
+   "dropped_by_bridge": [
+    "button",
+    "highlighted area"
+   ],
+   "prompt_chars": {
+    "fullhist": [
+     4932,
+     6753,
+     7797,
+     8672
+    ],
+    "memi": [
+     9587,
+     10983,
+     10148,
+     9981
+    ],
+    "ledger": [
+     6979,
+     8285,
+     7469,
+     7308
+    ],
+    "arbiter": [
+     7205,
+     8520,
+     7756,
+     7744
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: nothing yet"
+    ],
+    [
+     "Progress: grasps 1, pick-ups 1"
+    ],
+    [
+     "Progress: grasps 1, pick-ups 1"
+    ],
+    [
+     "Progress: grasps 1, places 1, pick-ups 1, releases 1, holds left 0, right 1"
+    ]
+   ]
+  },
+  "VideoRepick": {
+   "episode": "val 0",
+   "outcome": "fail",
+   "decisions": 1,
+   "decision_results": [
+    "executed"
+   ],
+   "episode_wall_s": 153.74,
+   "episode_cpu_s": 234.29,
+   "cpu_cores": 1.524,
+   "start_s": 15.11,
+   "reset_s": 105.84,
+   "executor_s": [
+    32.36
+   ],
+   "capture_object_types": {
+    "None": 423,
+    "button": 405,
+    "container": 1257
+   },
+   "bridge_classes": {
+    "cube": 1257
+   },
+   "dropped_by_bridge": [
+    "button"
+   ],
+   "prompt_chars": {
+    "fullhist": [
+     7555
+    ],
+    "memi": [
+     16031
+    ],
+    "ledger": [
+     9635
+    ],
+    "arbiter": [
+     9750
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: grasps 1, places 1, pick-ups 1, releases 1, holds left 1, right 0"
+    ]
+   ]
+  },
+  "VideoUnmaskSwap": {
+   "episode": "val 0",
+   "outcome": "fail",
+   "decisions": 1,
+   "decision_results": [
+    "executed"
+   ],
+   "episode_wall_s": 87.2,
+   "episode_cpu_s": 137.7,
+   "cpu_cores": 1.579,
+   "start_s": 13.06,
+   "reset_s": 41.17,
+   "executor_s": [
+    32.66
+   ],
+   "capture_object_types": {
+    "blue cube": 32,
+    "green cube": 32,
+    "red cube": 49,
+    "container": 726
+   },
+   "bridge_classes": {
+    "cube": 113,
+    "container": 726
+   },
+   "dropped_by_bridge": [],
+   "prompt_chars": {
+    "fullhist": [
+     6047
+    ],
+    "memi": [
+     13538
+    ],
+    "ledger": [
+     8489
+    ],
+    "arbiter": [
+     10117
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: covers 3"
+    ]
+   ]
+  }
+ },
+ "preflight_parallel3": {
+  "RouteStick": {
+   "episode": "val 49",
+   "outcome": "fail",
+   "decisions": 1,
+   "decision_results": [
+    "executed"
+   ],
+   "episode_wall_s": 457.42,
+   "episode_cpu_s": 566.44,
+   "cpu_cores": 1.238,
+   "start_s": 18.75,
+   "reset_s": 352.95,
+   "executor_s": [
+    83.63
+   ],
+   "capture_object_types": {
+    "cube": 804,
+    "highlighted target": 209,
+    "target": 796,
+    "waypoint": 3759
+   },
+   "bridge_classes": {
+    "cube": 804,
+    "target": 796
+   },
+   "dropped_by_bridge": [
+    "highlighted target",
+    "waypoint"
+   ],
+   "prompt_chars": {
+    "fullhist": [
+     7582
+    ],
+    "memi": [
+     15588
+    ],
+    "ledger": [
+     10208
+    ],
+    "arbiter": [
+     10491
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: nothing yet"
+    ]
+   ]
+  },
+  "StopCube": {
+   "episode": "val 49",
+   "outcome": "fail",
+   "decisions": 3,
+   "decision_results": [
+    "executed",
+    "executed",
+    "executed"
+   ],
+   "episode_wall_s": 245.41,
+   "episode_cpu_s": 305.54,
+   "cpu_cores": 1.245,
+   "start_s": 81.01,
+   "reset_s": 4.99,
+   "executor_s": [
+    59.48,
+    43.59,
+    53.0
+   ],
+   "capture_object_types": {
+    "None": 176,
+    "button": 176,
+    "cube": 176,
+    "target": 176
+   },
+   "bridge_classes": {
+    "cube": 176,
+    "target": 176
+   },
+   "dropped_by_bridge": [
+    "button"
+   ],
+   "prompt_chars": {
+    "fullhist": [
+     4762,
+     5584,
+     6407
+    ],
+    "memi": [
+     13844,
+     14245,
+     14246
+    ],
+    "ledger": [
+     6694,
+     7066,
+     7066
+    ],
+    "arbiter": [
+     6774,
+     7149,
+     7154
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: nothing yet"
+    ],
+    [
+     "Progress: nothing yet"
+    ],
+    [
+     "Progress: nothing yet"
+    ]
+   ]
+  },
+  "SwingXtimes": {
+   "episode": "val 49",
+   "outcome": "fail",
+   "decisions": 4,
+   "decision_results": [
+    "executed",
+    "executed",
+    "executed",
+    "executed"
+   ],
+   "episode_wall_s": 355.97,
+   "episode_cpu_s": 444.63,
+   "cpu_cores": 1.249,
+   "start_s": 29.55,
+   "reset_s": 1.27,
+   "executor_s": [
+    123.23,
+    53.28,
+    19.79,
+    121.25
+   ],
+   "capture_object_types": {
+    "None": 331,
+    "button": 331,
+    "red cube": 331,
+    "target": 524,
+    "highlighted area": 138
+   },
+   "bridge_classes": {
+    "cube": 331,
+    "target": 524
+   },
+   "dropped_by_bridge": [
+    "button",
+    "highlighted area"
+   ],
+   "prompt_chars": {
+    "fullhist": [
+     4932,
+     6753,
+     7797,
+     8672
+    ],
+    "memi": [
+     9587,
+     10983,
+     10148,
+     9981
+    ],
+    "ledger": [
+     6979,
+     8285,
+     7469,
+     7308
+    ],
+    "arbiter": [
+     7205,
+     8520,
+     7756,
+     7744
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: nothing yet"
+    ],
+    [
+     "Progress: grasps 1, pick-ups 1"
+    ],
+    [
+     "Progress: grasps 1, pick-ups 1"
+    ],
+    [
+     "Progress: grasps 1, places 1, pick-ups 1, releases 1, holds left 0, right 1"
+    ]
+   ]
+  },
+  "VideoRepick": {
+   "episode": "val 0",
+   "outcome": "fail",
+   "decisions": 1,
+   "decision_results": [
+    "executed"
+   ],
+   "episode_wall_s": 281.51,
+   "episode_cpu_s": 365.31,
+   "cpu_cores": 1.298,
+   "start_s": 18.75,
+   "reset_s": 157.68,
+   "executor_s": [
+    98.72
+   ],
+   "capture_object_types": {
+    "None": 423,
+    "button": 405,
+    "container": 1257
+   },
+   "bridge_classes": {
+    "cube": 1257
+   },
+   "dropped_by_bridge": [
+    "button"
+   ],
+   "prompt_chars": {
+    "fullhist": [
+     7555
+    ],
+    "memi": [
+     16031
+    ],
+    "ledger": [
+     9635
+    ],
+    "arbiter": [
+     9750
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: grasps 1, places 1, pick-ups 1, releases 1, holds left 1, right 0"
+    ]
+   ]
+  },
+  "VideoUnmaskSwap": {
+   "episode": "val 0",
+   "outcome": "fail",
+   "decisions": 1,
+   "decision_results": [
+    "executed"
+   ],
+   "episode_wall_s": 132.75,
+   "episode_cpu_s": 174.57,
+   "cpu_cores": 1.315,
+   "start_s": 18.73,
+   "reset_s": 59.8,
+   "executor_s": [
+    51.34
+   ],
+   "capture_object_types": {
+    "blue cube": 32,
+    "green cube": 32,
+    "red cube": 49,
+    "container": 726
+   },
+   "bridge_classes": {
+    "cube": 113,
+    "container": 726
+   },
+   "dropped_by_bridge": [],
+   "prompt_chars": {
+    "fullhist": [
+     6047
+    ],
+    "memi": [
+     13538
+    ],
+    "ledger": [
+     8489
+    ],
+    "arbiter": [
+     10117
+    ]
+   },
+   "kb_raw_progress": [
+    [
+     "Progress: covers 3"
+    ]
+   ]
+  }
+ },
+ "mac_parallel": {
+  "width": 3,
+  "episodes": 5,
+  "serial_sum_s": 592.4,
+  "parallel_wall_s": 552,
+  "throughput_gain": 1.07,
+  "note": "Docker on Apple M2, 8 CPU / 3.8 GiB, linux/amd64 emulation; effective width ~1"
+ },
+ "memi_split": {
+  "source_sha256": "307eaf7ff479aeae6bc5704dce5dccb0524b139aa22fe39216f0bb2a426fda54",
+  "rules": "NOTES 7327cf1 MEMI prompt split rules 1-2",
+  "tasks": {
+   "RouteStick": {
+    "field_names": [
+     "remaining_path"
+    ],
+    "identical_bytes": true,
+    "identical_normalized": true,
+    "substitutions": {
+     "remaining_path": 2
+    },
+    "new_the_the": 0,
+    "names_left_in_policy": [],
+    "policy_matched_sha256": "b12e3f0bbbc6f304b9ecadd097fc90161095bef146a5713b19b03e944010f1f9",
+    "policy_matched_normalized_sha256": "b12e3f0bbbc6f304b9ecadd097fc90161095bef146a5713b19b03e944010f1f9",
+    "memory_fields_sha256": "0d807b5d9880339c05710674a5ea8e490432d73a441ad8856977b91b8461a454",
+    "subgoal_sentences": 12
+   },
+   "SwingXtimes": {
+    "field_names": [
+     "completed_target_visits"
+    ],
+    "identical_bytes": true,
+    "identical_normalized": true,
+    "substitutions": {
+     "completed_target_visits": 3
+    },
+    "new_the_the": 0,
+    "names_left_in_policy": [],
+    "policy_matched_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+    "policy_matched_normalized_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+    "memory_fields_sha256": "8c2a2d1a21ae9393512a4be0b99a80e00b1b4dbcccbe6fe58ec20931d4fdf092",
+    "subgoal_sentences": 16
+   },
+   "VideoUnmaskSwap": {
+    "field_names": [
+     "remaining_targets"
+    ],
+    "identical_bytes": true,
+    "identical_normalized": true,
+    "substitutions": {
+     "remaining_targets": 2
+    },
+    "new_the_the": 0,
+    "names_left_in_policy": [],
+    "policy_matched_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+    "policy_matched_normalized_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+    "memory_fields_sha256": "153fcd5121b31a860e3e6829e164f9b37be154706b1c23440c725d846909514a",
+    "subgoal_sentences": 10
+   },
+   "StopCube": {
+    "field_names": [
+     "passage_count",
+     "last_side",
+     "motion_history"
+    ],
+    "identical_bytes": true,
+    "identical_normalized": true,
+    "substitutions": {
+     "passage_count": 5,
+     "last_side": 0,
+     "motion_history": 1
+    },
+    "new_the_the": 0,
+    "names_left_in_policy": [],
+    "policy_matched_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+    "policy_matched_normalized_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+    "memory_fields_sha256": "2824b527396ab1a81192653696471c0a61e20c47a3d6b7a77f17c935d7b6931c",
+    "subgoal_sentences": 37
+   },
+   "VideoRepick": {
+    "field_names": [
+     "target_anchor",
+     "completed_cycles"
+    ],
+    "identical_bytes": true,
+    "identical_normalized": true,
+    "substitutions": {
+     "target_anchor": 3,
+     "completed_cycles": 5
+    },
+    "new_the_the": 1,
+    "names_left_in_policy": [],
+    "policy_matched_sha256": "b784d92a15e352173effd02eb9a3500a53567a399880a0f097f7afbb61923771",
+    "policy_matched_normalized_sha256": "b784d92a15e352173effd02eb9a3500a53567a399880a0f097f7afbb61923771",
+    "memory_fields_sha256": "5ebf8e3c3cf24d935c5ad202bbe756db469623d21e54fd17909a51c56d545fbb",
+    "subgoal_sentences": 23
+   }
+  }
+ },
+ "g2_snapping": {
+  "source": "G train perceived replays, suffix 0-9 only; G test not opened",
+  "decision": "last frame of the replay (after every exchange); each container slot = one decision",
+  "approximation": "oracle mask-centroid pixel stands in for the wrapper's projected actor centre",
+  "results": {
+   "stock": {
+    "episodes": 10,
+    "final_frame": {
+     "decisions": 35,
+     "changed": 0,
+     "rate": 0.0,
+     "wilson95": [
+      0.0,
+      0.09890426758938868
+     ],
+     "slot_hidden_at_decision": 0,
+     "pixel_error_px": {
+      "median": 4.186591625213623,
+      "p95": 11.306163311004639,
+      "max": 13.667047500610352
+     },
+     "snap_margin_px": {
+      "min": 16.651225090026855,
+      "p05": 25.072005131840704,
+      "median": 37.25625070929527
+     }
+    },
+    "all_frames": {
+     "decisions": 4276,
+     "changed": 0,
+     "rate": 0.0,
+     "wilson95": [
+      -5.421010862427522e-20,
+      0.0008976033131693473
+     ],
+     "slot_hidden_at_decision": 1,
+     "pixel_error_px": {
+      "median": 3.7096610069274902,
+      "p95": 10.716041564941406,
+      "max": 14.677007675170898
+     },
+     "snap_margin_px": {
+      "min": 0.41440677642822266,
+      "p05": 17.900245785713196,
+      "median": 33.35123245418072
+     }
+    }
+   },
+   "stock_camera_shift": {
+    "episodes": 20,
+    "final_frame": {
+     "decisions": 70,
+     "changed": 0,
+     "rate": 0.0,
+     "wilson95": [
+      0.0,
+      0.05202487486728348
+     ],
+     "slot_hidden_at_decision": 0,
+     "pixel_error_px": {
+      "median": 2.6202667951583862,
+      "p95": 10.445268201828002,
+      "max": 14.97421932220459
+     },
+     "snap_margin_px": {
+      "min": 18.899394989013672,
+      "p05": 23.71295522451401,
+      "median": 38.67296148836613
+     }
+    },
+    "all_frames": {
+     "decisions": 8199,
+     "changed": 0,
+     "rate": 0.0,
+     "wilson95": [
+      0.0,
+      0.00046832551295395
+     ],
+     "slot_hidden_at_decision": 2,
+     "pixel_error_px": {
+      "median": 2.423845052719116,
+      "p95": 11.714616775512695,
+      "max": 15.041511535644531
+     },
+     "snap_margin_px": {
+      "min": 1.2343902587890625,
+      "p05": 18.97353720664978,
+      "median": 32.98803699016571
+     }
+    }
+   }
+  }
+ },
+ "compute": {
+  "seconds_per_call": 30.5,
+  "v21": {
+   "cells": 144,
+   "calls": 577,
+   "executor_s_per_cell": 108.75,
+   "llm_s_per_cell": 13.34,
+   "source": "paper/ROBOMME_CANONICAL_MEMORY_IDENTIFIABILITY_ZH.md \u00a76; validation report (577 calls)"
+  },
+  "expert_calls": {
+   "RouteStick": 3.69,
+   "SwingXtimes": 7.46,
+   "VideoUnmaskSwap": 2.08,
+   "StopCube": 4.93,
+   "VideoRepick": 5.14
+  },
+  "expected": {
+   "cell_s": {
+    "RouteStick": 272.0,
+    "SwingXtimes": 239.3,
+    "VideoUnmaskSwap": 117.6,
+    "StopCube": 161.6,
+    "VideoRepick": 277.6
+   },
+   "mean_cell_s": 213.6,
+   "G1_225_cells_h": {
+    "width_1": 13.35,
+    "width_3": 4.45,
+    "width_6": 2.23,
+    "width_8": 1.67,
+    "width_12": 1.11
+   },
+   "confirmation_n250_h": {
+    "width_1": 133.5,
+    "width_3": 44.5,
+    "width_6": 22.3,
+    "width_8": 16.7,
+    "width_12": 11.1
+   }
+  },
+  "pessimistic": {
+   "cell_s": {
+    "RouteStick": 455.2,
+    "SwingXtimes": 533.3,
+    "VideoUnmaskSwap": 261.9,
+    "StopCube": 386.3,
+    "VideoRepick": 502.5
+   },
+   "mean_cell_s": 427.8,
+   "G1_225_cells_h": {
+    "width_1": 26.74,
+    "width_3": 8.91,
+    "width_6": 4.46,
+    "width_8": 3.34,
+    "width_12": 2.23
+   },
+   "confirmation_n250_h": {
+    "width_1": 267.4,
+    "width_3": 89.1,
+    "width_6": 44.6,
+    "width_8": 33.4,
+    "width_12": 22.3
+   }
+  }
+ }
+}

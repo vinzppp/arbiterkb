@@ -1,0 +1,41 @@
+NORMALIZED TASK STATE (identical schema in both memory arms)
+Phase separation: demonstration events are excluded from execution progress.
+Demonstration-grasped cube: unknown (unknown).
+Execution progress: pick-ups 1, releases 0, button presses 0, holds 1.
+WORLD MEMORY (task progress is intentionally omitted; use the normalized state above)
+Goal: watch the video carefully, then pick up the container hiding the green cube
+Task items (named by the goal): container, green cube
+Objects (world frame, m):
+  [cube_blue] blue cube, hidden: see Inside below, last seen t=31
+  [bin_0] container (task item), visible at -0.012, 0.156, 0.053, last seen t=273 [o273:bin_0]
+  [bin_1] container (task item), held at 0.055, -0.173, 0.189, last seen t=273 [o273:bin_1]
+  [bin_2] container (task item), visible at 0.002, 0.015, 0.053, last seen t=273 [o273:bin_2]
+  [cube_green] green cube (task item), hidden: see Inside below, last seen t=31
+  [cube_red] red cube, visible at 0.055, -0.178, 0.017, last seen t=273 [o273:cube_red]
+Relations:
+  [Inside(cube_blue)] bin_0 0.99 | elsewhere 0.01  [e4,o32:bin_0]
+  [Inside(cube_green)] bin_2 0.99 | elsewhere 0.01  [e8,o32:bin_2]
+  [Inside(cube_red)] was under bin_1, revealed t=257 [v5]
+Event log (oldest first):
+  [v1] t=32 cube_blue covered by bin_0 at (-0.01, 0.16) (conf 0.99) [e4]; from then on it moves with bin_0
+  [v2] t=32 cube_green covered by bin_2 at (0.00, 0.02) (conf 0.99) [e8]; from then on it moves with bin_2
+  [v3] t=32 cube_red covered by bin_1 at (0.06, -0.18) (conf 0.99) [e9]; from then on it moves with bin_1
+  [e12] t=114 bin_1 moved (0.05, -0.17) -> (0.00, 0.02) (t=69-114)
+  [e13] t=114 bin_2 moved (0.01, 0.01) -> (0.06, -0.18) (t=69-114)
+  [e16] t=164 bin_1 moved (0.01, 0.01) -> (0.06, -0.18) (t=119-164)
+  [e17] t=164 bin_2 moved (0.05, -0.17) -> (0.00, 0.02) (t=119-164)
+  [v5] t=257 cube_red seen where bin_1 was grasped: bin_1 hid it
+Joined facts (computed from the memory above):
+  Containers from the robot's left to its right: bin_0, bin_2, bin_1.
+  Containers from nearest to farthest from the robot: bin_2, bin_0, bin_1.
+  bin_0: on the robot's left, number 2 from the robot; may hold the blue cube (0.99); moved 0 times.
+  bin_1: on the robot's right, number 3 from the robot; hid the red cube (revealed t=257); holds no cube as far as the memory knows; moved 2 times, last at t=119-164 together with bin_2.
+  bin_2: in the middle, nearest to the robot; may hold the green cube (0.99); moved 2 times, last at t=119-164 together with bin_1.
+  the blue cube: hidden since t=32, under bin_0 (0.99; bin_0 has moved 0 times since, and the cube moved with it).
+  the green cube (task item): hidden since t=32, under bin_2 (0.99; bin_2 has moved 2 times since, and the cube moved with it).
+  the red cube: visible; it was under bin_1 (revealed t=257).
+Visible object-to-pixel lookup:
+  [bin_0] container at pixel [95, 170]
+  [bin_1] container at pixel [80, 55]
+  [bin_2] container at pixel [99, 131]
+  [cube_red] cube at pixel [114, 77]

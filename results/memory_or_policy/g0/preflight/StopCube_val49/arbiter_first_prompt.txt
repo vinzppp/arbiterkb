@@ -1,0 +1,100 @@
+You control a robot arm at a table by choosing high-level commands. A separate controller carries out each command you choose until it is finished. You are asked only when the robot is waiting for its next command.
+
+THE STEPS
+An episode has three kinds of steps. Demonstration steps show the demonstration video, on a task that has one. Execution steps show the scene while the robot carries out a command. Decision steps are the moments the robot waits for its next command. A decision step shows every execution step since the previous decision step, and then the scene at the decision step itself. On a task with a demonstration, the first decision step also shows every demonstration step, before the scene at the start of execution.
+
+THE CONVERSATION
+One conversation covers one episode. The first user turn states the task goal. Every user turn is one decision step. It adds the steps recorded since the previous turn. All steps of this episode stay above in the conversation, together with your own earlier answers. Use the whole history. An earlier step can be the only record of something that is no longer visible.
+
+On a task with a demonstration, the first turn lists the demonstration steps under DEMONSTRATION STEPS. The scene at the start of execution follows under EXECUTION STEPS. That turn asks for a command like every other turn.
+
+THE OBSERVATIONS
+The observations are text recorded by the simulator. Each block is one step and starts with t=<timestep>. The timestep counts the demonstration and the execution on one clock. The last block of a turn is always the latest step. The robot is now at the last t shown.
+Each block describes the scene at that step.
+  * Each visible object is named by its kind with its position [y, x]. The position is the center of the object's visible pixels in the 256 x 256 front camera image. y is the row and grows downward. x is the column and grows to the right. The center shifts when part of an object is hidden. Several objects of one kind are listed after one name.
+  * An object can carry a state, such as being held in the gripper, lifted off the table or pressed down.
+  * The gripper line gives the position of the wrist in the same [y, x], its height above the table and how far the fingers are open. "raised out of the frame" means the gripper is above the camera's view.
+An object missing from a block is not visible at that step. It may still be there.
+
+THE MENU
+The turn of each decision step ends with the MENU of the commands available now, one per line as `label: action`. A line marked (needs a point) needs a target. The menu can change during the episode. Use only a label from the latest menu.
+
+DIRECTIONS
+Directions (left, right, forward, backward) are the robot's and not the camera's,
+so the robot's right-hand side appears on the LEFT of the image.
+
+Stated as arithmetic:
+
+  the robot's RIGHT is the SMALLER x.     the robot's LEFT is the LARGER x.
+  the robot's FORWARD is the LARGER y.    the robot's BACKWARD is the SMALLER y.
+
+So forward moves DOWN the image, which is the opposite of the usual reading, and
+a diagonal is the two combined: forward-left is larger y and larger x.
+
+Of two candidates at [84, 72] and [77, 180], the right-side one is [84, 72]
+because 72 is the smaller x, and the forward one is also [84, 72] because 84 is
+the larger y.
+
+Likewise, the NEAR end of something is the end close to the robot, not to the
+camera, so it is the end with the SMALLER y. The FAR end has the LARGER y.
+
+THE POINT
+A point is [y, x] in the same 256 x 256 front image coordinates as the observations, row first. The controller maps the point to the nearest object that the command can act on. So give the position of the object you mean, read from the observations. For a command that needs no point, give null.
+
+YOUR ANSWER
+Answer the turn of each decision step with one JSON object and nothing else.
+  {"choice": "<label>", "point": [y, x]}
+  {"choice": "<label>", "point": null}
+An answer is invalid if it is not one JSON object, if its label is not in the menu, or if it has no point where the command needs one. A point that is not two numbers is invalid too. An invalid answer executes nothing. It ends the episode at once, and the episode counts as failed. You are not asked again.
+
+MEMORY-ARM OVERRIDE
+Each request in this arm is a fresh conversation: earlier user and assistant
+turns are not present. Instead, at every decision you receive a MEMORY SNAPSHOT
+built only from the same visible semantic observations printed in the steps.
+Its anonymous ids come from geometric visual association, never simulator
+actor identity. Use the snapshot as the episode history; the latest steps
+remain authoritative for what is visible now. Answer in the original JSON
+format with choice and point only.
+
+
+FACTORIAL POLICY
+Use the full task objective and legal action menu in the user turn. The demonstration
+shows task-relevant history but is not execution: never count demonstration actions as actions completed by the
+agent. Use only the current observation interval, the memory snapshot, and execution feedback. Treat an executed
+action as progress only when the observations and environment feedback support that it succeeded. Complete the full
+objective, including its stated stopping condition; do not finish early. Do not invent object identity when memory
+says unknown. This is a competent generic policy, not a task-specific action program.
+
+TASK GOAL
+  press the button to stop the cube just as it reaches the target for the third time
+
+DECISION STEP 1. The execution steps since the previous decision step, then the scene at this decision step.
+t=0
+  gripper raised out of the frame  fingers 100% open
+  button at [61, 116]
+  cube at [80, 53]
+  target at [83, 126]
+
+MENU
+  a: move to the top of the button to prepare
+  b: remain static
+  c: press button to stop the cube
+
+Answer with {"choice": "<label>", "point": [y, x] or null}.
+
+MEMORY SNAPSHOT
+NORMALIZED TASK STATE (identical schema in both memory arms)
+Phase separation: demonstration events are excluded from execution progress.
+Demonstration-grasped cube: unknown (unknown).
+Execution progress: pick-ups 0, releases 0, button presses 0, holds 0.
+WORLD MEMORY (task progress is intentionally omitted; use the normalized state above)
+Goal: press the button to stop the cube just as it reaches the target for the third time
+Task items (named by the goal): button, cube, target
+Objects (world frame, m):
+  [cube_0] cube (task item), visible at -0.108, -0.305, 0.010, last seen t=0 [o0:cube_0]
+  [target_0] target (task item), visible at -0.099, -0.006, 0.010, last seen t=0 [o0:target_0]
+Relations:
+Event log (oldest first):
+Visible object-to-pixel lookup:
+  [cube_0] cube at pixel [80, 53]
+  [target_0] target at pixel [83, 126]
