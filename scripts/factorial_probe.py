@@ -26,7 +26,7 @@ def main() -> int:
     key = os.environ.get("OPENAI_API_KEY")
     if not key:
         raise SystemExit("OPENAI_API_KEY absent")
-    payload = {"model": a.model, "messages": [{"role": "user", "content": "Return {} only."}],
+    payload = {"model": a.model, "messages": [{"role": "user", "content": "Return the JSON object {} only."}],
                "response_format": {"type": "json_object"}, "max_completion_tokens": 32,
                "reasoning_effort": "low"}
     req = urllib.request.Request(a.url, data=json.dumps(payload).encode(), method="POST",
