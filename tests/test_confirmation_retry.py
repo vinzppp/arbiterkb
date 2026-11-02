@@ -84,20 +84,56 @@ def test_infrastructure_failure_exhausts_after_two_reruns(tmp_path):
     assert (tmp_path / "infrastructure_attempts/attempt_02/result.json").exists()
 
 
-def test_first_arm_retry_rejects_changed_reset_digest(tmp_path):
+def test_container_crash_before_reset_can_retry_to_nonempty_digest(tmp_path):
+    result, events = tmp_path / "result.json", tmp_path / "events.jsonl"
+    crashed = row("infrastructure_error", "container_crash_before_reset", "supervisor")
+    crashed["reset_digest"] = ""
+    succeeded = row()
+    calls, run = writer(result, [crashed, succeeded])
+    outcome = execute_with_retries(
+        result_path=result, event_path=events, expected_model=MODEL,
+        expected_identity=crashed["retry_identity"], reference=None,
+        max_reruns=2, run_once=run)
+    history = json.loads((tmp_path / "infrastructure_retry_history.json").read_text())
+    assert calls["n"] == 2
+    assert outcome.row["terminal"]["status"] == "success"
+    assert history["first_nonempty_reset_digest"] == "reset"
+    assert "first_attempt_pair_signature" not in history
+    assert history["fixed_seed_signature"] == {
+        "seed": 123, "difficulty": "easy", "episode_count": 50}
+
+
+def test_retry_rejects_different_nonempty_reset_after_baseline(tmp_path):
     result, events = tmp_path / "result.json", tmp_path / "events.jsonl"
     first = row("infrastructure_error", "CallFailed: retries exhausted", "llm")
     changed = row()
     changed["reset_digest"] = "different-reset"
     calls, run = writer(result, [first, changed])
-    with pytest.raises(RuntimeError, match="pair signature changed across reruns"):
+    with pytest.raises(RuntimeError, match="reset digest changed across reruns"):
         execute_with_retries(
             result_path=result, event_path=events, expected_model=MODEL,
             expected_identity=first["retry_identity"], reference=None,
             max_reruns=2, run_once=run)
     history = json.loads((tmp_path / "infrastructure_retry_history.json").read_text())
     assert calls["n"] == 2
-    assert history["first_attempt_pair_signature"] == pair_signature(first)
+    assert history["first_nonempty_reset_digest"] == "reset"
+
+
+def test_empty_digest_after_baseline_does_not_clear_it(tmp_path):
+    result, events = tmp_path / "result.json", tmp_path / "events.jsonl"
+    first = row("infrastructure_error", "CallFailed: retries exhausted", "llm")
+    crashed = row("infrastructure_error", "container_crash_before_reset", "supervisor")
+    crashed["reset_digest"] = ""
+    succeeded = row()
+    calls, run = writer(result, [first, crashed, succeeded])
+    outcome = execute_with_retries(
+        result_path=result, event_path=events, expected_model=MODEL,
+        expected_identity=first["retry_identity"], reference=None,
+        max_reruns=2, run_once=run)
+    history = json.loads((tmp_path / "infrastructure_retry_history.json").read_text())
+    assert calls["n"] == 3
+    assert outcome.row["terminal"]["status"] == "success"
+    assert history["first_nonempty_reset_digest"] == "reset"
 
 
 def test_exhaustion_records_all_arm_pair_drop(tmp_path):

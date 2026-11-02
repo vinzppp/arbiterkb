@@ -13,14 +13,8 @@ from pathlib import Path
 from typing import Callable
 
 
-RETRYABLE_REASONS = {
-    "api_failure_after_client_retries",
-    "wrong_model_id",
-    "container_crash",
-    "executor_timeout",
-    "reset_mismatch",
-    "seed_mismatch",
-}
+RETRYABLE_REASONS = {"api_failure_after_client_retries", "wrong_model_id", "container_crash",
+                     "executor_timeout", "reset_mismatch", "seed_mismatch"}
 
 
 def _atomic_json(path: Path, value: dict) -> None:
@@ -104,8 +98,8 @@ def infrastructure_reason(row: dict, expected_model: str,
     status = str(terminal.get("status") or "")
     phase = str(terminal.get("phase") or "")
     reason = str(terminal.get("reason") or "")
-    if status == "infrastructure_error" and phase == "llm" \
-            and (reason.startswith("CallFailed:") or reason.startswith("api_failure_after_client_retries")):
+    if status == "infrastructure_error" and phase == "llm" and (
+            reason.startswith("CallFailed:") or reason.startswith("api_failure_after_client_retries")):
         return "api_failure_after_client_retries"
     if status == "infrastructure_error" and phase == "executor" \
             and reason.startswith("executor_wall_timeout"):
@@ -130,23 +124,30 @@ def _load_history(result_path: Path) -> dict:
     path = _history_path(result_path)
     if path.exists():
         history = json.loads(path.read_text())
-        history.setdefault("first_attempt_pair_signature", None)
+        history.pop("first_attempt_pair_signature", None)
         return history
-    return {"max_reruns": None, "first_attempt_pair_signature": None,
-            "failed_attempts": []}
+    return {"max_reruns": None, "fixed_seed_signature": None, "first_nonempty_reset_digest": None, "failed_attempts": []}
 
 
-def _verify_first_attempt_signature(history: dict, row: dict, result_path: Path) -> dict:
+def _verify_retry_provenance(history: dict, row: dict, result_path: Path) -> None:
     current = pair_signature(row)
-    first = history.get("first_attempt_pair_signature")
-    if first is None:
-        history["first_attempt_pair_signature"] = current
-        return current
-    if any(first.get(key) != current.get(key)
-           for key in ("seed", "difficulty", "episode_count", "reset_digest")):
+    fixed = {key: current.get(key) for key in ("seed", "difficulty", "episode_count")}
+    expected = history.get("fixed_seed_signature")
+    changed = False
+    if expected is None:
+        history["fixed_seed_signature"], changed = fixed, True
+    elif expected != fixed:
         raise RuntimeError(
-            f"pair signature changed across reruns for {result_path}: {current} != {first}")
-    return current
+            f"seed signature changed across reruns for {result_path}: {fixed} != {expected}")
+    observed = current.get("reset_digest")
+    baseline = history.get("first_nonempty_reset_digest")
+    if observed and baseline is None:
+        history["first_nonempty_reset_digest"], changed = observed, True
+    elif observed and observed != baseline:
+        raise RuntimeError(
+            f"reset digest changed across reruns for {result_path}: {observed} != {baseline}")
+    if changed:
+        _atomic_json(_history_path(result_path), history)
 
 
 def _archive_attempt(result_path: Path, event_path: Path, attempt: int) -> None:
@@ -163,7 +164,8 @@ def _annotate_result(result_path: Path, row: dict, history: dict,
     annotated["infrastructure_retry"] = {
         "max_reruns": history["max_reruns"],
         "reruns_used": len(history["failed_attempts"]),
-        "first_attempt_pair_signature": history["first_attempt_pair_signature"],
+        "fixed_seed_signature": history["fixed_seed_signature"],
+        "first_nonempty_reset_digest": history["first_nonempty_reset_digest"],
         "failed_attempts": list(history["failed_attempts"]),
         "exhausted_reason": exhausted_reason,
     }
@@ -188,7 +190,7 @@ def execute_with_retries(*, result_path: Path, event_path: Path,
         if found_identity != expected_identity:
             raise RuntimeError(
                 f"retry identity changed for {result_path}: {found_identity} != {expected_identity}")
-        _verify_first_attempt_signature(history, row, result_path)
+        _verify_retry_provenance(history, row, result_path)
         reason = infrastructure_reason(row, expected_model, reference)
         if reason is None:
             return RetryOutcome(_annotate_result(result_path, row, history),

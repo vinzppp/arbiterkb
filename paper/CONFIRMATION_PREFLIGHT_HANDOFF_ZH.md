@@ -31,9 +31,10 @@ executor command timeout、跨臂 reset digest mismatch、跨臂 resolved seed/d
 failure、task failure、50-call cap、episode wall timeout 都直接保留，不 rerun。
 
 每次 rerun 的 `retry_identity` 固定 manifest、commit/clean、三方 source commits、params/prompt、task/episode/split、
-arm、观测配置、model/effort、resolved seed/difficulty 与 factorial inputs；retry history 另持久化第一次 attempt 的
-`seed / difficulty / episode_count / reset_digest`，包括 pair 第一个 arm 在内的每次 rerun 都必须逐字段一致，任何变化
-立即拒绝。初次 + 2 次完全相同的 rerun 仍失败时，写 `_pair_drops/<task>_ep<episode>.json`，列出并剔除全部 9 arms；
+arm、观测配置、model/effort、resolved seed/difficulty 与 factorial inputs；retry history 将
+`seed / difficulty / episode_count` 固定为 `fixed_seed_signature`，始终严格一致。reset digest 则以
+`first_nonempty_reset_digest` 为基准：reset 前崩溃产生的空值可重跑且不会清除既有基准，两个不同的非空值立即拒绝。
+初次 + 2 次完全相同的 rerun 仍失败时，写 `_pair_drops/<task>_ep<episode>.json`，列出并剔除全部 9 arms；
 已完成 arm 的原始 row 保留但加 `pair_exclusion`，剩余 arm 不执行，resume 看到 drop record 后继续跳过整个 pair。
 
 定向测试命令与结果：
@@ -43,7 +44,8 @@ arm、观测配置、model/effort、resolved seed/difficulty 与 factorial input
   tests/test_confirmation_retry.py tests/test_confirmation_gate.py tests/test_common_watchdog.py
 ```
 
-结果：`21 passed`。全套结果：`317 passed, 6 skipped`；quality `162 files, 0 problems`；self-test
+结果：`23 passed`。全套结果：`319 passed, 6 skipped`；quality `162 files, 0 problems`；self-test
+`16 PASS, 0 FAIL, 1 SKIPPED`。覆盖
 `16 PASS, 0 FAIL, 1 SKIPPED`。覆盖 successful retry、初次 + 2 reruns 后仍失败、9-arm pair drop、
 policy/task/cap/episode timeout 不 rerun、wrong model/reset/seed 分类、首臂 rerun reset 改变即拒绝、drop 后剩余 arm
 不执行且 resume 整 pair 跳过，以及 stale commit / changed source gate 拒绝。
@@ -190,8 +192,8 @@ episodes、observation seed 与 retry/drop 规则都来自 frozen manifest，并
 
 ## Code-reviewer 重点
 
-1. `arbiter_kb/confirmation_retry.py`：六类 retry 白名单是否过宽/过窄；首次 pair signature 是否先于 rerun 持久化；
-   第三次失败边界及 all-arm exclusion 是否不会被 resume 绕过。
+1. `arbiter_kb/confirmation_retry.py`：六类 retry 白名单是否过宽/过窄；固定 seed signature 与首次非空 reset digest
+   是否正确持久化；第三次失败边界及 all-arm exclusion 是否不会被 resume 绕过。
 2. `stress/common_harness_pod.py`：gate 的 commit/source-hash 绑定、跨臂 reference 建立顺序、已有结果 resume、pair drop
    后跳过剩余 arms。
 3. `arbiter_kb/common_supervisor.py`：executor timeout 从 scored timeout 改成 infrastructure 是否只影响新 protocol 的解释；
