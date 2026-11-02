@@ -206,10 +206,15 @@ def run_parent(a, spec, stage, sources):
     retry_policy = spec.get("infrastructure_retry") or {}
     strict_retry = a.stage in set(retry_policy.get("enabled_stages") or [])
     max_reruns = int(retry_policy.get("max_reruns_per_cell", 0))
+    shard, shards = parse_shard(getattr(a, "shard", None))
+    pair_index = -1
     for cfg in stage["observations"]:
         cell = cell_name(cfg)
         for task in spec["tasks"]:
             for episode in stage_episodes(stage, task):
+                pair_index += 1
+                if pair_index % shards != shard:
+                    continue
                 drop = pair_drop_path(a.out, a.stage, cell, task, episode)
                 if strict_retry and drop.exists():
                     record = json.loads(drop.read_text())
@@ -377,7 +382,19 @@ def args():
     ap.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     ap.add_argument("--events", type=Path, help=argparse.SUPPRESS)
     ap.add_argument("--gate-file", type=Path)
+    ap.add_argument("--shard", help="K/N: run only the (task, episode) pairs whose index mod N is K")
     return ap.parse_args()
+
+
+def parse_shard(value) -> tuple[int, int]:
+    """'K/N' -> (K, N); none -> (0, 1). Shards split (task, episode) pairs, so a pair's arms (and its retry and
+    drop records) stay in one process; every shard shares one run directory and the cost stop reads all its rows."""
+    if not value:
+        return 0, 1
+    k, _, n = str(value).partition("/")
+    if not (k.isdigit() and n.isdigit()) or not 0 <= int(k) < int(n):
+        raise SystemExit(f"bad --shard {value!r}; want K/N with 0 <= K < N")
+    return int(k), int(n)
 
 
 def prepare_run(a, spec, manifest_sha):
@@ -461,7 +478,7 @@ def main():
     if stage["split"] == "test":
         if not spec.get("frozen") or not ledger.was_frozen(manifest_sha):
             raise SystemExit(f"heldout refused: freeze manifest {manifest_sha} in the ledger first")
-        if not a.one:
+        if not a.one and parse_shard(a.shard)[0] == 0:
             ledger.record("READ", manifest_sha, f"RoboMME common harness {a.stage}")
     if a.one:
         if spec.get("watchdog") and not a.worker:
