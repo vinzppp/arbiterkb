@@ -13,8 +13,9 @@
   `9d667f2f043497fb`（完整 sha256 `9d667f2f043497fb19a74013cc1033bc46224b1f434c2f28f6e16fd92777ad6e`）。
 - 设计：test 0–49；5 tasks；9 arms；2,250 cells；`openai/gpt-6-luna` low effort；50-call cap；
   总费用停止线 `$6`。
-- 当前 draft gate 必须是 NO_GO：实测只报 3 个预期 blocker——未冻结、运行环境待定、工作树有本次未提交改动；
-  其余静态 manifest、fairness、RouteStick memory、scripted preflight、StopCube source pin 检查通过。
+- 当前 draft gate 必须是 NO_GO。`confirmation_preflight_20261102T0952Z` 是在旧 commit 且
+  `arbiter_dirty=true` 时得到的开发证据，只可帮助调试 executor，**不得给最终 frozen 包放行**。最终 gate 只接受在
+  clean 最终 commit 上重新生成、与最终 manifest hash / commit / sources / params / prompt 完全一致的五行 val 证据。
 
 ## 基础设施错误规则
 
@@ -30,18 +31,22 @@ executor command timeout、跨臂 reset digest mismatch、跨臂 resolved seed/d
 failure、task failure、50-call cap、episode wall timeout 都直接保留，不 rerun。
 
 每次 rerun 的 `retry_identity` 固定 manifest、commit/clean、三方 source commits、params/prompt、task/episode/split、
-arm、观测配置、model/effort、resolved seed/difficulty 与 factorial inputs；任何变化立即停止。初次 + 2 次完全相同的
-rerun 仍失败时，写 `_pair_drops/<task>_ep<episode>.json`，列出并剔除全部 9 arms；已完成 arm 的原始 row 保留，
-但加 `pair_exclusion`，未执行 arm 不补跑。
+arm、观测配置、model/effort、resolved seed/difficulty 与 factorial inputs；retry history 另持久化第一次 attempt 的
+`seed / difficulty / episode_count / reset_digest`，包括 pair 第一个 arm 在内的每次 rerun 都必须逐字段一致，任何变化
+立即拒绝。初次 + 2 次完全相同的 rerun 仍失败时，写 `_pair_drops/<task>_ep<episode>.json`，列出并剔除全部 9 arms；
+已完成 arm 的原始 row 保留但加 `pair_exclusion`，剩余 arm 不执行，resume 看到 drop record 后继续跳过整个 pair。
 
 定向测试命令与结果：
 
 ```bash
-.venv/bin/python -m pytest -q tests/test_confirmation_retry.py tests/test_common_watchdog.py
+.venv/bin/python -m pytest -q \
+  tests/test_confirmation_retry.py tests/test_confirmation_gate.py tests/test_common_watchdog.py
 ```
 
-结果：`13 passed`。覆盖 successful retry、初次 + 2 reruns 后仍失败、9-arm pair drop、policy/task/cap/episode
-timeout 不 rerun，以及 wrong model/reset/seed 分类。
+结果：`21 passed`。全套结果：`317 passed, 6 skipped`；quality `162 files, 0 problems`；self-test
+`16 PASS, 0 FAIL, 1 SKIPPED`。覆盖 successful retry、初次 + 2 reruns 后仍失败、9-arm pair drop、
+policy/task/cap/episode timeout 不 rerun、wrong model/reset/seed 分类、首臂 rerun reset 改变即拒绝、drop 后剩余 arm
+不执行且 resume 整 pair 跳过，以及 stale commit / changed source gate 拒绝。
 
 ## StopCube 免费核查
 
@@ -61,11 +66,13 @@ timeout 不 rerun，以及 wrong model/reset/seed 分类。
 
 ## 免费 scripted preflight 与真实 prompt fairness
 
-以下命令只用 val episode，显式断网且拒绝 API key；不会触碰 test：
+以下命令只用五个预定 val episode，显式断网且清除 API key；不会触碰 test。它必须在 host/frozen manifest/FREEZE
+ledger 均提交后的 **clean 最终 commit** 上重新执行；不要复用本次 dirty draft 的 `0952Z` 结果：
 
 ```bash
 unset OPENAI_API_KEY OPENROUTER_API_KEY
-PREP=results/robomme_common/memory_or_policy_confirmation/preflight_material
+PREP_RUN="confirmation_preflight_$(git rev-parse --short=12 HEAD)"
+PREP="results/robomme_common/memory_or_policy_confirmation/preflight_material/$PREP_RUN"
 mkdir -p "$PREP/probe"
 
 docker run --rm --platform linux/amd64 --network none \
@@ -103,18 +110,20 @@ docker run --rm --platform linux/amd64 --network none \
   --manifest experiments/memory_or_policy_confirmation_v1.json \
   --stage executor_preflight --memi-root /opt/memi \
   --out /workspace/ArbiterKB/results/robomme_common/memory_or_policy_confirmation \
-  --run-id confirmation_preflight_20261102T0952Z
+  --run-id "$PREP_RUN"
 ```
 
 本次实跑的真实-request probe fairness 输出为：5/5 tasks、0 fails、`passed: true`。RouteStick 第一次真实请求的
 LD-g / LD-m payload 均为 1,334 chars，KB-g / KB-m 均为 2,261 chars；均含实际 cube/stick object records，
 不是空 memory。独立 executor preflight 也完成 5/5，全部有 task_failure 类合法终态、0 model calls、5 个 reset
-digest 非空；结果在 `results/robomme_common/memory_or_policy_confirmation/`。`scripts/confirmation_gate.py` 会重新检查
-这些原始文件，不接受只看摘要。
+digest 非空；但这些仅是开发证据。最终 gate 会逐行要求精确的 task/episode/split/arm、最终 manifest SHA、当前
+Arbiter commit、`arbiter_dirty=false`、pinned sources、params/prompt hashes、0 model calls 和非空 reset digest，并拒绝
+任何额外行或重复行。
 
 ## Endpoint probe（本次未调用）
 
-这是唯一付费 preflight；遵照本次要求没有执行。正式冻结前由 user 授权后运行：
+这是唯一付费 preflight；遵照本次要求没有执行。它只能在 frozen manifest、FREEZE ledger 和 clean final-commit
+免费 preflight 就绪后，由 user 授权运行：
 
 ```bash
 OPENAI_API_KEY="$(security find-generic-password -s ArbiterKB-OpenRouter -w)" \
@@ -126,10 +135,21 @@ OPENAI_API_KEY="$(security find-generic-password -s ArbiterKB-OpenRouter -w)" \
 
 gate 要求 `requested_model == returned_model == openai/gpt-6-luna`。
 
-## 冻结与 gate（现在不要运行）
+## 最终冻结与放行顺序（现在不要运行）
 
-先由 orchestrator / user 决定 Mac 或 pod，把 manifest 的 `execution_host`、`environment_selection` 和最终专属 flags
-写实，再把 `frozen` 改为 `true`、提交；随后记录 FREEZE 并单独提交 `results/test_reads.log`。不得沿用本 draft hash。
+必须严格按以下顺序，任何后续源码 commit 都会令已有 gate stale：
+
+1. user 选择 Mac 或 pod host 及其专属参数；
+2. 写实 frozen manifest 并提交；
+3. 对该 manifest hash 记录 FREEZE ledger，并再次提交；
+4. 在此 clean 最终 commit 上重新运行上面的免费 val scripted preflight / prompt fairness；
+5. 运行 endpoint probe；
+6. 生成绑定该 manifest、该 commit 和 source hashes 的 gate；
+7. orchestrator 审查 gate 与证据包；
+8. user 明确 go 后，才可启动 confirmation。
+
+不得沿用本 draft hash 或 dirty draft preflight。runner 会要求当前 HEAD 精确等于 gate 的 `arbiter_commit`，并在启动前
+重新计算 gate 中每个 `source_sha256`；gate 后出现新 commit 或任一受保护源码变化都会 fail closed。
 
 ```bash
 .venv/bin/python -c "from pathlib import Path; from arbiter_kb.experiment_manifest import digest; from arbiter_kb import ledger; p=Path('experiments/memory_or_policy_confirmation_v1.json'); h=digest(p); ledger.record('FREEZE', h, 'memory-or-policy confirmation; test 0-49 x 5 tasks x 9 arms; 2250 cells; USD 6 stop'); print(h)"
@@ -137,9 +157,9 @@ gate 要求 `requested_model == returned_model == openai/gpt-6-luna`。
 .venv/bin/python scripts/confirmation_gate.py \
   --manifest experiments/memory_or_policy_confirmation_v1.json \
   --probe results/robomme_common/memory_or_policy_confirmation/endpoint_probe.json \
-  --probe-dir results/robomme_common/memory_or_policy_confirmation/preflight_material/probe \
-  --fairness results/robomme_common/memory_or_policy_confirmation/preflight_material/fairness.json \
-  --preflight results/robomme_common/memory_or_policy_confirmation/confirmation_preflight_20261102T0952Z \
+  --probe-dir "$PREP/probe" \
+  --fairness "$PREP/fairness.json" \
+  --preflight "results/robomme_common/memory_or_policy_confirmation/$PREP_RUN" \
   --stopcube-audit paper/STOPCUBE_EXECUTOR_AUDIT.json \
   --out results/robomme_common/memory_or_policy_confirmation/gate.json
 ```
@@ -170,11 +190,12 @@ episodes、observation seed 与 retry/drop 规则都来自 frozen manifest，并
 
 ## Code-reviewer 重点
 
-1. `arbiter_kb/confirmation_retry.py`：六类 retry 白名单是否过宽/过窄；resume 时 history/identity；第三次失败的边界；
-   all-arm exclusion 是否不会被后续 resume 绕过。
-2. `stress/common_harness_pod.py`：跨臂 reference 建立顺序、seed/reset mismatch、已有结果 resume、pair drop 后跳过剩余 arms。
+1. `arbiter_kb/confirmation_retry.py`：六类 retry 白名单是否过宽/过窄；首次 pair signature 是否先于 rerun 持久化；
+   第三次失败边界及 all-arm exclusion 是否不会被 resume 绕过。
+2. `stress/common_harness_pod.py`：gate 的 commit/source-hash 绑定、跨臂 reference 建立顺序、已有结果 resume、pair drop
+   后跳过剩余 arms。
 3. `arbiter_kb/common_supervisor.py`：executor timeout 从 scored timeout 改成 infrastructure 是否只影响新 protocol 的解释；
    signal / stale log 的 container-crash 分类是否足够严格。
 4. `tests/test_confirmation_retry.py`：是否还缺真实 supervisor/result-shape 的 integration case。
-5. `experiments/memory_or_policy_confirmation_v1.json` 与 `scripts/confirmation_gate.py`：2,250 cell、$6、未决 host、
-   provenance、prompt fairness、RouteStick 非空、StopCube pin 是否 fail closed。
+5. `experiments/memory_or_policy_confirmation_v1.json` 与 `scripts/confirmation_gate.py`：五行 clean-final-commit provenance、
+   无 extra/duplicate、2,250 cell、$6、未决 host、prompt fairness、RouteStick 非空、StopCube pin 是否 fail closed。

@@ -129,8 +129,24 @@ def _history_path(result_path: Path) -> Path:
 def _load_history(result_path: Path) -> dict:
     path = _history_path(result_path)
     if path.exists():
-        return json.loads(path.read_text())
-    return {"max_reruns": None, "failed_attempts": []}
+        history = json.loads(path.read_text())
+        history.setdefault("first_attempt_pair_signature", None)
+        return history
+    return {"max_reruns": None, "first_attempt_pair_signature": None,
+            "failed_attempts": []}
+
+
+def _verify_first_attempt_signature(history: dict, row: dict, result_path: Path) -> dict:
+    current = pair_signature(row)
+    first = history.get("first_attempt_pair_signature")
+    if first is None:
+        history["first_attempt_pair_signature"] = current
+        return current
+    if any(first.get(key) != current.get(key)
+           for key in ("seed", "difficulty", "episode_count", "reset_digest")):
+        raise RuntimeError(
+            f"pair signature changed across reruns for {result_path}: {current} != {first}")
+    return current
 
 
 def _archive_attempt(result_path: Path, event_path: Path, attempt: int) -> None:
@@ -147,6 +163,7 @@ def _annotate_result(result_path: Path, row: dict, history: dict,
     annotated["infrastructure_retry"] = {
         "max_reruns": history["max_reruns"],
         "reruns_used": len(history["failed_attempts"]),
+        "first_attempt_pair_signature": history["first_attempt_pair_signature"],
         "failed_attempts": list(history["failed_attempts"]),
         "exhausted_reason": exhausted_reason,
     }
@@ -171,6 +188,7 @@ def execute_with_retries(*, result_path: Path, event_path: Path,
         if found_identity != expected_identity:
             raise RuntimeError(
                 f"retry identity changed for {result_path}: {found_identity} != {expected_identity}")
+        _verify_first_attempt_signature(history, row, result_path)
         reason = infrastructure_reason(row, expected_model, reference)
         if reason is None:
             return RetryOutcome(_annotate_result(result_path, row, history),

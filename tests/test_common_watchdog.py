@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 import sys
 import time
@@ -112,3 +113,42 @@ def test_validation_gate_is_forwarded_to_worker(tmp_path):
         args, "Task", 1, "fullhist", {"mode": "clean"}, tmp_path / "events.jsonl")
     assert child[child.index("--gate-file") + 1] == str(gate)
     assert child[child.index("--run-id") + 1] == "validation-test"
+
+
+def gate_fixture(tmp_path):
+    source = tmp_path / "source.py"
+    source.write_text("VALUE = 1\n")
+    gate = tmp_path / "confirmation-gate.json"
+    gate.write_text(json.dumps({
+        "manifest_sha": "manifest",
+        "arbiter_commit": "approved-commit",
+        "audit": {"passed": True},
+        "gate": {"approved_stages": ["confirmation"]},
+        "source_sha256": {"source.py": hashlib.sha256(source.read_bytes()).hexdigest()},
+    }))
+    args = SimpleNamespace(gate_file=gate, stage="confirmation")
+    return args, source
+
+
+def test_confirmation_gate_accepts_bound_commit_and_source_hashes(tmp_path, monkeypatch):
+    args, _ = gate_fixture(tmp_path)
+    monkeypatch.setattr(HARNESS, "ROOT", tmp_path)
+    monkeypatch.setattr(HARNESS, "git", lambda _root, *_args: "approved-commit")
+    HARNESS.verify_stage_gate(args, {"requires_gate": "confirmation"}, "manifest")
+
+
+def test_confirmation_gate_rejects_new_commit_after_gate(tmp_path, monkeypatch):
+    args, _ = gate_fixture(tmp_path)
+    monkeypatch.setattr(HARNESS, "ROOT", tmp_path)
+    monkeypatch.setattr(HARNESS, "git", lambda _root, *_args: "new-commit")
+    with pytest.raises(SystemExit, match="stale gate"):
+        HARNESS.verify_stage_gate(args, {"requires_gate": "confirmation"}, "manifest")
+
+
+def test_confirmation_gate_rejects_source_change_after_gate(tmp_path, monkeypatch):
+    args, source = gate_fixture(tmp_path)
+    source.write_text("VALUE = 2\n")
+    monkeypatch.setattr(HARNESS, "ROOT", tmp_path)
+    monkeypatch.setattr(HARNESS, "git", lambda _root, *_args: "approved-commit")
+    with pytest.raises(SystemExit, match="source changed after approval"):
+        HARNESS.verify_stage_gate(args, {"requires_gate": "confirmation"}, "manifest")

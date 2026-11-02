@@ -7,6 +7,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +18,10 @@ from arbiter_kb.experiment_manifest import load_manifest  # noqa: E402
 ARMS = ["fh_g", "fh_m", "ld_g", "ld_m", "mm_g", "mm_m", "kb_g", "kb_m", "memi"]
 TASKS = ["RouteStick", "SwingXtimes", "VideoUnmaskSwap", "StopCube", "VideoRepick"]
 EPISODES = list(range(50))
+PREFLIGHT_EPISODES = {
+    "RouteStick": [49], "SwingXtimes": [49], "VideoUnmaskSwap": [0],
+    "StopCube": [49], "VideoRepick": [0],
+}
 SOURCES = [
     "stress/mop_policy.py", "arbiter_kb/mop_memory.py", "stress/common_scene.py",
     "stress/common_episode.py", "stress/common_policy.py", "stress/common_harness_pod.py",
@@ -70,8 +75,59 @@ def prompt_source_issues(spec: dict) -> list[str]:
     return issues
 
 
+def expected_preflight_keys(spec: dict) -> list[tuple[str, int, str, str]]:
+    arm = spec["arms"][0]
+    return [(task, episode, "val", arm)
+            for task in TASKS for episode in PREFLIGHT_EPISODES[task]]
+
+
+def _model_call_evidence(policy: dict) -> bool:
+    if policy.get("log") or policy.get("models_returned") or policy.get("calls"):
+        return True
+    usage = policy.get("usage") or {}
+    return any(value not in (None, 0, 0.0, "", [], {}) for value in usage.values())
+
+
+def preflight_provenance_issues(spec: dict, manifest_sha: str,
+                                arbiter_commit: str, rows: list[dict]) -> list[str]:
+    expected = expected_preflight_keys(spec)
+    found = [(row.get("task"), row.get("episode"), row.get("split"), row.get("arm"))
+             for row in rows]
+    issues = []
+    stage = spec.get("stages", {}).get("executor_preflight") or {}
+    if stage.get("split") != "val" or stage.get("backend") != "scripted" \
+            or stage.get("episodes") != [] or stage.get("episodes_by_task") != PREFLIGHT_EPISODES:
+        issues.append("manifest executor preflight is not the exact five scheduled val rows")
+    if Counter(found) != Counter(expected):
+        issues.append(f"preflight rows differ from the exact scheduled five: {found!r}")
+    if len(found) != len(set(found)):
+        issues.append("preflight contains duplicate task/episode/split/arm rows")
+    prompt_sha = spec["memory_policy"]["memi_prompts_sha256"][:16]
+    for index, row in enumerate(rows):
+        label = "/".join(map(str, found[index]))
+        provenance, policy = row.get("provenance") or {}, row.get("policy") or {}
+        checks = {
+            "manifest SHA": provenance.get("manifest_sha") == manifest_sha,
+            "Arbiter commit": provenance.get("arbiter_commit") == arbiter_commit,
+            "clean flag": provenance.get("arbiter_dirty") is False,
+            "pinned sources": provenance.get("sources") == spec.get("sources"),
+            "params hash": provenance.get("params_sha") == spec.get("params_sha"),
+            "prompt hash": provenance.get("prompt_sha") == prompt_sha,
+            "zero model calls": policy.get("model") == "none"
+                                and policy.get("effort") == "none"
+                                and not _model_call_evidence(policy),
+            "nonempty reset digest": bool(str(row.get("reset_digest") or "").strip()),
+        }
+        issues.extend(f"preflight {label} has invalid {name}"
+                      for name, passed in checks.items() if not passed)
+        if terminal(row) in {"missing", "infrastructure_error", "incomplete"}:
+            issues.append(f"preflight {label} has blocked terminal status")
+    return issues
+
+
 def audit(spec: dict, probe: dict, fairness: dict, rows: list[dict],
-          probe_dir: Path, stopcube: dict) -> list[str]:
+          probe_dir: Path, stopcube: dict, manifest_sha: str,
+          arbiter_commit: str) -> list[str]:
     issues, stage = [], spec.get("stages", {}).get("confirmation") or {}
     retry = spec.get("infrastructure_retry") or {}
     plan = spec.get("validation_analysis_plan") or {}
@@ -97,9 +153,7 @@ def audit(spec: dict, probe: dict, fairness: dict, rows: list[dict],
     fair_tasks = {row.get("task") for row in fairness.get("tasks", [])}
     if not fairness.get("passed") or fair_tasks != set(TASKS):
         issues.append("real-prompt fairness did not pass all five tasks")
-    if {row.get("task") for row in rows} != set(TASKS) \
-            or any(terminal(row) in {"missing", "infrastructure_error", "incomplete"} for row in rows):
-        issues.append("scripted executor preflight is incomplete or blocked")
+    issues += preflight_provenance_issues(spec, manifest_sha, arbiter_commit, rows)
     if stopcube.get("conclusion") != "official_no_op_matches_harness" \
             or stopcube.get("official_source", {}).get("memi_commit") != spec.get("sources", {}).get("memi"):
         issues.append("StopCube audit is missing or does not match the pinned MEMI source")
@@ -125,12 +179,14 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
     spec, manifest_sha = load_manifest(args.manifest)
+    arbiter_commit = git("rev-parse", "HEAD")
     rows = [json.loads(path.read_text()) for path in sorted(args.preflight.rglob("result.json"))]
     issues = audit(spec, json.loads(args.probe.read_text()), json.loads(args.fairness.read_text()),
-                   rows, args.probe_dir, json.loads(args.stopcube_audit.read_text()))
+                   rows, args.probe_dir, json.loads(args.stopcube_audit.read_text()),
+                   manifest_sha, arbiter_commit)
     result = {
         "manifest_sha": manifest_sha,
-        "arbiter_commit": git("rev-parse", "HEAD"),
+        "arbiter_commit": arbiter_commit,
         "audit": {"passed": not issues, "issues": issues},
         "gate": {"decision": "GO" if not issues else "NO_GO",
                  "approved_stages": ["confirmation"] if not issues else []},

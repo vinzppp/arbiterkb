@@ -7,6 +7,7 @@ environment. API secrets are read only by MEMI's client and never serialized.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import os
@@ -424,6 +425,23 @@ def verify_stage_gate(a, stage, manifest_sha):
         raise SystemExit("gate manifest/audit does not authorize this stage")
     if a.stage not in approved:
         raise SystemExit(f"gate does not approve stage {a.stage!r}")
+    current_commit = git(ROOT, "rev-parse", "HEAD")
+    if gate.get("arbiter_commit") != current_commit:
+        raise SystemExit(
+            f"stale gate: Arbiter commit is {current_commit}, gate binds {gate.get('arbiter_commit')}")
+    hashes = gate.get("source_sha256")
+    if not isinstance(hashes, dict) or not hashes:
+        raise SystemExit("gate has no source hash inventory")
+    for name, expected in hashes.items():
+        relative = Path(name)
+        if relative.is_absolute() or ".." in relative.parts:
+            raise SystemExit(f"unsafe gate source path: {name!r}")
+        source = ROOT / relative
+        if not source.is_file():
+            raise SystemExit(f"gate source is missing: {name}")
+        actual = hashlib.sha256(source.read_bytes()).hexdigest()
+        if actual != expected:
+            raise SystemExit(f"gate source changed after approval: {name}")
 
 
 def main():
