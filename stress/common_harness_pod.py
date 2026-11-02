@@ -11,6 +11,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -49,10 +50,50 @@ def git(root: Path, *args) -> str:
     return subprocess.run(["git", *args], cwd=root, check=True, capture_output=True, text=True).stdout.strip()
 
 
+def _test_read_ledger_is_append_only() -> bool:
+    """Allow only well-formed READ records appended after the committed ledger."""
+    relative = Path("results/test_reads.log")
+    diff = git(ROOT, "diff", "--unified=0", "HEAD", "--", str(relative))
+    if not diff:
+        return True
+    committed = git(ROOT, "show", f"HEAD:{relative}")
+    committed_lines = len(committed.splitlines())
+    hunk = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+    read = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\tREAD\t[^\t]+\t.*$")
+    hunks, additions = [], []
+    for line in diff.splitlines():
+        match = hunk.match(line)
+        if match:
+            hunks.append(tuple(int(value) if value is not None else 1 for value in match.groups()))
+        elif line.startswith("+") and not line.startswith("+++"):
+            additions.append(line[1:])
+        elif line.startswith("-") and not line.startswith("---"):
+            return False
+        elif line.startswith(("diff --git ", "index ", "--- ", "+++ ")):
+            continue
+        else:
+            return False
+    if len(hunks) != 1 or not additions or not all(read.fullmatch(line) for line in additions):
+        return False
+    old_start, old_count, new_start, new_count = hunks[0]
+    return (old_start, old_count, new_start, new_count) == (
+        committed_lines, 0, committed_lines + 1, len(additions))
+
+
 def source_dirty() -> bool:
-    """Generated common-harness results do not make the source tree dirty."""
-    lines = git(ROOT, "status", "--porcelain", "--untracked-files=all").splitlines()
-    return any(not line[3:].startswith("results/robomme_common/") for line in lines)
+    """Ignore generated results and a strictly append-only READ audit record."""
+    status = subprocess.run(
+        ["git", "status", "--porcelain", "--untracked-files=all"], cwd=ROOT,
+        check=True, capture_output=True, text=True).stdout
+    lines = status.splitlines()
+    for line in lines:
+        path = line[3:]
+        if path.startswith("results/robomme_common/"):
+            continue
+        if path == "results/test_reads.log" and _test_read_ledger_is_append_only():
+            continue
+        return True
+    return False
 
 
 def verify_sources(memi_root: Path, spec: dict) -> dict:
