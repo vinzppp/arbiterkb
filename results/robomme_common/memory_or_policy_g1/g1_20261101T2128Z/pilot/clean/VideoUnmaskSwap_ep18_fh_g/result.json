@@ -1,0 +1,155 @@
+{
+ "task": "VideoUnmaskSwap",
+ "episode": 18,
+ "split": "val",
+ "goal": "watch the video carefully, then pick up the container hiding the green cube",
+ "menu": [
+  {
+   "label": "a",
+   "action": "pick up the container",
+   "need_parameter": true
+  },
+  {
+   "label": "b",
+   "action": "put down the container",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 9,
+  "chars": 1084
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 114,
+   "t_to": 114,
+   "steps": 1,
+   "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [91, 100]\n  green cube at [100, 156]\n  red cube at [133, 158]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [91, 100]\n  green cube at [100, 156]\n  red cube at [133, 158]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 99], [97, 157], [123, 88], [131, 159]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 99], [97, 157], [123, 88], [131, 159]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 99], [97, 157], [123, 88], [131, 159]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 99], [105, 171], [122, 143], [123, 88]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 99], [107, 140], [120, 176], [123, 88]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 99], [98, 156], [123, 88], [131, 160]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 99], [98, 156], [123, 88], [131, 160]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 99], [98, 156], [123, 88], [131, 160]",
+   "demo_steps": 9,
+   "command": {
+    "choice": "a",
+    "point": [
+     98,
+     156
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 100,
+   "captured": 100,
+   "terminated": true,
+   "status": "fail",
+   "seconds": 29.96
+  }
+ ],
+ "outcome": "fail",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 115,
+ "reset_batch": 115,
+ "policy": {
+  "name": "fh_g",
+  "memory_kind": "fh",
+  "policy_kind": "g",
+  "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+  "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "models_returned": [
+   "openai/gpt-6-luna"
+  ],
+  "calls": {
+   "decide": 1
+  },
+  "statuses": {
+   "valid": 1
+  },
+  "usage": {
+   "input_tokens": 1673,
+   "cached_tokens": 0,
+   "output_tokens": 64,
+   "reasoning_tokens": 44,
+   "latency": 2.625
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"a\",\"point\":[98,156]}",
+    "command": {
+     "choice": "a",
+     "point": [
+      98,
+      156
+     ]
+    },
+    "memory_before": null,
+    "memory_updates": null,
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 1673,
+    "cached_tokens": 0,
+    "output_tokens": 64,
+    "reasoning_tokens": 44,
+    "error": "",
+    "cache_write_tokens": 1670,
+    "finish_reason": "stop",
+    "reasoning": "**Identifying container location**\n\nI need to determine the hiding container for the green cube from the demo. The initial green cube is at [100, 156], and there are containers located at [97, 157], among others. I think the container correlating to the desired position is the one at [98, 156]. So, I\u2019ll pick the container at that location and make sure my inference is accurate. I\u2019ll finalize this step!",
+    "latency": 2.625,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 1.679,
+    "ttft_s": 2.46,
+    "stream_s": 2.577
+   }
+  ]
+ },
+ "seconds": 57.2,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73301,
+  "dropout": 0.0,
+  "jitter_px": 0.0,
+  "bridge": "memi_named"
+ },
+ "arm": "fh_g",
+ "reset_digest": "49aa71fadcfc2084",
+ "success": false,
+ "run_id": "g1_20261101T2128Z",
+ "provenance": {
+  "manifest_sha": "75ee3199ac0853fe",
+  "arbiter_commit": "ac55555361a0343ad008727327f683fc24885ba5",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1051800,
+   "difficulty": "medium",
+   "episode_count": 50
+  },
+  "factorial": null
+ },
+ "terminal": {
+  "status": "task_failure",
+  "reason": "fail",
+  "phase": "environment",
+  "primary_eligible": true,
+  "primary_success": false,
+  "elapsed_s": 57.2
+ },
+ "watchdog": {
+  "triggered": false
+ },
+ "event_log": "/workspace/ArbiterKB/results/robomme_common/memory_or_policy_g1/g1_20261101T2128Z/pilot/clean/VideoUnmaskSwap_ep18_fh_g/events.jsonl"
+}

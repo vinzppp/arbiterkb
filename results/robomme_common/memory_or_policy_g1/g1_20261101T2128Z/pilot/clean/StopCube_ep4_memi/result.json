@@ -1,0 +1,372 @@
+{
+ "task": "StopCube",
+ "episode": 4,
+ "split": "val",
+ "goal": "press the button to stop the cube just as it reaches the target for the third time",
+ "menu": [
+  {
+   "label": "a",
+   "action": "move to the top of the button to prepare",
+   "need_parameter": false
+  },
+  {
+   "label": "b",
+   "action": "remain static",
+   "need_parameter": false
+  },
+  {
+   "label": "c",
+   "action": "press button to stop the cube",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 0,
+  "chars": 0
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 0,
+   "t_to": 0,
+   "steps": 1,
+   "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [59, 138]\n  cube at [116, 73]\n  target at [89, 148]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "A",
+    "point": [
+     59,
+     138
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 56,
+   "captured": 56,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 17.19
+  },
+  {
+   "index": 1,
+   "t_from": 1,
+   "t_to": 56,
+   "steps": 4,
+   "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [59, 138]\n  cube at [109, 90]\n  target at [89, 148]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [59, 138]\n  cube at [95, 130]\n  target at [89, 148]\nt=48\n  gripper at [24, 140]  height 0.158  fingers 100% open\n  button at [59, 138]\n  cube at [81, 169]\n  target at [89, 148]\nt=56\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [75, 185]\n  target at [89, 148]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "B",
+    "point": null
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 48,
+   "captured": 48,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 17.0
+  },
+  {
+   "index": 2,
+   "t_from": 57,
+   "t_to": 104,
+   "steps": 4,
+   "segment": "t=64\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [70, 198]\n  target at [89, 148]\nt=80\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [67, 208]\n  target at [89, 148]\nt=96\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [71, 196]\n  target at [89, 148]\nt=104\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [76, 182]\n  target at [89, 148]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "B",
+    "point": null
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 66,
+   "captured": 66,
+   "terminated": false,
+   "status": "ongoing",
+   "seconds": 21.01
+  },
+  {
+   "index": 3,
+   "t_from": 105,
+   "t_to": 170,
+   "steps": 5,
+   "segment": "t=112\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [83, 165]\n  target at [89, 148]\nt=128\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [97, 125]\n  target at [89, 149]\nt=144\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [110, 88]\n  target at [89, 149]\nt=160\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [116, 73]\n  target at [89, 149]\nt=170\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [112, 81]\n  target at [89, 149]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "B",
+    "point": null
+   },
+   "result": "no_op",
+   "error": "",
+   "batch": 0,
+   "captured": 0,
+   "terminated": false,
+   "status": "",
+   "seconds": 6.79
+  },
+  {
+   "index": 4,
+   "t_from": 171,
+   "t_to": 170,
+   "steps": 1,
+   "segment": "t=170\n  gripper at [25, 141]  height 0.154  fingers 0% open\n  button at [59, 138]\n  cube at [112, 81]\n  target at [89, 149]",
+   "demo_steps": 0,
+   "command": {
+    "choice": "C",
+    "point": null
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 67,
+   "captured": 67,
+   "terminated": true,
+   "status": "success",
+   "seconds": 30.1
+  }
+ ],
+ "outcome": "success",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 1,
+ "reset_batch": 1,
+ "policy": {
+  "name": "memory",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "system_sha": "0e5025552561",
+  "calls": {
+   "decide": 5
+  },
+  "models_returned": [
+   "openai/gpt-6-luna"
+  ],
+  "statuses": {
+   "valid": 5
+  },
+  "usage": {
+   "input_tokens": 15400,
+   "cached_tokens": 0,
+   "output_tokens": 1859,
+   "reasoning_tokens": 1019,
+   "latency": 22.833,
+   "retries": 0
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"A\",\"point\":[59,138],\"memory_updates\":[{\"field\":\"passage_count\",\"value\":\"0\"},{\"field\":\"last_side\",\"value\":\"-1\"},{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 73}]\"}],\"used_fields\":[]}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 2889,
+    "cached_tokens": 0,
+    "output_tokens": 130,
+    "reasoning_tokens": 59,
+    "error": "",
+    "cache_write_tokens": 2886,
+    "finish_reason": "stop",
+    "latency": 3.107,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 2.845,
+    "ttft_s": 2.853,
+    "stream_s": 3.068,
+    "memory_before": "passage_count=; last_side=; motion_history=",
+    "memory_after": "passage_count=0; last_side=-1; motion_history=[{'time': 0, 'cube_x': 73}]",
+    "memory_updates": {
+     "passage_count": "0",
+     "last_side": "-1",
+     "motion_history": "[{'time': 0, 'cube_x': 73}]"
+    },
+    "command": {
+     "choice": "A",
+     "point": [
+      59,
+      138
+     ]
+    }
+   },
+   {
+    "kind": "decide",
+    "index": 1,
+    "status": "valid",
+    "raw": "{\"choice\":\"B\",\"point\":null,\"memory_updates\":[{\"field\":\"passage_count\",\"value\":\"1\"},{\"field\":\"last_side\",\"value\":\"1\"},{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}]\"}],\"used_fields\":[\"passage_count\",\"last_side\",\"motion_history\"]}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 3062,
+    "cached_tokens": 0,
+    "output_tokens": 290,
+    "reasoning_tokens": 160,
+    "error": "",
+    "cache_write_tokens": 3059,
+    "finish_reason": "stop",
+    "latency": 3.33,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 2.534,
+    "ttft_s": 2.553,
+    "stream_s": 3.3,
+    "memory_before": "passage_count=0; last_side=-1; motion_history=[{'time': 0, 'cube_x': 73}]",
+    "memory_after": "passage_count=1; last_side=1; motion_history=[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}]",
+    "memory_updates": {
+     "passage_count": "1",
+     "last_side": "1",
+     "motion_history": "[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}]"
+    },
+    "command": {
+     "choice": "B",
+     "point": null
+    }
+   },
+   {
+    "kind": "decide",
+    "index": 2,
+    "status": "valid",
+    "raw": "{\"choice\":\"B\",\"point\":null,\"memory_updates\":[{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}]\"}],\"used_fields\":[\"passage_count\",\"last_side\",\"motion_history\"]}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 3130,
+    "cached_tokens": 0,
+    "output_tokens": 270,
+    "reasoning_tokens": 107,
+    "error": "",
+    "cache_write_tokens": 3127,
+    "finish_reason": "stop",
+    "latency": 3.169,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 2.378,
+    "ttft_s": 2.402,
+    "stream_s": 3.135,
+    "memory_before": "passage_count=1; last_side=1; motion_history=[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}]",
+    "memory_after": "passage_count=1; last_side=1; motion_history=[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}]",
+    "memory_updates": {
+     "motion_history": "[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}]"
+    },
+    "command": {
+     "choice": "B",
+     "point": null
+    }
+   },
+   {
+    "kind": "decide",
+    "index": 3,
+    "status": "valid",
+    "raw": "{\"choice\":\"B\",\"point\":null,\"memory_updates\":[{\"field\":\"passage_count\",\"value\":\"2\"},{\"field\":\"last_side\",\"value\":\"-1\"},{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]\"}],\"used_fields\":[\"passage_count\",\"last_side\",\"motion_history\"]}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 3237,
+    "cached_tokens": 0,
+    "output_tokens": 627,
+    "reasoning_tokens": 379,
+    "error": "",
+    "cache_write_tokens": 3234,
+    "finish_reason": "stop",
+    "latency": 6.756,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 5.265,
+    "ttft_s": 5.278,
+    "stream_s": 6.723,
+    "memory_before": "passage_count=1; last_side=1; motion_history=[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}]",
+    "memory_after": "passage_count=2; last_side=-1; motion_history=[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]",
+    "memory_updates": {
+     "passage_count": "2",
+     "last_side": "-1",
+     "motion_history": "[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]"
+    },
+    "command": {
+     "choice": "B",
+     "point": null
+    }
+   },
+   {
+    "kind": "decide",
+    "index": 4,
+    "status": "valid",
+    "raw": "{\"choice\":\"C\",\"point\":null,\"memory_updates\":[{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]\"}],\"used_fields\":[\"passage_count\",\"last_side\",\"motion_history\"]}",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 3082,
+    "cached_tokens": 0,
+    "output_tokens": 542,
+    "reasoning_tokens": 314,
+    "error": "",
+    "cache_write_tokens": 3079,
+    "finish_reason": "stop",
+    "reasoning": "**Figuring out periodic fits**\n\nI'm looking to establish a reliable periodic fit with a cycle around 140, crossing approximately at 195, and a remaining value of 25. I need to utilize fields like passage_count and last_side to make sense of the memory I've been using, and motion_history also plays a role here. I have to remember that last_side informs me about crossings and that I\u2019m working with JSON for this data structuring.",
+    "latency": 6.471,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 5.176,
+    "ttft_s": 5.646,
+    "stream_s": 6.45,
+    "memory_before": "passage_count=2; last_side=-1; motion_history=[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]",
+    "memory_after": "passage_count=2; last_side=-1; motion_history=[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]",
+    "memory_updates": {
+     "motion_history": "[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]"
+    },
+    "command": {
+     "choice": "C",
+     "point": null
+    }
+   }
+  ],
+  "policy_prompt": "/opt/memi/artifacts/gpt/policy_prompts/optimized_luna.json",
+  "memory": {
+   "passage_count": "2",
+   "last_side": "-1",
+   "motion_history": "[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]"
+  },
+  "memory_line": "passage_count=2; last_side=-1; motion_history=[{'time': 0, 'cube_x': 73}, {'time': 16, 'cube_x': 90}, {'time': 32, 'cube_x': 130}, {'time': 48, 'cube_x': 169}, {'time': 56, 'cube_x': 185}, {'time': 64, 'cube_x': 198}, {'time': 80, 'cube_x': 208}, {'time': 96, 'cube_x': 196}, {'time': 104, 'cube_x': 182}, {'time': 112, 'cube_x': 165}, {'time': 128, 'cube_x': 125}, {'time': 144, 'cube_x': 88}, {'time': 160, 'cube_x': 73}, {'time': 170, 'cube_x': 81}]"
+ },
+ "seconds": 92.7,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73301,
+  "dropout": 0.0,
+  "jitter_px": 0.0,
+  "bridge": "memi_named"
+ },
+ "arm": "memi",
+ "reset_digest": "c39ece7a0c556a6b",
+ "success": true,
+ "run_id": "g1_20261101T2128Z",
+ "provenance": {
+  "manifest_sha": "75ee3199ac0853fe",
+  "arbiter_commit": "ac55555361a0343ad008727327f683fc24885ba5",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1020400,
+   "difficulty": "easy",
+   "episode_count": 50
+  },
+  "factorial": null
+ },
+ "terminal": {
+  "status": "success",
+  "reason": "environment_success",
+  "phase": "environment",
+  "primary_eligible": true,
+  "primary_success": true,
+  "elapsed_s": 92.7
+ },
+ "watchdog": {
+  "triggered": false
+ },
+ "event_log": "/workspace/ArbiterKB/results/robomme_common/memory_or_policy_g1/g1_20261101T2128Z/pilot/clean/StopCube_ep4_memi/events.jsonl"
+}

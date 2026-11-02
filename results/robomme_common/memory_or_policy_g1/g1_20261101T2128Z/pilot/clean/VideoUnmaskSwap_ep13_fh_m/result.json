@@ -1,0 +1,154 @@
+{
+ "task": "VideoUnmaskSwap",
+ "episode": 13,
+ "split": "val",
+ "goal": "watch the video carefully, then pick up the container hiding the blue cube",
+ "menu": [
+  {
+   "label": "a",
+   "action": "pick up the container",
+   "need_parameter": true
+  },
+  {
+   "label": "b",
+   "action": "put down the container",
+   "need_parameter": false
+  }
+ ],
+ "demo": {
+  "steps": 9,
+  "chars": 1009
+ },
+ "decisions": [
+  {
+   "index": 0,
+   "t_from": 114,
+   "t_to": 114,
+   "steps": 1,
+   "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [82, 133]\n  green cube at [117, 98]\n  red cube at [118, 167]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [82, 133]\n  green cube at [117, 98]\n  red cube at [118, 167]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [80, 133], [115, 97], [115, 168]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [80, 133], [115, 97], [115, 168]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [80, 133], [115, 97], [115, 168]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 149], [112, 148], [115, 97]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [97, 130], [97, 168], [115, 97]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 133], [113, 168], [115, 97]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 133], [113, 168], [115, 97]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 133], [113, 168], [115, 97]",
+   "demo_steps": 9,
+   "command": {
+    "choice": "a",
+    "point": [
+     82,
+     133
+    ]
+   },
+   "result": "executed",
+   "error": "",
+   "batch": 113,
+   "captured": 113,
+   "terminated": true,
+   "status": "fail",
+   "seconds": 31.94
+  }
+ ],
+ "outcome": "fail",
+ "error": "",
+ "capture_errors": [],
+ "demo_rows": 115,
+ "reset_batch": 115,
+ "policy": {
+  "name": "fh_m",
+  "memory_kind": "fh",
+  "policy_kind": "m",
+  "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+  "system_sha256": "44c915e9cae6a7d254d371fb53df167a4afc194f202f28984923227d90839bd0",
+  "model": "openai/gpt-6-luna",
+  "effort": "low",
+  "models_returned": [
+   "openai/gpt-6-luna"
+  ],
+  "calls": {
+   "decide": 1
+  },
+  "statuses": {
+   "valid": 1
+  },
+  "usage": {
+   "input_tokens": 1738,
+   "cached_tokens": 0,
+   "output_tokens": 43,
+   "reasoning_tokens": 23,
+   "latency": 1.571
+  },
+  "log": [
+   {
+    "kind": "decide",
+    "index": 0,
+    "status": "valid",
+    "raw": "{\"choice\":\"a\",\"point\":[82,133]}",
+    "command": {
+     "choice": "a",
+     "point": [
+      82,
+      133
+     ]
+    },
+    "memory_before": null,
+    "memory_updates": null,
+    "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+    "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "model_returned": "openai/gpt-6-luna",
+    "input_tokens": 1738,
+    "cached_tokens": 0,
+    "output_tokens": 43,
+    "reasoning_tokens": 23,
+    "error": "",
+    "cache_write_tokens": 1735,
+    "finish_reason": "stop",
+    "latency": 1.571,
+    "retries": 0,
+    "streamed": true,
+    "first_chunk_s": 1.399,
+    "ttft_s": 1.408,
+    "stream_s": 1.524
+   }
+  ]
+ },
+ "seconds": 58.7,
+ "video": {},
+ "observation": {
+  "mode": "clean",
+  "seed": 73301,
+  "dropout": 0.0,
+  "jitter_px": 0.0,
+  "bridge": "memi_named"
+ },
+ "arm": "fh_m",
+ "reset_digest": "515123a091f93007",
+ "success": false,
+ "run_id": "g1_20261101T2128Z",
+ "provenance": {
+  "manifest_sha": "75ee3199ac0853fe",
+  "arbiter_commit": "ac55555361a0343ad008727327f683fc24885ba5",
+  "arbiter_dirty": false,
+  "sources": {
+   "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+   "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+   "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "params_sha": "fe4e94112a74",
+  "prompt_sha": "307eaf7ff479aeae",
+  "episode": {
+   "seed": 1051300,
+   "difficulty": "easy",
+   "episode_count": 50
+  },
+  "factorial": null
+ },
+ "terminal": {
+  "status": "task_failure",
+  "reason": "fail",
+  "phase": "environment",
+  "primary_eligible": true,
+  "primary_success": false,
+  "elapsed_s": 58.7
+ },
+ "watchdog": {
+  "triggered": false
+ },
+ "event_log": "/workspace/ArbiterKB/results/robomme_common/memory_or_policy_g1/g1_20261101T2128Z/pilot/clean/VideoUnmaskSwap_ep13_fh_m/events.jsonl"
+}
