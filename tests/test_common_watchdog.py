@@ -46,7 +46,7 @@ def hanging_worker(event_path, phase=None):
 
 @pytest.mark.parametrize(
     ("phase", "terminal_status", "primary_eligible"),
-    [("llm", "infrastructure_error", False), ("executor", "timeout", True)],
+    [("llm", "infrastructure_error", False), ("executor", "infrastructure_error", False)],
 )
 def test_phase_watchdog_kills_blocking_worker(tmp_path, phase, terminal_status, primary_eligible):
     events = tmp_path / phase / "events.jsonl"

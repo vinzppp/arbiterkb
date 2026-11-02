@@ -88,7 +88,7 @@ def _partial_policy(base: dict, events: list[dict]) -> dict:
 def _timeout_row(base: dict, events: list[dict], timeout: tuple, cleanup: str,
                  elapsed: float, event_path: Path) -> dict:
     phase, observed, limit = timeout
-    status = "infrastructure_error" if phase in {"reset", "llm"} else "timeout"
+    status = "infrastructure_error" if phase in {"reset", "llm", "executor"} else "timeout"
     reason = f"{phase}_wall_timeout: observed>{limit:.3f}s"
     return {**base, "policy": _partial_policy(base, events), "outcome": status,
             "success": False, "seconds": round(elapsed, 1),
@@ -104,10 +104,10 @@ def _exit_row(base: dict, events: list[dict], returncode: int,
     failure = next((event for event in reversed(events)
                     if event.get("event") == "terminal_error"), {})
     if returncode < 0:
-        status, reason = "incomplete", f"worker_signal_{-returncode}"
+        status, reason = "infrastructure_error", f"container_crash_worker_signal_{-returncode}"
     else:
         status = "infrastructure_error"
-        reason = str(failure.get("reason") or f"worker_exit_{returncode}_without_result")
+        reason = str(failure.get("reason") or f"container_crash_worker_exit_{returncode}_without_result")
     return {**base, "policy": _partial_policy(base, events), "outcome": status,
             "success": False, "seconds": round(elapsed, 1),
             "terminal": terminal_record(status, reason, str(failure.get("phase", "worker")), elapsed),

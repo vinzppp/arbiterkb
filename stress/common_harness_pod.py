@@ -22,6 +22,15 @@ from arbiter_kb import ledger  # noqa: E402
 from arbiter_kb.experiment_manifest import digest, load_manifest  # noqa: E402
 from arbiter_kb.params import Params  # noqa: E402
 from arbiter_kb.common_supervisor import supervise_cell  # noqa: E402
+from arbiter_kb.confirmation_retry import (  # noqa: E402
+    execute_with_retries,
+    infrastructure_reason,
+    mark_existing_pair_rows,
+    pair_drop_path,
+    pair_signature,
+    record_pair_drop,
+    retry_identity,
+)
 from arbiter_kb.common_watchdog import (  # noqa: E402
     EventSink,
     WatchdogSpec,
@@ -112,7 +121,7 @@ def row_provenance(a, spec, stage, task, episode, sources):
 
 
 def base_result(a, spec, stage, task, episode, arm, cfg, sources):
-    return {
+    row = {
         "run_id": a.run_id,
         "task": task,
         "episode": episode,
@@ -122,6 +131,8 @@ def base_result(a, spec, stage, task, episode, arm, cfg, sources):
         "policy": {"model": spec["model"], "effort": spec["effort"], "log": []},
         "provenance": row_provenance(a, spec, stage, task, episode, sources),
     }
+    row["retry_identity"] = retry_identity(row)
+    return row
 
 
 def _write_json(path: Path, row: dict):
@@ -166,11 +177,11 @@ def run_supervised_one(a, spec, stage, sources, task, episode, arm, cfg):
         partial = read_events(events)
         row = {
             **base,
-            "outcome": "incomplete",
+            "outcome": "infrastructure_error",
             "success": False,
             "seconds": float(partial[-1].get("elapsed_s", 0)) if partial else 0.0,
             "terminal": terminal_record(
-                "incomplete", "stale_event_log_without_result", "supervisor", 0.0),
+                "infrastructure_error", "container_crash_stale_event_log_without_result", "supervisor", 0.0),
             "watchdog": {"triggered": False, "cleanup": "supervisor_was_interrupted"},
             "partial_events": partial,
             "event_log": str(events),
@@ -191,12 +202,60 @@ def run_supervised_one(a, spec, stage, sources, task, episode, arm, cfg):
 def run_parent(a, spec, stage, sources):
     finished = 0
     arms = spec["arms"][:1] if stage["backend"] == "scripted" else spec["arms"]
+    retry_policy = spec.get("infrastructure_retry") or {}
+    strict_retry = a.stage in set(retry_policy.get("enabled_stages") or [])
+    max_reruns = int(retry_policy.get("max_reruns_per_cell", 0))
     for cfg in stage["observations"]:
         cell = cell_name(cfg)
         for task in spec["tasks"]:
             for episode in stage_episodes(stage, task):
+                drop = pair_drop_path(a.out, a.stage, cell, task, episode)
+                if strict_retry and drop.exists():
+                    record = json.loads(drop.read_text())
+                    paths = [result_path(a.out, a.stage, cell, task, episode, item) for item in arms]
+                    mark_existing_pair_rows(paths, drop, record)
+                    print(f"pair already dropped: {task} ep{episode}", flush=True)
+                    continue
+                reference = None
                 for arm in arms:
                     path = result_path(a.out, a.stage, cell, task, episode, arm)
+                    events = event_path(a.out, a.stage, cell, task, episode, arm)
+                    if strict_retry:
+                        base = base_result(a, spec, stage, task, episode, arm, cfg, sources)
+
+                        def run_once():
+                            rc = run_supervised_one(a, spec, stage, sources, task, episode, arm, cfg)
+                            if rc:
+                                raise RuntimeError(f"supervised cell returned {rc}: {task} ep{episode} {arm}")
+
+                        outcome = execute_with_retries(
+                            result_path=path,
+                            event_path=events,
+                            expected_model=spec["model"],
+                            expected_identity=base["retry_identity"],
+                            reference=reference,
+                            max_reruns=max_reruns,
+                            run_once=run_once,
+                        )
+                        if outcome.exhausted_reason:
+                            record = record_pair_drop(
+                                drop, task=task, episode=episode, arms=list(arms), failed_arm=arm,
+                                exhausted=outcome, reference=reference)
+                            paths = [result_path(a.out, a.stage, cell, task, episode, item) for item in arms]
+                            mark_existing_pair_rows(paths, drop, record)
+                            print(f"dropped all arms for {task} ep{episode}: {outcome.exhausted_reason}", flush=True)
+                            break
+                        terminal = (outcome.row.get("terminal") or {}).get("status")
+                        if terminal in {"infrastructure_error", "incomplete"} and not infrastructure_reason(
+                                outcome.row, spec["model"], reference):
+                            print(f"stage stopped on non-preregistered unscored failure: "
+                                  f"{task} ep{episode} {arm}", flush=True)
+                            return 4
+                        if reference is None:
+                            reference = pair_signature(outcome.row)
+                        if path.exists():
+                            finished += 1
+                        continue
                     if path.exists():
                         if spec.get("watchdog"):
                             finished += 1
@@ -307,7 +366,8 @@ def args():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", type=Path, default=ROOT / "experiments/robomme_common_v1.json")
     ap.add_argument("--stage", required=True,
-                    choices=("executor_preflight", "smoke", "validation", "pilot", "degradation", "heldout"))
+                    choices=("executor_preflight", "smoke", "validation", "pilot", "confirmation",
+                             "degradation", "heldout"))
     ap.add_argument("--memi-root", type=Path, required=True)
     ap.add_argument("--out", type=Path, default=Path("/workspace/robomme_common"))
     ap.add_argument("--run-id")
@@ -373,8 +433,8 @@ def main():
     if branch in ("main", "master") or branch != spec["research_branch"]:
         raise SystemExit(f"refusing branch {branch!r}; expected {spec['research_branch']!r}")
     stage, sources = spec["stages"][a.stage], verify_sources(a.memi_root, spec)
-    if a.stage == "pilot" and source_dirty():
-        raise SystemExit("factorial pilot refuses a dirty source tree; commit the frozen protocol first")
+    if a.stage in {"pilot", "confirmation"} and source_dirty():
+        raise SystemExit(f"{a.stage} refuses a dirty source tree; commit the protocol first")
     os.environ.setdefault("SAPIEN_RENDER_DEVICE", "cpu")
     verify_stage_gate(a, stage, manifest_sha)
     verify_api_transport(spec, stage)
