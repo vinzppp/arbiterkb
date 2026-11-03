@@ -1,0 +1,273 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 9,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the red cube, finally pick up another container hiding the blue cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 9,
+    "chars": 1019
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 114,
+      "t_to": 114,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [105, 144]\n  green cube at [132, 118]\n  red cube at [88, 118]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [105, 144]\n  green cube at [132, 118]\n  red cube at [88, 118]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 117], [103, 144], [130, 118]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 117], [103, 144], [130, 118]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 117], [103, 144], [130, 118]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 132], [107, 130], [130, 118]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 145], [100, 115], [130, 118]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [86, 117], [102, 144], [130, 118]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [86, 117], [102, 144], [130, 118]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [86, 117], [102, 144], [130, 118]",
+      "demo_steps": 9,
+      "command": {
+        "choice": "a",
+        "point": [
+          103,
+          144
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 98,
+      "captured": 98,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.87
+    },
+    {
+      "index": 1,
+      "t_from": 115,
+      "t_to": 212,
+      "steps": 7,
+      "segment": "t=128\n  gripper raised out of the frame  fingers 100% open\n  container at [86, 117], [102, 144], [130, 118]\nt=144\n  gripper raised out of the frame  fingers 100% open\n  container at [86, 117], [102, 144], [130, 118]\nt=160\n  gripper at [57, 152]  height 0.200  fingers 100% open\n  container at [86, 117], [102, 144], [130, 118]\nt=176\n  gripper at [84, 148]  height 0.118  fingers 100% open\n  container at [89, 116], [102, 144], [130, 118]\nt=192\n  gripper at [96, 146]  height 0.064  fingers 46% open\n  container at [105, 144] is held in the gripper\n  container at [86, 112], [130, 118]\nt=208\n  gripper at [66, 153]  height 0.180  fingers 46% open\n  container at [77, 152] is held in the gripper\n  container at [85, 117], [130, 118]\n  red cube at [106, 144]\nt=212\n  gripper at [61, 154]  height 0.195  fingers 46% open\n  container at [72, 153] is held in the gripper\n  container at [85, 117], [130, 118]\n  red cube at [106, 144]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 51,
+      "captured": 51,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.7
+    },
+    {
+      "index": 2,
+      "t_from": 213,
+      "t_to": 263,
+      "steps": 4,
+      "segment": "t=224\n  gripper at [78, 150]  height 0.140  fingers 46% open\n  container at [85, 117], [130, 118]\n  container at [88, 149] is held in the gripper\n  red cube at [106, 144]\nt=240\n  gripper at [95, 147]  height 0.068  fingers 93% open\n  container at [87, 113], [104, 146], [130, 118]\nt=256\n  gripper at [78, 150]  height 0.136  fingers 100% open\n  container at [88, 116], [102, 145], [130, 118]\nt=263\n  gripper at [74, 151]  height 0.149  fingers 100% open\n  container at [86, 117], [102, 145], [130, 118]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          102,
+          145
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 76,
+      "captured": 76,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 4.82
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 115,
+  "reset_batch": 115,
+  "policy": {
+    "name": "ld_g",
+    "memory_kind": "ld",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "3dd534ad42ff2295de632a390ccac218f70f8940bc780f807c46aee809403fc6",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 3
+    },
+    "statuses": {
+      "valid": 3
+    },
+    "usage": {
+      "input_tokens": 5834,
+      "cached_tokens": 2418,
+      "output_tokens": 251,
+      "reasoning_tokens": 193,
+      "latency": 8.374
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[103,144]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            103,
+            144
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: not visible now; last seen t=31 at pixel [105, 144]\n  [bin_0] container: visible at pixel [130, 118]\n  [bin_1] container: visible at pixel [103, 144]\n  [bin_2] container: visible at pixel [85, 117]\n  [cube_green] cube: not visible now; last seen t=31 at pixel [132, 118]\n  [cube_red] cube: not visible now; last seen t=31 at pixel [88, 118]\nCover relations (observed; a covered cube moves with its container):\n  [cube_blue] -> bin_2\n  [cube_green] -> bin_0\n  [cube_red] -> bin_1\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  t=32 cube_blue disappeared; covered by bin_2\n  t=32 cube_green disappeared; covered by bin_0\n  t=32 cube_red disappeared; covered by bin_1\nExecuted options (execution phase only, oldest first):\n  none\nExecuted option counts:\n  none",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2013,
+        "cached_tokens": 0,
+        "output_tokens": 52,
+        "reasoning_tokens": 32,
+        "error": "",
+        "cache_write_tokens": 2010,
+        "finish_reason": "stop",
+        "reasoning": "**Choosing color containers**\n\nI’m tasked with picking a container hiding red and then another container hiding blue. Currently, the red bin is at coordinates 103,144, but I need to choose another point. I wonder how many options there are for the blue container. It seems straightforward, but I want to make sure I don’t overlook any details. Alright, let’s find the right location for both color containers efficiently!",
+        "latency": 2.187,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.584,
+        "ttft_s": 2.06,
+        "stream_s": 2.183
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: not visible now; last seen t=31 at pixel [105, 144]\n  [bin_0] container: visible at pixel [130, 118]\n  [bin_1] container: visible at pixel [72, 153]\n  [bin_2] container: visible at pixel [85, 117]\n  [cube_green] cube: not visible now; last seen t=31 at pixel [132, 118]\n  [cube_red] cube: visible at pixel [105, 144]\nCover relations (observed; a covered cube moves with its container):\n  [cube_blue] -> bin_2\n  [cube_green] -> bin_0\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  t=32 cube_blue disappeared; covered by bin_2\n  t=32 cube_green disappeared; covered by bin_0\n  t=32 cube_red disappeared; covered by bin_1\nExecuted options (execution phase only, oldest first):\n  1. a: pick up the container at [103, 144] -> executed, status ongoing\nExecuted option counts:\n  a: pick up the container: 1",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1967,
+        "cached_tokens": 1209,
+        "output_tokens": 83,
+        "reasoning_tokens": 65,
+        "error": "",
+        "cache_write_tokens": 755,
+        "finish_reason": "stop",
+        "reasoning": "**Considering container tasks**\n\nI've got a red cover in hand, and I need to figure out how to put it down. My goal is to pick up a container that’s hiding a red cube, and then there's another one with a blue cube. So, I think I should set down the red cover before I can grab the blue cover from bin_2 at coordinates 85,117. Alright, let's make sure I accomplish this step by step!",
+        "latency": 2.753,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.872,
+        "ttft_s": 2.672,
+        "stream_s": 2.75
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[102,145]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            102,
+            145
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: not visible now; last seen t=31 at pixel [105, 144]\n  [bin_0] container: visible at pixel [130, 118]\n  [bin_1] container: visible at pixel [102, 145]\n  [bin_2] container: visible at pixel [86, 117]\n  [cube_green] cube: not visible now; last seen t=31 at pixel [132, 118]\n  [cube_red] cube: not visible now; last seen t=230 at pixel [111, 145]\nCover relations (observed; a covered cube moves with its container):\n  [cube_blue] -> bin_2\n  [cube_green] -> bin_0\n  [cube_red] -> bin_1\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  t=32 cube_blue disappeared; covered by bin_2\n  t=32 cube_green disappeared; covered by bin_0\n  t=32 cube_red disappeared; covered by bin_1\nExecuted options (execution phase only, oldest first):\n  1. a: pick up the container at [103, 144] -> executed, status ongoing\n  2. b: put down the container -> executed, status ongoing\nExecuted option counts:\n  a: pick up the container: 1\n  b: put down the container: 1",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1854,
+        "cached_tokens": 1209,
+        "output_tokens": 116,
+        "reasoning_tokens": 96,
+        "error": "",
+        "cache_write_tokens": 642,
+        "finish_reason": "stop",
+        "reasoning": "**Deciding on container pick-up**\n\nI need to pick up a red container that's hiding. It looks like there's another blue container I should grab afterward. Right now, I see that red bin_1 is at coordinates 102, 145, and blue bin_2 is at 86, 117. Previously, I picked something up from a red bin at 103, 144, but now the red cube seems to be absent, likely covered. I should retrieve that red container now before moving on to the blue one.",
+        "latency": 3.434,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.122,
+        "ttft_s": 3.313,
+        "stream_s": 3.432
+      }
+    ]
+  },
+  "seconds": 14.5,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "ld_g",
+  "reset_digest": "a150a67c52bdcd25",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 550900,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 14.5
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep9_ld_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 550900,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "a150a67c52bdcd25",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

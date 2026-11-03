@@ -1,0 +1,177 @@
+{
+  "task": "RouteStick",
+  "episode": 24,
+  "split": "test",
+  "goal": "watch the video carefully, then use the stick attached to the robot to navigate around the sticks on the table, following the same path",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the nearest left target by circling around the stick clockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "move to the nearest right target by circling around the stick clockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "move to the nearest left target by circling around the stick counterclockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "move to the nearest right target by circling around the stick counterclockwise",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 8,
+    "chars": 1799
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 100,
+      "t_to": 100,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper at [80, 174]  height 0.070  fingers 4539% open\n  cube at [63, 84], [70, 117], [78, 153], [87, 192]\n  highlighted target at [91, 168]\n  target at [69, 73], [76, 103], [83, 134], [100, 205]\nt=16\n  gripper at [102, 184]  height 0.070  fingers 4288% open\n  cube at [63, 84], [70, 117], [78, 153], [95, 190]\n  highlighted target at [91, 168]\n  target at [69, 73], [76, 103], [83, 134], [100, 205]\n  waypoint at [112, 177]\nt=32\n  gripper at [106, 200]  height 0.070  fingers 4289% open\n  cube at [63, 84], [70, 117], [78, 153], [97, 188]\n  highlighted target at [91, 168]\n  target at [69, 73], [76, 103], [83, 134], [101, 207]\n  waypoint at [114, 192]\nt=48\n  gripper at [90, 216]  height 0.070  fingers 4557% open\n  cube at [63, 84], [70, 117], [78, 153], [88, 192]\n  highlighted target at [100, 205]\n  target at [69, 73], [76, 103], [83, 134], [91, 168]\n  waypoint at [103, 203]\nt=64\n  gripper at [105, 203]  height 0.070  fingers 4297% open\n  cube at [63, 84], [70, 117], [78, 153], [94, 189]\n  highlighted target at [100, 205]\n  target at [69, 73], [76, 103], [83, 134], [91, 168]\n  waypoint at [115, 193]\nt=80\n  gripper at [104, 186]  height 0.070  fingers 4269% open\n  cube at [63, 84], [70, 117], [78, 153], [95, 186]\n  highlighted target at [100, 205]\n  target at [69, 73], [76, 103], [83, 134], [91, 168]\n  waypoint at [113, 178]\nt=96\n  gripper at [81, 175]  height 0.070  fingers 4516% open\n  cube at [63, 84], [70, 117], [80, 153], [88, 192]\n  highlighted target at [91, 168]\n  target at [69, 73], [76, 103], [83, 134], [100, 205]\n  waypoint at [96, 169]\nt=99\n  gripper at [81, 174]  height 0.070  fingers 4526% open\n  cube at [63, 84], [70, 117], [80, 153], [88, 192]\n  highlighted target at [91, 168]\n  target at [69, 73], [76, 103], [83, 134], [100, 205]\n  waypoint at [96, 169]\nEXECUTION STEPS\nt=100\n  gripper at [80, 174]  height 0.070  fingers 4539% open\n  cube at [63, 84], [70, 117], [80, 153], [88, 192]\n  highlighted target at [91, 168]\n  target at [69, 73], [76, 103], [83, 134], [100, 205]",
+      "demo_steps": 8,
+      "command": {
+        "choice": "a",
+        "point": [
+          100,
+          205
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 9.88
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 101,
+  "reset_batch": 101,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2162,
+      "cached_tokens": 0,
+      "output_tokens": 613,
+      "reasoning_tokens": 593,
+      "latency": 7.608
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[100,205]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            100,
+            205
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2162,
+        "cached_tokens": 0,
+        "output_tokens": 613,
+        "reasoning_tokens": 593,
+        "error": "",
+        "cache_write_tokens": 2159,
+        "finish_reason": "stop",
+        "reasoning": "**Analyzing robot path**\n\nI'm considering how the robot needs to follow a path from the highlighted point [91,168] to the target [100,205], navigating around obstacles. There are nearby target positions like [83,134] on one side and [100,205] on the other. It seems I need to choose the next target direction and determine the best way to replicate the demonstrated path. The robot will take waypoints like [112,177] and [114,192] as it moves along the route.**Determining path direction**\n\nI'm figuring out how to navigate around obstacles, particularly focusing on the cube at [88,192] near the endpoint. The robot starts at [80,174] and moves to the target at [91,168], with a potential path leading to [100,205] via waypoints like [112,177] and [114,192]. I need to select the left target, which is likely [100,205] in a clockwise direction. It looks like the route should curve around the obstacle, so I’m concerned about maintaining the right trajectory.**Analyzing movement coordinates**\n\nI’m considering the image coordinates where x goes right and y goes down. The movement path is clockwise: starting from above the obstacle at [88,192], moving to [112,177] which is upper-right, then [114,192] to the right, and finally to [103,203] lower-right. I’m confirming that it is indeed clockwise. I need to choose the nearest left target in this clockwise path, which leads me to point target [100,205].",
+        "latency": 7.608,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.402,
+        "ttft_s": 7.484,
+        "stream_s": 7.604
+      }
+    ]
+  },
+  "seconds": 21.8,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "2da76f689bd4d2ba",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 662400,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 21.8
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/RouteStick_ep24_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 662400,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "2da76f689bd4d2ba",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

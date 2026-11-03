@@ -1,0 +1,166 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 22,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the red cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 9,
+    "chars": 1078
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 114,
+      "t_to": 114,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [90, 92]\n  green cube at [137, 146]\n  red cube at [72, 134]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [90, 92]\n  green cube at [137, 146]\n  red cube at [72, 134]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [69, 134], [87, 91], [93, 169], [135, 147]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [69, 134], [87, 91], [93, 169], [135, 147]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [69, 134], [87, 91], [93, 169], [135, 147]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [69, 149], [87, 91], [94, 152], [135, 147]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [78, 167], [83, 134], [87, 91], [135, 147]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [71, 134], [87, 91], [93, 170], [135, 147]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [71, 134], [87, 91], [93, 170], [135, 147]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [71, 134], [87, 91], [93, 170], [135, 147]",
+      "demo_steps": 9,
+      "command": {
+        "choice": "a",
+        "point": [
+          93,
+          170
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 105,
+      "captured": 105,
+      "terminated": true,
+      "status": "success",
+      "seconds": 2.95
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 115,
+  "reset_batch": 115,
+  "policy": {
+    "name": "kb_g",
+    "memory_kind": "kb",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "3dd534ad42ff2295de632a390ccac218f70f8940bc780f807c46aee809403fc6",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2928,
+      "cached_tokens": 0,
+      "output_tokens": 18,
+      "reasoning_tokens": 0,
+      "latency": 1.083
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[93,170]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            93,
+            170
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: watch the video carefully, then pick up the container hiding the red cube\nTask items (named by the goal): container, red cube\nObjects (world frame, m):\n  [cube_blue] blue cube, hidden: see Inside below, last seen t=31\n  [bin_0] container (task item), visible at 0.145, 0.062, 0.053, last seen t=114 [o114:bin_0]\n  [bin_1] container (task item), visible at -0.051, -0.138, 0.053, last seen t=114 [o114:bin_1]\n  [bin_2] container (task item), visible at -0.024, 0.157, 0.053, last seen t=114 [o114:bin_2]\n  [bin_3] container (task item), visible at -0.151, 0.028, 0.052, last seen t=114 [o114:bin_3]\n  [cube_green] green cube, hidden: see Inside below, last seen t=31\n  [cube_red] red cube (task item), hidden: see Inside below, last seen t=31\nRelations:\n  [Inside(cube_blue)] bin_1 0.99 | elsewhere 0.01  [e4,o32:bin_1]\n  [Inside(cube_green)] bin_0 0.99 | elsewhere 0.01  [e9,o32:bin_0]\n  [Inside(cube_red)] bin_2 0.99 | elsewhere 0.01 | bin_3 0.00  [e10,e15,o32:bin_2]\nEvent log (oldest first):\n  [v1] t=32 cube_blue covered by bin_1 at (-0.05, -0.14) (conf 0.99) [e4]; from then on it moves with bin_1\n  [v2] t=32 cube_green covered by bin_0 at (0.14, 0.06) (conf 0.99) [e9]; from then on it moves with bin_0\n  [v3] t=32 cube_red covered by bin_2 at (-0.15, 0.03) (conf 0.99) [e10]; from then on it moves with bin_2\n  [e13] t=114 bin_2 moved (-0.15, 0.04) -> (-0.02, 0.16) (t=69-114)\n  [e14] t=114 bin_3 moved (-0.02, 0.15) -> (-0.15, 0.03) (t=69-114)\n  [e15] t=114 bin_2, bin_3 passed close to each other, closest 13.4 cm (detected)\n  [v4] t=114 bin_2 and bin_3 passed close (identity may be confused: see Inside)\nJoined facts (computed from the memory above):\n  Containers from the robot's left to its right: bin_2, bin_0, bin_3, bin_1.\n  Containers from nearest to farthest from the robot: bin_3, bin_1, bin_2, bin_0.\n  bin_0: on the robot's left, number 4 from the robot; may hold the green cube (0.99); moved 0 times.\n  bin_1: on the robot's right, number 2 from the robot; may hold the blue cube (0.99); moved 0 times.\n  bin_2: on the robot's left, number 3 from the robot; may hold the red cube (0.99); moved 1 time, last at t=69-114 together with bin_3.\n  bin_3: in the middle, nearest to the robot; holds no cube as far as the memory knows; moved 1 time, last at t=69-114 together with bin_2.\n  the blue cube: hidden since t=32, under bin_1 (0.99; bin_1 has moved 0 times since, and the cube moved with it).\n  the green cube: hidden since t=32, under bin_0 (0.99; bin_0 has moved 0 times since, and the cube moved with it).\n  the red cube (task item): hidden since t=32, under bin_2 (0.99; bin_2 has moved 1 time since, and the cube moved with it).\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  none\nVisible object-to-pixel lookup:\n  [bin_0] container at pixel [136, 147]\n  [bin_1] container at pixel [87, 91]\n  [bin_2] container at pixel [93, 170]\n  [bin_3] container at pixel [69, 134]",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2928,
+        "cached_tokens": 0,
+        "output_tokens": 18,
+        "reasoning_tokens": 0,
+        "error": "",
+        "cache_write_tokens": 2925,
+        "finish_reason": "stop",
+        "latency": 1.083,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 0.911,
+        "ttft_s": 0.911,
+        "stream_s": 1.081
+      }
+    ]
+  },
+  "seconds": 5.3,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "kb_g",
+  "reset_digest": "1e7f7eccbbe81cf1",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 552200,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 5.3
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep22_kb_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 552200,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "1e7f7eccbbe81cf1",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

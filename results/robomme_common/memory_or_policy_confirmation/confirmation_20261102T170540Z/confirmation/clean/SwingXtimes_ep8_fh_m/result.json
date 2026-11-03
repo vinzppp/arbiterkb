@@ -1,0 +1,609 @@
+{
+  "task": "SwingXtimes",
+  "episode": 8,
+  "split": "test",
+  "goal": "pick up the blue cube, move it to the top of the right-side target, then move it to the top of the left-side target, repeating this back-and-forth motion three times, finally press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "move to the top of the target",
+      "need_parameter": true
+    },
+    {
+      "label": "c",
+      "action": "put the cube on the table",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "press the button",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [116, 79]\n  button at [68, 170]\n  target at [80, 90], [94, 175]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          116,
+          79
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 111,
+      "captured": 111,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.59
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 111,
+      "steps": 7,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [116, 79]\n  button at [68, 170]\n  target at [80, 90], [94, 175]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [116, 79]\n  button at [68, 170]\n  target at [80, 90], [94, 175]\nt=48\n  gripper at [86, 62]  height 0.151  fingers 100% open\n  blue cube at [116, 79]\n  button at [68, 170]\n  target at [80, 90], [94, 175]\nt=64\n  gripper at [94, 66]  height 0.125  fingers 100% open\n  blue cube at [116, 79]\n  button at [68, 170]\n  target at [80, 90], [94, 175]\nt=80\n  gripper at [117, 81]  height 0.018  fingers 100% open\n  blue cube at [120, 81]\n  button at [68, 170]\n  target at [76, 88], [94, 175]\nt=96\n  gripper at [111, 78]  height 0.051  fingers 46% open\n  blue cube at [114, 79] is held in the gripper\n  button at [68, 170]\n  target at [78, 99], [94, 175]\nt=111\n  gripper at [89, 65]  height 0.150  fingers 46% open\n  blue cube at [89, 64] is held in the gripper\n  button at [68, 170]\n  target at [80, 90], [94, 175]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          80,
+          90
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 38,
+      "captured": 38,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 2.57
+    },
+    {
+      "index": 2,
+      "t_from": 112,
+      "t_to": 149,
+      "steps": 4,
+      "segment": "t=112\n  gripper at [89, 65]  height 0.149  fingers 46% open\n  blue cube at [89, 64] is held in the gripper\n  button at [68, 170]\n  target at [80, 90], [94, 175]\nt=128\n  gripper at [79, 72]  height 0.135  fingers 46% open\n  blue cube at [78, 72] is held in the gripper\n  button at [68, 170]\n  target at [80, 90], [94, 175]\nt=144\n  gripper at [61, 84]  height 0.103  fingers 46% open\n  blue cube at [60, 84] is held in the gripper\n  button at [68, 170]\n  highlighted target at [80, 90]\n  target at [94, 175]\nt=149\n  gripper at [60, 85]  height 0.100  fingers 46% open\n  blue cube at [60, 84] is held in the gripper\n  button at [68, 170]\n  highlighted target at [80, 90]\n  target at [94, 175]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          94,
+          175
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 36,
+      "captured": 36,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 5.48
+    },
+    {
+      "index": 3,
+      "t_from": 150,
+      "t_to": 185,
+      "steps": 3,
+      "segment": "t=160\n  gripper at [61, 96]  height 0.100  fingers 46% open\n  blue cube at [60, 94] is held in the gripper\n  button at [68, 170]\n  highlighted target at [80, 90]\n  target at [94, 175]\nt=176\n  gripper at [70, 165]  height 0.100  fingers 46% open\n  blue cube at [71, 167] is held in the gripper\n  button at [69, 175]\n  highlighted target at [80, 90]\n  target at [94, 175]\nt=185\n  gripper at [72, 186]  height 0.100  fingers 46% open\n  blue cube at [73, 186] is held in the gripper\n  highlighted target at [94, 175]\n  target at [80, 90]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          80,
+          90
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 36,
+      "captured": 36,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.8
+    },
+    {
+      "index": 4,
+      "t_from": 186,
+      "t_to": 221,
+      "steps": 3,
+      "segment": "t=192\n  gripper at [72, 182]  height 0.099  fingers 46% open\n  blue cube at [73, 186] is held in the gripper\n  highlighted target at [94, 175]\n  target at [80, 90]\nt=208\n  gripper at [63, 117]  height 0.100  fingers 46% open\n  blue cube at [62, 118] is held in the gripper\n  button at [68, 172]\n  highlighted target at [94, 175]\n  target at [80, 90]\nt=221\n  gripper at [58, 87]  height 0.100  fingers 46% open\n  blue cube at [57, 88] is held in the gripper\n  button at [68, 172]\n  highlighted target at [80, 90]\n  target at [94, 175]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          94,
+          175
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 36,
+      "captured": 36,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.56
+    },
+    {
+      "index": 5,
+      "t_from": 222,
+      "t_to": 257,
+      "steps": 4,
+      "segment": "t=224\n  gripper at [58, 87]  height 0.099  fingers 46% open\n  blue cube at [57, 88] is held in the gripper\n  button at [68, 172]\n  highlighted target at [80, 90]\n  target at [94, 175]\nt=240\n  gripper at [64, 128]  height 0.100  fingers 46% open\n  blue cube at [64, 128] is held in the gripper\n  button at [68, 172]\n  highlighted target at [80, 90]\n  target at [94, 175]\nt=256\n  gripper at [72, 185]  height 0.100  fingers 46% open\n  blue cube at [73, 186] is held in the gripper\n  highlighted target at [94, 175]\n  target at [80, 90]\nt=257\n  gripper at [72, 186]  height 0.100  fingers 46% open\n  blue cube at [73, 186] is held in the gripper\n  highlighted target at [94, 175]\n  target at [80, 90]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          80,
+          90
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 36,
+      "captured": 36,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.65
+    },
+    {
+      "index": 6,
+      "t_from": 258,
+      "t_to": 293,
+      "steps": 3,
+      "segment": "t=272\n  gripper at [68, 156]  height 0.099  fingers 46% open\n  blue cube at [69, 158] is held in the gripper\n  button at [68, 172]\n  highlighted target at [94, 175]\n  target at [80, 90]\nt=288\n  gripper at [59, 92]  height 0.100  fingers 46% open\n  blue cube at [58, 94] is held in the gripper\n  button at [68, 172]\n  highlighted target at [80, 90]\n  target at [94, 175]\nt=293\n  gripper at [58, 87]  height 0.100  fingers 46% open\n  blue cube at [57, 88] is held in the gripper\n  button at [68, 172]\n  highlighted target at [80, 90]\n  target at [94, 175]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          94,
+          175
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 34,
+      "captured": 34,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 5.67
+    },
+    {
+      "index": 7,
+      "t_from": 294,
+      "t_to": 327,
+      "steps": 3,
+      "segment": "t=304\n  gripper at [63, 96]  height 0.100  fingers 46% open\n  blue cube at [62, 96] is held in the gripper\n  button at [68, 172]\n  highlighted target at [80, 90]\n  target at [94, 175]\nt=320\n  gripper at [76, 170]  height 0.100  fingers 46% open\n  blue cube at [77, 172] is held in the gripper\n  highlighted target at [80, 90]\n  target at [94, 175]\nt=327\n  gripper at [75, 185]  height 0.100  fingers 46% open\n  blue cube at [76, 186] is held in the gripper\n  highlighted target at [94, 175]\n  target at [80, 90]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 36,
+      "captured": 36,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 5.29
+    },
+    {
+      "index": 8,
+      "t_from": 328,
+      "t_to": 363,
+      "steps": 3,
+      "segment": "t=336\n  gripper at [81, 182]  height 0.075  fingers 46% open\n  blue cube at [82, 184] is held in the gripper\n  highlighted target at [94, 175]\n  target at [80, 90]\nt=352\n  gripper at [75, 185]  height 0.099  fingers 100% open\n  blue cube at [89, 178]\n  highlighted target at [97, 175]\n  target at [80, 90]\nt=363\n  gripper at [61, 191]  height 0.150  fingers 100% open\n  blue cube at [89, 178]\n  button at [68, 170]\n  highlighted target at [97, 175]\n  target at [80, 90]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "d",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 95,
+      "captured": 95,
+      "terminated": true,
+      "status": "success",
+      "seconds": 4.93
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "fh_m",
+    "memory_kind": "fh",
+    "policy_kind": "m",
+    "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+    "system_sha256": "0f9de35e9ea49963caa38ff4fd14c4b58a03ef6a025de3b25d4d6f3fc23be94b",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 9
+    },
+    "statuses": {
+      "valid": 9
+    },
+    "usage": {
+      "input_tokens": 27925,
+      "cached_tokens": 23482,
+      "output_tokens": 835,
+      "reasoning_tokens": 659,
+      "latency": 28.809
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[116,79]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            116,
+            79
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1562,
+        "cached_tokens": 0,
+        "output_tokens": 35,
+        "reasoning_tokens": 15,
+        "error": "",
+        "cache_write_tokens": 1559,
+        "finish_reason": "stop",
+        "latency": 1.697,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.552,
+        "ttft_s": 1.571,
+        "stream_s": 1.693
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[80,90]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            80,
+            90
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2096,
+        "cached_tokens": 1559,
+        "output_tokens": 44,
+        "reasoning_tokens": 24,
+        "error": "",
+        "cache_write_tokens": 534,
+        "finish_reason": "stop",
+        "latency": 1.686,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.533,
+        "ttft_s": 1.55,
+        "stream_s": 1.684
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[94,175]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            94,
+            175
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2485,
+        "cached_tokens": 2093,
+        "output_tokens": 277,
+        "reasoning_tokens": 257,
+        "error": "",
+        "cache_write_tokens": 389,
+        "finish_reason": "stop",
+        "latency": 4.788,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.654,
+        "ttft_s": 4.663,
+        "stream_s": 4.785
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[80,90]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            80,
+            90
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2801,
+        "cached_tokens": 2482,
+        "output_tokens": 130,
+        "reasoning_tokens": 110,
+        "error": "",
+        "cache_write_tokens": 316,
+        "finish_reason": "stop",
+        "latency": 3.133,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.957,
+        "ttft_s": 2.97,
+        "stream_s": 3.13
+      },
+      {
+        "kind": "decide",
+        "index": 4,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[94,175]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            94,
+            175
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3117,
+        "cached_tokens": 2798,
+        "output_tokens": 50,
+        "reasoning_tokens": 30,
+        "error": "",
+        "cache_write_tokens": 316,
+        "finish_reason": "stop",
+        "reasoning": "**Following directions for visits**\n\nI’m mapping out a sequence for visits. First, I take the right at t149, then take a left at t185, and follow up with a right at t221.  After that, I notice I have an odd count of 3, so I’ll go left next. It feels a bit like following a treasure map! I’m curious if these directions lead somewhere interesting.",
+        "latency": 2.915,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.279,
+        "ttft_s": 2.791,
+        "stream_s": 2.912
+      },
+      {
+        "kind": "decide",
+        "index": 5,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[80,90]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            80,
+            90
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3496,
+        "cached_tokens": 3114,
+        "output_tokens": 71,
+        "reasoning_tokens": 51,
+        "error": "",
+        "cache_write_tokens": 379,
+        "finish_reason": "stop",
+        "reasoning": "**Calculating visit counts**\n\nI’m working with N=6 and tracking visit counts. At t149, I arrive at the right target. Then, moving left at t185 gives me a count of 2. Arriving right at t221 brings the count to 3, and moving left at t257 increases it to 4. Since I’m holding and the count is less than 6, I’ll choose to go right since it’s an even number.",
+        "latency": 2.88,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.941,
+        "ttft_s": 2.751,
+        "stream_s": 2.877
+      },
+      {
+        "kind": "decide",
+        "index": 6,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[94,175]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            94,
+            175
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3821,
+        "cached_tokens": 3493,
+        "output_tokens": 112,
+        "reasoning_tokens": 92,
+        "error": "",
+        "cache_write_tokens": 325,
+        "finish_reason": "stop",
+        "reasoning": "**Tracking visits and steps**\n\nI'm confirming that I have a goal of three repetitions to achieve six target visits. First, I moved right to complete the target at t149. Then, I made a left command to step 3-4, reaching left t185 for visit 2. Next, moving right to step 4-5 took me to t221 for visit 3. Following that, step 5-6 left me at t257 for visit 4. Continuing, I reached t293 for visit 5. Now, I’m held at the right target and planning to choose left for visit 6 before releasing.",
+        "latency": 3.866,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.541,
+        "ttft_s": 3.419,
+        "stream_s": 3.864
+      },
+      {
+        "kind": "decide",
+        "index": 7,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":null}",
+        "command": {
+          "choice": "c",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 4128,
+        "cached_tokens": 3818,
+        "output_tokens": 74,
+        "reasoning_tokens": 56,
+        "error": "",
+        "cache_write_tokens": 307,
+        "finish_reason": "stop",
+        "reasoning": "**Calculating visits count**\n\nI’m trying to figure out the total visits based on the moves I've made: I arrived at t149 (1), then turned left at t185 (2), right at t221 (3), left at t257 (4), right at t293 (5), and finally left again at t327 (6). So I have a total of N = 6 moves. Now I’m considering that the count equals the binomial coefficient, which gets a little tricky as I try to remember math specifics.",
+        "latency": 4.571,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.321,
+        "ttft_s": 4.451,
+        "stream_s": 4.568
+      },
+      {
+        "kind": "decide",
+        "index": 8,
+        "status": "valid",
+        "raw": "{\"choice\":\"d\",\"point\":null}",
+        "command": {
+          "choice": "d",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 4419,
+        "cached_tokens": 4125,
+        "output_tokens": 42,
+        "reasoning_tokens": 24,
+        "error": "",
+        "cache_write_tokens": 291,
+        "finish_reason": "stop",
+        "reasoning": "**Counting sequence visits**\n\nI’m trying to determine if I should count the visits as 6 based on the sequence I have: right, left, right, left, right, left. That definitely adds up to 6. After that, I think I need to release something and then look for \"D.\" It's a bit of a puzzle, but I'm following the logic as best I can. Let's keep going!",
+        "latency": 3.273,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.327,
+        "ttft_s": 3.116,
+        "stream_s": 3.27
+      }
+    ]
+  },
+  "seconds": 39.1,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_m",
+  "reset_digest": "20a9d38a017b4f61",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 530800,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 39.1
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/SwingXtimes_ep8_fh_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 530800,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "20a9d38a017b4f61",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

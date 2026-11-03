@@ -1,0 +1,785 @@
+{
+  "task": "SwingXtimes",
+  "episode": 10,
+  "split": "test",
+  "goal": "pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "move to the top of the target",
+      "need_parameter": true
+    },
+    {
+      "label": "c",
+      "action": "put the cube on the table",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "press the button",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [65, 75]\n  target at [81, 93], [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          65,
+          75
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 126,
+      "captured": 126,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 5.06
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 126,
+      "steps": 8,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [65, 75]\n  target at [81, 93], [93, 168]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [65, 75]\n  target at [81, 93], [93, 168]\nt=48\n  gripper at [19, 66]  height 0.188  fingers 100% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [65, 75]\n  target at [81, 93], [93, 168]\nt=64\n  gripper at [30, 64]  height 0.151  fingers 100% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [65, 75]\n  target at [81, 93], [93, 168]\nt=80\n  gripper at [50, 71]  height 0.085  fingers 100% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [65, 75]\n  target at [81, 93], [93, 168]\nt=96\n  gripper at [66, 77]  height 0.017  fingers 51% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [65, 75]\n  target at [81, 93], [93, 168]\nt=112\n  gripper at [59, 74]  height 0.050  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [60, 74] is held in the gripper\n  target at [81, 93], [93, 168]\nt=126\n  gripper at [34, 64]  height 0.146  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [33, 64] is held in the gripper\n  target at [81, 93], [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          93
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 19,
+      "captured": 19,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.22
+    },
+    {
+      "index": 2,
+      "t_from": 127,
+      "t_to": 145,
+      "steps": 3,
+      "segment": "t=128\n  gripper at [34, 64]  height 0.146  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  red cube at [33, 64] is held in the gripper\n  target at [81, 93], [93, 168]\nt=144\n  gripper at [60, 89]  height 0.100  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [58, 88] is held in the gripper\n  target at [93, 168]\nt=145\n  gripper at [60, 90]  height 0.099  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [58, 88] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 6,
+      "captured": 6,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 2.99
+    },
+    {
+      "index": 3,
+      "t_from": 146,
+      "t_to": 151,
+      "steps": 1,
+      "segment": "t=151\n  gripper at [61, 89]  height 0.099  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 3,
+      "captured": 3,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.07
+    },
+    {
+      "index": 4,
+      "t_from": 152,
+      "t_to": 154,
+      "steps": 1,
+      "segment": "t=154\n  gripper at [61, 88]  height 0.099  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 2,
+      "captured": 2,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.16
+    },
+    {
+      "index": 5,
+      "t_from": 155,
+      "t_to": 156,
+      "steps": 1,
+      "segment": "t=156\n  gripper at [61, 88]  height 0.100  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 2,
+      "captured": 2,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.05
+    },
+    {
+      "index": 6,
+      "t_from": 157,
+      "t_to": 158,
+      "steps": 1,
+      "segment": "t=158\n  gripper at [61, 88]  height 0.100  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 1,
+      "captured": 1,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.36
+    },
+    {
+      "index": 7,
+      "t_from": 159,
+      "t_to": 159,
+      "steps": 1,
+      "segment": "t=159\n  gripper at [61, 88]  height 0.099  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 2,
+      "captured": 2,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.72
+    },
+    {
+      "index": 8,
+      "t_from": 160,
+      "t_to": 161,
+      "steps": 2,
+      "segment": "t=160\n  gripper at [61, 88]  height 0.099  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]\nt=161\n  gripper at [61, 88]  height 0.099  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 1,
+      "captured": 1,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.49
+    },
+    {
+      "index": 9,
+      "t_from": 162,
+      "t_to": 162,
+      "steps": 1,
+      "segment": "t=162\n  gripper at [61, 88]  height 0.099  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 1,
+      "captured": 1,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.57
+    },
+    {
+      "index": 10,
+      "t_from": 163,
+      "t_to": 163,
+      "steps": 1,
+      "segment": "t=163\n  gripper at [61, 88]  height 0.099  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [60, 89] is held in the gripper\n  target at [93, 168]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          93,
+          168
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 34,
+      "captured": 34,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 5.31
+    },
+    {
+      "index": 11,
+      "t_from": 164,
+      "t_to": 197,
+      "steps": 3,
+      "segment": "t=176\n  gripper at [63, 106]  height 0.099  fingers 46% open\n  blue cube at [54, 110]\n  button at [61, 145]\n  green cube at [111, 187]\n  highlighted target at [81, 94]\n  red cube at [63, 106] is held in the gripper\n  target at [93, 168]\nt=192\n  gripper at [71, 171]  height 0.100  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 141]\n  green cube at [111, 187]\n  highlighted target at [81, 94], [93, 168]\n  red cube at [72, 173] is held in the gripper\nt=197\n  gripper at [72, 177]  height 0.100  fingers 46% open\n  blue cube at [57, 107]\n  button at [61, 144]\n  green cube at [111, 187]\n  highlighted target at [93, 168]\n  red cube at [73, 179] is held in the gripper\n  target at [81, 93]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          81,
+          93
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 33,
+      "captured": 33,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 5.51
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "kb_m",
+    "memory_kind": "kb",
+    "policy_kind": "m",
+    "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+    "system_sha256": "32b5789b6a35329930b22bee87c9bb39cc8c3707ae9fbb4b533a53e3007c2301",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 12
+    },
+    "statuses": {
+      "valid": 12
+    },
+    "usage": {
+      "input_tokens": 27545,
+      "cached_tokens": 16104,
+      "output_tokens": 1822,
+      "reasoning_tokens": 1582,
+      "latency": 41.82
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[65,75]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            65,
+            75
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=0 [o0:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=0 [o0:cube_green]\n  [cube_red] red cube (task item), visible at -0.192, -0.227, 0.020, last seen t=0 [o0:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=0 [o0:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=0 [o0:target_1]\nRelations:\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [65, 75]\n  [target_0] target at pixel [81, 93]\n  [target_1] target at pixel [93, 168]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2144,
+        "cached_tokens": 0,
+        "output_tokens": 47,
+        "reasoning_tokens": 27,
+        "error": "",
+        "cache_write_tokens": 2141,
+        "finish_reason": "stop",
+        "latency": 2.419,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.277,
+        "ttft_s": 2.291,
+        "stream_s": 2.415
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,93]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            93
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=126 [o126:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=126 [o126:cube_green]\n  [cube_red] red cube (task item), held at -0.194, -0.222, 0.149, last seen t=126 [o126:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=126 [o126:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=126 [o126:target_1]\nRelations:\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [32, 63]\n  [target_0] target at pixel [81, 93]\n  [target_1] target at pixel [93, 168]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2717,
+        "cached_tokens": 1464,
+        "output_tokens": 47,
+        "reasoning_tokens": 27,
+        "error": "",
+        "cache_write_tokens": 1250,
+        "finish_reason": "stop",
+        "latency": 2.647,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.497,
+        "ttft_s": 2.514,
+        "stream_s": 2.644
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            94
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=145 [o145:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=145 [o145:cube_green]\n  [cube_red] red cube (task item), held at -0.118, -0.136, 0.102, last seen t=145 [o145:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=145 [o145:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [59, 89]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2389,
+        "cached_tokens": 1464,
+        "output_tokens": 155,
+        "reasoning_tokens": 135,
+        "error": "",
+        "cache_write_tokens": 922,
+        "finish_reason": "stop",
+        "latency": 2.713,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.563,
+        "ttft_s": 2.578,
+        "stream_s": 2.711
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            94
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=151 [o151:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=151 [o151:cube_green]\n  [cube_red] red cube (task item), held at -0.114, -0.138, 0.103, last seen t=151 [o151:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=151 [o151:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [60, 88]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2209,
+        "cached_tokens": 1464,
+        "output_tokens": 167,
+        "reasoning_tokens": 147,
+        "error": "",
+        "cache_write_tokens": 742,
+        "finish_reason": "stop",
+        "latency": 2.824,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.675,
+        "ttft_s": 2.689,
+        "stream_s": 2.821
+      },
+      {
+        "kind": "decide",
+        "index": 4,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            94
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=154 [o154:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=154 [o154:cube_green]\n  [cube_red] red cube (task item), held at -0.113, -0.139, 0.103, last seen t=154 [o154:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=154 [o154:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [60, 88]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2209,
+        "cached_tokens": 1464,
+        "output_tokens": 103,
+        "reasoning_tokens": 83,
+        "error": "",
+        "cache_write_tokens": 742,
+        "finish_reason": "stop",
+        "reasoning": "**Interpreting target counts**\n\nI need to interpret counts with N=2 and visits = 0. It seems I'm holding a right target that's smaller, which leads me to compare two targets: the highlighted target [81,94] and target [93,168]. The smaller highlighted target of [81,94] seems correct, even if the one at (-.12,-.14) is noted as occluded. The highlighted target correlates to pixel 94, so I think I should choose the point target [81,94] itself.",
+        "latency": 2.96,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.981,
+        "ttft_s": 2.579,
+        "stream_s": 2.957
+      },
+      {
+        "kind": "decide",
+        "index": 5,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            94
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=156 [o156:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=156 [o156:cube_green]\n  [cube_red] red cube (task item), held at -0.113, -0.139, 0.103, last seen t=156 [o156:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=156 [o156:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [60, 88]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2209,
+        "cached_tokens": 1464,
+        "output_tokens": 147,
+        "reasoning_tokens": 127,
+        "error": "",
+        "cache_write_tokens": 742,
+        "finish_reason": "stop",
+        "latency": 2.836,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.696,
+        "ttft_s": 2.707,
+        "stream_s": 2.834
+      },
+      {
+        "kind": "decide",
+        "index": 6,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            94
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=158 [o158:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=158 [o158:cube_green]\n  [cube_red] red cube (task item), held at -0.113, -0.139, 0.103, last seen t=158 [o158:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=158 [o158:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [60, 88]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2209,
+        "cached_tokens": 1464,
+        "output_tokens": 170,
+        "reasoning_tokens": 150,
+        "error": "",
+        "cache_write_tokens": 742,
+        "finish_reason": "stop",
+        "reasoning": "**Identifying the target**\n\nI'm working on a task where I need to focus on the right-side target, which I think is smaller. The highlighted target at [81,94] seems likely to be the actual target, while the one at [93,168] may not be it. It's interesting because it looks like the actual target might have disappeared due to some interference with a held cube. I need to focus on that visible highlighted target at [81,94] to move forward.",
+        "latency": 4.121,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.202,
+        "ttft_s": 3.996,
+        "stream_s": 4.118
+      },
+      {
+        "kind": "decide",
+        "index": 7,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            94
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=159 [o159:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=159 [o159:cube_green]\n  [cube_red] red cube (task item), held at -0.113, -0.139, 0.103, last seen t=159 [o159:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=159 [o159:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [60, 88]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2209,
+        "cached_tokens": 1464,
+        "output_tokens": 187,
+        "reasoning_tokens": 167,
+        "error": "",
+        "cache_write_tokens": 742,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating target visibility**\n\nI need to count target visits and, right now, I have zero completed. With N=2, I think I should choose target B because it’s smaller. I’m comparing pixel locations: target1 at [93,168] and the highlighted target at [81,94]. It seems like target0 has disappeared, but the highlighted one is solid. I should keep track of their positions and mappings while recognizing that the highlighted target is likely the one I need to focus on — especially at time t159.",
+        "latency": 4.474,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.465,
+        "ttft_s": 4.429,
+        "stream_s": 4.471
+      },
+      {
+        "kind": "decide",
+        "index": 8,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            94
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=161 [o161:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=161 [o161:cube_green]\n  [cube_red] red cube (task item), held at -0.113, -0.139, 0.103, last seen t=161 [o161:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=161 [o161:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [60, 88]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2301,
+        "cached_tokens": 1464,
+        "output_tokens": 122,
+        "reasoning_tokens": 102,
+        "error": "",
+        "cache_write_tokens": 834,
+        "finish_reason": "stop",
+        "latency": 3.289,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.122,
+        "ttft_s": 3.132,
+        "stream_s": 3.286
+      },
+      {
+        "kind": "decide",
+        "index": 9,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            94
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=162 [o162:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=162 [o162:cube_green]\n  [cube_red] red cube (task item), held at -0.113, -0.139, 0.103, last seen t=162 [o162:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=162 [o162:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [60, 88]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2209,
+        "cached_tokens": 1464,
+        "output_tokens": 314,
+        "reasoning_tokens": 294,
+        "error": "",
+        "cache_write_tokens": 742,
+        "finish_reason": "stop",
+        "latency": 4.373,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.246,
+        "ttft_s": 4.255,
+        "stream_s": 4.371
+      },
+      {
+        "kind": "decide",
+        "index": 10,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[93,168]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            93,
+            168
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=163 [o163:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=163 [o163:cube_green]\n  [cube_red] red cube (task item), held at -0.113, -0.139, 0.102, last seen t=163 [o163:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=139 [o139:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=163 [o163:target_1]\nRelations:\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: visible at pixel [81, 94]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [60, 88]\n  [target_1] target at pixel [93, 168]\n  [highlighted_target_0] highlighted target at pixel [81, 94]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2209,
+        "cached_tokens": 1464,
+        "output_tokens": 189,
+        "reasoning_tokens": 169,
+        "error": "",
+        "cache_write_tokens": 742,
+        "finish_reason": "stop",
+        "reasoning": "**Analyzing target movements**\n\nI’m thinking about goal one with a repetition of N=2. The right target is highlighted at x94, while the target at x168 seems smaller. I need to track the completed target visits. It looks like target_0 vanished at t140, possibly due to being under a cube. I’m currently at position [60,89], hovering over the highlighted location. Now that I’m at the right target after the move, I need to focus on the left target B at x168 next.",
+        "latency": 4.527,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.356,
+        "ttft_s": 4.4,
+        "stream_s": 4.524
+      },
+      {
+        "kind": "decide",
+        "index": 11,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[81,93]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            81,
+            93
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop\nTask items (named by the goal): red cube, target, button\nObjects (world frame, m):\n  [cube_blue] blue cube, visible at -0.247, -0.093, 0.020, last seen t=197 [o197:cube_blue]\n  [cube_green] green cube, visible at 0.049, 0.210, 0.020, last seen t=197 [o197:cube_green]\n  [cube_red] red cube (task item), held at -0.058, 0.167, 0.103, last seen t=197 [o197:cube_red]\n  [target_0] target (task item), visible at -0.115, -0.141, 0.005, last seen t=197 [o197:target_0]\n  [target_1] target (task item), visible at -0.049, 0.161, 0.005, last seen t=190 [o190:target_1]\nRelations:\n  [Inside(cube_blue)] seen again at t=183, now at -0.247, -0.093, 0.020; the earlier belief (elsewhere 1.00) no longer applies\nEvent log (oldest first):\n  [e12] t=140 target_0 disappeared at (-0.12, -0.14)\n  [e14] t=177 cube_blue disappeared at (-0.25, -0.09)\n  [e16] t=181 cube_blue disappeared at (-0.25, -0.09)\n  [e18] t=191 target_1 disappeared at (-0.05, 0.16)\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 145]\n  [highlighted_target_0] highlighted target: not visible now; last seen t=193 at pixel [81, 94]\n  [highlighted_target_1] highlighted target: visible at pixel [93, 168]\nVisible object-to-pixel lookup:\n  [cube_blue] cube at pixel [57, 107]\n  [button_0] button at pixel [61, 145]\n  [cube_green] cube at pixel [111, 187]\n  [cube_red] cube at pixel [73, 179]\n  [target_0] target at pixel [81, 93]\n  [highlighted_target_1] highlighted target at pixel [93, 168]",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2531,
+        "cached_tokens": 1464,
+        "output_tokens": 174,
+        "reasoning_tokens": 154,
+        "error": "",
+        "cache_write_tokens": 1064,
+        "finish_reason": "stop",
+        "latency": 4.637,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.598,
+        "ttft_s": 4.605,
+        "stream_s": 4.634
+      }
+    ]
+  },
+  "seconds": 49.1,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "kb_m",
+  "reset_digest": "b8e6de7ace1f34ed",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 531000,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 49.1
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/SwingXtimes_ep10_kb_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 531000,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "b8e6de7ace1f34ed",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

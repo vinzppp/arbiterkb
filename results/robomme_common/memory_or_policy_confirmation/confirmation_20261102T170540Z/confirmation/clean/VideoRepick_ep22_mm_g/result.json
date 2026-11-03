@@ -1,0 +1,174 @@
+{
+  "task": "VideoRepick",
+  "episode": 22,
+  "split": "test",
+  "goal": "watch the video carefully, then repeatedly pick up and put down the same block that was previously picked up for three times, finally put it down and press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put it down",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press the button to finish",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 25,
+    "chars": 2996
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 377,
+      "t_to": 377,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  button at [66, 129]\n  cube at [90, 108], [100, 151], [126, 122]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  button at [66, 129]\n  cube at [90, 108], [100, 151], [126, 122]\nt=32\n  gripper at [44, 126]  height 0.255  fingers 100% open\n  button at [66, 129]\n  cube at [90, 108], [100, 151], [126, 122]\nt=48\n  gripper at [101, 123]  height 0.139  fingers 100% open\n  cube at [103, 151], [126, 122]\nt=64\n  gripper at [105, 123]  height 0.128  fingers 100% open\n  cube at [107, 149], [126, 122]\nt=80\n  gripper at [126, 124]  height 0.014  fingers 100% open\n  cube at [97, 151], [132, 121]\nt=96\n  gripper at [123, 123]  height 0.035  fingers 46% open\n  cube at [97, 151], [130, 120]\nt=112\n  gripper at [100, 121]  height 0.153  fingers 46% open\n  cube at [104, 150]\n  cube at [105, 118] is held in the gripper\nt=128\n  gripper at [120, 123]  height 0.051  fingers 46% open\n  cube at [125, 119] is held in the gripper\n  cube at [93, 153]\nt=144\n  gripper at [121, 123]  height 0.039  fingers 100% open\n  cube at [95, 151], [130, 121]\nt=160\n  gripper at [100, 121]  height 0.145  fingers 100% open\n  cube at [98, 104], [105, 150], [124, 122]\nt=176\n  gripper at [69, 126]  height 0.182  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [100, 151], [124, 122]\nt=192\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [100, 151], [124, 122]\nt=208\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [103, 152], [122, 121]\nt=224\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [101, 122], [121, 154]\nt=240\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [98, 141], [125, 133]\nt=256\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [100, 150], [123, 120]\nt=272\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [97, 130], [100, 150], [116, 99]\nt=288\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [98, 101], [100, 150], [114, 129]\nt=304\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [90, 109], [100, 150], [124, 122]\nt=320\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [95, 126], [100, 150], [117, 102]\nt=336\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [100, 100], [100, 150], [112, 130]\nt=352\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 107], [100, 150], [124, 122]\nt=368\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 107], [100, 150], [124, 122]\nt=376\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 107], [100, 150], [124, 122]\nEXECUTION STEPS\nt=377\n  gripper raised out of the frame  fingers 100% open\n  button at [67, 129]\n  cube at [91, 107], [100, 150], [124, 122]",
+      "demo_steps": 25,
+      "command": {
+        "choice": "a",
+        "point": [
+          124,
+          122
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 108,
+      "captured": 108,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 9.37
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 378,
+  "reset_batch": 378,
+  "policy": {
+    "name": "mm_g",
+    "memory_kind": "mm",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "71c50604b8843473e48d285394f98ff3ffca2b217f50cda4a3158b247efce0d2",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 3479,
+      "cached_tokens": 0,
+      "output_tokens": 446,
+      "reasoning_tokens": 398,
+      "latency": 7.024
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[124,122],\"memory_updates\":[{\"field\":\"target_anchor\",\"value\":\"[124, 122]\"},{\"field\":\"completed_cycles\",\"value\":\"0\"}]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            124,
+            122
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  target_anchor\n      With empty memory, inspect the demonstration to identify the cube grasped when the fingers close at table height and the hand lifts. Track that same cube through the rest of the demonstration and locate it in the initial execution scene. Establish target identity from the table-height closure and lift, then follow that same cube through descent to its table-height release and associate the release with the settled table cube. An elevated held centroid is not a table location and must not reassign identity to a neighboring table cube. Disappearances or centroid shifts caused by the traveling hand's occlusion do not establish exchanges. After the release, partition the remaining demonstration into exchanges only where coherent paired table motion connects settled configurations, and process every such exchange through the end of the demonstration. Maintain a temporary target-location token initialized to the settled release location; update it through the exchanges below, rather than repeatedly associating airborne centroids with table cubes. For each exchange, identify the two participating occupied locations and track both moving cubes jointly through the intermediate samples until they settle, matching trajectories across the whole exchange using direction and motion continuity. Do not independently choose the nearest point at each sample or infer identity by matching occupied start and end locations: a completed exchange swaps the identities at its two locations even when the set of occupied locations looks unchanged. For each completed pair swap, if the temporary target-location token names one participating location, move the token to the other; otherwise leave it unchanged. Carry this updated token and target identity into the next exchange without restarting from the original grasp location. Resolve participation using the updated token, not the original location. An exchange involving the target's new location and a third location moves it onward to that third location; two exchanges of the same pair restore the identities at those locations. Finish all exchanges before locating the target in the initial execution scene. This tracking is performed within the first decision step; do not store exchange history in persistent memory. Store its initial execution visible center as [y, x]. Determine this center from the demonstration and initial execution scene currently shown, not from an episode lookup, the original demonstration center, or the recorded grasp point. At every later step copy the incoming anchor unchanged. e.g. [122, 119]\n  completed_cycles\n      With empty memory write 0, ignoring demonstration actions. Otherwise inspect the execution interval shown at this step. Increment the incoming count once when the interval shows descent in a partially closed grasp posture to table height followed by opening and retreat ending in a raised fully open posture. The first visible sample may already be partway through the descent; a raised starting sample is not required. Recognize completion from this sequence, not from a required finger-opening percentage at table height. The table-height sample may show partial opening or still show the grasp opening if release occurs between samples and the next sample shows a fully open hand beginning retreat. No sample at 88–99% opening is required. This completed-release sequence takes precedence over lingering reports that a cube is held or airborne. Leave the count unchanged for an interval ending in the raised partially closed grasp posture, even if that pick-up interval contains unsuccessful closures, incidental lifts, releases, or retries. Do not increment for the command being chosen now. e.g. 1\nMEMORY CARRIED IN\n  target_anchor=; completed_cycles=",
+        "memory_updates": {
+          "target_anchor": "[124, 122]",
+          "completed_cycles": "0"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3479,
+        "cached_tokens": 0,
+        "output_tokens": 446,
+        "reasoning_tokens": 398,
+        "error": "",
+        "cache_write_tokens": 3476,
+        "finish_reason": "stop",
+        "latency": 7.024,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 6.654,
+        "ttft_s": 6.673,
+        "stream_s": 7.021
+      }
+    ]
+  },
+  "seconds": 19.6,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "mm_g",
+  "reset_digest": "5e9ac8f50b0cbf72",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 592200,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 19.6
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoRepick_ep22_mm_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 592200,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "5e9ac8f50b0cbf72",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

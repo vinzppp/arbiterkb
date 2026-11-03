@@ -1,0 +1,167 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 30,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the red cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 12,
+    "chars": 1451
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 168,
+      "t_to": 168,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [108, 175]\n  green cube at [109, 99]\n  red cube at [86, 134]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [108, 175]\n  green cube at [109, 99]\n  red cube at [86, 134]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [84, 134], [105, 176], [107, 98], [137, 115]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [84, 134], [105, 176], [107, 98], [137, 115]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [84, 134], [105, 176], [107, 98], [137, 115]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [81, 149], [107, 98], [109, 161], [137, 115]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [88, 169], [100, 138], [107, 98], [137, 115]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 135], [105, 176], [107, 98], [137, 115]\nt=128\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 146], [107, 98], [108, 164], [137, 115]\nt=144\n  gripper raised out of the frame  fingers 100% open\n  container at [86, 167], [102, 139], [107, 98], [137, 115]\nt=160\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 135], [103, 175], [107, 98], [137, 115]\nt=167\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 135], [105, 176], [107, 98], [137, 115]\nEXECUTION STEPS\nt=168\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 135], [105, 176], [107, 98], [137, 115]",
+      "demo_steps": 12,
+      "command": {
+        "choice": "a",
+        "point": [
+          85,
+          135
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 109,
+      "captured": 109,
+      "terminated": true,
+      "status": "success",
+      "seconds": 4.84
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 169,
+  "reset_batch": 169,
+  "policy": {
+    "name": "fh_m",
+    "memory_kind": "fh",
+    "policy_kind": "m",
+    "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+    "system_sha256": "44c915e9cae6a7d254d371fb53df167a4afc194f202f28984923227d90839bd0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 1924,
+      "cached_tokens": 0,
+      "output_tokens": 60,
+      "reasoning_tokens": 40,
+      "latency": 2.85
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[85,135]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            85,
+            135
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1924,
+        "cached_tokens": 0,
+        "output_tokens": 60,
+        "reasoning_tokens": 40,
+        "error": "",
+        "cache_write_tokens": 1921,
+        "finish_reason": "stop",
+        "reasoning": "**Figuring out policy memory targets**\n\nI'm looking at the policy memory targets list and noticing that I need to focus on a singular container that hides a red cube. The demo shows the red cube located at [86,134], while the container is at [84,134], effectively covering it. Hmm, I need to choose point A for this. It’s a bit tricky, so I’m being careful about how I approach that decision!",
+        "latency": 2.85,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.512,
+        "ttft_s": 2.361,
+        "stream_s": 2.846
+      }
+    ]
+  },
+  "seconds": 8.0,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_m",
+  "reset_digest": "566b26932c6c57a7",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 553000,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 8.0
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep30_fh_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 553000,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "566b26932c6c57a7",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "task": "VideoRepick",
+  "episode": 21,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the same block that was previously picked up again, finally put it down and press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put it down",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press the button to finish",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 22,
+    "chars": 2845
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 326,
+      "t_to": 326,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 120]\n  cube at [83, 140], [106, 104], [115, 141]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 120]\n  cube at [83, 140], [106, 104], [115, 141]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 120]\n  cube at [83, 140], [106, 104], [115, 141]\nt=48\n  gripper at [49, 145]  height 0.154  fingers 100% open\n  button at [60, 120]\n  cube at [83, 140], [106, 104], [115, 141]\nt=64\n  gripper at [59, 144]  height 0.123  fingers 100% open\n  button at [60, 120]\n  cube at [83, 140], [106, 104], [115, 141]\nt=80\n  gripper at [84, 141]  height 0.019  fingers 51% open\n  cube at [85, 139], [106, 104], [115, 141]\nt=96\n  gripper at [77, 142]  height 0.054  fingers 46% open\n  button at [65, 119]\n  cube at [106, 104], [115, 141]\n  cube at [79, 139] is held in the gripper\nt=112\n  gripper at [52, 144]  height 0.150  fingers 46% open\n  button at [62, 120]\n  cube at [106, 104], [115, 141]\n  cube at [53, 142] is held in the gripper\nt=128\n  gripper at [75, 141]  height 0.060  fingers 46% open\n  button at [64, 119]\n  cube at [106, 104], [115, 141]\n  cube at [74, 139] is held in the gripper\nt=144\n  gripper at [80, 141]  height 0.034  fingers 100% open\n  cube at [82, 138], [106, 104], [115, 141]\nt=160\n  gripper at [54, 144]  height 0.140  fingers 100% open\n  button at [61, 119]\n  cube at [82, 138], [106, 104], [115, 141]\nt=176\n  gripper at [53, 137]  height 0.173  fingers 100% open\n  button at [61, 119]\n  cube at [82, 138], [106, 104], [115, 141]\nt=192\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [82, 138], [106, 104], [115, 141]\nt=208\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [83, 140], [106, 104], [115, 141]\nt=224\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [93, 156], [102, 123], [106, 104]\nt=240\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [88, 129], [106, 104], [108, 152]\nt=256\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [83, 138], [106, 104], [114, 141]\nt=272\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [83, 138], [97, 120], [126, 126]\nt=288\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [83, 138], [101, 134], [121, 109]\nt=304\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [83, 138], [106, 104], [114, 141]\nt=320\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [83, 138], [106, 104], [114, 141]\nt=325\n  gripper at [54, 127]  height 0.200  fingers 100% open\n  button at [61, 119]\n  cube at [83, 138], [106, 104], [114, 141]\nEXECUTION STEPS\nt=326\n  gripper raised out of the frame  fingers 100% open\n  button at [61, 119]\n  cube at [83, 138], [106, 104], [114, 141]",
+      "demo_steps": 22,
+      "command": {
+        "choice": "a",
+        "point": [
+          83,
+          138
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 117,
+      "captured": 117,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 6.34
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 327,
+  "reset_batch": 327,
+  "policy": {
+    "name": "fh_m",
+    "memory_kind": "fh",
+    "policy_kind": "m",
+    "policy_sha256": "b784d92a15e352173effd02eb9a3500a53567a399880a0f097f7afbb61923771",
+    "system_sha256": "5b27f3a59eae921b7a3762b9a1f42bcc401de74f2103baccd0922601a9ac97ef",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2973,
+      "cached_tokens": 0,
+      "output_tokens": 88,
+      "reasoning_tokens": 68,
+      "latency": 3.675
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[83,138]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            83,
+            138
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "b784d92a15e352173effd02eb9a3500a53567a399880a0f097f7afbb61923771",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2973,
+        "cached_tokens": 0,
+        "output_tokens": 88,
+        "reasoning_tokens": 68,
+        "error": "",
+        "cache_write_tokens": 2970,
+        "finish_reason": "stop",
+        "reasoning": "**Determining target anchor**\n\nI’m focusing on the target anchor to pick up the same block I previously selected, which is located at [83,140]. Even though there are multiple blocks, I need to stick to the first one. The policy indicates I should aim for the target anchor again at [83,138]. It's worth noting that \"again\" refers to one complete cycle. I guess I'm confirming I’m following instructions correctly!",
+        "latency": 3.675,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.623,
+        "ttft_s": 3.545,
+        "stream_s": 3.673
+      }
+    ]
+  },
+  "seconds": 13.4,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_m",
+  "reset_digest": "41b9653598aca8c9",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 592100,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 13.4
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoRepick_ep21_fh_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 592100,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "41b9653598aca8c9",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

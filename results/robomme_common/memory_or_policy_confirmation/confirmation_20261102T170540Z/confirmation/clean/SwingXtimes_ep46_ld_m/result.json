@@ -1,0 +1,392 @@
+{
+  "task": "SwingXtimes",
+  "episode": 46,
+  "split": "test",
+  "goal": "pick up the red cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "move to the top of the target",
+      "need_parameter": true
+    },
+    {
+      "label": "c",
+      "action": "put the cube on the table",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "press the button",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [49, 155]\n  target at [77, 94], [78, 177]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          49,
+          155
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 151,
+      "captured": 151,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.82
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 151,
+      "steps": 10,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [49, 155]\n  target at [77, 94], [78, 177]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [49, 155]\n  target at [77, 94], [78, 177]\nt=48\n  gripper at [2, 161]  height 0.201  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [49, 155]\n  target at [77, 94], [78, 177]\nt=64\n  gripper at [15, 160]  height 0.153  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [49, 155]\n  target at [77, 94], [78, 177]\nt=80\n  gripper at [27, 158]  height 0.110  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [49, 155]\n  target at [77, 94], [78, 177]\nt=96\n  gripper at [45, 156]  height 0.038  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [49, 155]\n  target at [77, 94], [78, 177]\nt=112\n  gripper at [50, 155]  height 0.019  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [49, 155]\n  target at [77, 94], [78, 177]\nt=128\n  gripper at [41, 157]  height 0.060  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [42, 157] is held in the gripper\n  target at [77, 94], [78, 177]\nt=144\n  gripper at [21, 161]  height 0.134  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [21, 161] is held in the gripper\n  target at [77, 94], [78, 177]\nt=151\n  gripper at [16, 162]  height 0.149  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [16, 162] is held in the gripper\n  target at [77, 94], [78, 177]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          77,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 37,
+      "captured": 37,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 2.31
+    },
+    {
+      "index": 2,
+      "t_from": 152,
+      "t_to": 188,
+      "steps": 3,
+      "segment": "t=160\n  gripper at [19, 157]  height 0.145  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [18, 158] is held in the gripper\n  target at [77, 94], [78, 177]\nt=176\n  gripper at [44, 108]  height 0.111  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  red cube at [44, 108] is held in the gripper\n  target at [77, 94], [78, 177]\nt=188\n  gripper at [56, 87]  height 0.096  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  highlighted target at [77, 94]\n  red cube at [54, 87] is held in the gripper\n  target at [78, 177]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          78,
+          177
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 38,
+      "captured": 38,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.63
+    },
+    {
+      "index": 3,
+      "t_from": 189,
+      "t_to": 226,
+      "steps": 4,
+      "segment": "t=192\n  gripper at [56, 87]  height 0.096  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  highlighted target at [77, 94]\n  red cube at [54, 87] is held in the gripper\n  target at [78, 177]\nt=208\n  gripper at [56, 130]  height 0.098  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  highlighted target at [77, 94]\n  red cube at [56, 130] is held in the gripper\n  target at [78, 177]\nt=224\n  gripper at [56, 184]  height 0.100  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  highlighted target at [78, 177]\n  red cube at [56, 184] is held in the gripper\n  target at [77, 94]\nt=226\n  gripper at [56, 186]  height 0.100  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  highlighted target at [78, 177]\n  red cube at [56, 187] is held in the gripper\n  target at [77, 94]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 40,
+      "captured": 40,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.98
+    },
+    {
+      "index": 4,
+      "t_from": 227,
+      "t_to": 266,
+      "steps": 3,
+      "segment": "t=240\n  gripper at [63, 182]  height 0.068  fingers 46% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  highlighted target at [78, 177]\n  red cube at [64, 183] is held in the gripper\n  target at [77, 94]\nt=256\n  gripper at [58, 184]  height 0.090  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  highlighted target at [78, 177]\n  red cube at [71, 179]\n  target at [77, 94]\nt=266\n  gripper at [42, 191]  height 0.147  fingers 100% open\n  blue cube at [104, 136]\n  button at [65, 132]\n  green cube at [84, 164]\n  highlighted target at [78, 177]\n  red cube at [71, 179]\n  target at [77, 94]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "d",
+        "point": [
+          65,
+          132
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 89,
+      "captured": 89,
+      "terminated": true,
+      "status": "success",
+      "seconds": 5.07
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "ld_m",
+    "memory_kind": "ld",
+    "policy_kind": "m",
+    "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+    "system_sha256": "32b5789b6a35329930b22bee87c9bb39cc8c3707ae9fbb4b533a53e3007c2301",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 5
+    },
+    "statuses": {
+      "valid": 5
+    },
+    "usage": {
+      "input_tokens": 11110,
+      "cached_tokens": 5856,
+      "output_tokens": 514,
+      "reasoning_tokens": 416,
+      "latency": 11.963
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[49,155]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            49,
+            155
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: visible at pixel [104, 136]\n  [button_0] button: visible at pixel [65, 132]\n  [cube_green] cube: visible at pixel [84, 164]\n  [cube_red] cube: visible at pixel [49, 155]\n  [target_0] target: visible at pixel [77, 94]\n  [target_1] target: visible at pixel [78, 177]\nCover relations (observed; a covered cube moves with its container):\n  none\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  none\nExecuted options (execution phase only, oldest first):\n  none\nExecuted option counts:\n  none",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1858,
+        "cached_tokens": 0,
+        "output_tokens": 28,
+        "reasoning_tokens": 8,
+        "error": "",
+        "cache_write_tokens": 1855,
+        "finish_reason": "stop",
+        "latency": 1.572,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.411,
+        "ttft_s": 1.425,
+        "stream_s": 1.568
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[77,94]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            77,
+            94
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: visible at pixel [104, 136]\n  [button_0] button: visible at pixel [65, 132]\n  [cube_green] cube: visible at pixel [84, 164]\n  [cube_red] cube: visible at pixel [15, 163]\n  [target_0] target: visible at pixel [77, 94]\n  [target_1] target: visible at pixel [78, 177]\nCover relations (observed; a covered cube moves with its container):\n  none\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  none\nExecuted options (execution phase only, oldest first):\n  1. a: pick up the cube at [49, 155] -> executed, status ongoing\nExecuted option counts:\n  a: pick up the cube: 1",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2628,
+        "cached_tokens": 1464,
+        "output_tokens": 47,
+        "reasoning_tokens": 27,
+        "error": "",
+        "cache_write_tokens": 1161,
+        "finish_reason": "stop",
+        "latency": 1.406,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.272,
+        "ttft_s": 1.283,
+        "stream_s": 1.404
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[78,177]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            78,
+            177
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: visible at pixel [104, 136]\n  [button_0] button: visible at pixel [65, 132]\n  [cube_green] cube: visible at pixel [84, 164]\n  [cube_red] cube: visible at pixel [55, 86]\n  [target_0] target: not visible now; last seen t=181 at pixel [77, 94]\n  [target_1] target: visible at pixel [78, 177]\n  [highlighted_target_0] highlighted target: visible at pixel [77, 94]\nCover relations (observed; a covered cube moves with its container):\n  none\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  none\nExecuted options (execution phase only, oldest first):\n  1. a: pick up the cube at [49, 155] -> executed, status ongoing\n  2. b: move to the top of the target at [77, 94] -> executed, status ongoing\nExecuted option counts:\n  a: pick up the cube: 1\n  b: move to the top of the target: 1",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2149,
+        "cached_tokens": 1464,
+        "output_tokens": 133,
+        "reasoning_tokens": 113,
+        "error": "",
+        "cache_write_tokens": 682,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating target movement**\n\nI’m working on the goal repetition count, which has one repetition with N=2. The cube is currently held at coordinates [54,87], and I’m observing the right-side target at [77,94]. I see that the latest target has been moved to the top. Based on my interval observations, it looks like I've completed one target visit. I need to focus on moving to the left target next because it's at [78,177].",
+        "latency": 2.736,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.936,
+        "ttft_s": 2.634,
+        "stream_s": 2.733
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":null}",
+        "command": {
+          "choice": "c",
+          "point": null
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: visible at pixel [104, 136]\n  [button_0] button: visible at pixel [65, 132]\n  [cube_green] cube: visible at pixel [84, 164]\n  [cube_red] cube: visible at pixel [56, 187]\n  [target_0] target: visible at pixel [77, 94]\n  [target_1] target: not visible now; last seen t=220 at pixel [78, 177]\n  [highlighted_target_0] highlighted target: visible at pixel [78, 177]\nCover relations (observed; a covered cube moves with its container):\n  none\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  none\nExecuted options (execution phase only, oldest first):\n  1. a: pick up the cube at [49, 155] -> executed, status ongoing\n  2. b: move to the top of the target at [77, 94] -> executed, status ongoing\n  3. b: move to the top of the target at [78, 177] -> executed, status ongoing\nExecuted option counts:\n  a: pick up the cube: 1\n  b: move to the top of the target: 2",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2275,
+        "cached_tokens": 1464,
+        "output_tokens": 193,
+        "reasoning_tokens": 175,
+        "error": "",
+        "cache_write_tokens": 808,
+        "finish_reason": "stop",
+        "latency": 3.069,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.919,
+        "ttft_s": 2.929,
+        "stream_s": 3.066
+      },
+      {
+        "kind": "decide",
+        "index": 4,
+        "status": "valid",
+        "raw": "{\"choice\":\"d\",\"point\":[65,132]}",
+        "command": {
+          "choice": "d",
+          "point": [
+            65,
+            132
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: visible at pixel [104, 136]\n  [button_0] button: visible at pixel [65, 132]\n  [cube_green] cube: visible at pixel [84, 164]\n  [cube_red] cube: visible at pixel [72, 179]\n  [target_0] target: visible at pixel [77, 94]\n  [target_1] target: not visible now; last seen t=220 at pixel [78, 177]\n  [highlighted_target_0] highlighted target: visible at pixel [80, 177]\nCover relations (observed; a covered cube moves with its container):\n  none\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  none\nExecuted options (execution phase only, oldest first):\n  1. a: pick up the cube at [49, 155] -> executed, status ongoing\n  2. b: move to the top of the target at [77, 94] -> executed, status ongoing\n  3. b: move to the top of the target at [78, 177] -> executed, status ongoing\n  4. c: put the cube on the table -> executed, status ongoing\nExecuted option counts:\n  a: pick up the cube: 1\n  b: move to the top of the target: 2\n  c: put the cube on the table: 1",
+        "memory_updates": null,
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2200,
+        "cached_tokens": 1464,
+        "output_tokens": 113,
+        "reasoning_tokens": 93,
+        "error": "",
+        "cache_write_tokens": 733,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating target completion**\n\nI’m tracking my progress with the red cube targets. I’ve noted that the right-side target at [77,94] and the left-side one at [78,177] have both been executed. However, the scene cube at [71,179] shows that the release happened at the left target, which means my count for completed targets is accurate at N=2. Now I need to choose D and press the button to move forward!",
+        "latency": 3.18,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.151,
+        "ttft_s": 3.16,
+        "stream_s": 3.178
+      }
+    ]
+  },
+  "seconds": 20.3,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "ld_m",
+  "reset_digest": "a47d12ab25fde6af",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 534600,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 20.3
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/SwingXtimes_ep46_ld_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 534600,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "a47d12ab25fde6af",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 8,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the blue cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 12,
+    "chars": 1332
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 168,
+      "t_to": 168,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [127, 154]\n  green cube at [99, 119]\n  red cube at [76, 116]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [127, 154]\n  green cube at [99, 119]\n  red cube at [76, 116]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [72, 116], [96, 119], [125, 155]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [72, 116], [96, 119], [125, 155]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [72, 116], [96, 119], [125, 155]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [72, 116], [95, 136], [127, 136]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [72, 116], [105, 154], [114, 117]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [72, 116], [97, 119], [125, 155]\nt=128\n  gripper raised out of the frame  fingers 100% open\n  container at [76, 125], [93, 109], [125, 155]\nt=144\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 101], [85, 134], [125, 155]\nt=160\n  gripper raised out of the frame  fingers 100% open\n  container at [73, 115], [95, 121], [125, 155]\nt=167\n  gripper raised out of the frame  fingers 100% open\n  container at [73, 115], [96, 119], [125, 155]\nEXECUTION STEPS\nt=168\n  gripper raised out of the frame  fingers 100% open\n  container at [73, 115], [96, 119], [125, 155]",
+      "demo_steps": 12,
+      "command": {
+        "choice": "a",
+        "point": [
+          72,
+          116
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 115,
+      "captured": 115,
+      "terminated": true,
+      "status": "success",
+      "seconds": 15.49
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 169,
+  "reset_batch": 169,
+  "policy": {
+    "name": "ld_m",
+    "memory_kind": "ld",
+    "policy_kind": "m",
+    "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+    "system_sha256": "47a4cb696b667d36f480d08dde51e0adcb46fa826b01df1fc415c83f171e6b2e",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2236,
+      "cached_tokens": 0,
+      "output_tokens": 56,
+      "reasoning_tokens": 36,
+      "latency": 13.622
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[72,116]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            72,
+            116
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [cube_blue] cube: not visible now; last seen t=31 at pixel [127, 154]\n  [bin_0] container: visible at pixel [96, 119]\n  [bin_1] container: visible at pixel [72, 116]\n  [bin_2] container: visible at pixel [125, 155]\n  [cube_green] cube: not visible now; last seen t=31 at pixel [99, 119]\n  [cube_red] cube: not visible now; last seen t=31 at pixel [76, 116]\nCover relations (observed; a covered cube moves with its container):\n  [cube_blue] -> bin_1\n  [cube_green] -> bin_2\n  [cube_red] -> bin_0\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  t=32 cube_blue disappeared; covered by bin_1\n  t=32 cube_green disappeared; covered by bin_2\n  t=32 cube_red disappeared; covered by bin_0\nExecuted options (execution phase only, oldest first):\n  none\nExecuted option counts:\n  none",
+        "memory_updates": null,
+        "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2236,
+        "cached_tokens": 0,
+        "output_tokens": 56,
+        "reasoning_tokens": 36,
+        "error": "",
+        "cache_write_tokens": 2233,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating location policy**\n\nI’m working on understanding how the policy specifies that the first location container is identified by the first location. Then, for the remaining targets, it seems likely that the blue target from memory bin_1 should be chosen. So I'll need to set a point center at coordinates [72,116]. This process is important to ensure clarity in decision-making as I move forward with identifying locations effectively.",
+        "latency": 13.622,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 12.733,
+        "ttft_s": 13.489,
+        "stream_s": 13.618
+      }
+    ]
+  },
+  "seconds": 18.5,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "ld_m",
+  "reset_digest": "ddbfefcc62b65894",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 550800,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 18.5
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep8_ld_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 550800,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "ddbfefcc62b65894",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

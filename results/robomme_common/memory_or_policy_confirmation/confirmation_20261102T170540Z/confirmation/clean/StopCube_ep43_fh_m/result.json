@@ -1,0 +1,314 @@
+{
+  "task": "StopCube",
+  "episode": 43,
+  "split": "test",
+  "goal": "press the button to stop the cube just as it reaches the target for the second time",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the top of the button to prepare",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "remain static",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press button to stop the cube",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [68, 156]\n  cube at [89, 37]\n  target at [116, 105]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 53,
+      "captured": 53,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 2.98
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 53,
+      "steps": 4,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [68, 156]\n  cube at [99, 62]\n  target at [116, 105]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [68, 156]\n  cube at [119, 116]\n  target at [116, 104]\nt=48\n  gripper at [33, 164]  height 0.154  fingers 51% open\n  button at [68, 156]\n  cube at [141, 174]\n  target at [116, 104]\nt=53\n  gripper at [33, 164]  height 0.154  fingers 0% open\n  button at [68, 156]\n  cube at [146, 186]\n  target at [116, 104]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 6,
+      "captured": 6,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.34
+    },
+    {
+      "index": 2,
+      "t_from": 54,
+      "t_to": 59,
+      "steps": 1,
+      "segment": "t=59\n  gripper at [33, 164]  height 0.154  fingers 0% open\n  button at [68, 156]\n  cube at [148, 190]\n  target at [116, 104]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "no_op",
+      "error": "",
+      "batch": 0,
+      "captured": 0,
+      "terminated": false,
+      "status": "",
+      "seconds": 5.78
+    },
+    {
+      "index": 3,
+      "t_from": 60,
+      "t_to": 59,
+      "steps": 1,
+      "segment": "t=59\n  gripper at [33, 164]  height 0.154  fingers 0% open\n  button at [68, 156]\n  cube at [148, 190]\n  target at [116, 104]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 62,
+      "captured": 62,
+      "terminated": true,
+      "status": "success",
+      "seconds": 8.67
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "fh_m",
+    "memory_kind": "fh",
+    "policy_kind": "m",
+    "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+    "system_sha256": "587cc6a1afbcec8d4bf968055a5a3705d5e569abda681d004b9c7363da22a1e0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 4
+    },
+    "statuses": {
+      "valid": 4
+    },
+    "usage": {
+      "input_tokens": 9542,
+      "cached_tokens": 6892,
+      "output_tokens": 915,
+      "reasoning_tokens": 843,
+      "latency": 18.894
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":null}",
+        "command": {
+          "choice": "a",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2057,
+        "cached_tokens": 0,
+        "output_tokens": 27,
+        "reasoning_tokens": 9,
+        "error": "",
+        "cache_write_tokens": 2054,
+        "finish_reason": "stop",
+        "latency": 1.998,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.802,
+        "ttft_s": 1.82,
+        "stream_s": 1.994
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2349,
+        "cached_tokens": 2054,
+        "output_tokens": 168,
+        "reasoning_tokens": 150,
+        "error": "",
+        "cache_write_tokens": 292,
+        "finish_reason": "stop",
+        "reasoning": "**Analyzing motion criteria**\n\nI’ve prepared the criteria for the closed gripper with specific measurements and offsets. I’m tracking crossings regarding the cube's interaction with the target. At different time markers, I'm observing the cube's position changes, noting the endpoint seems to be moving away. It looks like I need to estimate periodic motion and gather evidence on positions versus time, especially since the speed initially increases and then slows down. It feels like I've crossed the target before but need to check for further crossings.",
+        "latency": 4.002,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.971,
+        "ttft_s": 3.836,
+        "stream_s": 3.999
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2495,
+        "cached_tokens": 2346,
+        "output_tokens": 385,
+        "reasoning_tokens": 367,
+        "error": "",
+        "cache_write_tokens": 146,
+        "finish_reason": "stop",
+        "latency": 5.565,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 5.542,
+        "ttft_s": 5.543,
+        "stream_s": 5.563
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":null}",
+        "command": {
+          "choice": "c",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2641,
+        "cached_tokens": 2492,
+        "output_tokens": 335,
+        "reasoning_tokens": 317,
+        "error": "",
+        "cache_write_tokens": 146,
+        "finish_reason": "stop",
+        "reasoning": "**Estimating motion behavior**\n\nI need to determine the count for crossing a specific target value as a cube is moving. It starts at 37, increasing to 190, with a first crossing target at around 104. I see it's crossed between t16 and t32. The current movement indicates a likely reversal as it approaches 190. The speed was about 3.4 frames per unit initially, but it slows near the endpoint. I need to infer the sinusoidal motion's period and further crossings.**Analyzing cube motion and crossings**\n\nAt t59, the cube is at x148, but it seems to have become static with no new motion. I'm analyzing crossing timestamps with a sinusoidal fit. The x values start from 37 at t0, then 62 at t16, 116 at t32, 174 at t48, 186 at t53, and finally 190 at t59. It looks like the cosine trajectory hits the endpoint around 190 at t59, with target crossings near t29 and estimated return around t89. I’m all set to prepare the gripper.",
+        "latency": 7.329,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.649,
+        "ttft_s": 7.191,
+        "stream_s": 7.326
+      }
+    ]
+  },
+  "seconds": 22.5,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_m",
+  "reset_digest": "ed5606e74a857a5e",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 524300,
+      "difficulty": "hard",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 22.5
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/StopCube_ep43_fh_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 524300,
+      "difficulty": "hard",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "ed5606e74a857a5e",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

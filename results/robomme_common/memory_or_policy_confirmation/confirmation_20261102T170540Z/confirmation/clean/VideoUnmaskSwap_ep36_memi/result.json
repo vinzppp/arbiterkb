@@ -1,0 +1,275 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 36,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the green cube, finally pick up another container hiding the blue cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 9,
+    "chars": 1011
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 114,
+      "t_to": 114,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [78, 120]\n  green cube at [116, 96]\n  red cube at [112, 164]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [78, 120]\n  green cube at [116, 96]\n  red cube at [112, 164]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [87, 126], [101, 90], [110, 166]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [81, 101], [105, 119], [110, 166]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 118], [110, 166], [114, 98]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 118], [110, 166], [114, 95]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]",
+      "demo_steps": 9,
+      "command": {
+        "choice": "A",
+        "point": [
+          75,
+          118
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 114,
+      "captured": 114,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 8.74
+    },
+    {
+      "index": 1,
+      "t_from": 115,
+      "t_to": 228,
+      "steps": 8,
+      "segment": "t=128\n  gripper raised out of the frame  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]\nt=144\n  gripper raised out of the frame  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]\nt=160\n  gripper at [22, 118]  height 0.209  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]\nt=176\n  gripper at [27, 118]  height 0.199  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]\nt=192\n  gripper at [63, 120]  height 0.083  fingers 100% open\n  container at [74, 120], [110, 166], [114, 95]\nt=208\n  gripper at [67, 120]  height 0.067  fingers 46% open\n  container at [110, 166], [114, 95]\n  container at [74, 120] is held in the gripper\nt=224\n  gripper at [33, 119]  height 0.183  fingers 46% open\n  container at [110, 166], [114, 95]\n  container at [43, 120] is held in the gripper\n  green cube at [77, 121]\nt=228\n  gripper at [28, 119]  height 0.196  fingers 46% open\n  container at [110, 166], [114, 95]\n  container at [40, 120] is held in the gripper\n  green cube at [77, 121]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "B",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 2.87
+    },
+    {
+      "index": 2,
+      "t_from": 229,
+      "t_to": 278,
+      "steps": 4,
+      "segment": "t=240\n  gripper at [44, 120]  height 0.152  fingers 46% open\n  container at [110, 166], [114, 95]\n  container at [53, 121] is held in the gripper\n  green cube at [77, 121]\nt=256\n  gripper at [65, 121]  height 0.071  fingers 88% open\n  container at [110, 166], [114, 95]\n  container at [72, 122] is held in the gripper\nt=272\n  gripper at [52, 120]  height 0.120  fingers 100% open\n  container at [72, 122], [110, 166], [114, 95]\nt=278\n  gripper at [44, 120]  height 0.146  fingers 100% open\n  container at [72, 122], [110, 166], [114, 95]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "A",
+        "point": [
+          114,
+          95
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 103,
+      "captured": 103,
+      "terminated": true,
+      "status": "success",
+      "seconds": 4.27
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 115,
+  "reset_batch": 115,
+  "policy": {
+    "name": "memory",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "system_sha": "0e5025552561",
+    "calls": {
+      "decide": 3
+    },
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "statuses": {
+      "valid": 3
+    },
+    "usage": {
+      "input_tokens": 8242,
+      "cached_tokens": 0,
+      "output_tokens": 673,
+      "reasoning_tokens": 549,
+      "latency": 10.88,
+      "retries": 0
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"A\",\"point\":[75,118],\"memory_updates\":[{\"field\":\"remaining_targets\",\"value\":\"[[75, 118], [114, 98]]\"}],\"used_fields\":[]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2840,
+        "cached_tokens": 0,
+        "output_tokens": 426,
+        "reasoning_tokens": 377,
+        "error": "",
+        "cache_write_tokens": 2837,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating endpoint swaps**\n\nAlright, it looks like there were some endpoint swaps: green ends are now at the original blue position (75,118), and blue ends are swapped to where green was (114,98). So, the green target final position remains at [75,118], which is the first target. The point is in the center, and the remaining list will include green followed by blue. The final identity for blue is [114,98]. I’ll choose a green endpoint first.",
+        "latency": 6.661,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 5.377,
+        "ttft_s": 6.459,
+        "stream_s": 6.659,
+        "memory_before": "remaining_targets=",
+        "memory_after": "remaining_targets=[[75, 118], [114, 98]]",
+        "memory_updates": {
+          "remaining_targets": "[[75, 118], [114, 98]]"
+        },
+        "command": {
+          "choice": "A",
+          "point": [
+            75,
+            118
+          ]
+        }
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"B\",\"point\":null,\"memory_updates\":[{\"field\":\"remaining_targets\",\"value\":\"[[114, 98]]\"}],\"used_fields\":[\"remaining_targets\"]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2804,
+        "cached_tokens": 0,
+        "output_tokens": 77,
+        "reasoning_tokens": 33,
+        "error": "",
+        "cache_write_tokens": 2801,
+        "finish_reason": "stop",
+        "latency": 1.771,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.564,
+        "ttft_s": 1.575,
+        "stream_s": 1.768,
+        "memory_before": "remaining_targets=[[75, 118], [114, 98]]",
+        "memory_after": "remaining_targets=[[114, 98]]",
+        "memory_updates": {
+          "remaining_targets": "[[114, 98]]"
+        },
+        "command": {
+          "choice": "B",
+          "point": null
+        }
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"A\",\"point\":[114,95],\"memory_updates\":[],\"used_fields\":[\"remaining_targets\"]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2598,
+        "cached_tokens": 0,
+        "output_tokens": 170,
+        "reasoning_tokens": 139,
+        "error": "",
+        "cache_write_tokens": 2595,
+        "finish_reason": "stop",
+        "latency": 2.448,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.274,
+        "ttft_s": 2.282,
+        "stream_s": 2.445,
+        "memory_before": "remaining_targets=[[114, 98]]",
+        "memory_after": "remaining_targets=[[114, 98]]",
+        "memory_updates": {},
+        "command": {
+          "choice": "A",
+          "point": [
+            114,
+            95
+          ]
+        }
+      }
+    ],
+    "policy_prompt": "/workspace/memi/artifacts/gpt/policy_prompts/optimized_luna.json",
+    "memory": {
+      "remaining_targets": "[[114, 98]]"
+    },
+    "memory_line": "remaining_targets=[[114, 98]]"
+  },
+  "seconds": 18.8,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "memi",
+  "reset_digest": "50f9e2668d71956a",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 553600,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 18.8
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep36_memi/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 553600,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "50f9e2668d71956a",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

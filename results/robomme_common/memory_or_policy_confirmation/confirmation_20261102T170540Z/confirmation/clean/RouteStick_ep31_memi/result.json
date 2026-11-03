@@ -1,0 +1,326 @@
+{
+  "task": "RouteStick",
+  "episode": 31,
+  "split": "test",
+  "goal": "watch the video carefully, then use the stick attached to the robot to navigate around the sticks on the table, following the same path",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the nearest left target by circling around the stick clockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "move to the nearest right target by circling around the stick clockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "move to the nearest left target by circling around the stick counterclockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "move to the nearest right target by circling around the stick counterclockwise",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 14,
+    "chars": 3125
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 200,
+      "t_to": 200,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper at [80, 82]  height 0.070  fingers 3708% open\n  cube at [63, 170], [70, 137], [78, 101], [86, 62]\n  highlighted target at [91, 86]\n  target at [70, 182], [76, 152], [83, 120], [99, 49]\nt=16\n  gripper at [62, 91]  height 0.070  fingers 3876% open\n  cube at [63, 170], [70, 137], [78, 101], [86, 62]\n  highlighted target at [91, 86]\n  target at [70, 182], [76, 152], [83, 120], [99, 49]\n  waypoint at [73, 94]\nt=32\n  gripper at [60, 104]  height 0.070  fingers 4049% open\n  cube at [63, 170], [70, 137], [78, 101], [86, 62]\n  highlighted target at [91, 86]\n  target at [70, 182], [76, 152], [83, 120], [99, 49]\n  waypoint at [72, 106]\nt=48\n  gripper at [72, 120]  height 0.070  fingers 4148% open\n  cube at [63, 170], [70, 137], [78, 101], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [79, 116]\nt=64\n  gripper at [85, 137]  height 0.070  fingers 4175% open\n  cube at [68, 171], [76, 137], [78, 101], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [96, 135]\nt=80\n  gripper at [84, 152]  height 0.070  fingers 4295% open\n  cube at [73, 169], [76, 137], [78, 101], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [95, 150]\nt=96\n  gripper at [65, 156]  height 0.070  fingers 4550% open\n  cube at [65, 170], [70, 137], [78, 101], [86, 62]\n  highlighted target at [76, 152]\n  target at [70, 182], [83, 120], [91, 86], [99, 49]\n  waypoint at [80, 152]\nt=112\n  gripper at [80, 154]  height 0.070  fingers 4364% open\n  cube at [68, 170], [70, 137], [78, 101], [86, 62]\n  highlighted target at [76, 152]\n  target at [70, 182], [83, 120], [91, 86], [99, 49]\n  waypoint at [91, 152]\nt=128\n  gripper at [87, 143]  height 0.070  fingers 4193% open\n  cube at [74, 169], [76, 137], [78, 101], [86, 62]\n  highlighted target at [76, 152]\n  target at [70, 182], [83, 120], [91, 86], [99, 49]\n  waypoint at [98, 140]\nt=144\n  gripper at [74, 122]  height 0.070  fingers 4147% open\n  cube at [63, 170], [72, 137], [78, 101], [86, 62]\n  highlighted target at [76, 152], [83, 120]\n  target at [70, 182], [91, 86], [99, 49]\n  waypoint at [87, 123]\nt=160\n  gripper at [86, 117]  height 0.070  fingers 4007% open\n  cube at [63, 170], [75, 137], [80, 102], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [96, 117]\nt=176\n  gripper at [97, 105]  height 0.070  fingers 3819% open\n  cube at [63, 170], [74, 139], [88, 63], [88, 105]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [107, 106]\nt=192\n  gripper at [85, 86]  height 0.070  fingers 3737% open\n  cube at [63, 170], [71, 138], [82, 102], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [96, 90]\nt=199\n  gripper at [80, 82]  height 0.070  fingers 3720% open\n  cube at [63, 170], [71, 138], [79, 102], [86, 62]\n  highlighted target at [91, 86]\n  target at [70, 182], [76, 152], [83, 120], [99, 49]\n  waypoint at [94, 89]\nEXECUTION STEPS\nt=200\n  gripper at [80, 82]  height 0.070  fingers 3708% open\n  cube at [63, 170], [71, 138], [79, 102], [86, 62]\n  highlighted target at [91, 86]\n  target at [70, 182], [76, 152], [83, 120], [99, 49]",
+      "demo_steps": 14,
+      "command": {
+        "choice": "A",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 10.74
+    },
+    {
+      "index": 1,
+      "t_from": 201,
+      "t_to": 250,
+      "steps": 4,
+      "segment": "t=208\n  gripper at [71, 85]  height 0.070  fingers 3777% open\n  cube at [63, 170], [71, 138], [79, 102], [86, 62]\n  highlighted target at [91, 86]\n  target at [70, 182], [76, 152], [83, 120], [99, 49]\n  waypoint at [82, 89]\nt=224\n  gripper at [59, 96]  height 0.070  fingers 3952% open\n  cube at [63, 170], [71, 138], [79, 102], [86, 62]\n  highlighted target at [91, 86]\n  target at [70, 182], [76, 152], [83, 120], [99, 49]\n  waypoint at [72, 95]\nt=240\n  gripper at [64, 112]  height 0.070  fingers 4112% open\n  cube at [63, 170], [71, 138], [79, 102], [86, 62]\n  highlighted target at [91, 86]\n  target at [70, 182], [76, 152], [83, 120], [99, 49]\n  waypoint at [76, 112]\nt=250\n  gripper at [72, 120]  height 0.070  fingers 4148% open\n  cube at [63, 170], [71, 138], [79, 102], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [79, 116]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "C",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 6.22
+    },
+    {
+      "index": 2,
+      "t_from": 251,
+      "t_to": 300,
+      "steps": 4,
+      "segment": "t=256\n  gripper at [77, 125]  height 0.070  fingers 4156% open\n  cube at [63, 170], [71, 138], [79, 102], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [88, 124]\nt=272\n  gripper at [87, 145]  height 0.070  fingers 4209% open\n  cube at [73, 169], [77, 137], [79, 102], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [98, 143]\nt=288\n  gripper at [77, 155]  height 0.070  fingers 4399% open\n  cube at [68, 170], [71, 137], [79, 102], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [77, 150], [91, 86], [99, 49]\n  waypoint at [88, 151]\nt=300\n  gripper at [65, 156]  height 0.070  fingers 4559% open\n  cube at [65, 170], [71, 137], [79, 102], [86, 62]\n  highlighted target at [76, 152]\n  target at [70, 182], [83, 120], [91, 86], [99, 49]\n  waypoint at [80, 152]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "B",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 6.51
+    },
+    {
+      "index": 3,
+      "t_from": 301,
+      "t_to": 350,
+      "steps": 4,
+      "segment": "t=304\n  gripper at [68, 156]  height 0.070  fingers 4522% open\n  cube at [65, 170], [71, 137], [79, 102], [86, 62]\n  highlighted target at [76, 152]\n  target at [70, 182], [83, 120], [91, 86], [99, 49]\n  waypoint at [80, 152]\nt=320\n  gripper at [86, 151]  height 0.070  fingers 4268% open\n  cube at [72, 168], [74, 137], [79, 102], [86, 62]\n  highlighted target at [76, 152]\n  target at [70, 182], [83, 120], [91, 86], [99, 49]\n  waypoint at [96, 147]\nt=336\n  gripper at [84, 135]  height 0.070  fingers 4166% open\n  cube at [68, 171], [76, 138], [79, 102], [86, 62]\n  highlighted target at [76, 152]\n  target at [70, 182], [83, 120], [91, 86], [99, 49]\n  waypoint at [94, 133]\nt=350\n  gripper at [72, 120]  height 0.070  fingers 4144% open\n  cube at [63, 170], [72, 137], [79, 102], [86, 62]\n  highlighted target at [83, 120]\n  target at [70, 182], [76, 152], [91, 86], [99, 49]\n  waypoint at [87, 123]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "B",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": true,
+      "status": "success",
+      "seconds": 6.16
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 201,
+  "reset_batch": 201,
+  "policy": {
+    "name": "memory",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "system_sha": "0e5025552561",
+    "calls": {
+      "decide": 4
+    },
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "statuses": {
+      "valid": 4
+    },
+    "usage": {
+      "input_tokens": 13309,
+      "cached_tokens": 0,
+      "output_tokens": 959,
+      "reasoning_tokens": 780,
+      "latency": 17.593,
+      "retries": 0
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"A\",\"point\":null,\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['A', 'C', 'B', 'B']\"}],\"used_fields\":[]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 4183,
+        "cached_tokens": 0,
+        "output_tokens": 670,
+        "reasoning_tokens": 623,
+        "error": "",
+        "cache_write_tokens": 4180,
+        "finish_reason": "stop",
+        "latency": 8.283,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 6.692,
+        "ttft_s": 8.052,
+        "stream_s": 8.279,
+        "memory_before": "remaining_path=",
+        "memory_after": "remaining_path=['A', 'C', 'B', 'B']",
+        "memory_updates": {
+          "remaining_path": "['A', 'C', 'B', 'B']"
+        },
+        "command": {
+          "choice": "A",
+          "point": null
+        }
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"C\",\"point\":null,\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['C', 'B', 'B']\"}],\"used_fields\":[\"remaining_path\"]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3045,
+        "cached_tokens": 0,
+        "output_tokens": 99,
+        "reasoning_tokens": 52,
+        "error": "",
+        "cache_write_tokens": 3042,
+        "finish_reason": "stop",
+        "reasoning": "**Refining navigation path**\n\nI need to remove one leading path due to completed execution. My current path is ['C', 'B', 'B']. I'm considering choosing C as it’s the left counterclockwise point, which is currently null. I’ll use the remaining path, highlighting the target at x120. It looks like my left is larger and adjacent at x152, but there doesn't seem to be a point here. I need to clarify this further!",
+        "latency": 3.253,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.272,
+        "ttft_s": 2.974,
+        "stream_s": 3.25,
+        "memory_before": "remaining_path=['A', 'C', 'B', 'B']",
+        "memory_after": "remaining_path=['C', 'B', 'B']",
+        "memory_updates": {
+          "remaining_path": "['C', 'B', 'B']"
+        },
+        "command": {
+          "choice": "C",
+          "point": null
+        }
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"B\",\"point\":null,\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['B', 'B']\"}],\"used_fields\":[\"remaining_path\"]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3042,
+        "cached_tokens": 0,
+        "output_tokens": 81,
+        "reasoning_tokens": 37,
+        "error": "",
+        "cache_write_tokens": 3039,
+        "finish_reason": "stop",
+        "reasoning": "**Choosing target direction**\n\nI see that I need to remove one leading item from my completed command execution, leaving me with ['B', 'B']. Now, I need to choose 'B' that’s nearest to the right target in a clockwise direction. It seems I've got to point to a null menu internally and manage the used fields along the remaining path. There’s a bit of strategic thinking here! Let's ensure I'm clear on that before proceeding.",
+        "latency": 3.39,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.562,
+        "ttft_s": 3.207,
+        "stream_s": 3.386,
+        "memory_before": "remaining_path=['C', 'B', 'B']",
+        "memory_after": "remaining_path=['B', 'B']",
+        "memory_updates": {
+          "remaining_path": "['B', 'B']"
+        },
+        "command": {
+          "choice": "B",
+          "point": null
+        }
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"B\",\"point\":null,\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['B']\"}],\"used_fields\":[\"remaining_path\"]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3039,
+        "cached_tokens": 0,
+        "output_tokens": 109,
+        "reasoning_tokens": 68,
+        "error": "",
+        "cache_write_tokens": 3036,
+        "finish_reason": "stop",
+        "latency": 2.667,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.411,
+        "ttft_s": 2.436,
+        "stream_s": 2.664,
+        "memory_before": "remaining_path=['B', 'B']",
+        "memory_after": "remaining_path=['B']",
+        "memory_updates": {
+          "remaining_path": "['B']"
+        },
+        "command": {
+          "choice": "B",
+          "point": null
+        }
+      }
+    ],
+    "policy_prompt": "/workspace/memi/artifacts/gpt/policy_prompts/optimized_luna.json",
+    "memory": {
+      "remaining_path": "['B']"
+    },
+    "memory_line": "remaining_path=['B']"
+  },
+  "seconds": 46.9,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "memi",
+  "reset_digest": "03a45b0a0c96e08d",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 663100,
+      "difficulty": "hard",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 46.9
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/RouteStick_ep31_memi/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 663100,
+      "difficulty": "hard",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "03a45b0a0c96e08d",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

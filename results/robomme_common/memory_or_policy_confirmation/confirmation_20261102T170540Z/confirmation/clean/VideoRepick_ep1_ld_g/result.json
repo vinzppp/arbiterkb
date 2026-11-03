@@ -1,0 +1,278 @@
+{
+  "task": "VideoRepick",
+  "episode": 1,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the same block that was previously picked up again, finally put it down and press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put it down",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press the button to finish",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 17,
+    "chars": 2023
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 255,
+      "t_to": 255,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  button at [58, 120]\n  cube at [77, 137], [105, 135], [134, 113]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  button at [58, 120]\n  cube at [77, 137], [105, 135], [134, 113]\nt=32\n  gripper at [27, 137]  height 0.253  fingers 100% open\n  button at [58, 120]\n  cube at [77, 137], [105, 135], [134, 113]\nt=48\n  gripper at [73, 138]  height 0.150  fingers 100% open\n  cube at [77, 137], [105, 135], [134, 113]\nt=64\n  gripper at [94, 136]  height 0.074  fingers 100% open\n  cube at [105, 135], [134, 113]\nt=80\n  gripper at [105, 135]  height 0.018  fingers 46% open\n  button at [57, 118]\n  cube at [108, 135], [134, 113]\nt=96\n  gripper at [83, 138]  height 0.125  fingers 46% open\n  cube at [134, 113]\n  cube at [85, 138] is held in the gripper\nt=112\n  gripper at [89, 137]  height 0.101  fingers 46% open\n  cube at [134, 113]\n  cube at [92, 137] is held in the gripper\nt=128\n  gripper at [103, 136]  height 0.028  fingers 80% open\n  button at [57, 118]\n  cube at [107, 136], [134, 113]\nt=144\n  gripper at [93, 137]  height 0.078  fingers 100% open\n  cube at [104, 135], [134, 113]\nt=160\n  gripper at [74, 138]  height 0.151  fingers 100% open\n  cube at [78, 137], [104, 135], [134, 113]\nt=176\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 135], [134, 113]\nt=192\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 135], [132, 112]\nt=208\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [115, 107], [121, 144]\nt=224\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 121], [133, 130]\nt=240\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 134], [134, 115]\nt=254\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 134], [134, 115]\nEXECUTION STEPS\nt=255\n  gripper raised out of the frame  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 134], [134, 115]",
+      "demo_steps": 17,
+      "command": {
+        "choice": "a",
+        "point": [
+          134,
+          115
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 116,
+      "captured": 116,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 5.73
+    },
+    {
+      "index": 1,
+      "t_from": 256,
+      "t_to": 371,
+      "steps": 9,
+      "segment": "t=256\n  gripper raised out of the frame  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 134], [134, 115]\nt=272\n  gripper raised out of the frame  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 134], [134, 115]\nt=288\n  gripper at [48, 118]  height 0.260  fingers 100% open\n  button at [59, 120]\n  cube at [78, 137], [104, 134], [134, 115]\nt=304\n  gripper at [111, 112]  height 0.141  fingers 100% open\n  cube at [71, 139], [134, 115]\nt=320\n  gripper at [115, 112]  height 0.127  fingers 100% open\n  cube at [76, 137], [134, 115]\nt=336\n  gripper at [135, 115]  height 0.012  fingers 100% open\n  cube at [82, 137], [103, 136], [135, 113]\nt=352\n  gripper at [132, 114]  height 0.028  fingers 46% open\n  cube at [134, 111] is held in the gripper\n  cube at [82, 137], [103, 136]\nt=368\n  gripper at [109, 108]  height 0.157  fingers 46% open\n  cube at [120, 107] is held in the gripper\n  cube at [70, 141]\nt=371\n  gripper at [111, 108]  height 0.151  fingers 46% open\n  cube at [120, 107] is held in the gripper\n  cube at [71, 139]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 55,
+      "captured": 55,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.61
+    },
+    {
+      "index": 2,
+      "t_from": 372,
+      "t_to": 426,
+      "steps": 4,
+      "segment": "t=384\n  gripper at [126, 112]  height 0.070  fingers 46% open\n  cube at [126, 113] is held in the gripper\n  cube at [76, 137], [100, 136]\nt=400\n  gripper at [134, 114]  height 0.016  fingers 93% open\n  cube at [82, 136], [103, 136], [133, 111]\nt=416\n  gripper at [121, 111]  height 0.097  fingers 100% open\n  button at [60, 124]\n  cube at [77, 137], [97, 138], [135, 113]\nt=426\n  gripper at [109, 108]  height 0.152  fingers 100% open\n  cube at [70, 140], [133, 112]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          133,
+          112
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 67,
+      "captured": 67,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 4.11
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 256,
+  "reset_batch": 256,
+  "policy": {
+    "name": "ld_g",
+    "memory_kind": "ld",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "3dd534ad42ff2295de632a390ccac218f70f8940bc780f807c46aee809403fc6",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 3
+    },
+    "statuses": {
+      "valid": 3
+    },
+    "usage": {
+      "input_tokens": 7089,
+      "cached_tokens": 2418,
+      "output_tokens": 261,
+      "reasoning_tokens": 203,
+      "latency": 8.372
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[134,115]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            134,
+            115
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [button_0] button: visible at pixel [58, 120]\n  [cube_0] cube: visible at pixel [104, 135]\n  [cube_1] cube: visible at pixel [77, 137]\n  [cube_2] cube: visible at pixel [134, 113]\nCover relations (observed; a covered cube moves with its container):\n  none\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  t=48 hand pause, hand at (0.01, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=62 cube_1 disappeared; cover unknown\n  t=76 hand pause, hand at (0.01, 0.03, 0.02); nearest object cube_2 (horizontal distance, then 3D)\n  t=76 pick up, hand at (0.01, 0.03, 0.02); nearest object cube_2 (horizontal distance, then 3D)\n  t=104 hand pause, hand at (0.02, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=126 hand pause, hand at (0.01, 0.03, 0.03); nearest object cube_2 (horizontal distance, then 3D)\n  t=131 release, hand at (0.01, 0.03, 0.03); nearest object cube_2 (horizontal distance, then 3D)\n  t=157 hand pause, hand at (0.01, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=174 hand pause, hand at (-0.00, 0.00, 0.20); nearest object cube_2 (horizontal distance, then 3D)\nExecuted options (execution phase only, oldest first):\n  none\nExecuted option counts:\n  none",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2730,
+        "cached_tokens": 0,
+        "output_tokens": 100,
+        "reasoning_tokens": 80,
+        "error": "",
+        "cache_write_tokens": 2727,
+        "finish_reason": "stop",
+        "reasoning": "**Clarifying object selection**\n\nI need to reference the same block I picked up during the demo. The ledger indicates that cube_2 was picked, but visually, I see it at [134,113]. The demonstration hand targets [105,135] but according to the ledger, cube_2 is the nearest object. There's some ambiguity regarding the disappearance of cube_1. My instruction memory identifies an anonymous geometrical association, but the demo event clearly states to pick cube_2, so I’ll go with the current location of cube_2 at [134,115].",
+        "latency": 3.416,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.999,
+        "ttft_s": 3.124,
+        "stream_s": 3.413
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [button_0] button: not visible now; last seen t=360 at pixel [56, 125]\n  [cube_0] cube: visible at pixel [71, 139]\n  [cube_1] cube: not visible now; last seen t=359 at pixel [98, 138]\n  [cube_2] cube: visible at pixel [120, 107]\nCover relations (observed; a covered cube moves with its container):\n  [cube_1] -> unknown\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  t=48 hand pause, hand at (0.01, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=62 cube_1 disappeared; cover unknown\n  t=76 hand pause, hand at (0.01, 0.03, 0.02); nearest object cube_2 (horizontal distance, then 3D)\n  t=76 pick up, hand at (0.01, 0.03, 0.02); nearest object cube_2 (horizontal distance, then 3D)\n  t=104 hand pause, hand at (0.02, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=126 hand pause, hand at (0.01, 0.03, 0.03); nearest object cube_2 (horizontal distance, then 3D)\n  t=131 release, hand at (0.01, 0.03, 0.03); nearest object cube_2 (horizontal distance, then 3D)\n  t=157 hand pause, hand at (0.01, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=174 hand pause, hand at (-0.00, 0.00, 0.20); nearest object cube_2 (horizontal distance, then 3D)\nExecuted options (execution phase only, oldest first):\n  1. a: pick up the cube at [134, 115] -> executed, status ongoing\nExecuted option counts:\n  a: pick up the cube: 1",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2289,
+        "cached_tokens": 1209,
+        "output_tokens": 66,
+        "reasoning_tokens": 48,
+        "error": "",
+        "cache_write_tokens": 1077,
+        "finish_reason": "stop",
+        "reasoning": "**Handling cube commands**\n\nI see that I need to work with the same block we previously discussed, which seems to be demonstration cube_2. The current location of this held cube is at [120,107], and it's inferred that cube_2 has been picked. Now, it looks like I need to put it down and then press the \"b\" command. Let’s make sure I follow through with these steps correctly!",
+        "latency": 2.4,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.617,
+        "ttft_s": 2.303,
+        "stream_s": 2.397
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[133,112]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            133,
+            112
+          ]
+        },
+        "memory_before": "MEMORY: deterministic ledger (no probabilities; records only what was observed or executed)\nObjects (last observed pixel [y, x]):\n  [button_0] button: not visible now; last seen t=417 at pixel [56, 125]\n  [cube_0] cube: visible at pixel [70, 140]\n  [cube_1] cube: not visible now; last seen t=416 at pixel [97, 138]\n  [cube_2] cube: visible at pixel [133, 112]\nCover relations (observed; a covered cube moves with its container):\n  [cube_1] -> unknown\nDEMONSTRATION (events seen in the demonstration video; not executed by the robot):\n  t=48 hand pause, hand at (0.01, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=62 cube_1 disappeared; cover unknown\n  t=76 hand pause, hand at (0.01, 0.03, 0.02); nearest object cube_2 (horizontal distance, then 3D)\n  t=76 pick up, hand at (0.01, 0.03, 0.02); nearest object cube_2 (horizontal distance, then 3D)\n  t=104 hand pause, hand at (0.02, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=126 hand pause, hand at (0.01, 0.03, 0.03); nearest object cube_2 (horizontal distance, then 3D)\n  t=131 release, hand at (0.01, 0.03, 0.03); nearest object cube_2 (horizontal distance, then 3D)\n  t=157 hand pause, hand at (0.01, 0.03, 0.15); nearest object cube_2 (horizontal distance, then 3D)\n  t=174 hand pause, hand at (-0.00, 0.00, 0.20); nearest object cube_2 (horizontal distance, then 3D)\nExecuted options (execution phase only, oldest first):\n  1. a: pick up the cube at [134, 115] -> executed, status ongoing\n  2. b: put it down -> executed, status ongoing\nExecuted option counts:\n  a: pick up the cube: 1\n  b: put it down: 1",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2070,
+        "cached_tokens": 1209,
+        "output_tokens": 95,
+        "reasoning_tokens": 75,
+        "error": "",
+        "cache_write_tokens": 858,
+        "finish_reason": "stop",
+        "reasoning": "**Completing the task**\n\nI'm focusing on the current goal of picking up the same cube again to put it down and press the button. Right now, the cubes I have include cube_0 at [70,140] and cube_2 at [133,112]. I previously demonstrated picking up cube_2, and it seems I executed the task by picking the same cube again at coordinates [133,112]. It looks like I’m just repeating that action for clarity.",
+        "latency": 2.556,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.729,
+        "ttft_s": 2.444,
+        "stream_s": 2.554
+      }
+    ]
+  },
+  "seconds": 18.2,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "ld_g",
+  "reset_digest": "6d34640198ee152f",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 590100,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 18.2
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoRepick_ep1_ld_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 590100,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "6d34640198ee152f",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

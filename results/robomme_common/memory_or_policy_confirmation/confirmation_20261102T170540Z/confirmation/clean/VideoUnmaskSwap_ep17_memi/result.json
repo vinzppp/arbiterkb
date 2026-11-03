@@ -1,0 +1,171 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 17,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the red cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 12,
+    "chars": 1333
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 168,
+      "t_to": 168,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [101, 126]\n  green cube at [81, 116]\n  red cube at [139, 145]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [101, 126]\n  green cube at [81, 116]\n  red cube at [139, 145]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [78, 116], [98, 126], [137, 145]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [78, 116], [98, 126], [137, 145]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [78, 116], [98, 126], [137, 145]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 129], [97, 113], [137, 145]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [87, 137], [88, 105], [137, 145]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [78, 116], [98, 127], [137, 145]\nt=128\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 126], [98, 114], [137, 145]\nt=144\n  gripper raised out of the frame  fingers 100% open\n  container at [84, 138], [90, 104], [137, 145]\nt=160\n  gripper raised out of the frame  fingers 100% open\n  container at [80, 114], [98, 127], [137, 145]\nt=167\n  gripper raised out of the frame  fingers 100% open\n  container at [78, 116], [98, 127], [137, 145]\nEXECUTION STEPS\nt=168\n  gripper raised out of the frame  fingers 100% open\n  container at [78, 116], [98, 127], [137, 145]",
+      "demo_steps": 12,
+      "command": {
+        "choice": "A",
+        "point": [
+          137,
+          145
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 102,
+      "captured": 102,
+      "terminated": true,
+      "status": "success",
+      "seconds": 9.78
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 169,
+  "reset_batch": 169,
+  "policy": {
+    "name": "memory",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "system_sha": "0e5025552561",
+    "calls": {
+      "decide": 1
+    },
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2953,
+      "cached_tokens": 0,
+      "output_tokens": 529,
+      "reasoning_tokens": 486,
+      "latency": 8.105,
+      "retries": 0
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"A\",\"point\":[137,145],\"memory_updates\":[{\"field\":\"remaining_targets\",\"value\":\"[[137, 145]]\"}],\"used_fields\":[]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2953,
+        "cached_tokens": 0,
+        "output_tokens": 529,
+        "reasoning_tokens": 486,
+        "error": "",
+        "cache_write_tokens": 2950,
+        "finish_reason": "stop",
+        "reasoning": "**Analyzing container movements**\n\nI need to track the demo covering colors: red, green, and blue, along with their movement trajectories. The containers started at specific positions, and there was a significant movement from t64 to t112. I'm trying to figure out if their identities were swapped during the movement based on their positions. It looks like green might have moved from [78,116] toward [79,129] and back again, while blue's movement is less clear. I'll dive deeper into their paths.**Mapping identity movements**\n\nI'm analyzing the rotations around the midpoint to determine the identities of the color containers. The starting positions show green at [78,116] and blue at [98,126]. Their trajectories shift through various time points, and it looks like green might be advancing while possibly swapping with blue at certain intervals. The second interval suggests a similar pattern where another exchange occurs. I'll list my findings and focus on the target red container, which remains steady at [137,145].",
+        "latency": 8.105,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.921,
+        "ttft_s": 7.873,
+        "stream_s": 8.102,
+        "memory_before": "remaining_targets=",
+        "memory_after": "remaining_targets=[[137, 145]]",
+        "memory_updates": {
+          "remaining_targets": "[[137, 145]]"
+        },
+        "command": {
+          "choice": "A",
+          "point": [
+            137,
+            145
+          ]
+        }
+      }
+    ],
+    "policy_prompt": "/workspace/memi/artifacts/gpt/policy_prompts/optimized_luna.json",
+    "memory": {
+      "remaining_targets": "[[137, 145]]"
+    },
+    "memory_line": "remaining_targets=[[137, 145]]"
+  },
+  "seconds": 12.6,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "memi",
+  "reset_digest": "9bca4466418bd2fe",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 551700,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 12.6
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep17_memi/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 551700,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "9bca4466418bd2fe",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

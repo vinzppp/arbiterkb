@@ -1,0 +1,398 @@
+{
+  "task": "StopCube",
+  "episode": 5,
+  "split": "test",
+  "goal": "press the button to stop the cube just as it reaches the target for the second time",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the top of the button to prepare",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "remain static",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press button to stop the cube",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [58, 167]\n  cube at [76, 47]\n  target at [89, 116]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          58,
+          167
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 58,
+      "captured": 58,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.63
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 58,
+      "steps": 4,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [58, 167]\n  cube at [80, 73]\n  target at [89, 116]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [58, 167]\n  cube at [90, 127]\n  target at [89, 115]\nt=48\n  gripper at [23, 175]  height 0.156  fingers 100% open\n  button at [58, 167]\n  cube at [99, 180]\n  target at [89, 115]\nt=58\n  gripper at [24, 175]  height 0.152  fingers 0% open\n  button at [58, 167]\n  cube at [101, 194]\n  target at [89, 115]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 15,
+      "captured": 15,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.2
+    },
+    {
+      "index": 2,
+      "t_from": 59,
+      "t_to": 73,
+      "steps": 2,
+      "segment": "t=64\n  gripper at [25, 176]  height 0.151  fingers 0% open\n  button at [58, 167]\n  cube at [101, 191]\n  target at [89, 115]\nt=73\n  gripper at [27, 177]  height 0.149  fingers 0% open\n  button at [58, 167]\n  cube at [97, 172]\n  target at [89, 115]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          58,
+          167
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 9,
+      "captured": 9,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 6.36
+    },
+    {
+      "index": 3,
+      "t_from": 74,
+      "t_to": 82,
+      "steps": 2,
+      "segment": "t=80\n  gripper at [27, 177]  height 0.149  fingers 0% open\n  button at [58, 167]\n  cube at [93, 149]\n  target at [89, 115]\nt=82\n  gripper at [27, 177]  height 0.149  fingers 0% open\n  button at [58, 167]\n  cube at [92, 142]\n  target at [89, 115]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          58,
+          167
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 8,
+      "captured": 8,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 5.61
+    },
+    {
+      "index": 4,
+      "t_from": 83,
+      "t_to": 90,
+      "steps": 1,
+      "segment": "t=90\n  gripper at [27, 178]  height 0.149  fingers 0% open\n  button at [58, 167]\n  cube at [85, 112]\n  target at [90, 116]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 63,
+      "captured": 63,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 4.81
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "mm_g",
+    "memory_kind": "mm",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "71c50604b8843473e48d285394f98ff3ffca2b217f50cda4a3158b247efce0d2",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 5
+    },
+    "statuses": {
+      "valid": 5
+    },
+    "usage": {
+      "input_tokens": 10754,
+      "cached_tokens": 5164,
+      "output_tokens": 1419,
+      "reasoning_tokens": 778,
+      "latency": 22.331
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[58,167],\"memory_updates\":[{\"field\":\"passage_count\",\"value\":\"0\"},{\"field\":\"last_side\",\"value\":\"-1\"},{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 47}]\"}]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            58,
+            167
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  passage_count\n      Start at 0 for empty memory, otherwise use the incoming passage_count. Process all newly shown observations chronologically, starting with incoming last_side as the preceding side. Extract cube_x and target_x from the SECOND component of the cube's and target's respective [y, x] positions, never the first component. Compute the sign of cube_x minus target_x. Each nonzero sign opposite to the preceding nonzero side increments the count once; then update the working side. Ignore exact equality until a nonzero side appears. Include observations during A and B, and count multiple crossings within one decision interval separately. Write the resulting count, without adding any predicted future passage from the command being selected. e.g. 2\n  last_side\n      The cube's most recently observed nonzero side of the target center, represented as -1 when cube x is smaller than target x and 1 when it is larger. Extract x from the SECOND component of each observed [y, x] position for both cube and target, never the first component. Starting with incoming last_side, or 0 for empty memory, process newly shown execution observations chronologically and replace the working side with each nonzero sign of cube_x minus target_x. If exactly equal, retain the preceding nonzero side; use 0 if none has yet been observed. Record the side at the decision's final observation, not the side expected after its selected command. e.g. -1\n  motion_history\n      With empty memory, start with an empty ordered list; otherwise preserve incoming motion_history. Append all newly shown execution observations chronologically, including the final observation, keeping only one sample for any repeated timestamp. Exclude demonstration observations. Write only observed timestamps and cube x measurements, never predicted positions or command outcomes. Extract every cube_x measurement from the SECOND component of the observed cube [y, x] position, never the first component. Use the combined incoming history and newly shown execution observations to estimate motion for subgoal selection. Do not recount retained history when updating passage_count: that update still uses only newly shown observations and incoming last_side. Each history entry contains a timestamp and a scalar cube x measurement, not a spatial coordinate pair. Serialize the field as list text with single-quoted keys, key order 'time' then 'cube_x', and one space after each colon and comma. Do not include extra outer quotation marks within the value. Use [] for an empty list. This representation does not change the observations retained. e.g. [{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 80}, {'time': 32, 'cube_x': 147}]\nMEMORY CARRIED IN\n  passage_count=; last_side=; motion_history=",
+        "memory_updates": {
+          "passage_count": "0",
+          "last_side": "-1",
+          "motion_history": "[{'time': 0, 'cube_x': 47}]"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2034,
+        "cached_tokens": 0,
+        "output_tokens": 149,
+        "reasoning_tokens": 82,
+        "error": "",
+        "cache_write_tokens": 2031,
+        "finish_reason": "stop",
+        "reasoning": "**Choosing press timing**\n\nI'm considering when to press the button for the Cube x47 to reach target116 on side -1. It looks like I'll need to press it when it reaches the target for the second time, since it's likely moving in an oscillatory manner. I’ll prepare the button now for an action later. I'll update my memory with the initial observation: count0 on side -1 and history t0 at x47. This should help keep track of everything.",
+        "latency": 3.491,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.487,
+        "ttft_s": 3.267,
+        "stream_s": 3.488
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":null,\"memory_updates\":[{\"field\":\"passage_count\",\"value\":\"1\"},{\"field\":\"last_side\",\"value\":\"1\"},{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}]\"}]}",
+        "command": {
+          "choice": "a",
+          "point": null
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  passage_count\n      Start at 0 for empty memory, otherwise use the incoming passage_count. Process all newly shown observations chronologically, starting with incoming last_side as the preceding side. Extract cube_x and target_x from the SECOND component of the cube's and target's respective [y, x] positions, never the first component. Compute the sign of cube_x minus target_x. Each nonzero sign opposite to the preceding nonzero side increments the count once; then update the working side. Ignore exact equality until a nonzero side appears. Include observations during A and B, and count multiple crossings within one decision interval separately. Write the resulting count, without adding any predicted future passage from the command being selected. e.g. 2\n  last_side\n      The cube's most recently observed nonzero side of the target center, represented as -1 when cube x is smaller than target x and 1 when it is larger. Extract x from the SECOND component of each observed [y, x] position for both cube and target, never the first component. Starting with incoming last_side, or 0 for empty memory, process newly shown execution observations chronologically and replace the working side with each nonzero sign of cube_x minus target_x. If exactly equal, retain the preceding nonzero side; use 0 if none has yet been observed. Record the side at the decision's final observation, not the side expected after its selected command. e.g. -1\n  motion_history\n      With empty memory, start with an empty ordered list; otherwise preserve incoming motion_history. Append all newly shown execution observations chronologically, including the final observation, keeping only one sample for any repeated timestamp. Exclude demonstration observations. Write only observed timestamps and cube x measurements, never predicted positions or command outcomes. Extract every cube_x measurement from the SECOND component of the observed cube [y, x] position, never the first component. Use the combined incoming history and newly shown execution observations to estimate motion for subgoal selection. Do not recount retained history when updating passage_count: that update still uses only newly shown observations and incoming last_side. Each history entry contains a timestamp and a scalar cube x measurement, not a spatial coordinate pair. Serialize the field as list text with single-quoted keys, key order 'time' then 'cube_x', and one space after each colon and comma. Do not include extra outer quotation marks within the value. Use [] for an empty list. This representation does not change the observations retained. e.g. [{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 80}, {'time': 32, 'cube_x': 147}]\nMEMORY CARRIED IN\n  passage_count=0; last_side=-1; motion_history=[{'time': 0, 'cube_x': 47}]",
+        "memory_updates": {
+          "passage_count": "1",
+          "last_side": "1",
+          "motion_history": "[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}]"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2204,
+        "cached_tokens": 1291,
+        "output_tokens": 282,
+        "reasoning_tokens": 166,
+        "error": "",
+        "cache_write_tokens": 910,
+        "finish_reason": "stop",
+        "reasoning": "**Deciding on timing and actions**\n\nI need to process some newly shown targets at different points like t16, t32, t48, and t58. The goal is to hit 116/115, with various cubes moving at different rates. The first crossing happened at t32. I need to decide when to act for the second target hit. Depending on the cube's movement, I might have to prepare an action and update my history for better timing. So, I guess it’s button prep time!",
+        "latency": 3.832,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.29,
+        "ttft_s": 3.497,
+        "stream_s": 3.83
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[58,167],\"memory_updates\":[{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}, {'time': 64, 'cube_x': 191}, {'time': 73, 'cube_x': 172}]\"}]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            58,
+            167
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  passage_count\n      Start at 0 for empty memory, otherwise use the incoming passage_count. Process all newly shown observations chronologically, starting with incoming last_side as the preceding side. Extract cube_x and target_x from the SECOND component of the cube's and target's respective [y, x] positions, never the first component. Compute the sign of cube_x minus target_x. Each nonzero sign opposite to the preceding nonzero side increments the count once; then update the working side. Ignore exact equality until a nonzero side appears. Include observations during A and B, and count multiple crossings within one decision interval separately. Write the resulting count, without adding any predicted future passage from the command being selected. e.g. 2\n  last_side\n      The cube's most recently observed nonzero side of the target center, represented as -1 when cube x is smaller than target x and 1 when it is larger. Extract x from the SECOND component of each observed [y, x] position for both cube and target, never the first component. Starting with incoming last_side, or 0 for empty memory, process newly shown execution observations chronologically and replace the working side with each nonzero sign of cube_x minus target_x. If exactly equal, retain the preceding nonzero side; use 0 if none has yet been observed. Record the side at the decision's final observation, not the side expected after its selected command. e.g. -1\n  motion_history\n      With empty memory, start with an empty ordered list; otherwise preserve incoming motion_history. Append all newly shown execution observations chronologically, including the final observation, keeping only one sample for any repeated timestamp. Exclude demonstration observations. Write only observed timestamps and cube x measurements, never predicted positions or command outcomes. Extract every cube_x measurement from the SECOND component of the observed cube [y, x] position, never the first component. Use the combined incoming history and newly shown execution observations to estimate motion for subgoal selection. Do not recount retained history when updating passage_count: that update still uses only newly shown observations and incoming last_side. Each history entry contains a timestamp and a scalar cube x measurement, not a spatial coordinate pair. Serialize the field as list text with single-quoted keys, key order 'time' then 'cube_x', and one space after each colon and comma. Do not include extra outer quotation marks within the value. Use [] for an empty list. This representation does not change the observations retained. e.g. [{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 80}, {'time': 32, 'cube_x': 147}]\nMEMORY CARRIED IN\n  passage_count=1; last_side=1; motion_history=[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}]",
+        "memory_updates": {
+          "motion_history": "[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}, {'time': 64, 'cube_x': 191}, {'time': 73, 'cube_x': 172}]"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2164,
+        "cached_tokens": 1291,
+        "output_tokens": 356,
+        "reasoning_tokens": 231,
+        "error": "",
+        "cache_write_tokens": 870,
+        "finish_reason": "stop",
+        "reasoning": "**Analyzing cube movements**\n\nI’m analyzing the newly shown data, focusing on the targets and cube's trajectory. It looks like the cube is moving toward a decreasing x position, and I need to press a button when it reaches the target the second time. The current movement suggests it's oscillating horizontally and crossing the target. Since there's a delay with the command press, maybe I should press it now. My decision is based on how close the cube is to the target and its velocity.**Preparing button for press**\n\nI need to prepare the button now and decide when to press it as the cube nears the target. My first step is to assess the situation, ensuring I'm ready for the action. It's important to choose a suitable preparation option, so I’ll consider what will work best based on the cube's trajectory. I want to make sure I'm set up correctly before the moment comes, so I don’t miss the chance to act.",
+        "latency": 6.059,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.093,
+        "ttft_s": 5.718,
+        "stream_s": 6.056
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[58,167],\"memory_updates\":[{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}, {'time': 64, 'cube_x': 191}, {'time': 73, 'cube_x': 172}, {'time': 80, 'cube_x': 149}, {'time': 82, 'cube_x': 142}]\"}]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            58,
+            167
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  passage_count\n      Start at 0 for empty memory, otherwise use the incoming passage_count. Process all newly shown observations chronologically, starting with incoming last_side as the preceding side. Extract cube_x and target_x from the SECOND component of the cube's and target's respective [y, x] positions, never the first component. Compute the sign of cube_x minus target_x. Each nonzero sign opposite to the preceding nonzero side increments the count once; then update the working side. Ignore exact equality until a nonzero side appears. Include observations during A and B, and count multiple crossings within one decision interval separately. Write the resulting count, without adding any predicted future passage from the command being selected. e.g. 2\n  last_side\n      The cube's most recently observed nonzero side of the target center, represented as -1 when cube x is smaller than target x and 1 when it is larger. Extract x from the SECOND component of each observed [y, x] position for both cube and target, never the first component. Starting with incoming last_side, or 0 for empty memory, process newly shown execution observations chronologically and replace the working side with each nonzero sign of cube_x minus target_x. If exactly equal, retain the preceding nonzero side; use 0 if none has yet been observed. Record the side at the decision's final observation, not the side expected after its selected command. e.g. -1\n  motion_history\n      With empty memory, start with an empty ordered list; otherwise preserve incoming motion_history. Append all newly shown execution observations chronologically, including the final observation, keeping only one sample for any repeated timestamp. Exclude demonstration observations. Write only observed timestamps and cube x measurements, never predicted positions or command outcomes. Extract every cube_x measurement from the SECOND component of the observed cube [y, x] position, never the first component. Use the combined incoming history and newly shown execution observations to estimate motion for subgoal selection. Do not recount retained history when updating passage_count: that update still uses only newly shown observations and incoming last_side. Each history entry contains a timestamp and a scalar cube x measurement, not a spatial coordinate pair. Serialize the field as list text with single-quoted keys, key order 'time' then 'cube_x', and one space after each colon and comma. Do not include extra outer quotation marks within the value. Use [] for an empty list. This representation does not change the observations retained. e.g. [{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 80}, {'time': 32, 'cube_x': 147}]\nMEMORY CARRIED IN\n  passage_count=1; last_side=1; motion_history=[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}, {'time': 64, 'cube_x': 191}, {'time': 73, 'cube_x': 172}]",
+        "memory_updates": {
+          "motion_history": "[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}, {'time': 64, 'cube_x': 191}, {'time': 73, 'cube_x': 172}, {'time': 80, 'cube_x': 149}, {'time': 82, 'cube_x': 142}]"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2190,
+        "cached_tokens": 1291,
+        "output_tokens": 290,
+        "reasoning_tokens": 139,
+        "error": "",
+        "cache_write_tokens": 896,
+        "finish_reason": "stop",
+        "latency": 5.365,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.635,
+        "ttft_s": 4.655,
+        "stream_s": 5.362
+      },
+      {
+        "kind": "decide",
+        "index": 4,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":null,\"memory_updates\":[{\"field\":\"passage_count\",\"value\":\"2\"},{\"field\":\"last_side\",\"value\":\"-1\"},{\"field\":\"motion_history\",\"value\":\"[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}, {'time': 64, 'cube_x': 191}, {'time': 73, 'cube_x': 172}, {'time': 80, 'cube_x': 149}, {'time': 82, 'cube_x': 142}, {'time': 90, 'cube_x': 112}]\"}]}",
+        "command": {
+          "choice": "c",
+          "point": null
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  passage_count\n      Start at 0 for empty memory, otherwise use the incoming passage_count. Process all newly shown observations chronologically, starting with incoming last_side as the preceding side. Extract cube_x and target_x from the SECOND component of the cube's and target's respective [y, x] positions, never the first component. Compute the sign of cube_x minus target_x. Each nonzero sign opposite to the preceding nonzero side increments the count once; then update the working side. Ignore exact equality until a nonzero side appears. Include observations during A and B, and count multiple crossings within one decision interval separately. Write the resulting count, without adding any predicted future passage from the command being selected. e.g. 2\n  last_side\n      The cube's most recently observed nonzero side of the target center, represented as -1 when cube x is smaller than target x and 1 when it is larger. Extract x from the SECOND component of each observed [y, x] position for both cube and target, never the first component. Starting with incoming last_side, or 0 for empty memory, process newly shown execution observations chronologically and replace the working side with each nonzero sign of cube_x minus target_x. If exactly equal, retain the preceding nonzero side; use 0 if none has yet been observed. Record the side at the decision's final observation, not the side expected after its selected command. e.g. -1\n  motion_history\n      With empty memory, start with an empty ordered list; otherwise preserve incoming motion_history. Append all newly shown execution observations chronologically, including the final observation, keeping only one sample for any repeated timestamp. Exclude demonstration observations. Write only observed timestamps and cube x measurements, never predicted positions or command outcomes. Extract every cube_x measurement from the SECOND component of the observed cube [y, x] position, never the first component. Use the combined incoming history and newly shown execution observations to estimate motion for subgoal selection. Do not recount retained history when updating passage_count: that update still uses only newly shown observations and incoming last_side. Each history entry contains a timestamp and a scalar cube x measurement, not a spatial coordinate pair. Serialize the field as list text with single-quoted keys, key order 'time' then 'cube_x', and one space after each colon and comma. Do not include extra outer quotation marks within the value. Use [] for an empty list. This representation does not change the observations retained. e.g. [{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 80}, {'time': 32, 'cube_x': 147}]\nMEMORY CARRIED IN\n  passage_count=1; last_side=1; motion_history=[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}, {'time': 64, 'cube_x': 191}, {'time': 73, 'cube_x': 172}, {'time': 80, 'cube_x': 149}, {'time': 82, 'cube_x': 142}]",
+        "memory_updates": {
+          "passage_count": "2",
+          "last_side": "-1",
+          "motion_history": "[{'time': 0, 'cube_x': 47}, {'time': 16, 'cube_x': 73}, {'time': 32, 'cube_x': 127}, {'time': 48, 'cube_x': 180}, {'time': 58, 'cube_x': 194}, {'time': 64, 'cube_x': 191}, {'time': 73, 'cube_x': 172}, {'time': 80, 'cube_x': 149}, {'time': 82, 'cube_x': 142}, {'time': 90, 'cube_x': 112}]"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2162,
+        "cached_tokens": 1291,
+        "output_tokens": 342,
+        "reasoning_tokens": 160,
+        "error": "",
+        "cache_write_tokens": 868,
+        "finish_reason": "stop",
+        "latency": 3.584,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.679,
+        "ttft_s": 2.689,
+        "stream_s": 3.581
+      }
+    ]
+  },
+  "seconds": 26.0,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "mm_g",
+  "reset_digest": "cf816ddc9f29113c",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 520500,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 26.0
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/StopCube_ep5_mm_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 520500,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "cf816ddc9f29113c",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

@@ -1,0 +1,395 @@
+{
+  "task": "StopCube",
+  "episode": 6,
+  "split": "test",
+  "goal": "press the button to stop the cube just as it reaches the target for the third time",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the top of the button to prepare",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "remain static",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press button to stop the cube",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [66, 142]\n  cube at [71, 48]\n  target at [86, 114]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          66,
+          142
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 54,
+      "captured": 54,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.58
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 54,
+      "steps": 4,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [66, 142]\n  cube at [72, 53]\n  target at [86, 114]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [66, 142]\n  cube at [76, 70]\n  target at [86, 114]\nt=48\n  gripper at [32, 146]  height 0.154  fingers 100% open\n  button at [66, 142]\n  cube at [81, 93]\n  target at [86, 114]\nt=54\n  gripper at [32, 146]  height 0.154  fingers 0% open\n  button at [66, 142]\n  cube at [83, 104]\n  target at [86, 114]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          66,
+          142
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 15,
+      "captured": 15,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.52
+    },
+    {
+      "index": 2,
+      "t_from": 55,
+      "t_to": 69,
+      "steps": 2,
+      "segment": "t=64\n  gripper at [35, 147]  height 0.149  fingers 0% open\n  button at [66, 142]\n  cube at [87, 123]\n  target at [86, 112]\nt=69\n  gripper at [35, 147]  height 0.150  fingers 0% open\n  button at [66, 142]\n  cube at [89, 132]\n  target at [86, 112]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          66,
+          142
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 9,
+      "captured": 9,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.95
+    },
+    {
+      "index": 3,
+      "t_from": 70,
+      "t_to": 78,
+      "steps": 1,
+      "segment": "t=78\n  gripper at [35, 147]  height 0.149  fingers 0% open\n  button at [66, 142]\n  cube at [92, 148]\n  target at [86, 112]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          66,
+          142
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 8,
+      "captured": 8,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.2
+    },
+    {
+      "index": 4,
+      "t_from": 79,
+      "t_to": 86,
+      "steps": 2,
+      "segment": "t=80\n  gripper at [35, 147]  height 0.149  fingers 0% open\n  button at [66, 142]\n  cube at [93, 151]\n  target at [86, 112]\nt=86\n  gripper at [35, 147]  height 0.149  fingers 0% open\n  button at [66, 142]\n  cube at [95, 159]\n  target at [86, 112]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          66,
+          142
+        ]
+      },
+      "result": "planner_error",
+      "error": "RuntimeError: FailAwareWrapper caught specific exception: Fail to parameterize path",
+      "batch": -1,
+      "captured": 0,
+      "terminated": false,
+      "status": "",
+      "seconds": 2.99
+    }
+  ],
+  "outcome": "planner_error",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "kb_g",
+    "memory_kind": "kb",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "3dd534ad42ff2295de632a390ccac218f70f8940bc780f807c46aee809403fc6",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 5
+    },
+    "statuses": {
+      "valid": 5
+    },
+    "usage": {
+      "input_tokens": 8632,
+      "cached_tokens": 4836,
+      "output_tokens": 516,
+      "reasoning_tokens": 416,
+      "latency": 16.306
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[66,142]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            66,
+            142
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: press the button to stop the cube just as it reaches the target for the third time\nTask items (named by the goal): button, cube, target\nObjects (world frame, m):\n  [cube_0] cube (task item), visible at -0.163, -0.342, 0.010, last seen t=0 [o0:cube_0]\n  [target_0] target (task item), visible at -0.081, -0.053, 0.010, last seen t=0 [o0:target_0]\nRelations:\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [66, 142]\nVisible object-to-pixel lookup:\n  [button_0] button at pixel [66, 142]\n  [cube_0] cube at pixel [71, 48]\n  [target_0] target at pixel [86, 114]",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1658,
+        "cached_tokens": 0,
+        "output_tokens": 103,
+        "reasoning_tokens": 83,
+        "error": "",
+        "cache_write_tokens": 1655,
+        "finish_reason": "stop",
+        "reasoning": "**Figuring out button timing**\n\nI need to be ready to press a button at the right time as the cube moves toward its target. It seems like staying static and observing is the way to go. I should prepare by moving the top button, then press it when the moment feels right. The cube is at x48, approaching a target at 114, which suggests its movement might be bouncing. So, preparing for that button action is crucial, then I can monitor the situation.",
+        "latency": 3.696,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.855,
+        "ttft_s": 3.533,
+        "stream_s": 3.691
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[66,142]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            66,
+            142
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: press the button to stop the cube just as it reaches the target for the third time\nTask items (named by the goal): button, cube, target\nObjects (world frame, m):\n  [cube_0] cube (task item), visible at -0.091, -0.089, 0.010, last seen t=54 [o54:cube_0]\n  [target_0] target (task item), visible at -0.081, -0.053, 0.010, last seen t=54 [o54:target_0]\nRelations:\n  [Near(cube_0, target_0)] from positions [o54:cube_0,o54:target_0]\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [66, 142]\nVisible object-to-pixel lookup:\n  [button_0] button at pixel [66, 142]\n  [cube_0] cube at pixel [83, 104]\n  [target_0] target at pixel [87, 115]",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1840,
+        "cached_tokens": 1209,
+        "output_tokens": 128,
+        "reasoning_tokens": 108,
+        "error": "",
+        "cache_write_tokens": 628,
+        "finish_reason": "stop",
+        "reasoning": "**Figuring out timing for movement**\n\nI'm trying to figure out the timing for the cube moving toward the target. It looks like the target is crossing the third point. I think I might need to press the button now. As the cube is at [83,104] and the target at [86,114], it's moving right/down. It should reach the target within the next six frames, so I need to prepare the button for movement and decide at the right moment. Let’s press prepare now!",
+        "latency": 3.164,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.338,
+        "ttft_s": 3.046,
+        "stream_s": 3.161
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[66,142]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            66,
+            142
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: press the button to stop the cube just as it reaches the target for the third time\nTask items (named by the goal): button, cube, target\nObjects (world frame, m):\n  [cube_0] cube (task item), visible at -0.060, 0.018, 0.010, last seen t=69 [o69:cube_0]\n  [target_0] target (task item), visible at -0.081, -0.053, 0.010, last seen t=69 [o69:target_0]\nRelations:\n  [Near(cube_0, target_0)] from positions [o69:cube_0,o69:target_0]\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [66, 142]\nVisible object-to-pixel lookup:\n  [button_0] button at pixel [66, 142]\n  [cube_0] cube at pixel [89, 132]\n  [target_0] target at pixel [86, 114]",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1748,
+        "cached_tokens": 1209,
+        "output_tokens": 102,
+        "reasoning_tokens": 82,
+        "error": "",
+        "cache_write_tokens": 536,
+        "finish_reason": "stop",
+        "latency": 3.645,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.3,
+        "ttft_s": 3.352,
+        "stream_s": 3.642
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[66,142]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            66,
+            142
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: press the button to stop the cube just as it reaches the target for the third time\nTask items (named by the goal): button, cube, target\nObjects (world frame, m):\n  [cube_0] cube (task item), visible at -0.043, 0.079, 0.010, last seen t=78 [o78:cube_0]\n  [target_0] target (task item), visible at -0.081, -0.053, 0.010, last seen t=78 [o78:target_0]\nRelations:\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [66, 142]\nVisible object-to-pixel lookup:\n  [button_0] button at pixel [66, 142]\n  [cube_0] cube at pixel [92, 148]\n  [target_0] target at pixel [86, 114]",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1666,
+        "cached_tokens": 1209,
+        "output_tokens": 88,
+        "reasoning_tokens": 68,
+        "error": "",
+        "cache_write_tokens": 454,
+        "finish_reason": "stop",
+        "reasoning": "**Tracking timing hits**\n\nI need to track timing for hits, focusing only on the current step. The button should be pressed when it reaches the target, specifically when the third reaches a specific target. The cube's position is at [92,148], and the target at [86,112] — so there's a distance to consider. I might need to adjust the top button and monitor the movement. The goal is to aim for a press during the third time it's triggered.",
+        "latency": 2.955,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.965,
+        "ttft_s": 2.791,
+        "stream_s": 2.951
+      },
+      {
+        "kind": "decide",
+        "index": 4,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[66,142]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            66,
+            142
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: press the button to stop the cube just as it reaches the target for the third time\nTask items (named by the goal): button, cube, target\nObjects (world frame, m):\n  [cube_0] cube (task item), visible at -0.029, 0.128, 0.010, last seen t=86 [o86:cube_0]\n  [target_0] target (task item), visible at -0.081, -0.053, 0.010, last seen t=86 [o86:target_0]\nRelations:\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [66, 142]\nVisible object-to-pixel lookup:\n  [button_0] button at pixel [66, 142]\n  [cube_0] cube at pixel [95, 161]\n  [target_0] target at pixel [86, 114]",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1720,
+        "cached_tokens": 1209,
+        "output_tokens": 95,
+        "reasoning_tokens": 75,
+        "error": "",
+        "cache_write_tokens": 508,
+        "finish_reason": "stop",
+        "reasoning": "**Preparing for movement analysis**\n\nI’m looking into the timing for the third arrival. The cube is moving from coordinates (y93, x151) to (y95, x159), with the target at (y86, x112). I wonder if this oscillation is dynamic. I need to prepare now and figure out the timing. Right now, it seems the cube is heading toward the target, but I need to decide whether to move to the top button next.",
+        "latency": 2.846,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.977,
+        "ttft_s": 2.733,
+        "stream_s": 2.843
+      }
+    ]
+  },
+  "seconds": 18.6,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "kb_g",
+  "reset_digest": "790846842f10e11d",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 520600,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "planner_error",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 18.6
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/StopCube_ep6_kb_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 520600,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "790846842f10e11d",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

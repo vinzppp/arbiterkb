@@ -1,0 +1,167 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 18,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the green cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 9,
+    "chars": 1091
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 114,
+      "t_to": 114,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [101, 100]\n  green cube at [94, 158]\n  red cube at [125, 174]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [101, 100]\n  green cube at [94, 158]\n  red cube at [125, 174]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [91, 159], [99, 99], [123, 175], [126, 115]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [91, 159], [99, 99], [123, 175], [126, 115]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [91, 159], [99, 99], [123, 175], [126, 115]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [91, 159], [100, 114], [123, 175], [126, 99]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [91, 159], [110, 125], [113, 89], [123, 175]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [91, 159], [99, 99], [123, 175], [125, 116]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [91, 159], [99, 99], [123, 175], [125, 116]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [91, 159], [99, 99], [123, 175], [125, 116]",
+      "demo_steps": 9,
+      "command": {
+        "choice": "a",
+        "point": [
+          91,
+          159
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 108,
+      "captured": 108,
+      "terminated": true,
+      "status": "success",
+      "seconds": 4.08
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 115,
+  "reset_batch": 115,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 1673,
+      "cached_tokens": 0,
+      "output_tokens": 58,
+      "reasoning_tokens": 38,
+      "latency": 2.375
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[91,159]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            91,
+            159
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1673,
+        "cached_tokens": 0,
+        "output_tokens": 58,
+        "reasoning_tokens": 38,
+        "error": "",
+        "cache_write_tokens": 1670,
+        "finish_reason": "stop",
+        "reasoning": "**Identifying hidden green**\n\nI need to identify hidden green areas from the demonstration. The initial green is at coordinates [94, 158], but it looks like the container at [91, 159] seems to cover this green area. So, I’ll need to choose the corresponding container at [91, 159] to ensure I’m accurately targeting the hidden green. It’s important to get this right for clarity in the demonstration!",
+        "latency": 2.375,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.53,
+        "ttft_s": 2.249,
+        "stream_s": 2.371
+      }
+    ]
+  },
+  "seconds": 6.2,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "b8373860e8165ffa",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 551800,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 6.2
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep18_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 551800,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "b8373860e8165ffa",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

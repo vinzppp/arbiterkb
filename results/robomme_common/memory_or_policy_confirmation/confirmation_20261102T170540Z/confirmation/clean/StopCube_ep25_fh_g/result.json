@@ -1,0 +1,375 @@
+{
+  "task": "StopCube",
+  "episode": 25,
+  "split": "test",
+  "goal": "press the button to stop the cube just as it reaches the target for the fourth time",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the top of the button to prepare",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "remain static",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press button to stop the cube",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [63, 84]\n  cube at [79, 52]\n  target at [84, 124]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          63,
+          84
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 55,
+      "captured": 55,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.61
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 55,
+      "steps": 4,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [63, 84]\n  cube at [80, 77]\n  target at [84, 124]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [63, 84]\n  cube at [83, 135]\n  target at [84, 123]\nt=48\n  gripper at [28, 77]  height 0.154  fingers 100% open\n  button at [63, 84]\n  cube at [85, 185]\n  target at [84, 123]\nt=55\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [86, 195]\n  target at [84, 123]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 48,
+      "captured": 48,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.55
+    },
+    {
+      "index": 2,
+      "t_from": 56,
+      "t_to": 103,
+      "steps": 4,
+      "segment": "t=64\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [86, 198]\n  target at [84, 123]\nt=80\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [84, 156]\n  target at [84, 123]\nt=96\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [81, 99]\n  target at [84, 126]\nt=103\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [80, 79]\n  target at [84, 126]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 78,
+      "captured": 78,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.82
+    },
+    {
+      "index": 3,
+      "t_from": 104,
+      "t_to": 181,
+      "steps": 6,
+      "segment": "t=112\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [79, 57]\n  target at [84, 126]\nt=128\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [79, 60]\n  target at [84, 126]\nt=144\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [81, 106]\n  target at [84, 126]\nt=160\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [84, 163]\n  target at [84, 123]\nt=176\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [86, 198]\n  target at [84, 123]\nt=181\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [86, 198]\n  target at [84, 123]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "no_op",
+      "error": "",
+      "batch": 0,
+      "captured": 0,
+      "terminated": false,
+      "status": "",
+      "seconds": 4.53
+    },
+    {
+      "index": 4,
+      "t_from": 182,
+      "t_to": 181,
+      "steps": 1,
+      "segment": "t=181\n  gripper at [28, 76]  height 0.153  fingers 0% open\n  button at [63, 84]\n  cube at [86, 198]\n  target at [84, 123]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": [
+          63,
+          84
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 69,
+      "captured": 69,
+      "terminated": true,
+      "status": "success",
+      "seconds": 7.65
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 5
+    },
+    "statuses": {
+      "valid": 5
+    },
+    "usage": {
+      "input_tokens": 9363,
+      "cached_tokens": 6930,
+      "output_tokens": 924,
+      "reasoning_tokens": 830,
+      "latency": 20.809
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[63,84]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            63,
+            84
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1257,
+        "cached_tokens": 0,
+        "output_tokens": 64,
+        "reasoning_tokens": 44,
+        "error": "",
+        "cache_write_tokens": 1254,
+        "finish_reason": "stop",
+        "reasoning": "**Understanding the cube movement**\n\nI need to focus on reaching the fourth target. First, I have to understand how the cube moves, starting from an initial position of (79, 52) to a target of (84, 124). It seems that I’ll need to prepare for pressing the top button at the right moment, probably waiting for the cube to reach the target position before I press. So, I’ll think about how to set that up effectively.",
+        "latency": 3.718,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.704,
+        "ttft_s": 3.565,
+        "stream_s": 3.714
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1551,
+        "cached_tokens": 1254,
+        "output_tokens": 117,
+        "reasoning_tokens": 99,
+        "error": "",
+        "cache_write_tokens": 294,
+        "finish_reason": "stop",
+        "latency": 2.813,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.636,
+        "ttft_s": 2.648,
+        "stream_s": 2.811
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1859,
+        "cached_tokens": 1548,
+        "output_tokens": 183,
+        "reasoning_tokens": 165,
+        "error": "",
+        "cache_write_tokens": 308,
+        "finish_reason": "stop",
+        "latency": 3.669,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.511,
+        "ttft_s": 3.526,
+        "stream_s": 3.666
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2275,
+        "cached_tokens": 1856,
+        "output_tokens": 258,
+        "reasoning_tokens": 240,
+        "error": "",
+        "cache_write_tokens": 416,
+        "finish_reason": "stop",
+        "latency": 4.435,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.282,
+        "ttft_s": 4.306,
+        "stream_s": 4.432
+      },
+      {
+        "kind": "decide",
+        "index": 4,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":[63,84]}",
+        "command": {
+          "choice": "c",
+          "point": [
+            63,
+            84
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2421,
+        "cached_tokens": 2272,
+        "output_tokens": 302,
+        "reasoning_tokens": 282,
+        "error": "",
+        "cache_write_tokens": 146,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating pressing strategy**\n\nI need to consider if I can press immediately. It looks like the controller press has a variable duration. Thinking about my goal for the fourth press, I need to count the crossings: t32, t88, t151, and then t206 for the fourth time. Should I start pressing now? I guess I need to decide on the timing for the button at the target. Let's see how that plays out!",
+        "latency": 6.174,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 5.345,
+        "ttft_s": 6.061,
+        "stream_s": 6.171
+      }
+    ]
+  },
+  "seconds": 25.7,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "67d98a97bf9ebdf6",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 522501,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 25.7
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/StopCube_ep25_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 522501,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "67d98a97bf9ebdf6",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

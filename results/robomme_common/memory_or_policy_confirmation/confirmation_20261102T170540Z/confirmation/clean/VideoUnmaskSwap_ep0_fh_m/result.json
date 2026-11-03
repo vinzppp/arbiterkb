@@ -1,0 +1,167 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 0,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the green cube, finally pick up another container hiding the blue cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 9,
+    "chars": 1010
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 114,
+      "t_to": 114,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [108, 88]\n  green cube at [85, 121]\n  red cube at [112, 139]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [108, 88]\n  green cube at [85, 121]\n  red cube at [112, 139]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [81, 121], [105, 87], [110, 139]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [81, 121], [105, 87], [110, 139]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [81, 121], [105, 87], [110, 139]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [92, 122], [93, 88], [110, 139]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [80, 102], [107, 108], [110, 139]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 120], [106, 89], [110, 139]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 120], [106, 89], [110, 139]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [82, 120], [105, 87], [110, 139]",
+      "demo_steps": 9,
+      "command": {
+        "choice": "a",
+        "point": [
+          82,
+          120
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 110,
+      "captured": 110,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 3.98
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 115,
+  "reset_batch": 115,
+  "policy": {
+    "name": "fh_m",
+    "memory_kind": "fh",
+    "policy_kind": "m",
+    "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+    "system_sha256": "44c915e9cae6a7d254d371fb53df167a4afc194f202f28984923227d90839bd0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 1748,
+      "cached_tokens": 0,
+      "output_tokens": 51,
+      "reasoning_tokens": 31,
+      "latency": 2.234
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[82,120]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            82,
+            120
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1748,
+        "cached_tokens": 0,
+        "output_tokens": 51,
+        "reasoning_tokens": 31,
+        "error": "",
+        "cache_write_tokens": 1745,
+        "finish_reason": "stop",
+        "reasoning": "**Identifying target containers**\n\nI'm focusing on the first container which is holding the green identified demo at coordinates [81,121]. Next, I need to consider the blue container located at [105,87]. It looks like I'll be starting with Policy A at the first location. There’s a clear sequence of actions I need to take! Keeping things organized and methodical will definitely help me tackle this task effectively.",
+        "latency": 2.234,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.571,
+        "ttft_s": 2.112,
+        "stream_s": 2.23
+      }
+    ]
+  },
+  "seconds": 5.9,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_m",
+  "reset_digest": "30d181edb97a0f5b",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 550000,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 5.9
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep0_fh_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 550000,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "30d181edb97a0f5b",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

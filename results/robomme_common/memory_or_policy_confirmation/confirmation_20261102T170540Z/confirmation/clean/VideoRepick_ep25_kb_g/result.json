@@ -1,0 +1,172 @@
+{
+  "task": "VideoRepick",
+  "episode": 25,
+  "split": "test",
+  "goal": "watch the video carefully, then repeatedly pick up and put down the same block that was previously picked up for two times, finally put it down and press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put it down",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press the button to finish",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 17,
+    "chars": 2202
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 257,
+      "t_to": 257,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [108, 174]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [108, 174]\nt=32\n  gripper at [26, 186]  height 0.260  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [108, 174]\nt=48\n  gripper at [78, 189]  height 0.147  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [108, 174]\nt=64\n  gripper at [94, 181]  height 0.089  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [108, 174]\nt=80\n  gripper at [108, 174]  height 0.019  fingers 46% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [110, 173]\nt=96\n  gripper at [88, 185]  height 0.120  fingers 46% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133]\n  cube at [91, 185] is held in the gripper\nt=112\n  gripper at [86, 186]  height 0.127  fingers 46% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133]\n  cube at [89, 186] is held in the gripper\nt=128\n  gripper at [105, 174]  height 0.031  fingers 93% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [110, 173]\nt=144\n  gripper at [89, 182]  height 0.107  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [107, 173]\nt=160\n  gripper at [73, 173]  height 0.159  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [107, 173]\nt=176\n  gripper at [54, 129]  height 0.198  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [107, 173]\nt=192\n  gripper at [54, 129]  height 0.198  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [101, 133], [107, 173]\nt=208\n  gripper at [54, 129]  height 0.198  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [91, 147], [119, 158]\nt=224\n  gripper at [54, 129]  height 0.198  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [96, 165], [113, 141]\nt=240\n  gripper at [54, 129]  height 0.198  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [102, 134], [106, 172]\nt=256\n  gripper at [54, 129]  height 0.198  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [102, 134], [106, 172]\nEXECUTION STEPS\nt=257\n  gripper raised out of the frame  fingers 100% open\n  button at [61, 124]\n  cube at [87, 95], [102, 134], [106, 172]",
+      "demo_steps": 17,
+      "command": {
+        "choice": "a",
+        "point": [
+          106,
+          172
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 105,
+      "captured": 105,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 7.46
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 258,
+  "reset_batch": 258,
+  "policy": {
+    "name": "kb_g",
+    "memory_kind": "kb",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "3dd534ad42ff2295de632a390ccac218f70f8940bc780f807c46aee809403fc6",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2871,
+      "cached_tokens": 0,
+      "output_tokens": 222,
+      "reasoning_tokens": 202,
+      "latency": 4.859
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[106,172]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            106,
+            172
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: watch the video carefully, then repeatedly pick up and put down the same block that was previously picked up for two times, finally put it down and press the button to stop\nTask items (named by the goal): cube, button\nObjects (world frame, m):\n  [cube_0] cube (task item), visible at 0.002, 0.023, 0.020, last seen t=257 [o257:cube_0]\n  [cube_1] cube (task item), visible at -0.062, -0.126, 0.020, last seen t=257 [o257:cube_1]\n  [cube_2] cube (task item), visible at 0.030, 0.164, 0.020, last seen t=257 [o257:cube_2]\nRelations:\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  [v1] t=75 event grasp(cube_0) conf 1.00\n  [e7] t=77 picked up an object (pick-up #1) at (0.03, 0.16, 0.02)\n  [e9] t=105 held it up on the robot's left side (left hold #1) at (0.03, 0.16, 0.15), then placed it down at table level (release #1) at (0.03, 0.16, 0.03)\n  [v2] t=129 event place(cube_0, table) conf 1.00\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [61, 124]\nVisible object-to-pixel lookup:\n  [button_0] button at pixel [61, 124]\n  [cube_0] cube at pixel [101, 133]\n  [cube_1] cube at pixel [87, 95]\n  [cube_2] cube at pixel [107, 173]",
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2871,
+        "cached_tokens": 0,
+        "output_tokens": 222,
+        "reasoning_tokens": 202,
+        "error": "",
+        "cache_write_tokens": 2868,
+        "finish_reason": "stop",
+        "reasoning": "**Assessing cube identity**\n\nI need to determine if I should pick the same block, cube_0, that I demonstrated before. The goal is to repeatedly pick up and put down this block two times. However, there’s an inconsistency in my memory. It seems cube_0 is associated with different coordinates, possibly 101,133, but its actual location should be around 107,173. I need to resolve this mismatch before proceeding with the task to ensure I'm handling the correct cube.",
+        "latency": 4.859,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.427,
+        "ttft_s": 4.463,
+        "stream_s": 4.856
+      }
+    ]
+  },
+  "seconds": 17.2,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "kb_g",
+  "reset_digest": "e709fefb5a01ab2d",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 592500,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 17.2
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoRepick_ep25_kb_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 592500,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "e709fefb5a01ab2d",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

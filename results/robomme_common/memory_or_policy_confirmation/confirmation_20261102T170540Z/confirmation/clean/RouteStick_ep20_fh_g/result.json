@@ -1,0 +1,177 @@
+{
+  "task": "RouteStick",
+  "episode": 20,
+  "split": "test",
+  "goal": "watch the video carefully, then use the stick attached to the robot to navigate around the sticks on the table, following the same path",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the nearest left target by circling around the stick clockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "move to the nearest right target by circling around the stick clockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "move to the nearest left target by circling around the stick counterclockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "move to the nearest right target by circling around the stick counterclockwise",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 8,
+    "chars": 1790
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 100,
+      "t_to": 100,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper at [79, 46]  height 0.070  fingers 3310% open\n  cube at [68, 176], [72, 141], [75, 104], [80, 66]\n  highlighted target at [91, 53]\n  target at [75, 188], [79, 156], [83, 123], [87, 89]\n  waypoint at [87, 58]\nt=16\n  gripper at [97, 57]  height 0.070  fingers 3366% open\n  cube at [68, 176], [72, 141], [75, 104], [86, 69]\n  highlighted target at [90, 55]\n  target at [75, 188], [79, 156], [83, 123], [87, 89]\n  waypoint at [107, 64]\nt=32\n  gripper at [95, 72]  height 0.070  fingers 3517% open\n  cube at [68, 176], [72, 141], [75, 104], [86, 71]\n  highlighted target at [91, 53]\n  target at [75, 188], [79, 156], [83, 123], [87, 89]\n  waypoint at [105, 78]\nt=48\n  gripper at [76, 85]  height 0.070  fingers 3730% open\n  cube at [68, 176], [72, 141], [75, 104], [82, 66]\n  highlighted target at [86, 89]\n  target at [75, 188], [79, 156], [83, 123], [91, 53]\n  waypoint at [91, 87]\nt=64\n  gripper at [60, 96]  height 0.070  fingers 3917% open\n  cube at [68, 176], [72, 141], [75, 104], [82, 66]\n  highlighted target at [86, 89]\n  target at [75, 188], [79, 156], [83, 123], [91, 53]\n  waypoint at [72, 98]\nt=80\n  gripper at [57, 108]  height 0.070  fingers 4102% open\n  cube at [68, 176], [72, 141], [75, 104], [82, 66]\n  highlighted target at [86, 89]\n  target at [75, 188], [79, 156], [83, 123], [91, 53]\n  waypoint at [69, 109]\nt=96\n  gripper at [71, 124]  height 0.070  fingers 4171% open\n  cube at [68, 176], [72, 141], [75, 104], [82, 66]\n  highlighted target at [83, 123]\n  target at [75, 188], [79, 156], [87, 89], [91, 53]\n  waypoint at [78, 120]\nt=99\n  gripper at [71, 124]  height 0.070  fingers 4170% open\n  cube at [68, 176], [72, 141], [75, 104], [82, 66]\n  highlighted target at [83, 123]\n  target at [75, 188], [79, 156], [87, 89], [91, 53]\n  waypoint at [78, 120]\nEXECUTION STEPS\nt=100\n  gripper at [79, 46]  height 0.070  fingers 3310% open\n  cube at [68, 176], [72, 141], [75, 104], [82, 66]\n  highlighted target at [91, 53]\n  target at [75, 188], [79, 156], [83, 123], [87, 89]",
+      "demo_steps": 8,
+      "command": {
+        "choice": "a",
+        "point": [
+          91,
+          53
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 10.34
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 101,
+  "reset_batch": 101,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2171,
+      "cached_tokens": 0,
+      "output_tokens": 652,
+      "reasoning_tokens": 632,
+      "latency": 8.182
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[91,53]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            91,
+            53
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2171,
+        "cached_tokens": 0,
+        "output_tokens": 652,
+        "reasoning_tokens": 632,
+        "error": "",
+        "cache_write_tokens": 2168,
+        "finish_reason": "stop",
+        "reasoning": "**Analyzing gripper trajectory**\n\nI need to infer the path from a demo that starts at the highlighted target [91,53] and moves through the target chain. The trajectory begins at [79,46], moving around the first stick at [82,66]. It seems like the gripper circles the stick clockwise, so I should confirm the nearest targets to the left or right. The path needs to follow the demonstrated route around the upper end of the cube, moving in a clockwise direction.**Determining target progression**\n\nI’m focusing on whether to select the nearest left or right target based on their orientation. The target [87,89] seems aligned with the stick lower on the x-axis, starting from the highlighted point [91,53]. It looks like I need to command the nearest target while circling clockwise. The demo shows an initial waypoint at [87,58] around cube [82,66], and by time t48, the highlight shifts, suggesting I should pick the nearest right target for movement. I'll need to ensure the command aligns with the stick's relative position!",
+        "latency": 8.182,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.116,
+        "ttft_s": 7.985,
+        "stream_s": 8.179
+      }
+    ]
+  },
+  "seconds": 22.2,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "a2935b36a907799f",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 662000,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 22.2
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/RouteStick_ep20_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 662000,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "a2935b36a907799f",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

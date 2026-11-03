@@ -1,0 +1,222 @@
+{
+  "task": "StopCube",
+  "episode": 16,
+  "split": "test",
+  "goal": "press the button to stop the cube just as it reaches the target for the fourth time",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the top of the button to prepare",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "remain static",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press button to stop the cube",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 130]\n  cube at [111, 41]\n  target at [114, 125]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          60,
+          130
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 56,
+      "captured": 56,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.58
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 56,
+      "steps": 4,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 130]\n  cube at [111, 50]\n  target at [114, 125]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 130]\n  cube at [112, 72]\n  target at [114, 125]\nt=48\n  gripper at [25, 132]  height 0.158  fingers 100% open\n  button at [60, 130]\n  cube at [113, 100]\n  target at [114, 125]\nt=56\n  gripper at [25, 132]  height 0.154  fingers 0% open\n  button at [60, 130]\n  cube at [112, 119]\n  target at [115, 127]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 73,
+      "captured": 73,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 5.08
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 2
+    },
+    "statuses": {
+      "valid": 2
+    },
+    "usage": {
+      "input_tokens": 2808,
+      "cached_tokens": 1254,
+      "output_tokens": 135,
+      "reasoning_tokens": 97,
+      "latency": 6.328
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[60,130]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            60,
+            130
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1257,
+        "cached_tokens": 0,
+        "output_tokens": 36,
+        "reasoning_tokens": 16,
+        "error": "",
+        "cache_write_tokens": 1254,
+        "finish_reason": "stop",
+        "reasoning": "**Preparing and observing**\n\nI realize that I need to prepare first and then observe what happens next. It feels like I need to be strategic about this decision. Choosing a point or a button to focus on seems crucial. What if I picked the wrong one? I wonder if there's a specific approach that would make this easier. It’s like trying to pinpoint the best moment or feature to concentrate on – and I'm just hoping I get it right!",
+        "latency": 2.695,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.456,
+        "ttft_s": 2.581,
+        "stream_s": 2.691
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":null}",
+        "command": {
+          "choice": "c",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1551,
+        "cached_tokens": 1254,
+        "output_tokens": 99,
+        "reasoning_tokens": 81,
+        "error": "",
+        "cache_write_tokens": 294,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating cube interaction**\n\nI'm trying to assess the best timing for pressing the button as the cube approaches the target at coordinates y112 x119. I should probably press it right when it reaches the target to account for any latency. But wait, do I need to infer if the button should stop the cycles? My goal is to reach the target for the fourth time. At t56, the cube is very close, so it seems like I should press the button now. I'm wondering about the need for specific points in the directions too.",
+        "latency": 3.633,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.587,
+        "ttft_s": 3.515,
+        "stream_s": 3.63
+      }
+    ]
+  },
+  "seconds": 9.2,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "e2cd2e83a236cd44",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 521600,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 9.2
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/StopCube_ep16_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 521600,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "e2cd2e83a236cd44",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

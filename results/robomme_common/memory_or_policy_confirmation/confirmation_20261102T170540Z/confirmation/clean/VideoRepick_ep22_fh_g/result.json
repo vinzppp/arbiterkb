@@ -1,0 +1,172 @@
+{
+  "task": "VideoRepick",
+  "episode": 22,
+  "split": "test",
+  "goal": "watch the video carefully, then repeatedly pick up and put down the same block that was previously picked up for three times, finally put it down and press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put it down",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press the button to finish",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 25,
+    "chars": 2996
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 377,
+      "t_to": 377,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  button at [66, 129]\n  cube at [90, 108], [100, 151], [126, 122]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  button at [66, 129]\n  cube at [90, 108], [100, 151], [126, 122]\nt=32\n  gripper at [44, 126]  height 0.255  fingers 100% open\n  button at [66, 129]\n  cube at [90, 108], [100, 151], [126, 122]\nt=48\n  gripper at [101, 123]  height 0.139  fingers 100% open\n  cube at [103, 151], [126, 122]\nt=64\n  gripper at [105, 123]  height 0.128  fingers 100% open\n  cube at [107, 149], [126, 122]\nt=80\n  gripper at [126, 124]  height 0.014  fingers 100% open\n  cube at [97, 151], [132, 121]\nt=96\n  gripper at [123, 123]  height 0.035  fingers 46% open\n  cube at [97, 151], [130, 120]\nt=112\n  gripper at [100, 121]  height 0.153  fingers 46% open\n  cube at [104, 150]\n  cube at [105, 118] is held in the gripper\nt=128\n  gripper at [120, 123]  height 0.051  fingers 46% open\n  cube at [125, 119] is held in the gripper\n  cube at [93, 153]\nt=144\n  gripper at [121, 123]  height 0.039  fingers 100% open\n  cube at [95, 151], [130, 121]\nt=160\n  gripper at [100, 121]  height 0.145  fingers 100% open\n  cube at [98, 104], [105, 150], [124, 122]\nt=176\n  gripper at [69, 126]  height 0.182  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [100, 151], [124, 122]\nt=192\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [100, 151], [124, 122]\nt=208\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [103, 152], [122, 121]\nt=224\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [101, 122], [121, 154]\nt=240\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [98, 141], [125, 133]\nt=256\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 108], [100, 150], [123, 120]\nt=272\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [97, 130], [100, 150], [116, 99]\nt=288\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [98, 101], [100, 150], [114, 129]\nt=304\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [90, 109], [100, 150], [124, 122]\nt=320\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [95, 126], [100, 150], [117, 102]\nt=336\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [100, 100], [100, 150], [112, 130]\nt=352\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 107], [100, 150], [124, 122]\nt=368\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 107], [100, 150], [124, 122]\nt=376\n  gripper at [56, 128]  height 0.197  fingers 100% open\n  button at [67, 129]\n  cube at [91, 107], [100, 150], [124, 122]\nEXECUTION STEPS\nt=377\n  gripper raised out of the frame  fingers 100% open\n  button at [67, 129]\n  cube at [91, 107], [100, 150], [124, 122]",
+      "demo_steps": 25,
+      "command": {
+        "choice": "a",
+        "point": [
+          124,
+          122
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 108,
+      "captured": 108,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 6.52
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 378,
+  "reset_batch": 378,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2599,
+      "cached_tokens": 0,
+      "output_tokens": 95,
+      "reasoning_tokens": 75,
+      "latency": 4.098
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[124,122]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            124,
+            122
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2599,
+        "cached_tokens": 0,
+        "output_tokens": 95,
+        "reasoning_tokens": 75,
+        "error": "",
+        "cache_write_tokens": 2596,
+        "finish_reason": "stop",
+        "reasoning": "**Repeating block pickup process**\n\nI need to use the same block I previously picked in the demo, which appears as a cube at coordinates [105,118] after my initial approach. I'll place it at roughly [130,121], near the original coordinates of [126,122]. My target now is at [124,122]. I need to repeat the pickup and putdown process three times and then press the button. The menu is generic for picking the cube and putting it down with no specific point. So, I'll start by picking the target.",
+        "latency": 4.098,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.584,
+        "ttft_s": 3.987,
+        "stream_s": 4.095
+      }
+    ]
+  },
+  "seconds": 12.9,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "5e9ac8f50b0cbf72",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 592200,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 12.9
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoRepick_ep22_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 592200,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "5e9ac8f50b0cbf72",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

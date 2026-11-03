@@ -1,0 +1,171 @@
+{
+  "task": "VideoRepick",
+  "episode": 17,
+  "split": "test",
+  "goal": "watch the video carefully, then repeatedly pick up and put down the same block that was previously picked up for two times, finally put it down and press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put it down",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press the button to finish",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 17,
+    "chars": 2074
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 255,
+      "t_to": 255,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [99, 139], [118, 149]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [99, 139], [118, 149]\nt=32\n  gripper at [7, 146]  height 0.278  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [99, 139], [118, 149]\nt=48\n  gripper at [68, 145]  height 0.150  fingers 100% open\n  button at [58, 126]\n  cube at [85, 100], [99, 139], [118, 149]\nt=64\n  gripper at [81, 143]  height 0.103  fingers 100% open\n  cube at [85, 100], [99, 139], [118, 149]\nt=80\n  gripper at [99, 140]  height 0.021  fingers 46% open\n  cube at [85, 100], [102, 135], [118, 149]\nt=96\n  gripper at [81, 141]  height 0.104  fingers 46% open\n  cube at [83, 137] is held in the gripper\n  cube at [85, 100], [118, 149]\nt=112\n  gripper at [78, 141]  height 0.118  fingers 46% open\n  cube at [77, 137] is held in the gripper\n  cube at [85, 100], [118, 149]\nt=128\n  gripper at [96, 139]  height 0.029  fingers 67% open\n  cube at [85, 100], [100, 136], [118, 149]\nt=144\n  gripper at [88, 140]  height 0.070  fingers 100% open\n  cube at [85, 100], [98, 137], [118, 149]\nt=160\n  gripper at [67, 141]  height 0.151  fingers 100% open\n  button at [58, 126]\n  cube at [85, 100], [98, 137], [118, 149]\nt=176\n  gripper at [55, 128]  height 0.199  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [98, 137], [118, 149]\nt=192\n  gripper at [55, 128]  height 0.199  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [97, 139], [118, 149]\nt=208\n  gripper at [55, 128]  height 0.199  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [98, 156], [115, 127]\nt=224\n  gripper at [55, 128]  height 0.199  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [103, 130], [111, 156]\nt=240\n  gripper at [55, 128]  height 0.199  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [98, 136], [117, 149]\nt=254\n  gripper at [55, 128]  height 0.199  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [98, 136], [117, 149]\nEXECUTION STEPS\nt=255\n  gripper raised out of the frame  fingers 100% open\n  button at [57, 128]\n  cube at [85, 100], [98, 136], [117, 149]",
+      "demo_steps": 17,
+      "command": {
+        "choice": "a",
+        "point": [
+          97,
+          137
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 103,
+      "captured": 103,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 5.11
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 256,
+  "reset_batch": 256,
+  "policy": {
+    "name": "kb_m",
+    "memory_kind": "kb",
+    "policy_kind": "m",
+    "policy_sha256": "b784d92a15e352173effd02eb9a3500a53567a399880a0f097f7afbb61923771",
+    "system_sha256": "2c3ed0a69b65e8839b6db61973a2ace9862e1597c02567974a251509605da0e0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 3238,
+      "cached_tokens": 0,
+      "output_tokens": 51,
+      "reasoning_tokens": 31,
+      "latency": 2.83
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[97,137]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            97,
+            137
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: watch the video carefully, then repeatedly pick up and put down the same block that was previously picked up for two times, finally put it down and press the button to stop\nTask items (named by the goal): cube, button\nObjects (world frame, m):\n  [cube_0] cube (task item), visible at -0.017, 0.037, 0.020, last seen t=255 [o255:cube_0]\n  [cube_1] cube (task item), visible at -0.075, -0.107, 0.020, last seen t=255 [o255:cube_1]\n  [cube_2] cube (task item), visible at 0.075, 0.075, 0.020, last seen t=255 [o255:cube_2]\nRelations:\nEvent log (oldest first):\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  [v1] t=76 event grasp(cube_2) conf 1.00\n  [e6] t=78 picked up an object (pick-up #1) at (-0.01, 0.04, 0.02)\n  [e11] t=132 placed it down at table level (release #1) at (-0.02, 0.04, 0.03)\n  [v2] t=132 event place(cube_2, table) conf 1.00\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  [button_0] button: visible at pixel [57, 128]\nVisible object-to-pixel lookup:\n  [button_0] button at pixel [57, 128]\n  [cube_0] cube at pixel [97, 137]\n  [cube_1] cube at pixel [85, 100]\n  [cube_2] cube at pixel [118, 149]",
+        "memory_updates": null,
+        "policy_sha256": "b784d92a15e352173effd02eb9a3500a53567a399880a0f097f7afbb61923771",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3238,
+        "cached_tokens": 0,
+        "output_tokens": 51,
+        "reasoning_tokens": 31,
+        "error": "",
+        "cache_write_tokens": 3235,
+        "finish_reason": "stop",
+        "latency": 2.83,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.658,
+        "ttft_s": 2.662,
+        "stream_s": 2.827
+      }
+    ]
+  },
+  "seconds": 13.6,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "kb_m",
+  "reset_digest": "273e592ec86cb57d",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 591700,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 13.6
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoRepick_ep17_kb_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 591700,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "273e592ec86cb57d",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

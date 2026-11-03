@@ -1,0 +1,508 @@
+{
+  "task": "SwingXtimes",
+  "episode": 32,
+  "split": "test",
+  "goal": "pick up the green cube, move it to the top of the right-side target, then move it to the top of the left-side target, repeating this back-and-forth motion two times, finally press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "move to the top of the target",
+      "need_parameter": true
+    },
+    {
+      "label": "c",
+      "action": "put the cube on the table",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "press the button",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [58, 127]\n  green cube at [97, 124]\n  target at [73, 172], [78, 85]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          97,
+          124
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 104,
+      "captured": 104,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.41
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 104,
+      "steps": 7,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [58, 127]\n  green cube at [97, 124]\n  target at [73, 172], [78, 85]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [58, 127]\n  green cube at [97, 124]\n  target at [73, 172], [78, 85]\nt=48\n  gripper at [65, 123]  height 0.151  fingers 100% open\n  button at [58, 127]\n  green cube at [97, 124]\n  target at [73, 172], [78, 85]\nt=64\n  gripper at [78, 123]  height 0.108  fingers 100% open\n  green cube at [97, 124]\n  target at [73, 172], [79, 83]\nt=80\n  gripper at [97, 124]  height 0.019  fingers 46% open\n  green cube at [99, 125]\n  target at [73, 172], [79, 83]\nt=96\n  gripper at [82, 124]  height 0.094  fingers 46% open\n  green cube at [87, 125] is held in the gripper\n  target at [73, 172], [79, 83]\nt=104\n  gripper at [68, 124]  height 0.147  fingers 46% open\n  button at [59, 130]\n  green cube at [71, 125] is held in the gripper\n  target at [73, 172], [78, 85]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          78,
+          85
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 31,
+      "captured": 31,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.58
+    },
+    {
+      "index": 2,
+      "t_from": 105,
+      "t_to": 135,
+      "steps": 3,
+      "segment": "t=112\n  gripper at [67, 119]  height 0.143  fingers 46% open\n  button at [58, 128]\n  green cube at [68, 121] is held in the gripper\n  target at [73, 172], [78, 85]\nt=128\n  gripper at [58, 81]  height 0.103  fingers 46% open\n  button at [58, 127]\n  green cube at [57, 82] is held in the gripper\n  highlighted target at [78, 85]\n  target at [73, 172]\nt=135\n  gripper at [57, 79]  height 0.100  fingers 46% open\n  button at [58, 127]\n  green cube at [56, 79] is held in the gripper\n  highlighted target at [78, 85]\n  target at [73, 172]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          73,
+          172
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 44,
+      "captured": 44,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.4
+    },
+    {
+      "index": 3,
+      "t_from": 136,
+      "t_to": 179,
+      "steps": 4,
+      "segment": "t=144\n  gripper at [57, 86]  height 0.100  fingers 46% open\n  button at [58, 127]\n  green cube at [56, 86] is held in the gripper\n  highlighted target at [78, 85]\n  target at [73, 172]\nt=160\n  gripper at [53, 147]  height 0.100  fingers 46% open\n  button at [59, 127]\n  green cube at [53, 148] is held in the gripper\n  highlighted target at [78, 85]\n  target at [73, 172]\nt=176\n  gripper at [51, 181]  height 0.100  fingers 46% open\n  button at [59, 127]\n  green cube at [51, 181] is held in the gripper\n  highlighted target at [73, 172]\n  target at [78, 85]\nt=179\n  gripper at [51, 180]  height 0.100  fingers 46% open\n  button at [59, 127]\n  green cube at [51, 181] is held in the gripper\n  highlighted target at [73, 172]\n  target at [78, 85]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          78,
+          85
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 41,
+      "captured": 41,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.12
+    },
+    {
+      "index": 4,
+      "t_from": 180,
+      "t_to": 220,
+      "steps": 3,
+      "segment": "t=192\n  gripper at [52, 165]  height 0.100  fingers 46% open\n  button at [59, 127]\n  green cube at [51, 166] is held in the gripper\n  highlighted target at [73, 172]\n  target at [78, 85]\nt=208\n  gripper at [55, 99]  height 0.100  fingers 46% open\n  button at [58, 127]\n  green cube at [54, 99] is held in the gripper\n  highlighted target at [73, 172]\n  target at [78, 85]\nt=220\n  gripper at [56, 78]  height 0.100  fingers 46% open\n  button at [58, 127]\n  green cube at [55, 80] is held in the gripper\n  highlighted target at [78, 85]\n  target at [73, 172]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          73,
+          172
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 42,
+      "captured": 42,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.79
+    },
+    {
+      "index": 5,
+      "t_from": 221,
+      "t_to": 262,
+      "steps": 4,
+      "segment": "t=224\n  gripper at [56, 79]  height 0.100  fingers 46% open\n  button at [58, 127]\n  green cube at [55, 80] is held in the gripper\n  highlighted target at [78, 85]\n  target at [73, 172]\nt=240\n  gripper at [54, 122]  height 0.100  fingers 46% open\n  button at [60, 129]\n  green cube at [53, 122] is held in the gripper\n  highlighted target at [78, 85]\n  target at [73, 172]\nt=256\n  gripper at [51, 176]  height 0.100  fingers 46% open\n  button at [59, 127]\n  green cube at [51, 178] is held in the gripper\n  highlighted target at [73, 172]\n  target at [78, 85]\nt=262\n  gripper at [51, 180]  height 0.100  fingers 46% open\n  button at [59, 127]\n  green cube at [51, 181] is held in the gripper\n  highlighted target at [73, 172]\n  target at [78, 85]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 44,
+      "captured": 44,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.38
+    },
+    {
+      "index": 6,
+      "t_from": 263,
+      "t_to": 306,
+      "steps": 4,
+      "segment": "t=272\n  gripper at [57, 178]  height 0.075  fingers 46% open\n  button at [59, 127]\n  green cube at [56, 180] is held in the gripper\n  highlighted target at [73, 172]\n  target at [78, 85]\nt=288\n  gripper at [56, 178]  height 0.076  fingers 100% open\n  button at [59, 127]\n  green cube at [67, 174]\n  highlighted target at [76, 172]\n  target at [78, 85]\nt=304\n  gripper at [35, 185]  height 0.152  fingers 100% open\n  button at [59, 127]\n  green cube at [67, 174]\n  highlighted target at [76, 172]\n  target at [78, 85]\nt=306\n  gripper at [36, 185]  height 0.150  fingers 100% open\n  button at [59, 127]\n  green cube at [67, 174]\n  highlighted target at [76, 172]\n  target at [78, 85]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "d",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 88,
+      "captured": 88,
+      "terminated": true,
+      "status": "success",
+      "seconds": 4.34
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "mm_m",
+    "memory_kind": "mm",
+    "policy_kind": "m",
+    "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+    "system_sha256": "3a319d1b7f3ffbfb392fb9c014dfede9bf35b088abb70198ae735ad8e7eba0d8",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 7
+    },
+    "statuses": {
+      "valid": 7
+    },
+    "usage": {
+      "input_tokens": 15853,
+      "cached_tokens": 9276,
+      "output_tokens": 752,
+      "reasoning_tokens": 528,
+      "latency": 17.875
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[97,124],\"memory_updates\":[{\"field\":\"completed_target_visits\",\"value\":\"0\"}]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            97,
+            124
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  completed_target_visits\n      With empty incoming memory, write 0. Otherwise start with the incoming integer. The next countable destination is the smaller-x target when that integer is even, and the larger-x target when it is odd. If the incoming count is below the required number of visits, increase once when the observed interval ends with the cube still grasped, the hand at approximately 0.100 height on the expected destination's side, and that destination highlighted in the final scene. The elevated wrist or cube need not coincide with the target in image coordinates: projection offsets above and slightly beside the target are expected and do not invalidate this arrival evidence. Use the final destination highlight, not a stale highlight during transit. Do not count pickup, which ends with the hand raised at approximately 0.150 height, or release, which ends with an open empty hand. Do not count multiple frames of the same arrival, and do not increase beyond the required number of visits (twice the requested repetition count, or two for the instruction to go right then put down left). Otherwise preserve the incoming integer. Treat the incoming integer as the pre-interval count and apply the arrival test above exactly once. Use the resulting count both to select the next subgoal and as the outgoing completed_target_visits value. Do not write the incoming count after using an incremented count for subgoal selection. e.g. 2\nMEMORY CARRIED IN\n  completed_target_visits=",
+        "memory_updates": {
+          "completed_target_visits": "0"
+        },
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2070,
+        "cached_tokens": 0,
+        "output_tokens": 52,
+        "reasoning_tokens": 16,
+        "error": "",
+        "cache_write_tokens": 2067,
+        "finish_reason": "stop",
+        "latency": 1.67,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.455,
+        "ttft_s": 1.475,
+        "stream_s": 1.666
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[78,85],\"memory_updates\":[]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            78,
+            85
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  completed_target_visits\n      With empty incoming memory, write 0. Otherwise start with the incoming integer. The next countable destination is the smaller-x target when that integer is even, and the larger-x target when it is odd. If the incoming count is below the required number of visits, increase once when the observed interval ends with the cube still grasped, the hand at approximately 0.100 height on the expected destination's side, and that destination highlighted in the final scene. The elevated wrist or cube need not coincide with the target in image coordinates: projection offsets above and slightly beside the target are expected and do not invalidate this arrival evidence. Use the final destination highlight, not a stale highlight during transit. Do not count pickup, which ends with the hand raised at approximately 0.150 height, or release, which ends with an open empty hand. Do not count multiple frames of the same arrival, and do not increase beyond the required number of visits (twice the requested repetition count, or two for the instruction to go right then put down left). Otherwise preserve the incoming integer. Treat the incoming integer as the pre-interval count and apply the arrival test above exactly once. Use the resulting count both to select the next subgoal and as the outgoing completed_target_visits value. Do not write the incoming count after using an incremented count for subgoal selection. e.g. 2\nMEMORY CARRIED IN\n  completed_target_visits=0",
+        "memory_updates": {},
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2417,
+        "cached_tokens": 1546,
+        "output_tokens": 68,
+        "reasoning_tokens": 44,
+        "error": "",
+        "cache_write_tokens": 868,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating intervals and targets**\n\nI need to focus on the interval pickup at a height of .147 instead of the arrival at .1. I'm counting 0 and considering fewer targets; N=4 helps here. I want to choose the right, smaller target around x=85. I can see my target range is between 78 and 85, which gives me a clear idea of what's visible. This should help me narrow down my options effectively!",
+        "latency": 2.882,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.92,
+        "ttft_s": 2.733,
+        "stream_s": 2.879
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[73,172],\"memory_updates\":[{\"field\":\"completed_target_visits\",\"value\":\"1\"}]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            73,
+            172
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  completed_target_visits\n      With empty incoming memory, write 0. Otherwise start with the incoming integer. The next countable destination is the smaller-x target when that integer is even, and the larger-x target when it is odd. If the incoming count is below the required number of visits, increase once when the observed interval ends with the cube still grasped, the hand at approximately 0.100 height on the expected destination's side, and that destination highlighted in the final scene. The elevated wrist or cube need not coincide with the target in image coordinates: projection offsets above and slightly beside the target are expected and do not invalidate this arrival evidence. Use the final destination highlight, not a stale highlight during transit. Do not count pickup, which ends with the hand raised at approximately 0.150 height, or release, which ends with an open empty hand. Do not count multiple frames of the same arrival, and do not increase beyond the required number of visits (twice the requested repetition count, or two for the instruction to go right then put down left). Otherwise preserve the incoming integer. Treat the incoming integer as the pre-interval count and apply the arrival test above exactly once. Use the resulting count both to select the next subgoal and as the outgoing completed_target_visits value. Do not write the incoming count after using an incremented count for subgoal selection. e.g. 2\nMEMORY CARRIED IN\n  completed_target_visits=0",
+        "memory_updates": {
+          "completed_target_visits": "1"
+        },
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2231,
+        "cached_tokens": 1546,
+        "output_tokens": 91,
+        "reasoning_tokens": 55,
+        "error": "",
+        "cache_write_tokens": 682,
+        "finish_reason": "stop",
+        "reasoning": "**Calculating target intervals**\n\nI’m working on counting intervals for a highlighted target at x85 with a height of .1 while keeping track of an expected count of 0, which I’ll increment to 1. There are 4 of those. Then I’ll look at the left target at x172, choosing a b point target between [73,172]. Finally, I’ll update the memory to reflect this new information.",
+        "latency": 2.608,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.774,
+        "ttft_s": 2.422,
+        "stream_s": 2.605
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[78,85],\"memory_updates\":[{\"field\":\"completed_target_visits\",\"value\":\"2\"}]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            78,
+            85
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  completed_target_visits\n      With empty incoming memory, write 0. Otherwise start with the incoming integer. The next countable destination is the smaller-x target when that integer is even, and the larger-x target when it is odd. If the incoming count is below the required number of visits, increase once when the observed interval ends with the cube still grasped, the hand at approximately 0.100 height on the expected destination's side, and that destination highlighted in the final scene. The elevated wrist or cube need not coincide with the target in image coordinates: projection offsets above and slightly beside the target are expected and do not invalidate this arrival evidence. Use the final destination highlight, not a stale highlight during transit. Do not count pickup, which ends with the hand raised at approximately 0.150 height, or release, which ends with an open empty hand. Do not count multiple frames of the same arrival, and do not increase beyond the required number of visits (twice the requested repetition count, or two for the instruction to go right then put down left). Otherwise preserve the incoming integer. Treat the incoming integer as the pre-interval count and apply the arrival test above exactly once. Use the resulting count both to select the next subgoal and as the outgoing completed_target_visits value. Do not write the incoming count after using an incremented count for subgoal selection. e.g. 2\nMEMORY CARRIED IN\n  completed_target_visits=1",
+        "memory_updates": {
+          "completed_target_visits": "2"
+        },
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2307,
+        "cached_tokens": 1546,
+        "output_tokens": 137,
+        "reasoning_tokens": 101,
+        "error": "",
+        "cache_write_tokens": 758,
+        "finish_reason": "stop",
+        "latency": 2.357,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.171,
+        "ttft_s": 2.187,
+        "stream_s": 2.354
+      },
+      {
+        "kind": "decide",
+        "index": 4,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[73,172],\"memory_updates\":[{\"field\":\"completed_target_visits\",\"value\":\"3\"}]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            73,
+            172
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  completed_target_visits\n      With empty incoming memory, write 0. Otherwise start with the incoming integer. The next countable destination is the smaller-x target when that integer is even, and the larger-x target when it is odd. If the incoming count is below the required number of visits, increase once when the observed interval ends with the cube still grasped, the hand at approximately 0.100 height on the expected destination's side, and that destination highlighted in the final scene. The elevated wrist or cube need not coincide with the target in image coordinates: projection offsets above and slightly beside the target are expected and do not invalidate this arrival evidence. Use the final destination highlight, not a stale highlight during transit. Do not count pickup, which ends with the hand raised at approximately 0.150 height, or release, which ends with an open empty hand. Do not count multiple frames of the same arrival, and do not increase beyond the required number of visits (twice the requested repetition count, or two for the instruction to go right then put down left). Otherwise preserve the incoming integer. Treat the incoming integer as the pre-interval count and apply the arrival test above exactly once. Use the resulting count both to select the next subgoal and as the outgoing completed_target_visits value. Do not write the incoming count after using an incremented count for subgoal selection. e.g. 2\nMEMORY CARRIED IN\n  completed_target_visits=2",
+        "memory_updates": {
+          "completed_target_visits": "3"
+        },
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2235,
+        "cached_tokens": 1546,
+        "output_tokens": 111,
+        "reasoning_tokens": 75,
+        "error": "",
+        "cache_write_tokens": 686,
+        "finish_reason": "stop",
+        "reasoning": "**Calculating targets**\n\nI need to count the incoming values and I’ve got N set to 4. I’m keeping the interval ends held with a height of 0.1. The destination is expected to have an even smaller x for the right target, focusing on [78,85]. I’ll increment the count to 3. Now for the next odd, I’ll look at the left target, which has a larger x, specifically [73,172]. Should I choose a b-point target? I wonder if any further updates are needed since I've changed from 2 to 3.",
+        "latency": 3.012,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.96,
+        "ttft_s": 2.827,
+        "stream_s": 3.009
+      },
+      {
+        "kind": "decide",
+        "index": 5,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":null,\"memory_updates\":[{\"field\":\"completed_target_visits\",\"value\":\"4\"}]}",
+        "command": {
+          "choice": "c",
+          "point": null
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  completed_target_visits\n      With empty incoming memory, write 0. Otherwise start with the incoming integer. The next countable destination is the smaller-x target when that integer is even, and the larger-x target when it is odd. If the incoming count is below the required number of visits, increase once when the observed interval ends with the cube still grasped, the hand at approximately 0.100 height on the expected destination's side, and that destination highlighted in the final scene. The elevated wrist or cube need not coincide with the target in image coordinates: projection offsets above and slightly beside the target are expected and do not invalidate this arrival evidence. Use the final destination highlight, not a stale highlight during transit. Do not count pickup, which ends with the hand raised at approximately 0.150 height, or release, which ends with an open empty hand. Do not count multiple frames of the same arrival, and do not increase beyond the required number of visits (twice the requested repetition count, or two for the instruction to go right then put down left). Otherwise preserve the incoming integer. Treat the incoming integer as the pre-interval count and apply the arrival test above exactly once. Use the resulting count both to select the next subgoal and as the outgoing completed_target_visits value. Do not write the incoming count after using an incremented count for subgoal selection. e.g. 2\nMEMORY CARRIED IN\n  completed_target_visits=3",
+        "memory_updates": {
+          "completed_target_visits": "4"
+        },
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2307,
+        "cached_tokens": 1546,
+        "output_tokens": 107,
+        "reasoning_tokens": 73,
+        "error": "",
+        "cache_write_tokens": 758,
+        "finish_reason": "stop",
+        "reasoning": "**Counting and updating targets**\n\nI'm counting 3, with N set to 4. I need to focus on the interval ends while holding a hand height of .1. The next countable item should be the larger x target at 172. Once I confirm that final targeted arrival at 172 is correct, I'll increment to 4. Then, I should release the final left target. Menu options don't seem relevant right now, so I’ll update to 4.",
+        "latency": 2.601,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.746,
+        "ttft_s": 2.442,
+        "stream_s": 2.599
+      },
+      {
+        "kind": "decide",
+        "index": 6,
+        "status": "valid",
+        "raw": "{\"choice\":\"d\",\"point\":null,\"memory_updates\":[]}",
+        "command": {
+          "choice": "d",
+          "point": null
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  completed_target_visits\n      With empty incoming memory, write 0. Otherwise start with the incoming integer. The next countable destination is the smaller-x target when that integer is even, and the larger-x target when it is odd. If the incoming count is below the required number of visits, increase once when the observed interval ends with the cube still grasped, the hand at approximately 0.100 height on the expected destination's side, and that destination highlighted in the final scene. The elevated wrist or cube need not coincide with the target in image coordinates: projection offsets above and slightly beside the target are expected and do not invalidate this arrival evidence. Use the final destination highlight, not a stale highlight during transit. Do not count pickup, which ends with the hand raised at approximately 0.150 height, or release, which ends with an open empty hand. Do not count multiple frames of the same arrival, and do not increase beyond the required number of visits (twice the requested repetition count, or two for the instruction to go right then put down left). Otherwise preserve the incoming integer. Treat the incoming integer as the pre-interval count and apply the arrival test above exactly once. Use the resulting count both to select the next subgoal and as the outgoing completed_target_visits value. Do not write the incoming count after using an incremented count for subgoal selection. e.g. 2\nMEMORY CARRIED IN\n  completed_target_visits=4",
+        "memory_updates": {},
+        "policy_sha256": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2286,
+        "cached_tokens": 1546,
+        "output_tokens": 186,
+        "reasoning_tokens": 164,
+        "error": "",
+        "cache_write_tokens": 737,
+        "finish_reason": "stop",
+        "latency": 2.745,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.55,
+        "ttft_s": 2.564,
+        "stream_s": 2.743
+      }
+    ]
+  },
+  "seconds": 25.6,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "mm_m",
+  "reset_digest": "bb9732b7bbdf1abb",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 533200,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 25.6
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/SwingXtimes_ep32_mm_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 533200,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "bb9732b7bbdf1abb",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

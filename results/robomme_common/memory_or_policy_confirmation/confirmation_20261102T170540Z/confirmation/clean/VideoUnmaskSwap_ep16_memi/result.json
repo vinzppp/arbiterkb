@@ -1,0 +1,170 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 16,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the blue cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 9,
+    "chars": 1011
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 114,
+      "t_to": 114,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [88, 138]\n  green cube at [98, 107]\n  red cube at [118, 148]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [88, 138]\n  green cube at [98, 107]\n  red cube at [118, 148]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 138], [95, 106], [115, 148]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 138], [95, 106], [115, 148]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 138], [95, 106], [115, 148]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 110], [95, 136], [115, 148]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [78, 121], [104, 123], [115, 148]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 137], [96, 106], [115, 148]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 137], [96, 106], [115, 148]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [85, 137], [96, 106], [115, 148]",
+      "demo_steps": 9,
+      "command": {
+        "choice": "A",
+        "point": [
+          96,
+          106
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 103,
+      "captured": 103,
+      "terminated": true,
+      "status": "success",
+      "seconds": 8.82
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 115,
+  "reset_batch": 115,
+  "policy": {
+    "name": "memory",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "system_sha": "0e5025552561",
+    "calls": {
+      "decide": 1
+    },
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2830,
+      "cached_tokens": 0,
+      "output_tokens": 583,
+      "reasoning_tokens": 540,
+      "latency": 7.227,
+      "retries": 0
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"A\",\"point\":[96,106],\"memory_updates\":[{\"field\":\"remaining_targets\",\"value\":\"[[96, 106]]\"}],\"used_fields\":[]}",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2830,
+        "cached_tokens": 0,
+        "output_tokens": 583,
+        "reasoning_tokens": 540,
+        "error": "",
+        "cache_write_tokens": 2827,
+        "finish_reason": "stop",
+        "latency": 7.227,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 6.69,
+        "ttft_s": 6.987,
+        "stream_s": 7.224,
+        "memory_before": "remaining_targets=",
+        "memory_after": "remaining_targets=[[96, 106]]",
+        "memory_updates": {
+          "remaining_targets": "[[96, 106]]"
+        },
+        "command": {
+          "choice": "A",
+          "point": [
+            96,
+            106
+          ]
+        }
+      }
+    ],
+    "policy_prompt": "/workspace/memi/artifacts/gpt/policy_prompts/optimized_luna.json",
+    "memory": {
+      "remaining_targets": "[[96, 106]]"
+    },
+    "memory_line": "remaining_targets=[[96, 106]]"
+  },
+  "seconds": 10.8,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "memi",
+  "reset_digest": "61cc962c37758465",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 551600,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 10.8
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep16_memi/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 551600,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "61cc962c37758465",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

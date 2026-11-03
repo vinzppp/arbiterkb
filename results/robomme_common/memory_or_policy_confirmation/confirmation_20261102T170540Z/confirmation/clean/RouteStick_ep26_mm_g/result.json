@@ -1,0 +1,409 @@
+{
+  "task": "RouteStick",
+  "episode": 26,
+  "split": "test",
+  "goal": "watch the video carefully, then use the stick attached to the robot to navigate around the sticks on the table, following the same path",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the nearest left target by circling around the stick clockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "move to the nearest right target by circling around the stick clockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "move to the nearest left target by circling around the stick counterclockwise",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "move to the nearest right target by circling around the stick counterclockwise",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 17,
+    "chars": 3848
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 250,
+      "t_to": 250,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper at [54, 74]  height 0.070  fingers 3628% open\n  cube at [61, 88], [70, 120], [80, 155], [91, 194]\n  highlighted target at [66, 78]\n  target at [75, 106], [84, 136], [94, 170], [105, 207]\nt=16\n  gripper at [45, 95]  height 0.070  fingers 3967% open\n  cube at [61, 88], [70, 120], [80, 155], [91, 194]\n  highlighted target at [66, 78]\n  target at [75, 106], [84, 136], [94, 170], [105, 207]\n  waypoint at [57, 97]\nt=32\n  gripper at [48, 105]  height 0.070  fingers 4111% open\n  cube at [61, 88], [70, 120], [80, 155], [91, 194]\n  highlighted target at [66, 78]\n  target at [75, 106], [84, 136], [94, 170], [105, 207]\n  waypoint at [60, 106]\nt=48\n  gripper at [63, 105]  height 0.070  fingers 4029% open\n  cube at [61, 88], [70, 120], [80, 155], [91, 194]\n  highlighted target at [75, 106]\n  target at [66, 78], [84, 136], [94, 170], [105, 207]\n  waypoint at [69, 107]\nt=64\n  gripper at [80, 104]  height 0.070  fingers 3918% open\n  cube at [66, 89], [70, 120], [80, 155], [91, 194]\n  highlighted target at [75, 106]\n  target at [66, 78], [84, 136], [94, 170], [105, 207]\n  waypoint at [91, 106]\nt=80\n  gripper at [86, 116]  height 0.070  fingers 3978% open\n  cube at [71, 90], [76, 120], [80, 155], [91, 194]\n  highlighted target at [74, 106]\n  target at [68, 77], [84, 136], [94, 170], [105, 207]\n  waypoint at [96, 116]\nt=96\n  gripper at [73, 138]  height 0.070  fingers 4286% open\n  cube at [61, 88], [71, 120], [80, 155], [91, 194]\n  highlighted target at [84, 136]\n  target at [66, 78], [75, 106], [94, 170], [105, 207]\n  waypoint at [87, 133]\nt=112\n  gripper at [89, 140]  height 0.070  fingers 4139% open\n  cube at [61, 88], [77, 120], [82, 154], [91, 194]\n  highlighted target at [83, 134]\n  target at [66, 78], [75, 106], [94, 170], [105, 207]\n  waypoint at [100, 138]\nt=128\n  gripper at [99, 152]  height 0.070  fingers 4113% open\n  cube at [61, 88], [73, 117], [89, 152], [91, 194]\n  highlighted target at [84, 136]\n  target at [66, 78], [75, 106], [94, 170], [105, 207]\n  waypoint at [108, 149]\nt=144\n  gripper at [86, 174]  height 0.070  fingers 4394% open\n  cube at [61, 88], [70, 120], [81, 154], [91, 194]\n  highlighted target at [84, 136], [94, 170]\n  target at [66, 78], [75, 106], [105, 207]\n  waypoint at [97, 167]\nt=160\n  gripper at [99, 180]  height 0.070  fingers 4247% open\n  cube at [61, 88], [70, 120], [86, 152], [95, 192]\n  highlighted target at [94, 170]\n  target at [66, 78], [75, 106], [84, 136], [105, 207]\n  waypoint at [109, 173]\nt=176\n  gripper at [112, 194]  height 0.070  fingers 4107% open\n  cube at [61, 88], [70, 120], [81, 154], [102, 188]\n  highlighted target at [96, 168]\n  target at [66, 78], [75, 106], [84, 136], [105, 207]\n  waypoint at [121, 186]\nt=192\n  gripper at [101, 213]  height 0.070  fingers 4317% open\n  cube at [61, 88], [70, 120], [81, 154], [94, 192]\n  highlighted target at [94, 169]\n  target at [66, 78], [75, 106], [84, 136], [106, 206]\n  waypoint at [110, 203]\nt=208\n  gripper at [83, 214]  height 0.070  fingers 4576% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [105, 207]\n  target at [66, 78], [75, 106], [84, 136], [94, 170]\n  waypoint at [94, 203]\nt=224\n  gripper at [70, 200]  height 0.070  fingers 4739% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [105, 207]\n  target at [66, 78], [75, 106], [84, 136], [94, 170]\n  waypoint at [82, 192]\nt=240\n  gripper at [77, 184]  height 0.070  fingers 4556% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [105, 207]\n  target at [66, 78], [75, 106], [84, 136], [94, 170]\n  waypoint at [88, 177]\nt=249\n  gripper at [83, 176]  height 0.070  fingers 4419% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [94, 169]\n  target at [66, 78], [75, 106], [84, 136], [106, 206]\n  waypoint at [90, 175]\nEXECUTION STEPS\nt=250\n  gripper at [54, 74]  height 0.070  fingers 3628% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [66, 78]\n  target at [75, 106], [84, 136], [94, 170], [106, 206]",
+      "demo_steps": 17,
+      "command": {
+        "choice": "a",
+        "point": [
+          75,
+          106
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 8.94
+    },
+    {
+      "index": 1,
+      "t_from": 251,
+      "t_to": 300,
+      "steps": 4,
+      "segment": "t=256\n  gripper at [50, 80]  height 0.070  fingers 3726% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [66, 78]\n  target at [75, 106], [84, 136], [94, 170], [106, 206]\nt=272\n  gripper at [44, 99]  height 0.070  fingers 4039% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [66, 78]\n  target at [75, 106], [84, 136], [94, 170], [106, 206]\n  waypoint at [56, 101]\nt=288\n  gripper at [52, 106]  height 0.070  fingers 4103% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [66, 78]\n  target at [75, 106], [84, 136], [94, 170], [106, 206]\n  waypoint at [64, 107]\nt=300\n  gripper at [63, 104]  height 0.070  fingers 4028% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [74, 106]\n  target at [66, 78], [84, 136], [94, 170], [106, 206]\n  waypoint at [69, 107]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": [
+          84,
+          136
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 8.01
+    },
+    {
+      "index": 2,
+      "t_from": 301,
+      "t_to": 350,
+      "steps": 4,
+      "segment": "t=304\n  gripper at [66, 104]  height 0.070  fingers 4005% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [74, 106]\n  target at [66, 78], [84, 136], [94, 170], [106, 206]\n  waypoint at [69, 107]\nt=320\n  gripper at [84, 106]  height 0.070  fingers 3909% open\n  cube at [68, 90], [73, 120], [81, 154], [92, 193]\n  highlighted target at [74, 106]\n  target at [66, 78], [84, 136], [94, 170], [106, 206]\n  waypoint at [95, 108]\nt=336\n  gripper at [83, 122]  height 0.070  fingers 4053% open\n  cube at [67, 88], [74, 120], [81, 154], [92, 193]\n  highlighted target at [74, 106]\n  target at [66, 78], [84, 136], [94, 170], [106, 206]\n  waypoint at [94, 122]\nt=350\n  gripper at [73, 139]  height 0.070  fingers 4298% open\n  cube at [61, 88], [71, 120], [81, 154], [92, 193]\n  highlighted target at [84, 136]\n  target at [66, 78], [75, 106], [94, 170], [106, 206]\n  waypoint at [87, 133]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": [
+          84,
+          136
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 9.66
+    },
+    {
+      "index": 3,
+      "t_from": 351,
+      "t_to": 400,
+      "steps": 4,
+      "segment": "t=352\n  gripper at [73, 139]  height 0.070  fingers 4290% open\n  cube at [61, 88], [71, 120], [81, 154], [92, 193]\n  highlighted target at [84, 136]\n  target at [66, 78], [75, 106], [94, 170], [106, 206]\n  waypoint at [87, 133]\nt=368\n  gripper at [94, 143]  height 0.070  fingers 4100% open\n  cube at [61, 88], [80, 120], [86, 153], [92, 193]\n  highlighted target at [83, 134]\n  target at [66, 78], [75, 106], [94, 170], [106, 206]\n  waypoint at [105, 140]\nt=384\n  gripper at [97, 158]  height 0.070  fingers 4167% open\n  cube at [61, 88], [70, 120], [89, 152], [92, 193]\n  highlighted target at [84, 136]\n  target at [66, 78], [75, 106], [94, 170], [106, 206]\n  waypoint at [106, 154]\nt=400\n  gripper at [83, 176]  height 0.070  fingers 4431% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [94, 169]\n  target at [66, 78], [75, 106], [84, 136], [106, 206]\n  waypoint at [97, 167]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": [
+          106,
+          206
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 12.41
+    },
+    {
+      "index": 4,
+      "t_from": 401,
+      "t_to": 450,
+      "steps": 4,
+      "segment": "t=416\n  gripper at [106, 183]  height 0.070  fingers 4171% open\n  cube at [61, 88], [70, 120], [83, 153], [100, 191]\n  highlighted target at [94, 169]\n  target at [66, 78], [75, 106], [84, 136], [106, 206]\n  waypoint at [115, 176]\nt=432\n  gripper at [112, 200]  height 0.070  fingers 4134% open\n  cube at [61, 88], [70, 120], [81, 154], [102, 188]\n  highlighted target at [94, 169]\n  target at [66, 78], [75, 106], [84, 136], [107, 208]\n  waypoint at [121, 191]\nt=448\n  gripper at [96, 218]  height 0.070  fingers 4397% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [105, 207]\n  target at [66, 78], [75, 106], [84, 136], [94, 170]\n  waypoint at [109, 204]\nt=450\n  gripper at [95, 218]  height 0.070  fingers 4403% open\n  cube at [61, 88], [70, 120], [81, 154], [92, 193]\n  highlighted target at [105, 207]\n  target at [66, 78], [75, 106], [84, 136], [94, 170]\n  waypoint at [109, 204]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "d",
+        "point": [
+          105,
+          207
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 50,
+      "captured": 50,
+      "terminated": true,
+      "status": "success",
+      "seconds": 8.63
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 251,
+  "reset_batch": 251,
+  "policy": {
+    "name": "mm_g",
+    "memory_kind": "mm",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "71c50604b8843473e48d285394f98ff3ffca2b217f50cda4a3158b247efce0d2",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 5
+    },
+    "statuses": {
+      "valid": 5
+    },
+    "usage": {
+      "input_tokens": 15413,
+      "cached_tokens": 5164,
+      "output_tokens": 2115,
+      "reasoning_tokens": 1905,
+      "latency": 31.24
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[75,106],\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['A', 'C', 'C', 'C', 'D']\"}]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            75,
+            106
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  remaining_path\n      When memory is empty and demonstration frames are present, decode the entire demonstration in two stages. First construct a temporary traversal ledger from the demonstration alone, excluding the reset to the execution starting scene. Anchor the ledger at the initial demonstrated highlighted target and initial wrist position, before any arrival change. Identify that starting target and every chronological arrival through the final demonstration arrival, identifying sites by stable horizontal order rather than exact fluctuating coordinates. The first distinct arrival closes the first traversal from this initial scene; it does not begin the route. Each consecutive pair of distinct adjacent sites creates one ledger row, even if that pair or destination has appeared before. Complete this arrival ledger before classifying any traversal; never compress its repeated rows. The ledger is temporary reasoning at this decision, not an additional memory field. Use highlight changes together with wrist arrival and subsequent motion to resolve each reached site. Temporary double highlights must not erase an arrival boundary. Suppress only coordinate jitter and duplicate indications of the same arrival; preserve every return to a previously visited site, immediate reversal, and repeated crossing as a separate traversal. Do not combine traversals into a net excursion. Second classify each ledger row independently. For that crossing, identify its departure and destination target sites, representative resting wrist positions at those endpoints, and intermediate wrist samples belonging to that crossing. Write any positions as [y, x]. Compute destination target x minus departure target x to determine horizontal direction; do not use a local reversal in wrist x. Judge the arc using the substantial interior wrist excursion relative to the line joining that row's endpoint wrist positions, not a near-arrival sample that may belong to the next crossing. For endpoint wrist positions [y0, x0] and [y1, x1] and an interior wrist sample [ys, xs], when x1 differs from x0, baseline_y = y0 + (y1 - y0) * (xs - x0) / (x1 - x0). Negative ys minus baseline_y indicates upper; positive indicates lower. Use wrist coordinates throughout this baseline calculation. Reversing horizontal direction does not by itself change the side of the baseline occupied by the arc. Use this table: larger x plus upper arc = A; larger x plus lower arc = C; smaller x plus upper arc = D; smaller x plus lower arc = B. Larger x is robot-left and smaller x is robot-right. Do not infer an arc from the preceding traversal, the net excursion, or a waypoint. Do not confuse the wrist with the attached stick endpoint or compare wrist height directly with target coordinates to classify the arc. Write exactly one letter per ledger row in chronological order. Verify a one-to-one correspondence between rows and letters, retaining every repeated crossing and the row ending at the final demonstration arrival. Explicitly check that the first row covers the motion from the demonstration's initial scene to its first distinct arrival, and that its independently classified letter is the first entry of the list. Keep this entry even though it is also the command being selected now. Before committing the list, verify every letter against its own demonstration segment, not just the first letter. First check the departure and destination target x values: smaller destination x permits only B or D; larger destination x permits only A or C. Independently check the intermediate wrist trajectory against the baseline joining that segment's endpoint wrist resting positions: upper selects D for smaller x or A for larger x; lower selects B for smaller x or C for larger x. Correct any letter that fails either check. Recheck both properties for every segment, including successive moves in the same horizontal direction and moves immediately after reversals; neither direction nor arc may be copied from a neighboring traversal. Write the full list at this first decision, without deleting the move selected now. On a later decision with carried memory, the intervening execution shows the preceding oracle command completed at its adjacent target; remove exactly one leading letter from the carried list before selecting the next command. The decision-step protocol guarantees that each such return follows one completed command, so do not count individual frames or repeated highlights as additional completions. If there is no intervening completed execution, retain the carried list. Once exhausted, write []. Use a canonical textual format for the list: square brackets, single-quoted uppercase letters, and a comma followed by one space between entries. This formatting does not change which traversals the list contains or when entries are removed. e.g. ['A', 'B', 'A', 'D']\nMEMORY CARRIED IN\n  remaining_path=",
+        "memory_updates": {
+          "remaining_path": "['A', 'C', 'C', 'C', 'D']"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 4200,
+        "cached_tokens": 0,
+        "output_tokens": 489,
+        "reasoning_tokens": 441,
+        "error": "",
+        "cache_write_tokens": 4197,
+        "finish_reason": "stop",
+        "latency": 6.292,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 6.036,
+        "ttft_s": 6.063,
+        "stream_s": 6.289
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":[84,136],\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['C', 'C', 'C', 'D']\"}]}",
+        "command": {
+          "choice": "c",
+          "point": [
+            84,
+            136
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  remaining_path\n      When memory is empty and demonstration frames are present, decode the entire demonstration in two stages. First construct a temporary traversal ledger from the demonstration alone, excluding the reset to the execution starting scene. Anchor the ledger at the initial demonstrated highlighted target and initial wrist position, before any arrival change. Identify that starting target and every chronological arrival through the final demonstration arrival, identifying sites by stable horizontal order rather than exact fluctuating coordinates. The first distinct arrival closes the first traversal from this initial scene; it does not begin the route. Each consecutive pair of distinct adjacent sites creates one ledger row, even if that pair or destination has appeared before. Complete this arrival ledger before classifying any traversal; never compress its repeated rows. The ledger is temporary reasoning at this decision, not an additional memory field. Use highlight changes together with wrist arrival and subsequent motion to resolve each reached site. Temporary double highlights must not erase an arrival boundary. Suppress only coordinate jitter and duplicate indications of the same arrival; preserve every return to a previously visited site, immediate reversal, and repeated crossing as a separate traversal. Do not combine traversals into a net excursion. Second classify each ledger row independently. For that crossing, identify its departure and destination target sites, representative resting wrist positions at those endpoints, and intermediate wrist samples belonging to that crossing. Write any positions as [y, x]. Compute destination target x minus departure target x to determine horizontal direction; do not use a local reversal in wrist x. Judge the arc using the substantial interior wrist excursion relative to the line joining that row's endpoint wrist positions, not a near-arrival sample that may belong to the next crossing. For endpoint wrist positions [y0, x0] and [y1, x1] and an interior wrist sample [ys, xs], when x1 differs from x0, baseline_y = y0 + (y1 - y0) * (xs - x0) / (x1 - x0). Negative ys minus baseline_y indicates upper; positive indicates lower. Use wrist coordinates throughout this baseline calculation. Reversing horizontal direction does not by itself change the side of the baseline occupied by the arc. Use this table: larger x plus upper arc = A; larger x plus lower arc = C; smaller x plus upper arc = D; smaller x plus lower arc = B. Larger x is robot-left and smaller x is robot-right. Do not infer an arc from the preceding traversal, the net excursion, or a waypoint. Do not confuse the wrist with the attached stick endpoint or compare wrist height directly with target coordinates to classify the arc. Write exactly one letter per ledger row in chronological order. Verify a one-to-one correspondence between rows and letters, retaining every repeated crossing and the row ending at the final demonstration arrival. Explicitly check that the first row covers the motion from the demonstration's initial scene to its first distinct arrival, and that its independently classified letter is the first entry of the list. Keep this entry even though it is also the command being selected now. Before committing the list, verify every letter against its own demonstration segment, not just the first letter. First check the departure and destination target x values: smaller destination x permits only B or D; larger destination x permits only A or C. Independently check the intermediate wrist trajectory against the baseline joining that segment's endpoint wrist resting positions: upper selects D for smaller x or A for larger x; lower selects B for smaller x or C for larger x. Correct any letter that fails either check. Recheck both properties for every segment, including successive moves in the same horizontal direction and moves immediately after reversals; neither direction nor arc may be copied from a neighboring traversal. Write the full list at this first decision, without deleting the move selected now. On a later decision with carried memory, the intervening execution shows the preceding oracle command completed at its adjacent target; remove exactly one leading letter from the carried list before selecting the next command. The decision-step protocol guarantees that each such return follows one completed command, so do not count individual frames or repeated highlights as additional completions. If there is no intervening completed execution, retain the carried list. Once exhausted, write []. Use a canonical textual format for the list: square brackets, single-quoted uppercase letters, and a comma followed by one space between entries. This formatting does not change which traversals the list contains or when entries are removed. e.g. ['A', 'B', 'A', 'D']\nMEMORY CARRIED IN\n  remaining_path=['A', 'C', 'C', 'C', 'D']",
+        "memory_updates": {
+          "remaining_path": "['C', 'C', 'C', 'D']"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2801,
+        "cached_tokens": 1291,
+        "output_tokens": 304,
+        "reasoning_tokens": 259,
+        "error": "",
+        "cache_write_tokens": 1507,
+        "finish_reason": "stop",
+        "reasoning": "**Calculating target paths**\n\nI'm determining the next nearest left target, which suggests that the robot's left direction is larger compared to the nearest target located at coordinates [84,136]. I'll set this point as the target and choose 'c' for my next step. Additionally, I need to update my memory with the remaining path as ['C','C','C','D']. This will help me keep track of the course I need to follow.",
+        "latency": 4.979,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.952,
+        "ttft_s": 4.606,
+        "stream_s": 4.976
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":[84,136],\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['C', 'C', 'D']\"}]}",
+        "command": {
+          "choice": "c",
+          "point": [
+            84,
+            136
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  remaining_path\n      When memory is empty and demonstration frames are present, decode the entire demonstration in two stages. First construct a temporary traversal ledger from the demonstration alone, excluding the reset to the execution starting scene. Anchor the ledger at the initial demonstrated highlighted target and initial wrist position, before any arrival change. Identify that starting target and every chronological arrival through the final demonstration arrival, identifying sites by stable horizontal order rather than exact fluctuating coordinates. The first distinct arrival closes the first traversal from this initial scene; it does not begin the route. Each consecutive pair of distinct adjacent sites creates one ledger row, even if that pair or destination has appeared before. Complete this arrival ledger before classifying any traversal; never compress its repeated rows. The ledger is temporary reasoning at this decision, not an additional memory field. Use highlight changes together with wrist arrival and subsequent motion to resolve each reached site. Temporary double highlights must not erase an arrival boundary. Suppress only coordinate jitter and duplicate indications of the same arrival; preserve every return to a previously visited site, immediate reversal, and repeated crossing as a separate traversal. Do not combine traversals into a net excursion. Second classify each ledger row independently. For that crossing, identify its departure and destination target sites, representative resting wrist positions at those endpoints, and intermediate wrist samples belonging to that crossing. Write any positions as [y, x]. Compute destination target x minus departure target x to determine horizontal direction; do not use a local reversal in wrist x. Judge the arc using the substantial interior wrist excursion relative to the line joining that row's endpoint wrist positions, not a near-arrival sample that may belong to the next crossing. For endpoint wrist positions [y0, x0] and [y1, x1] and an interior wrist sample [ys, xs], when x1 differs from x0, baseline_y = y0 + (y1 - y0) * (xs - x0) / (x1 - x0). Negative ys minus baseline_y indicates upper; positive indicates lower. Use wrist coordinates throughout this baseline calculation. Reversing horizontal direction does not by itself change the side of the baseline occupied by the arc. Use this table: larger x plus upper arc = A; larger x plus lower arc = C; smaller x plus upper arc = D; smaller x plus lower arc = B. Larger x is robot-left and smaller x is robot-right. Do not infer an arc from the preceding traversal, the net excursion, or a waypoint. Do not confuse the wrist with the attached stick endpoint or compare wrist height directly with target coordinates to classify the arc. Write exactly one letter per ledger row in chronological order. Verify a one-to-one correspondence between rows and letters, retaining every repeated crossing and the row ending at the final demonstration arrival. Explicitly check that the first row covers the motion from the demonstration's initial scene to its first distinct arrival, and that its independently classified letter is the first entry of the list. Keep this entry even though it is also the command being selected now. Before committing the list, verify every letter against its own demonstration segment, not just the first letter. First check the departure and destination target x values: smaller destination x permits only B or D; larger destination x permits only A or C. Independently check the intermediate wrist trajectory against the baseline joining that segment's endpoint wrist resting positions: upper selects D for smaller x or A for larger x; lower selects B for smaller x or C for larger x. Correct any letter that fails either check. Recheck both properties for every segment, including successive moves in the same horizontal direction and moves immediately after reversals; neither direction nor arc may be copied from a neighboring traversal. Write the full list at this first decision, without deleting the move selected now. On a later decision with carried memory, the intervening execution shows the preceding oracle command completed at its adjacent target; remove exactly one leading letter from the carried list before selecting the next command. The decision-step protocol guarantees that each such return follows one completed command, so do not count individual frames or repeated highlights as additional completions. If there is no intervening completed execution, retain the carried list. Once exhausted, write []. Use a canonical textual format for the list: square brackets, single-quoted uppercase letters, and a comma followed by one space between entries. This formatting does not change which traversals the list contains or when entries are removed. e.g. ['A', 'B', 'A', 'D']\nMEMORY CARRIED IN\n  remaining_path=['C', 'C', 'C', 'D']",
+        "memory_updates": {
+          "remaining_path": "['C', 'C', 'D']"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2807,
+        "cached_tokens": 1291,
+        "output_tokens": 369,
+        "reasoning_tokens": 327,
+        "error": "",
+        "cache_write_tokens": 1513,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating command execution and mapping**\n\nI’m trying to determine if the preceding command executed completely. The current interval suggests that it likely ended at the target, which I’m noting as [84,136]. I should remove one leading C from my letters, leaving C, C, D. To decide which letter corresponds, I'm exploring menu mappings. It seems mapping A and B suggests larger and smaller movements. The directions for C and D need to be inferred based on the chosen clockwise and counterclockwise movements.**Identifying the nearest target**\n\nI need to find the nearest target from my current position at x136. The targets are x170 on the right and x78 on the left. It looks like the nearest target should be x170 since right means smaller x. I notice that the distance calculations show 34 to the left target and 58 to the right, which means left at x170 is closer. I need to ensure I'm navigating to the correct anchor point from the highlighted target [84,136].",
+        "latency": 6.135,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.619,
+        "ttft_s": 5.941,
+        "stream_s": 6.132
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":[106,206],\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['C', 'D']\"}]}",
+        "command": {
+          "choice": "c",
+          "point": [
+            106,
+            206
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  remaining_path\n      When memory is empty and demonstration frames are present, decode the entire demonstration in two stages. First construct a temporary traversal ledger from the demonstration alone, excluding the reset to the execution starting scene. Anchor the ledger at the initial demonstrated highlighted target and initial wrist position, before any arrival change. Identify that starting target and every chronological arrival through the final demonstration arrival, identifying sites by stable horizontal order rather than exact fluctuating coordinates. The first distinct arrival closes the first traversal from this initial scene; it does not begin the route. Each consecutive pair of distinct adjacent sites creates one ledger row, even if that pair or destination has appeared before. Complete this arrival ledger before classifying any traversal; never compress its repeated rows. The ledger is temporary reasoning at this decision, not an additional memory field. Use highlight changes together with wrist arrival and subsequent motion to resolve each reached site. Temporary double highlights must not erase an arrival boundary. Suppress only coordinate jitter and duplicate indications of the same arrival; preserve every return to a previously visited site, immediate reversal, and repeated crossing as a separate traversal. Do not combine traversals into a net excursion. Second classify each ledger row independently. For that crossing, identify its departure and destination target sites, representative resting wrist positions at those endpoints, and intermediate wrist samples belonging to that crossing. Write any positions as [y, x]. Compute destination target x minus departure target x to determine horizontal direction; do not use a local reversal in wrist x. Judge the arc using the substantial interior wrist excursion relative to the line joining that row's endpoint wrist positions, not a near-arrival sample that may belong to the next crossing. For endpoint wrist positions [y0, x0] and [y1, x1] and an interior wrist sample [ys, xs], when x1 differs from x0, baseline_y = y0 + (y1 - y0) * (xs - x0) / (x1 - x0). Negative ys minus baseline_y indicates upper; positive indicates lower. Use wrist coordinates throughout this baseline calculation. Reversing horizontal direction does not by itself change the side of the baseline occupied by the arc. Use this table: larger x plus upper arc = A; larger x plus lower arc = C; smaller x plus upper arc = D; smaller x plus lower arc = B. Larger x is robot-left and smaller x is robot-right. Do not infer an arc from the preceding traversal, the net excursion, or a waypoint. Do not confuse the wrist with the attached stick endpoint or compare wrist height directly with target coordinates to classify the arc. Write exactly one letter per ledger row in chronological order. Verify a one-to-one correspondence between rows and letters, retaining every repeated crossing and the row ending at the final demonstration arrival. Explicitly check that the first row covers the motion from the demonstration's initial scene to its first distinct arrival, and that its independently classified letter is the first entry of the list. Keep this entry even though it is also the command being selected now. Before committing the list, verify every letter against its own demonstration segment, not just the first letter. First check the departure and destination target x values: smaller destination x permits only B or D; larger destination x permits only A or C. Independently check the intermediate wrist trajectory against the baseline joining that segment's endpoint wrist resting positions: upper selects D for smaller x or A for larger x; lower selects B for smaller x or C for larger x. Correct any letter that fails either check. Recheck both properties for every segment, including successive moves in the same horizontal direction and moves immediately after reversals; neither direction nor arc may be copied from a neighboring traversal. Write the full list at this first decision, without deleting the move selected now. On a later decision with carried memory, the intervening execution shows the preceding oracle command completed at its adjacent target; remove exactly one leading letter from the carried list before selecting the next command. The decision-step protocol guarantees that each such return follows one completed command, so do not count individual frames or repeated highlights as additional completions. If there is no intervening completed execution, retain the carried list. Once exhausted, write []. Use a canonical textual format for the list: square brackets, single-quoted uppercase letters, and a comma followed by one space between entries. This formatting does not change which traversals the list contains or when entries are removed. e.g. ['A', 'B', 'A', 'D']\nMEMORY CARRIED IN\n  remaining_path=['C', 'C', 'D']",
+        "memory_updates": {
+          "remaining_path": "['C', 'D']"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2804,
+        "cached_tokens": 1291,
+        "output_tokens": 555,
+        "reasoning_tokens": 516,
+        "error": "",
+        "cache_write_tokens": 1510,
+        "finish_reason": "stop",
+        "reasoning": "**Mapping coordinate movement**\n\nI'm thinking about how to coordinate movement on a screen, moving from left to right while following a circular path around a central stick. If I’m navigating this direction, there are upper and lower arcs to consider. When moving from left to right, the upper arc seems to correspond to a movement from the bottom, following the clockwise route around the obstacle. It looks like the path goes from the leftmost angle through the top, so I'll define that as positive y as I map this out.**Defining target navigation**\n\nI'm mapping out the navigation for targets based on their coordinates. For the lower left target, it seems to follow a clockwise path, whereas the upper right target might go counterclockwise. I'm considering that if I'm moving from right to left, I traverse the bottom section. I note the current position as 170, and the nearest left target options appear to be [106,206] or [84,136], focusing on increasing x values. My next move will be to choose the closest target from this highlighted list.",
+        "latency": 8.824,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 6.547,
+        "ttft_s": 8.637,
+        "stream_s": 8.821
+      },
+      {
+        "kind": "decide",
+        "index": 4,
+        "status": "valid",
+        "raw": "{\"choice\":\"d\",\"point\":[105,207],\"memory_updates\":[{\"field\":\"remaining_path\",\"value\":\"['D']\"}]}",
+        "command": {
+          "choice": "d",
+          "point": [
+            105,
+            207
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  remaining_path\n      When memory is empty and demonstration frames are present, decode the entire demonstration in two stages. First construct a temporary traversal ledger from the demonstration alone, excluding the reset to the execution starting scene. Anchor the ledger at the initial demonstrated highlighted target and initial wrist position, before any arrival change. Identify that starting target and every chronological arrival through the final demonstration arrival, identifying sites by stable horizontal order rather than exact fluctuating coordinates. The first distinct arrival closes the first traversal from this initial scene; it does not begin the route. Each consecutive pair of distinct adjacent sites creates one ledger row, even if that pair or destination has appeared before. Complete this arrival ledger before classifying any traversal; never compress its repeated rows. The ledger is temporary reasoning at this decision, not an additional memory field. Use highlight changes together with wrist arrival and subsequent motion to resolve each reached site. Temporary double highlights must not erase an arrival boundary. Suppress only coordinate jitter and duplicate indications of the same arrival; preserve every return to a previously visited site, immediate reversal, and repeated crossing as a separate traversal. Do not combine traversals into a net excursion. Second classify each ledger row independently. For that crossing, identify its departure and destination target sites, representative resting wrist positions at those endpoints, and intermediate wrist samples belonging to that crossing. Write any positions as [y, x]. Compute destination target x minus departure target x to determine horizontal direction; do not use a local reversal in wrist x. Judge the arc using the substantial interior wrist excursion relative to the line joining that row's endpoint wrist positions, not a near-arrival sample that may belong to the next crossing. For endpoint wrist positions [y0, x0] and [y1, x1] and an interior wrist sample [ys, xs], when x1 differs from x0, baseline_y = y0 + (y1 - y0) * (xs - x0) / (x1 - x0). Negative ys minus baseline_y indicates upper; positive indicates lower. Use wrist coordinates throughout this baseline calculation. Reversing horizontal direction does not by itself change the side of the baseline occupied by the arc. Use this table: larger x plus upper arc = A; larger x plus lower arc = C; smaller x plus upper arc = D; smaller x plus lower arc = B. Larger x is robot-left and smaller x is robot-right. Do not infer an arc from the preceding traversal, the net excursion, or a waypoint. Do not confuse the wrist with the attached stick endpoint or compare wrist height directly with target coordinates to classify the arc. Write exactly one letter per ledger row in chronological order. Verify a one-to-one correspondence between rows and letters, retaining every repeated crossing and the row ending at the final demonstration arrival. Explicitly check that the first row covers the motion from the demonstration's initial scene to its first distinct arrival, and that its independently classified letter is the first entry of the list. Keep this entry even though it is also the command being selected now. Before committing the list, verify every letter against its own demonstration segment, not just the first letter. First check the departure and destination target x values: smaller destination x permits only B or D; larger destination x permits only A or C. Independently check the intermediate wrist trajectory against the baseline joining that segment's endpoint wrist resting positions: upper selects D for smaller x or A for larger x; lower selects B for smaller x or C for larger x. Correct any letter that fails either check. Recheck both properties for every segment, including successive moves in the same horizontal direction and moves immediately after reversals; neither direction nor arc may be copied from a neighboring traversal. Write the full list at this first decision, without deleting the move selected now. On a later decision with carried memory, the intervening execution shows the preceding oracle command completed at its adjacent target; remove exactly one leading letter from the carried list before selecting the next command. The decision-step protocol guarantees that each such return follows one completed command, so do not count individual frames or repeated highlights as additional completions. If there is no intervening completed execution, retain the carried list. Once exhausted, write []. Use a canonical textual format for the list: square brackets, single-quoted uppercase letters, and a comma followed by one space between entries. This formatting does not change which traversals the list contains or when entries are removed. e.g. ['A', 'B', 'A', 'D']\nMEMORY CARRIED IN\n  remaining_path=['C', 'D']",
+        "memory_updates": {
+          "remaining_path": "['D']"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2801,
+        "cached_tokens": 1291,
+        "output_tokens": 398,
+        "reasoning_tokens": 362,
+        "error": "",
+        "cache_write_tokens": 1507,
+        "finish_reason": "stop",
+        "latency": 5.01,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 4.815,
+        "ttft_s": 4.826,
+        "stream_s": 5.007
+      }
+    ]
+  },
+  "seconds": 68.6,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "mm_g",
+  "reset_digest": "7a572b97ae5a5149",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 662600,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 68.6
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/RouteStick_ep26_mm_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 662600,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "7a572b97ae5a5149",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

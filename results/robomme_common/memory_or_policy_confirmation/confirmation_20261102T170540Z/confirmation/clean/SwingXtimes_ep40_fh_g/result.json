@@ -1,0 +1,344 @@
+{
+  "task": "SwingXtimes",
+  "episode": 40,
+  "split": "test",
+  "goal": "pick up the green cube, move it to the top of the right-side target, then put it down on the left-side target, finally press the button to stop",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the cube",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "move to the top of the target",
+      "need_parameter": true
+    },
+    {
+      "label": "c",
+      "action": "put the cube on the table",
+      "need_parameter": false
+    },
+    {
+      "label": "d",
+      "action": "press the button",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [61, 112]\n  green cube at [84, 94]\n  target at [88, 71], [91, 181]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          84,
+          94
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 120,
+      "captured": 120,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.7
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 120,
+      "steps": 8,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [61, 112]\n  green cube at [84, 94]\n  target at [88, 71], [91, 181]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [61, 112]\n  green cube at [84, 94]\n  target at [88, 71], [91, 181]\nt=48\n  gripper at [49, 85]  height 0.158  fingers 100% open\n  button at [61, 112]\n  green cube at [84, 94]\n  target at [88, 71], [91, 181]\nt=64\n  gripper at [52, 85]  height 0.149  fingers 100% open\n  button at [61, 112]\n  green cube at [84, 94]\n  target at [88, 71], [91, 181]\nt=80\n  gripper at [81, 94]  height 0.036  fingers 100% open\n  button at [63, 114]\n  green cube at [84, 94]\n  target at [88, 71], [91, 181]\nt=96\n  gripper at [85, 96]  height 0.019  fingers 46% open\n  button at [62, 116]\n  green cube at [86, 95]\n  target at [90, 70], [91, 181]\nt=112\n  gripper at [59, 88]  height 0.129  fingers 46% open\n  button at [62, 113]\n  green cube at [58, 88] is held in the gripper\n  target at [88, 71], [91, 181]\nt=120\n  gripper at [53, 87]  height 0.149  fingers 46% open\n  button at [62, 113]\n  green cube at [52, 86] is held in the gripper\n  target at [88, 71], [91, 181]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          88,
+          71
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 19,
+      "captured": 19,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 2.83
+    },
+    {
+      "index": 2,
+      "t_from": 121,
+      "t_to": 139,
+      "steps": 2,
+      "segment": "t=128\n  gripper at [57, 81]  height 0.139  fingers 46% open\n  button at [62, 113]\n  green cube at [55, 81] is held in the gripper\n  target at [88, 71], [91, 181]\nt=139\n  gripper at [67, 62]  height 0.100  fingers 46% open\n  button at [62, 113]\n  green cube at [66, 63] is held in the gripper\n  highlighted target at [88, 71]\n  target at [91, 181]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          91,
+          181
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 39,
+      "captured": 39,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.83
+    },
+    {
+      "index": 3,
+      "t_from": 140,
+      "t_to": 178,
+      "steps": 4,
+      "segment": "t=144\n  gripper at [67, 64]  height 0.099  fingers 46% open\n  button at [62, 113]\n  green cube at [67, 61] is held in the gripper\n  highlighted target at [88, 71]\n  target at [91, 181]\nt=160\n  gripper at [68, 124]  height 0.100  fingers 46% open\n  green cube at [69, 125] is held in the gripper\n  highlighted target at [88, 71]\n  target at [91, 181]\nt=176\n  gripper at [69, 189]  height 0.100  fingers 46% open\n  button at [61, 112]\n  green cube at [69, 191] is held in the gripper\n  highlighted target at [91, 181]\n  target at [88, 71]\nt=178\n  gripper at [69, 191]  height 0.100  fingers 46% open\n  button at [61, 112]\n  green cube at [69, 191] is held in the gripper\n  highlighted target at [91, 181]\n  target at [88, 71]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": [
+          88,
+          71
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 39,
+      "captured": 39,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 3.64
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 4
+    },
+    "statuses": {
+      "valid": 4
+    },
+    "usage": {
+      "input_tokens": 7851,
+      "cached_tokens": 5315,
+      "output_tokens": 223,
+      "reasoning_tokens": 143,
+      "latency": 10.217
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[84,94]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            84,
+            94
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1295,
+        "cached_tokens": 0,
+        "output_tokens": 28,
+        "reasoning_tokens": 8,
+        "error": "",
+        "cache_write_tokens": 1292,
+        "finish_reason": "stop",
+        "latency": 1.764,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.568,
+        "ttft_s": 1.579,
+        "stream_s": 1.76
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[88,71]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            88,
+            71
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1890,
+        "cached_tokens": 1292,
+        "output_tokens": 49,
+        "reasoning_tokens": 29,
+        "error": "",
+        "cache_write_tokens": 595,
+        "finish_reason": "stop",
+        "reasoning": "**Navigating robot movements**\n\nI need to navigate the robot to move a cube to the top of a right-side target. The target I'm focusing on has coordinates [88, 71]. So, I’ll choose a specific point on the target, referred to as “b,” to aim for. Making sure the robot moves correctly is essential for optimizing the placement of the cube, and ensuring everything lines up just right helps avoid any unintended positioning errors.",
+        "latency": 2.372,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.512,
+        "ttft_s": 2.205,
+        "stream_s": 2.369
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[91,181]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            91,
+            181
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2139,
+        "cached_tokens": 1887,
+        "output_tokens": 84,
+        "reasoning_tokens": 64,
+        "error": "",
+        "cache_write_tokens": 249,
+        "finish_reason": "stop",
+        "reasoning": "**Planning target placement**\n\nI’ve reached the top target, and now I need to focus on placing the goal on the left-side target. The targets' image coordinates are x 181 for the left robot side, which is larger. I’ll need to put the cube there, labeling it with “c” and noting that it only says “table.” I won't take any target action except to move and then place the target down. I should select target \"b\" on the left at coordinates [91,181], followed by \"c.\"",
+        "latency": 3.146,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.175,
+        "ttft_s": 2.988,
+        "stream_s": 3.142
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":[88,71]}",
+        "command": {
+          "choice": "b",
+          "point": [
+            88,
+            71
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2527,
+        "cached_tokens": 2136,
+        "output_tokens": 62,
+        "reasoning_tokens": 42,
+        "error": "",
+        "cache_write_tokens": 388,
+        "finish_reason": "stop",
+        "reasoning": "**Executing movement plan**\n\nI need to focus on the goal, which involves moving to the top right-side target and then putting something down on the left-side target before pressing a button. I've successfully moved to the right target, which is great! Now it’s time to move to the left target, specifically at position x71. Once I get there, I’ll put it down as planned. Let’s keep everything organized and follow through!",
+        "latency": 2.935,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.142,
+        "ttft_s": 2.803,
+        "stream_s": 2.932
+      }
+    ]
+  },
+  "seconds": 14.5,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "a9ee6a64c1dc096e",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 534000,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 14.5
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/SwingXtimes_ep40_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 534000,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "a9ee6a64c1dc096e",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

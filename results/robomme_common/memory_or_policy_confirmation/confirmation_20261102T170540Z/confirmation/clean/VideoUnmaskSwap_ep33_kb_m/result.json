@@ -1,0 +1,270 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 33,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the green cube, finally pick up another container hiding the red cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 12,
+    "chars": 1323
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 168,
+      "t_to": 168,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [73, 99]\n  green cube at [138, 166]\n  red cube at [100, 120]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [73, 99]\n  green cube at [138, 166]\n  red cube at [100, 120]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [97, 119], [136, 168]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [97, 119], [136, 168]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [97, 119], [136, 168]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [98, 137], [136, 144]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [112, 162], [118, 120]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [99, 119], [135, 167]\nt=128\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [98, 133], [136, 151]\nt=144\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [110, 161], [123, 122]\nt=160\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [99, 119], [135, 167]\nt=167\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [99, 119], [135, 167]\nEXECUTION STEPS\nt=168\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [99, 119], [135, 167]",
+      "demo_steps": 12,
+      "command": {
+        "choice": "a",
+        "point": [
+          136,
+          168
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 103,
+      "captured": 103,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.13
+    },
+    {
+      "index": 1,
+      "t_from": 169,
+      "t_to": 271,
+      "steps": 7,
+      "segment": "t=176\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [99, 119], [135, 167]\nt=192\n  gripper raised out of the frame  fingers 100% open\n  container at [70, 99], [99, 119], [135, 167]\nt=208\n  gripper at [94, 185]  height 0.212  fingers 100% open\n  container at [70, 99], [99, 119], [135, 167]\nt=224\n  gripper at [105, 187]  height 0.192  fingers 100% open\n  container at [70, 99], [99, 119], [137, 168]\nt=240\n  gripper at [127, 174]  height 0.093  fingers 100% open\n  container at [70, 99], [99, 119], [143, 171]\nt=256\n  gripper at [130, 171]  height 0.067  fingers 46% open\n  container at [70, 99], [99, 119], [146, 170]\nt=271\n  gripper at [102, 193]  height 0.198  fingers 46% open\n  container at [120, 194] is held in the gripper\n  container at [70, 99], [99, 119]\n  green cube at [138, 167]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 41,
+      "captured": 41,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.99
+    },
+    {
+      "index": 2,
+      "t_from": 272,
+      "t_to": 312,
+      "steps": 4,
+      "segment": "t=272\n  gripper at [102, 193]  height 0.199  fingers 46% open\n  container at [120, 194] is held in the gripper\n  container at [70, 99], [99, 119]\n  green cube at [138, 167]\nt=288\n  gripper at [126, 174]  height 0.086  fingers 46% open\n  container at [140, 174] is held in the gripper\n  container at [70, 99], [99, 119]\nt=304\n  gripper at [125, 174]  height 0.086  fingers 100% open\n  container at [70, 99], [99, 119], [143, 171]\nt=312\n  gripper at [113, 182]  height 0.147  fingers 100% open\n  container at [70, 99], [99, 119], [138, 169]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          97,
+          119
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 101,
+      "captured": 101,
+      "terminated": true,
+      "status": "success",
+      "seconds": 4.95
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 169,
+  "reset_batch": 169,
+  "policy": {
+    "name": "kb_m",
+    "memory_kind": "kb",
+    "policy_kind": "m",
+    "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+    "system_sha256": "47a4cb696b667d36f480d08dde51e0adcb46fa826b01df1fc415c83f171e6b2e",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 3
+    },
+    "statuses": {
+      "valid": 3
+    },
+    "usage": {
+      "input_tokens": 8767,
+      "cached_tokens": 2644,
+      "output_tokens": 155,
+      "reasoning_tokens": 97,
+      "latency": 7.492
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[136,168]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            136,
+            168
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 0, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: watch the video carefully, then pick up the container hiding the green cube, finally pick up another container hiding the red cube\nTask items (named by the goal): container, green cube, red cube\nObjects (world frame, m):\n  [cube_blue] blue cube, hidden: see Inside below, last seen t=31\n  [bin_0] container (task item), visible at -0.147, -0.117, 0.053, last seen t=168 [o168:bin_0]\n  [bin_1] container (task item), visible at 0.148, 0.126, 0.053, last seen t=168 [o168:bin_1]\n  [bin_2] container (task item), visible at -0.004, -0.027, 0.053, last seen t=168 [o168:bin_2]\n  [cube_green] green cube (task item), hidden: see Inside below, last seen t=31\n  [cube_red] red cube (task item), hidden: see Inside below, last seen t=31\nRelations:\n  [Inside(cube_blue)] bin_0 0.99 | elsewhere 0.01  [e4,o32:bin_0]\n  [Inside(cube_green)] bin_1 0.99 | elsewhere 0.01  [e8,o32:bin_1]\n  [Inside(cube_red)] bin_2 0.99 | elsewhere 0.01  [e9,o32:bin_2]\nEvent log (oldest first):\n  [v1] t=32 cube_blue covered by bin_0 at (-0.15, -0.12) (conf 0.99) [e4]; from then on it moves with bin_0\n  [v2] t=32 cube_green covered by bin_1 at (0.15, 0.13) (conf 0.99) [e8]; from then on it moves with bin_1\n  [v3] t=32 cube_red covered by bin_2 at (-0.00, -0.03) (conf 0.99) [e9]; from then on it moves with bin_2\n  [e12] t=114 bin_1 moved (0.15, 0.12) -> (-0.00, -0.03) (t=68-114)\n  [e13] t=114 bin_2 moved (-0.00, -0.02) -> (0.15, 0.13) (t=68-114)\n  [e16] t=164 bin_1 moved (-0.00, -0.02) -> (0.15, 0.13) (t=118-164)\n  [e17] t=164 bin_2 moved (0.15, 0.12) -> (-0.00, -0.03) (t=118-164)\nJoined facts (computed from the memory above):\n  Containers from the robot's left to its right: bin_1, bin_2, bin_0.\n  Containers from nearest to farthest from the robot: bin_0, bin_2, bin_1.\n  bin_0: on the robot's right, nearest to the robot; may hold the blue cube (0.99); moved 0 times.\n  bin_1: on the robot's left, number 3 from the robot; may hold the green cube (0.99); moved 2 times, last at t=118-164 together with bin_2.\n  bin_2: in the middle, number 2 from the robot; may hold the red cube (0.99); moved 2 times, last at t=118-164 together with bin_1.\n  the blue cube: hidden since t=32, under bin_0 (0.99; bin_0 has moved 0 times since, and the cube moved with it).\n  the green cube (task item): hidden since t=32, under bin_1 (0.99; bin_1 has moved 2 times since, and the cube moved with it).\n  the red cube (task item): hidden since t=32, under bin_2 (0.99; bin_2 has moved 2 times since, and the cube moved with it).\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  none\nVisible object-to-pixel lookup:\n  [bin_0] container at pixel [70, 99]\n  [bin_1] container at pixel [136, 168]\n  [bin_2] container at pixel [97, 119]",
+        "memory_updates": null,
+        "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3058,
+        "cached_tokens": 0,
+        "output_tokens": 36,
+        "reasoning_tokens": 16,
+        "error": "",
+        "cache_write_tokens": 3055,
+        "finish_reason": "stop",
+        "latency": 1.434,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.299,
+        "ttft_s": 1.308,
+        "stream_s": 1.431
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 0, button presses 0, holds 0.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: watch the video carefully, then pick up the container hiding the green cube, finally pick up another container hiding the red cube\nTask items (named by the goal): container, green cube, red cube\nObjects (world frame, m):\n  [cube_blue] blue cube, hidden: see Inside below, last seen t=31\n  [bin_0] container (task item), visible at -0.147, -0.117, 0.053, last seen t=271 [o271:bin_0]\n  [bin_1] container (task item), held at 0.145, 0.131, 0.188, last seen t=271 [o271:bin_1]\n  [bin_2] container (task item), visible at -0.004, -0.027, 0.053, last seen t=271 [o271:bin_2]\n  [cube_green] green cube (task item), visible at 0.145, 0.128, 0.017, last seen t=271 [o271:cube_green]\n  [cube_red] red cube (task item), hidden: see Inside below, last seen t=31\nRelations:\n  [Inside(cube_blue)] bin_0 0.99 | elsewhere 0.01  [e4,o32:bin_0]\n  [Inside(cube_green)] was under bin_1, revealed t=262 [v5]\n  [Inside(cube_red)] bin_2 0.99 | elsewhere 0.01  [e9,o32:bin_2]\nEvent log (oldest first):\n  [v1] t=32 cube_blue covered by bin_0 at (-0.15, -0.12) (conf 0.99) [e4]; from then on it moves with bin_0\n  [v2] t=32 cube_green covered by bin_1 at (0.15, 0.13) (conf 0.99) [e8]; from then on it moves with bin_1\n  [v3] t=32 cube_red covered by bin_2 at (-0.00, -0.03) (conf 0.99) [e9]; from then on it moves with bin_2\n  [e12] t=114 bin_1 moved (0.15, 0.12) -> (-0.00, -0.03) (t=68-114)\n  [e13] t=114 bin_2 moved (-0.00, -0.02) -> (0.15, 0.13) (t=68-114)\n  [e16] t=164 bin_1 moved (-0.00, -0.02) -> (0.15, 0.13) (t=118-164)\n  [e17] t=164 bin_2 moved (0.15, 0.12) -> (-0.00, -0.03) (t=118-164)\n  [v5] t=262 cube_green seen where bin_1 was grasped: bin_1 hid it\nJoined facts (computed from the memory above):\n  Containers from the robot's left to its right: bin_1, bin_2, bin_0.\n  Containers from nearest to farthest from the robot: bin_0, bin_2, bin_1.\n  bin_0: on the robot's right, nearest to the robot; may hold the blue cube (0.99); moved 0 times.\n  bin_1: on the robot's left, number 3 from the robot; hid the green cube (revealed t=262); holds no cube as far as the memory knows; moved 2 times, last at t=118-164 together with bin_2.\n  bin_2: in the middle, number 2 from the robot; may hold the red cube (0.99); moved 2 times, last at t=118-164 together with bin_1.\n  the blue cube: hidden since t=32, under bin_0 (0.99; bin_0 has moved 0 times since, and the cube moved with it).\n  the green cube (task item): visible; it was under bin_1 (revealed t=262).\n  the red cube (task item): hidden since t=32, under bin_2 (0.99; bin_2 has moved 2 times since, and the cube moved with it).\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  none\nVisible object-to-pixel lookup:\n  [bin_0] container at pixel [70, 99]\n  [bin_1] container at pixel [120, 194]\n  [bin_2] container at pixel [97, 119]\n  [cube_green] cube at pixel [137, 167]",
+        "memory_updates": null,
+        "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2892,
+        "cached_tokens": 1322,
+        "output_tokens": 53,
+        "reasoning_tokens": 35,
+        "error": "",
+        "cache_write_tokens": 1567,
+        "finish_reason": "stop",
+        "latency": 3.072,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.939,
+        "ttft_s": 2.949,
+        "stream_s": 3.07
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[97,119]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            97,
+            119
+          ]
+        },
+        "memory_before": "EXECUTION COUNTS (execution phase only; the demonstration is not counted): pick-ups 1, releases 1, button presses 0, holds 1.\nWORLD MEMORY (task progress is intentionally omitted; use the execution counts above)\nGoal: watch the video carefully, then pick up the container hiding the green cube, finally pick up another container hiding the red cube\nTask items (named by the goal): container, green cube, red cube\nObjects (world frame, m):\n  [cube_blue] blue cube, hidden: see Inside below, last seen t=31\n  [bin_0] container (task item), visible at -0.147, -0.117, 0.053, last seen t=312 [o312:bin_0]\n  [bin_1] container (task item), visible at 0.140, 0.129, 0.053, last seen t=312 [o312:bin_1]\n  [bin_2] container (task item), visible at -0.004, -0.027, 0.053, last seen t=312 [o312:bin_2]\n  [cube_green] green cube (task item), hidden: see Inside below, last seen t=286\n  [cube_red] red cube (task item), hidden: see Inside below, last seen t=31\nRelations:\n  [Inside(cube_blue)] bin_0 0.99 | elsewhere 0.01  [e4,o32:bin_0]\n  [Inside(cube_green)] bin_1 0.99 | elsewhere 0.01  [e25,o287:bin_1]\n  [Inside(cube_red)] bin_2 0.99 | elsewhere 0.01  [e9,o32:bin_2]\nEvent log (oldest first):\n  [v1] t=32 cube_blue covered by bin_0 at (-0.15, -0.12) (conf 0.99) [e4]; from then on it moves with bin_0\n  [v2] t=32 cube_green covered by bin_1 at (0.15, 0.13) (conf 0.99) [e8]; from then on it moves with bin_1\n  [v3] t=32 cube_red covered by bin_2 at (-0.00, -0.03) (conf 0.99) [e9]; from then on it moves with bin_2\n  [e12] t=114 bin_1 moved (0.15, 0.12) -> (-0.00, -0.03) (t=68-114)\n  [e13] t=114 bin_2 moved (-0.00, -0.02) -> (0.15, 0.13) (t=68-114)\n  [e16] t=164 bin_1 moved (-0.00, -0.02) -> (0.15, 0.13) (t=118-164)\n  [e17] t=164 bin_2 moved (0.15, 0.12) -> (-0.00, -0.03) (t=118-164)\n  [v5] t=262 cube_green seen where bin_1 was grasped: bin_1 hid it\n  [v6] t=287 cube_green covered by bin_1 at (0.15, 0.13) (conf 0.99) [e25]; from then on it moves with bin_1\nJoined facts (computed from the memory above):\n  Containers from the robot's left to its right: bin_1, bin_2, bin_0.\n  Containers from nearest to farthest from the robot: bin_0, bin_2, bin_1.\n  bin_0: on the robot's right, nearest to the robot; may hold the blue cube (0.99); moved 0 times.\n  bin_1: on the robot's left, number 3 from the robot; hid the green cube (revealed t=262); may hold the green cube (0.99); moved 2 times, last at t=118-164 together with bin_2.\n  bin_2: in the middle, number 2 from the robot; may hold the red cube (0.99); moved 2 times, last at t=118-164 together with bin_1.\n  the blue cube: hidden since t=32, under bin_0 (0.99; bin_0 has moved 0 times since, and the cube moved with it).\n  the green cube (task item): hidden since t=287, under bin_1 (0.99; bin_1 has moved 0 times since, and the cube moved with it).\n  the red cube (task item): hidden since t=32, under bin_2 (0.99; bin_2 has moved 2 times since, and the cube moved with it).\nDEMONSTRATION (manipulation seen in the demonstration video; not executed by the robot):\n  none\nOther observed objects (outside the KB's reset vocabulary of cubes, containers and targets; last observed pixel [y, x]):\n  none\nVisible object-to-pixel lookup:\n  [bin_0] container at pixel [70, 99]\n  [bin_1] container at pixel [138, 168]\n  [bin_2] container at pixel [97, 119]",
+        "memory_updates": null,
+        "policy_sha256": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+        "memory_note_sha256": "1432e21828848dd099f640ea6419f457d27abd3bac4e8e7f9b96130c13dd71b4",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2817,
+        "cached_tokens": 1322,
+        "output_tokens": 66,
+        "reasoning_tokens": 46,
+        "error": "",
+        "cache_write_tokens": 1492,
+        "finish_reason": "stop",
+        "latency": 2.986,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.77,
+        "ttft_s": 2.77,
+        "stream_s": 2.983
+      }
+    ]
+  },
+  "seconds": 18.6,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "kb_m",
+  "reset_digest": "ed619abda820cd99",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 553300,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 18.6
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep33_kb_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 553300,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "ed619abda820cd99",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

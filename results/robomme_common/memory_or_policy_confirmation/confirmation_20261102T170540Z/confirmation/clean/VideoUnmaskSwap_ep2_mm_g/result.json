@@ -1,0 +1,169 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 2,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the red cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 9,
+    "chars": 1080
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 114,
+      "t_to": 114,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [118, 146]\n  green cube at [96, 99]\n  red cube at [79, 121]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [118, 146]\n  green cube at [96, 99]\n  red cube at [79, 121]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 121], [88, 167], [94, 98], [116, 147]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 121], [88, 167], [94, 98], [116, 147]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 121], [88, 167], [94, 98], [116, 147]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [84, 95], [85, 125], [88, 167], [116, 147]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [74, 104], [88, 167], [96, 116], [116, 147]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 120], [88, 167], [94, 101], [116, 147]\nt=113\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 120], [88, 167], [94, 98], [116, 147]\nEXECUTION STEPS\nt=114\n  gripper raised out of the frame  fingers 100% open\n  container at [75, 120], [88, 167], [94, 98], [116, 147]",
+      "demo_steps": 9,
+      "command": {
+        "choice": "a",
+        "point": [
+          94,
+          101
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 103,
+      "captured": 103,
+      "terminated": true,
+      "status": "success",
+      "seconds": 8.73
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 115,
+  "reset_batch": 115,
+  "policy": {
+    "name": "mm_g",
+    "memory_kind": "mm",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "71c50604b8843473e48d285394f98ff3ffca2b217f50cda4a3158b247efce0d2",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 2653,
+      "cached_tokens": 0,
+      "output_tokens": 711,
+      "reasoning_tokens": 673,
+      "latency": 7.118
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[94,101],\"memory_updates\":[{\"field\":\"remaining_targets\",\"value\":\"[[94,101]]\"}]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            94,
+            101
+          ]
+        },
+        "memory_before": "POLICY PROMPT FOR MEMORY\n  remaining_targets\n      Initialize only when incoming memory is absent and the demonstration is shown. Associate each requested cube with the container placed over it. Within this demonstration-bearing decision, maintain a temporary identity-to-resting-position assignment for every container, giving unrequested and extra containers distinct temporary identities too. Initialize this assignment at the covering layout and process all subsequent movements chronologically, partitioning the demonstration into movement intervals bounded by settled layouts. For each interval, identify the departing resting positions from the visible intermediate motion, excluding stationary containers from the moving pair. This assignment is temporary computation, not an additional persistent memory field. Use continuous motion and direction through intermediate frames to assign endpoints; never reset identities at a resting layout or infer them from nearest original positions or detection-list order. Carry each identity along its intermediate trajectory through the final settling segment. For sparsely sampled curved motion, a change of direction does not itself mark another exchange: continue the same identity along that branch to its resting endpoint, rather than rematching the endpoint to an initial position. To resolve a curved exchange of two containers, identify the moving pair and exclude stationary containers from that pair's endpoint association. Estimate the pair's midpoint across successive frames and follow each identity's displacement around it. Assign the two settling endpoints jointly by continuing their observed rotational branches; do not assign an endpoint by proximity to that identity's starting position or by extrapolating only its last straight-line displacement. When the moving pair settles, commit both endpoint assignments before processing the next movement. Check each interval for exchange completion using the intermediate trajectories through settling. When they establish a completed exchange between two resting positions, jointly assign the identity previously at each departing position to the opposite resting endpoint, exactly once. Nearly identical unordered occupied positions before and after the interval do not negate this swap. Do not override the committed assignment by subsequently matching endpoints to initial positions. Keep every identity outside that moving pair at its committed position. Identify the participants in the next movement from visible departures and intermediate motion using this updated assignment, never the original cube-to-position association. Apply each later exchange to the current assignment, including exchanges involving extra containers or a different pair. After all movements have been processed, verify every requested identity's final assignment against the committed interval updates, including targets not selected by the current command and targets that exchanged with extra containers. For each requested identity, use its last committed endpoint, or its covering location if it never moved; later intervals in which it was stationary leave that endpoint unchanged. Then look up all requested identities in the final assignment to construct remaining_targets in goal order. Count a second exchange only when subsequent motion shows the pair exchanging endpoints again. A pair departing two resting positions and settling at the opposite endpoints completes one exchange. Neither the intermediate crossing nor the return of the unordered set of occupied positions counts as another exchange. Only a second complete exchange of that same pair restores its original assignment; exchanges involving a different pair do not cancel the first. Write the final container centers as an ordered list of [y, x] locations in goal order, including the target being selected now. Do not include unrequested containers in the list. An existing remaining_targets value of [] is completed memory, not absent memory, and must not trigger initialization. With existing memory, remove the first entry only when the execution frames shown at this decision show the hand descending to that target, closing around a container, and lifting with fingers still partly open around it. The observed successful grasps finish near 46% opening at raised height; unchanged reported container centers do not negate that grasp evidence. A release sequence, with descent followed by opening and withdrawal, leaves the list unchanged. Otherwise preserve the incoming list. Never remove an entry in anticipation of the command chosen now. e.g. [[121, 102]]\nMEMORY CARRIED IN\n  remaining_targets=",
+        "memory_updates": {
+          "remaining_targets": "[[94,101]]"
+        },
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "830c521f14b1c4cb21d84a7c0f0da942893566e713c2c44e37ffc6b23899c583",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2653,
+        "cached_tokens": 0,
+        "output_tokens": 711,
+        "reasoning_tokens": 673,
+        "error": "",
+        "cache_write_tokens": 2650,
+        "finish_reason": "stop",
+        "reasoning": "**Tracking container movements**\n\nI need to find out which container is hiding the red cube. Initially, the red cube's position is at [79,121], corresponding to the container's position at [75,121]. As things move, at time t80, I'm tracking these positions: red at [85,125] and green at [84,95]. It seems like there might have been a swap between containers during movement, which could explain the red cube's trajectory. Ultimately, I confirm that the red cube returns to its original position, despite a confusing path.**Analyzing red cube movements**\n\nI need to determine which container is hiding the red cube in this shell game scenario, specifically looking at the final endpoint, which is [75,120]. I’m considering the possibility of trajectories crossing or exchanging paths. I find the midpoints at different times: t80 at (84.5,109.5), t96 at (85,110), and t112 at (84.5,110.5). The vectors show how the red cube at [75,121] moves, and at t80, I see where they settle — it looks like they’re rotating around each other!",
+        "latency": 7.118,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.797,
+        "ttft_s": 6.955,
+        "stream_s": 7.115
+      }
+    ]
+  },
+  "seconds": 10.7,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "mm_g",
+  "reset_digest": "adfff08de3ead8c2",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 550200,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 10.7
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep2_mm_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 550200,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "adfff08de3ead8c2",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

@@ -1,0 +1,321 @@
+{
+  "task": "StopCube",
+  "episode": 34,
+  "split": "test",
+  "goal": "press the button to stop the cube just as it reaches the target for the third time",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the top of the button to prepare",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "remain static",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press button to stop the cube",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 83]\n  cube at [93, 60]\n  target at [84, 136]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          60,
+          83
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 60,
+      "captured": 60,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.0
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 60,
+      "steps": 4,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 83]\n  cube at [92, 68]\n  target at [84, 136]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [60, 83]\n  cube at [89, 89]\n  target at [84, 136]\nt=48\n  gripper at [25, 76]  height 0.153  fingers 100% open\n  button at [60, 83]\n  cube at [85, 116]\n  target at [84, 136]\nt=60\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [81, 138]\n  target at [86, 135]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 42,
+      "captured": 42,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 2.68
+    },
+    {
+      "index": 2,
+      "t_from": 61,
+      "t_to": 102,
+      "steps": 4,
+      "segment": "t=64\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [81, 143]\n  target at [84, 135]\nt=80\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [78, 171]\n  target at [84, 135]\nt=96\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [75, 191]\n  target at [84, 135]\nt=102\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [75, 197]\n  target at [84, 135]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 102,
+      "captured": 102,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 6.04
+    },
+    {
+      "index": 3,
+      "t_from": 103,
+      "t_to": 204,
+      "steps": 7,
+      "segment": "t=112\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [74, 202]\n  target at [84, 135]\nt=128\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [74, 203]\n  target at [84, 135]\nt=144\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [76, 190]\n  target at [84, 135]\nt=160\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [78, 168]\n  target at [84, 135]\nt=176\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [82, 141]\n  target at [84, 135]\nt=192\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [87, 112]\n  target at [84, 136]\nt=204\n  gripper at [26, 75]  height 0.151  fingers 0% open\n  button at [60, 83]\n  cube at [89, 92]\n  target at [84, 136]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 62,
+      "captured": 62,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 5.19
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "fh_m",
+    "memory_kind": "fh",
+    "policy_kind": "m",
+    "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+    "system_sha256": "587cc6a1afbcec8d4bf968055a5a3705d5e569abda681d004b9c7363da22a1e0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 4
+    },
+    "statuses": {
+      "valid": 4
+    },
+    "usage": {
+      "input_tokens": 10196,
+      "cached_tokens": 7058,
+      "output_tokens": 453,
+      "reasoning_tokens": 379,
+      "latency": 12.583
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[60,83]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            60,
+            83
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2057,
+        "cached_tokens": 0,
+        "output_tokens": 32,
+        "reasoning_tokens": 12,
+        "error": "",
+        "cache_write_tokens": 2054,
+        "finish_reason": "stop",
+        "reasoning": "**Preparing A point button**\n\nI need to focus on getting A, but I’m not entirely sure what specifics I should consider for this button. Should I look into its design or functionality? I want to ensure it meets the user's needs, but I might be overthinking things. It's important to have a clear plan, so I'll map out the possible features it could have and how it would be used. Let's figure this out!",
+        "latency": 1.879,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.3,
+        "ttft_s": 1.759,
+        "stream_s": 1.876
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2351,
+        "cached_tokens": 2054,
+        "output_tokens": 92,
+        "reasoning_tokens": 74,
+        "error": "",
+        "cache_write_tokens": 294,
+        "finish_reason": "stop",
+        "latency": 2.044,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 1.905,
+        "ttft_s": 1.926,
+        "stream_s": 2.041
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 2659,
+        "cached_tokens": 2348,
+        "output_tokens": 192,
+        "reasoning_tokens": 174,
+        "error": "",
+        "cache_write_tokens": 308,
+        "finish_reason": "stop",
+        "reasoning": "**Estimating movements**\n\nI’m preparing to analyze the motion of a cube. It moves across the x-axis from 60 to 197, crossing the target at x=135 around time 60. The endpoint seems to be approximately 197 at time 102. I need to determine periodic crossings and find smooth movement patterns. It looks like a sinusoidal function might fit, oscillating between 55 and 200. The next target crossing is estimated around 50 units after the last maximum, but I need to refine these calculations.",
+        "latency": 4.667,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.488,
+        "ttft_s": 4.616,
+        "stream_s": 4.664
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":null}",
+        "command": {
+          "choice": "c",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 3129,
+        "cached_tokens": 2656,
+        "output_tokens": 137,
+        "reasoning_tokens": 119,
+        "error": "",
+        "cache_write_tokens": 470,
+        "finish_reason": "stop",
+        "reasoning": "**Estimating crossing times**\n\nI’m analyzing the crossing at target x=136 while the values descend. At time 179, I started moves around x60 towards 203 and initially crossed 136 at t59, counting that as 1. As I check for the next crossing around t179, I note this as count 2. Now, I need to estimate when it might cross again, possibly around t228. The current position is at 204, moving towards a lower target, and I'm preparing for crossing x136 next at around 228.",
+        "latency": 3.993,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.936,
+        "ttft_s": 3.834,
+        "stream_s": 3.99
+      }
+    ]
+  },
+  "seconds": 17.4,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_m",
+  "reset_digest": "390b39bc2f08be26",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 523400,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 17.4
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/StopCube_ep34_fh_m/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 523400,
+      "difficulty": "medium",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "390b39bc2f08be26",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

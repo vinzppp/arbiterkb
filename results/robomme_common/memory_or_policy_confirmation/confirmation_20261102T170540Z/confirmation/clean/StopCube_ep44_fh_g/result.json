@@ -1,0 +1,322 @@
+{
+  "task": "StopCube",
+  "episode": 44,
+  "split": "test",
+  "goal": "press the button to stop the cube just as it reaches the target for the second time",
+  "menu": [
+    {
+      "label": "a",
+      "action": "move to the top of the button to prepare",
+      "need_parameter": false
+    },
+    {
+      "label": "b",
+      "action": "remain static",
+      "need_parameter": false
+    },
+    {
+      "label": "c",
+      "action": "press button to stop the cube",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 0,
+    "chars": 0
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 0,
+      "t_to": 0,
+      "steps": 1,
+      "segment": "t=0\n  gripper raised out of the frame  fingers 100% open\n  button at [71, 155]\n  cube at [86, 38]\n  target at [117, 100]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "a",
+        "point": [
+          71,
+          155
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 58,
+      "captured": 58,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 4.1
+    },
+    {
+      "index": 1,
+      "t_from": 1,
+      "t_to": 58,
+      "steps": 4,
+      "segment": "t=16\n  gripper raised out of the frame  fingers 100% open\n  button at [71, 155]\n  cube at [97, 60]\n  target at [117, 100]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  button at [71, 155]\n  cube at [121, 110]\n  target at [117, 97]\nt=48\n  gripper at [37, 162]  height 0.149  fingers 100% open\n  button at [71, 155]\n  cube at [150, 166]\n  target at [117, 100]\nt=58\n  gripper at [37, 162]  height 0.151  fingers 0% open\n  button at [71, 155]\n  cube at [157, 181]\n  target at [117, 100]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 6,
+      "captured": 6,
+      "terminated": false,
+      "status": "ongoing",
+      "seconds": 3.06
+    },
+    {
+      "index": 2,
+      "t_from": 59,
+      "t_to": 64,
+      "steps": 1,
+      "segment": "t=64\n  gripper at [37, 162]  height 0.151  fingers 0% open\n  button at [71, 155]\n  cube at [156, 179]\n  target at [117, 100]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "b",
+        "point": null
+      },
+      "result": "no_op",
+      "error": "",
+      "batch": 0,
+      "captured": 0,
+      "terminated": false,
+      "status": "",
+      "seconds": 5.3
+    },
+    {
+      "index": 3,
+      "t_from": 65,
+      "t_to": 64,
+      "steps": 1,
+      "segment": "t=64\n  gripper at [37, 162]  height 0.151  fingers 0% open\n  button at [71, 155]\n  cube at [156, 179]\n  target at [117, 100]",
+      "demo_steps": 0,
+      "command": {
+        "choice": "c",
+        "point": null
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 62,
+      "captured": 62,
+      "terminated": true,
+      "status": "success",
+      "seconds": 7.69
+    }
+  ],
+  "outcome": "success",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 1,
+  "reset_batch": 1,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 4
+    },
+    "statuses": {
+      "valid": 4
+    },
+    "usage": {
+      "input_tokens": 6348,
+      "cached_tokens": 4496,
+      "output_tokens": 639,
+      "reasoning_tokens": 565,
+      "latency": 17.433
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[71,155]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            71,
+            155
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1257,
+        "cached_tokens": 0,
+        "output_tokens": 44,
+        "reasoning_tokens": 24,
+        "error": "",
+        "cache_write_tokens": 1254,
+        "finish_reason": "stop",
+        "reasoning": "**Considering button timing**\n\nI need to think about the timing for the button. It seems like the cube is going to be moving in an oscillatory manner, so I’ll need to monitor that closely. I guess preparing the top button first makes sense, since it might be the one I need to interact with. I want to ensure everything is set up correctly so that I don’t miss anything important! Let's make sure I keep track of all these details!",
+        "latency": 3.112,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.207,
+        "ttft_s": 2.967,
+        "stream_s": 3.107
+      },
+      {
+        "kind": "decide",
+        "index": 1,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1551,
+        "cached_tokens": 1254,
+        "output_tokens": 74,
+        "reasoning_tokens": 56,
+        "error": "",
+        "cache_write_tokens": 294,
+        "finish_reason": "stop",
+        "reasoning": "**Evaluating cube motion**\n\nI see that the cube passed the target for the first time at t32 with a value of 110, while the target was 97, and then it moved away. The next crossing seems to involve some cyclic motion. I think I need to wait until the cube arrives again and then press the button. I can stay in position above the button with the gripper prepared and closed, tracking its movement carefully.",
+        "latency": 2.778,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.276,
+        "ttft_s": 2.652,
+        "stream_s": 2.776
+      },
+      {
+        "kind": "decide",
+        "index": 2,
+        "status": "valid",
+        "raw": "{\"choice\":\"b\",\"point\":null}",
+        "command": {
+          "choice": "b",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1697,
+        "cached_tokens": 1548,
+        "output_tokens": 150,
+        "reasoning_tokens": 132,
+        "error": "",
+        "cache_write_tokens": 146,
+        "finish_reason": "stop",
+        "reasoning": "**Analyzing cube movement**\n\nI’m tracking the cube’s movement after it first went to the target at [121,110] and then moved to [156,179]. It seems like it might be bouncing, as indicated by its position changes at times t58 and t64. I need to wait for it to reach the target again before I can press the button. I'm also checking the gripper's position to ensure it aligns with the button, which is challenging since it’s not directly at [71,155].",
+        "latency": 5.122,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.9,
+        "ttft_s": 4.948,
+        "stream_s": 5.119
+      },
+      {
+        "kind": "decide",
+        "index": 3,
+        "status": "valid",
+        "raw": "{\"choice\":\"c\",\"point\":null}",
+        "command": {
+          "choice": "c",
+          "point": null
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1843,
+        "cached_tokens": 1694,
+        "output_tokens": 371,
+        "reasoning_tokens": 353,
+        "error": "",
+        "cache_write_tokens": 146,
+        "finish_reason": "stop",
+        "reasoning": "**Analyzing cube movement**\n\nI see that the cube is stationary at coordinates 156, 179, which suggests it's likely stopped. It passed the target at 117, 100 before reaching the boundary. The user wants to press a button to stop the cube as it reaches the target a second time. I think the target might be shifting. The cube may have missed its first pass and could bounce back, but for now, I'm unsure when to trigger the button to ensure timing is correct. It looks like I need to wait.**Evaluating cube behavior**\n\nI wonder if the button is a no-op since time could be frozen because the cube has stopped at the edge. I might need to press it during the cube's second pass. The path involves oscillating across a target, but I’m only observing movement on the diagonal. At t64, the cube appears to be at the same position as t58 and might be stuck. Perhaps I should press the button now since the second reach might have happened without me noticing. Choosing to press!",
+        "latency": 6.421,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 3.711,
+        "ttft_s": 6.235,
+        "stream_s": 6.417
+      }
+    ]
+  },
+  "seconds": 20.8,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "692c622b86ef28e4",
+  "success": true,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 524400,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "success",
+    "reason": "environment_success",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": true,
+    "elapsed_s": 20.8
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/StopCube_ep44_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 524400,
+      "difficulty": "easy",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "692c622b86ef28e4",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}

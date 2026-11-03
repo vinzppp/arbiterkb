@@ -1,0 +1,167 @@
+{
+  "task": "VideoUnmaskSwap",
+  "episode": 3,
+  "split": "test",
+  "goal": "watch the video carefully, then pick up the container hiding the green cube, finally pick up another container hiding the blue cube",
+  "menu": [
+    {
+      "label": "a",
+      "action": "pick up the container",
+      "need_parameter": true
+    },
+    {
+      "label": "b",
+      "action": "put down the container",
+      "need_parameter": false
+    }
+  ],
+  "demo": {
+    "steps": 15,
+    "chars": 1798
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "t_from": 216,
+      "t_to": 216,
+      "steps": 1,
+      "segment": "DEMONSTRATION STEPS\nt=0\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [127, 99]\n  green cube at [90, 159]\n  red cube at [83, 114]\nt=16\n  gripper raised out of the frame  fingers 100% open\n  blue cube at [127, 99]\n  green cube at [90, 159]\n  red cube at [83, 114]\nt=32\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 159], [123, 157], [126, 98]\nt=48\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 159], [123, 157], [126, 98]\nt=64\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 159], [123, 157], [126, 98]\nt=80\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 159], [112, 112], [138, 145]\nt=96\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 159], [109, 137], [141, 115]\nt=112\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 159], [123, 157], [127, 99]\nt=128\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [94, 169], [115, 147], [127, 99]\nt=144\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [97, 141], [111, 177], [127, 99]\nt=160\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 158], [122, 159], [127, 99]\nt=176\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 158], [117, 106], [132, 150]\nt=192\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 158], [107, 130], [144, 123]\nt=208\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 158], [120, 153], [129, 101]\nt=215\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 158], [123, 157], [127, 99]\nEXECUTION STEPS\nt=216\n  gripper raised out of the frame  fingers 100% open\n  container at [79, 113], [88, 158], [123, 157], [127, 99]",
+      "demo_steps": 15,
+      "command": {
+        "choice": "a",
+        "point": [
+          88,
+          158
+        ]
+      },
+      "result": "executed",
+      "error": "",
+      "batch": 113,
+      "captured": 113,
+      "terminated": true,
+      "status": "fail",
+      "seconds": 6.55
+    }
+  ],
+  "outcome": "fail",
+  "error": "",
+  "capture_errors": [],
+  "demo_rows": 217,
+  "reset_batch": 217,
+  "policy": {
+    "name": "fh_g",
+    "memory_kind": "fh",
+    "policy_kind": "g",
+    "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+    "system_sha256": "4ee3e47c9f57341711b6e796ca3ba17c0d99d898c80e56fa6a0826d512a2abc0",
+    "model": "openai/gpt-6-luna",
+    "effort": "low",
+    "models_returned": [
+      "openai/gpt-6-luna"
+    ],
+    "calls": {
+      "decide": 1
+    },
+    "statuses": {
+      "valid": 1
+    },
+    "usage": {
+      "input_tokens": 1959,
+      "cached_tokens": 0,
+      "output_tokens": 75,
+      "reasoning_tokens": 55,
+      "latency": 3.777
+    },
+    "log": [
+      {
+        "kind": "decide",
+        "index": 0,
+        "status": "valid",
+        "raw": "{\"choice\":\"a\",\"point\":[88,158]}",
+        "command": {
+          "choice": "a",
+          "point": [
+            88,
+            158
+          ]
+        },
+        "memory_before": null,
+        "memory_updates": null,
+        "policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+        "memory_note_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "model": "openai/gpt-6-luna",
+        "effort": "low",
+        "model_returned": "openai/gpt-6-luna",
+        "input_tokens": 1959,
+        "cached_tokens": 0,
+        "output_tokens": 75,
+        "reasoning_tokens": 55,
+        "error": "",
+        "cache_write_tokens": 1956,
+        "finish_reason": "stop",
+        "reasoning": "**Determining container positions**\n\nI need to figure out where the containers are located based on some coordinates. The green container is originally at [90,159], the blue one at [127,99], and the red one at [83,114]. The transformation demonstration shows that the containers are positioned over cubes. I need to pick up the green container from [88,158] and then the blue container from [127,99]. This feels like a straightforward task!",
+        "latency": 3.777,
+        "retries": 0,
+        "streamed": true,
+        "first_chunk_s": 2.549,
+        "ttft_s": 3.654,
+        "stream_s": 3.774
+      }
+    ]
+  },
+  "seconds": 10.3,
+  "video": {},
+  "observation": {
+    "mode": "clean",
+    "seed": 73301,
+    "dropout": 0.0,
+    "jitter_px": 0.0,
+    "bridge": "memi_named"
+  },
+  "arm": "fh_g",
+  "reset_digest": "7eaf6d7dceddf26c",
+  "success": false,
+  "run_id": "confirmation_20261102T170540Z",
+  "provenance": {
+    "manifest_sha": "67df681ec8d4ee4d",
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "arbiter_dirty": false,
+    "sources": {
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+    },
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "episode": {
+      "seed": 550300,
+      "difficulty": "hard",
+      "episode_count": 50
+    },
+    "factorial": null
+  },
+  "terminal": {
+    "status": "task_failure",
+    "reason": "fail",
+    "phase": "environment",
+    "primary_eligible": true,
+    "primary_success": false,
+    "elapsed_s": 10.3
+  },
+  "watchdog": {
+    "triggered": false
+  },
+  "event_log": "results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation/clean/VideoUnmaskSwap_ep3_fh_g/events.jsonl",
+  "infrastructure_retry": {
+    "max_reruns": 2,
+    "reruns_used": 0,
+    "fixed_seed_signature": {
+      "seed": 550300,
+      "difficulty": "hard",
+      "episode_count": 50
+    },
+    "first_nonempty_reset_digest": "7eaf6d7dceddf26c",
+    "failed_attempts": [],
+    "exhausted_reason": null
+  }
+}
