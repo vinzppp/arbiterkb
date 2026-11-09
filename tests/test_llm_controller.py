@@ -46,6 +46,21 @@ def test_a_cache_hit_reports_the_original_calls_usage(tmp_path, monkeypatch):
     assert (first["usd"], again["usd"], again["cached_usd"]) == (pytest.approx(0.01), 0.0, pytest.approx(0.01))
 
 
+def test_provider_prompt_cache_tokens_are_counted(tmp_path, monkeypatch):
+    """The provider's prompt cache (Astra pilot: H's history read from it), apart from our disk cache."""
+    monkeypatch.setenv("OPENROUTER_API_KEY", KEY)
+    resp = {"choices": [{"message": {"content": "x"}}], "usage": {
+        "prompt_tokens": 2356, "completion_tokens": 181, "cost": 0.0385,
+        "prompt_tokens_details": {"cached_tokens": 2000, "cache_write_tokens": 356}}}
+    m = LLM(cache_dir=tmp_path, max_usd=1, transport=lambda body, key: resp)
+    _, u = m.call([{"role": "user", "content": "hi"}])
+    assert (u["cached_tokens"], u["cache_write_tokens"], u["hits"]) == (2000, 356, 0)
+    _, again = m.call([{"role": "user", "content": "hi"}])
+    assert again["cached_tokens"] == 2000 and m.usage["cached_tokens"] == 4000
+    _, none = LLM(cache_dir=tmp_path / "b", max_usd=1, transport=fake()[0]).call([{"role": "user", "content": "y"}])
+    assert none["cached_tokens"] == 0
+
+
 def test_budget_cap_refuses_the_call_that_would_pass_it(tmp_path, monkeypatch):
     m, calls = llm(tmp_path, monkeypatch, cost=0.02)
     m.chat([{"role": "user", "content": "a"}])  # price unknown: allowed
@@ -100,6 +115,36 @@ def test_user_content_has_images_and_state():
     parts = C.user_content("K", "pick it", "[e1] t=3 ...", [(rgb, "Current front"), (rgb, "Current wrist")], {"tcp": [0, 0, 0]})
     assert count_images([{"role": "user", "content": parts}]) == 2
     assert parts[1]["text"].startswith("[e1]") and parts[0]["text"] == "Task goal: pick it" and parts[-1]["text"].startswith("Robot state")
+
+
+def _read(parts):
+    """What the model reads, as (texts with the JSON parts decoded, images)."""
+    texts, imgs = [], [p["image_url"]["url"] for p in parts if p["type"] == "image_url"]
+    for p in parts:
+        if p["type"] == "text":
+            head, _, tail = p["text"].partition(": {")
+            texts.append((head, json.loads("{" + tail)) if tail else p["text"])
+    return texts, imgs
+
+
+def test_fixed_first_layout_reads_the_same_keys_and_values_with_the_fixed_part_first():
+    rgb = np.zeros((8, 8, 3), np.uint8)
+    cur = [(rgb, "Current front camera"), (rgb + 1, "Current wrist camera")]
+    st = {"tcp_pose_xyz_rpy": [0.1, 0, 0.2, -3.1416, 0, 0], "finger_positions_m": [0.04, 0.04], "elapsed_control_steps": 5,
+          "wrist_camera_K": [[1, 0, 2], [0, 1, 2], [0, 0, 1]], "wrist_camera_extrinsic_world_to_camera": [[0] * 4] * 3,
+          "front_camera_K": [[3, 0, 2], [0, 3, 2], [0, 0, 1]], "front_camera_extrinsic_world_to_camera": [[1] * 4] * 3}
+    view = "Since your last decision (t=4):\n  nothing\n\nGoal: pick it\nProgress: nothing yet"
+    v1, ff = C.user_content("K", "pick it", view, cur, st), C.user_content("K", "pick it", view, cur, st, "fixed_first")
+    (t1, i1), (t2, i2) = _read(v1), _read(ff)
+    assert i1 == i2 and t2[0] == "Task goal: pick it" and t2[2] == view == t1[1]  # same memory text and images
+    assert t2[1][0] == "Robot state, fixed part (camera calibration)" and set(t2[1][1]) == set(C.FIXED_STATE)
+    assert {**t2[1][1], **t2[-1][1]} == t1[-1][1] == st  # the same keys and values, split in two
+    st2 = {**st, "tcp_pose_xyz_rpy": [0.2, 0, 0.1, -3.1416, 0, 0], "elapsed_control_steps": 9}
+    later = C.user_content("K", "pick it", view + "\n[e9] more", [(rgb + 2, "Current front camera")], st2, "fixed_first")
+    assert later[:2] == ff[:2]  # the fixed block is byte-identical at every call of an episode
+    assert "prompt_cache_breakpoint" not in json.dumps(ff)
+    marked = C.user_content("K", "pick it", view, cur, st, "fixed_first", breakpoint=True)
+    assert marked[1]["prompt_cache_breakpoint"] == {"mode": "explicit"} and len(marked) == len(ff)
 
 
 @pytest.mark.parametrize("text, kind", [
@@ -170,3 +215,21 @@ def test_vlm_client_uses_the_params_model_pinned_provider_and_no_thinking():
     b = c.body([{"role": "user", "content": "x"}], None, 0.0, 0, 10)
     assert b["model"] == "qwen/qwen3.5-9b" and b["provider"]["order"] == ["Parasail", "DeepInfra"]
     assert b["provider"]["allow_fallbacks"] is False and b["reasoning"] == {"enabled": False}
+
+
+def test_cites_written_as_one_string_or_in_brackets_are_split():
+    import numpy as np
+    act = np.array([0.0, 0.0, 0.2, -3.1416, 0, 0, 0])
+    known = {"e32", "e37", "o49:bin_2", "o74:bin_2"}
+    assert C.check(act, {"cites": "e32,e37,o49:bin_2"}, known) == []
+    assert C.check(act, {"cites": ["[o74:bin_2]"]}, known) == []
+    assert C.check(act, {"cites": ["e99"]}, known) == ["unknown cite 'e99'"]
+
+
+def test_temperature_none_is_left_out_for_the_api_default():
+    from arbiter_kb.llm import LLM
+    c = LLM(model="openai/gpt-6-astra", provider=None)
+    assert "temperature" not in c.body([{"role": "user", "content": "x"}], None, None, 0, 10)
+    assert c.body([{"role": "user", "content": "x"}], None, 0.6, 0, 10)["temperature"] == 0.6
+    assert "seed" not in LLM(model="anthropic/x", provider=None).body([{"role": "user", "content": "x"}], None, None,
+                                                                       None, 10)

@@ -1,0 +1,148 @@
+import numpy as np
+
+from arbiter_kb.sg_compat import F_HIDDEN, F_U, F_X, F_Z
+from arbiter_kb.sources.perceived import occluded
+
+
+def _rows(T: int = 30) -> np.ndarray:
+    """One container (slot 0) and one cube (slot 1); the cube's track climbs onto the container at t = 10."""
+    p = np.zeros((T, 2, 8), np.float32)
+    p[:, :, F_U:F_U + 2] = 100.0
+    p[:, 0, F_X:F_Z + 1] = [0.0, 0.0, 0.05]
+    p[:, 1, F_X:F_Z + 1] = [0.10, 0.0, 0.017]
+    p[10:, 1, F_X:F_Z + 1] = [0.01, 0.0, 0.05]
+    p[:5, 0, F_HIDDEN] = 1  # the container appears late, as in G
+    return p
+
+
+def test_cube_on_container_top_counts_as_covered():
+    occ = occluded(_rows(), 1, r=0.05, dz=0.01)
+    assert not occ[:10, 1].any() and occ[10:, 1].all() and not occ[:, 0].any()
+
+
+def test_back_at_table_height_is_visible_again():
+    p = _rows()
+    p[20:, 1, F_X:F_Z + 1] = [0.2, 0.0, 0.017]
+    occ = occluded(p, 1, r=0.05, dz=0.01)
+    assert occ[10:20, 1].all() and not occ[20:, 1].any()
+
+
+def test_far_from_any_container_is_not_covered():
+    p = _rows()
+    p[10:, 1, F_X:F_Z + 1] = [0.3, 0.0, 0.05]  # high, but not over a container
+    assert not occluded(p, 1, r=0.05, dz=0.01)[:, 1].any()
+
+
+def test_relink_follows_motion_through_a_label_swap():
+    from arbiter_kb.relink import relink
+    T = 40
+    p = np.zeros((T, 2, 8), np.float32)
+    p[:, :, F_U:F_U + 2] = 100.0
+    x = np.linspace(-0.1, 0.1, T)
+    p[:, 0, F_X:F_Z + 1] = np.stack([x, np.zeros(T), np.full(T, 0.05)], 1)   # moves +x
+    p[:, 1, F_X:F_Z + 1] = np.stack([-x, np.zeros(T), np.full(T, 0.05)], 1)  # moves -x
+    p[20:, [0, 1]] = p[20:, [1, 0]]  # the tracker swaps the two labels at the crossing
+    out = relink(p, 2)
+    assert np.all(np.diff(out[:, 0, F_X]) > 0) and np.all(np.diff(out[:, 1, F_X]) < 0)
+
+
+def test_strip_probs_removes_probabilities_only():
+    from arbiter_kb.epistemic import strip_probs
+    text = ("  [Inside(cube_red)] bin_1 0.98 | bin_0 0.02  [e3]\n  [e7] t=32 cube_red covered by bin_0 at (0.01, 0.13) "
+            "(conf 0.99) [e5]\n  event swap(bin_0, bin_1) conf 0.50\n  under bin_1 (0.98; bin_1 has moved 3 times since)"
+            "\n  may hold the red cube (0.97); moved\n  [e9] t=40 bin_0 moved (0.02, 0.05) -> (0.03, 0.06)")
+    out = strip_probs(text)
+    assert "0.98" not in out and "0.99" not in out and "0.50" not in out and "0.97" not in out
+    assert "(0.01, 0.13)" in out and "(0.02, 0.05) -> (0.03, 0.06)" in out and "under bin_1 (bin_1 has moved" in out
+
+
+def test_q6_truth_uses_the_container_once_it_is_there():
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    from perceived_qa import truth
+    import pytest
+    from arbiter_kb.sources.perceived import PerceivedSource
+    src = PerceivedSource()
+    if not src.files:
+        pytest.skip("no G perceived episodes in data/g_perceived")
+    answers = {truth(src.load(e))["q6"] for e in src.episodes("train")[:40]}
+    assert answers == {"yes", "no"}  # before the fix every episode read "no" (NaN container position at the cover)
+
+
+def test_relink_margin_small_at_a_crossing_and_inf_alone():
+    from arbiter_kb.relink import relink_margin
+    T = 40
+    p = np.zeros((T, 2, 8), np.float32)
+    p[:, :, F_U:F_U + 2] = 100.0
+    x = np.linspace(-0.1, 0.1, T)
+    p[:, 0, F_X:F_Z + 1] = np.stack([x, np.zeros(T), np.full(T, 0.05)], 1)
+    p[:, 1, F_X:F_Z + 1] = np.stack([-x, np.zeros(T), np.full(T, 0.05)], 1)
+    _, m = relink_margin(p, 2)
+    assert m[1:, 0].min() < 0.02 < m[1, 0] and np.all(m[1:] >= 0)  # near 0 where they cross, larger apart
+    q = p.copy()
+    q[:, 1, F_HIDDEN] = 1  # only one container seen: no competitor
+    assert np.isinf(relink_margin(q, 2)[1][:, 0]).all()
+
+
+def test_r6_scale_follows_the_feature():
+    from dataclasses import replace
+    from arbiter_kb.kb import KB, AddEvidence
+    from arbiter_kb.params import RuleParams
+    from arbiter_kb.rules import r6_swap
+    from arbiter_kb.types import FrameObs
+    kb = KB([("bin_0", "container", {}), ("bin_1", "container", {})])
+    kb.apply([AddEvidence(5, "near_pass", ("bin_0", "bin_1"), {"min_3d": 0.08, "min_q": 0.01, "obs": []})])
+    ev, f = kb.evidence[-1:], FrameObs(5, {}, np.zeros(3), 0.08, True)
+    tiny = replace(RuleParams(), d0=1e-9)  # min_3d 0.08 m with this d0: w = 0, so no swap event
+    assert r6_swap(kb, ev, f, tiny) == []
+    assert r6_swap(kb, ev, f, replace(tiny, r6_feature="min_q", q0=0.05))  # the same pass by min_q 0.01: w > 0
+
+
+def test_online_names_generic_cube_slots_apart():
+    from arbiter_kb.sources.online import OnlineObs
+    names = [oid for oid, _, _ in OnlineObs(["container."] * 2 + ["green cube.", "cube.", "cube."], 2).objects()]
+    assert names == ["bin_0", "bin_1", "cube_green", "cube_s3", "cube_s4"]
+
+
+def test_online_cube_placed_on_a_target_is_on_it_not_inside():
+    """VideoPlaceOrder (val pilot): with "container." slots the KB read a cube on a target as hidden in a bin."""
+    from arbiter_kb.sg_compat import F_HIDDEN, F_U, F_X
+    from arbiter_kb.sources.online import OnlineObs
+    from arbiter_kb.systems.arbiter_kb import ArbiterKBSystem
+    from arbiter_kb.params import Params
+    from arbiter_kb.task_items import open_vocabulary, parse_task_items
+    from arbiter_kb.types import EpisodeMeta
+    goal = "place the red cube on the first target it was previously placed on"
+    cls = open_vocabulary(parse_task_items(goal))
+    on, kb_sys = OnlineObs(cls, 0), ArbiterKBSystem(Params())
+    kb_sys.reset(EpisodeMeta("t", 0, "test", goal, on.objects(), None, None))
+    ci = cls.index("red cube.")
+
+    def row(cube):
+        r = np.full((len(cls), 8), np.nan, np.float32)
+        r[:, F_HIDDEN] = 1
+        for s, p in ((0, (0.1, 0.1, 0.005)), (ci, cube)):
+            r[s, F_HIDDEN], r[s, F_U:F_U + 2], r[s, F_X:F_X + 3] = 0, (100, 100), p
+        return r
+    at, up = (0, -0.1, 0.02), (0, -0.1, 0.1)
+    path = [(at, up, 0.08)] * 12 + [(at, at, 0.08)] * 3 + [(at, at, 0.02)] * 3
+    path += [((0, -0.1 + 0.02 * k, 0.12),) * 2 + (0.02,) for k in range(11)]
+    on_t = (0.1, 0.1, 0.03)
+    path += [(on_t, on_t, 0.02)] * 3 + [(on_t, on_t, 0.08)] * 3 + [(on_t, (0.1, 0.1, 0.15), 0.08)] * 4
+    for cube, ee, w in path:
+        kb_sys.step(on.step(row(cube), ee, w))
+    kb = kb_sys.kb
+    assert [(e.type, e.args) for e in kb.events] == [("grasp", ("cube_red",)), ("place", ("cube_red", "target_0"))]
+    assert kb.objects["cube_red"].visibility.value == "visible" and not kb.inside("cube_red")
+    from arbiter_kb.sources.online import OnlineObs as O  # a coloured target is a target, not a cube
+    assert [n[:2] for n in O(["blue target.", "blue cube."], 0).objects()] == [("target_0", "target"), ("cube_blue", "cube")]
+
+
+def test_online_drops_the_robot_base_and_below_table_detections():
+    from arbiter_kb.sources.online import not_objects
+    r = np.full((3, 8), np.nan, np.float32)
+    r[:, F_HIDDEN] = 0
+    r[:, F_U:F_U + 2] = 100
+    r[0, F_X:F_Z + 1], r[1, F_X:F_Z + 1], r[2, F_X:F_Z + 1] = (-0.577, -0.002, 0.054), (-0.1, 0.0, -0.035), (0.1, 0.1, 0.02)
+    assert not_objects(r)[:, F_HIDDEN].tolist() == [1, 1, 0]

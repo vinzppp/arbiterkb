@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "name": "robomme-common-harness-v1",
+  "frozen": true,
+  "research_branch": "research/perception-belief-robomme",
+  "arms": ["fullhist", "memi", "soft", "arbiter"],
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "max_tokens": 32768,
+  "timeout_s": 1800,
+  "prices_per_million": {"fresh_input": 0.10, "cached_input": 0.01, "cache_write": 0.125, "output": 0.50},
+  "params_sha": "fe4e94112a74",
+  "sources": {
+    "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+    "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e",
+    "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd"
+  },
+  "prompts": "artifacts/gpt/policy_prompts/optimized_luna.json",
+  "tasks": ["VideoUnmaskSwap", "ButtonUnmaskSwap", "PickHighlight", "VideoRepick"],
+  "optional_tasks": ["VideoRepick"],
+  "pairwise_contrasts": [
+    ["memi", "fullhist"], ["soft", "fullhist"], ["arbiter", "fullhist"],
+    ["arbiter", "memi"], ["arbiter", "soft"], ["memi", "soft"]
+  ],
+  "stages": {
+    "executor_preflight": {
+      "split": "val", "episodes": [0], "backend": "scripted",
+      "observations": [{"mode": "clean", "seed": 73001, "dropout": 0.0, "jitter_px": 0.0}]
+    },
+    "smoke": {
+      "split": "val", "episodes": [0], "backend": "api",
+      "observations": [{"mode": "clean", "seed": 73001, "dropout": 0.0, "jitter_px": 0.0}]
+    },
+    "degradation": {
+      "split": "val", "episodes": [1, 2, 3, 4, 5, 6, 7, 8, 9], "backend": "api",
+      "observations": [
+        {"mode": "clean", "seed": 73011, "dropout": 0.0, "jitter_px": 0.0},
+        {"mode": "dropout", "seed": 73012, "dropout": 0.15, "jitter_px": 0.0},
+        {"mode": "jitter", "seed": 73013, "dropout": 0.0, "jitter_px": 4.0}
+      ]
+    },
+    "heldout": {
+      "split": "test", "episodes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      "backend": "api",
+      "observations": [{"mode": "clean", "seed": 73100, "dropout": 0.0, "jitter_px": 0.0}]
+    }
+  }
+}

@@ -1,5 +1,7 @@
 # Phase G pod session: measure how the real tracker swaps container ids
 
+(G is done: 2026-10-28. Kept as the record of how G ran and as the fresh-volume setup recipe (§0F) that `POD_CLOSED_LOOP.md` reuses. The current pod session is `POD_CLOSED_LOOP.md`.)
+
 Needs the user's go (GPU spend). Uses the existing RunPod volume from scene-graph-robot (`/workspace`: venvs `sg-main` and `sg-percep`, model weights, Vulkan fix). See `scene-graph-robot/notebooks/pilot/POD_RUNBOOK.md` and `BUILD_NOTES.md` ("new pod" section) for the pod itself.
 
 **Rough cost:** RTX 4090 at about $0.4–0.7/h. Rendering 7 settings × 20 episodes takes about 0.5–1 h, perception about 1 min per episode (about 2–2.5 h), plus copying. Total about 3–4 h, i.e. **about $2–3**. Run the smoke test (step 3) first and re-estimate from its timings before the full run.

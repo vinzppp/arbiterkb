@@ -12,6 +12,7 @@ interface text is theirs, verbatim where possible. Ours: the memory section per 
   or history). It separates "memory" from "being given coordinates".
 - S (v1.6): the current frames + one sentence per hidden cube naming its most likely container (Bound-like).
   If S ties K, the KB's structure adds nothing on that task.
+- K2 (2026-10-30, user design): initial state, an appended change log, the current state (view_k2.py).
 """
 from __future__ import annotations
 
@@ -22,7 +23,7 @@ import re
 
 import numpy as np
 
-ARMS = ("H", "K", "K-L3", "R", "K0", "S")
+ARMS = ("H", "K", "K-L3", "R", "K0", "S", "K2")
 BASE = np.array([-0.615, 0.0, 0.0])
 SHOULDER = BASE + [0, 0, 0.333]  # Panda joint 2 height above the base
 REACH = 0.855  # m: Panda reach from the shoulder (datasheet)
@@ -46,7 +47,8 @@ TCP pose also fails: to only open or close the gripper, move the TCP by at least
 
 MEMORY = {
     "H": """Observations: frames from the fixed front camera (256 x 256) in time order, of the video so far and of each
-motion, then the current front and wrist images; the TCP pose; the finger positions (0.04 m each = fully open,
+motion, grouped 3 x 3 into one image in reading order (left to right, top to bottom), then the current front and wrist
+images; the TCP pose; the finger positions (0.04 m each = fully open,
 0 = closed); the elapsed control steps. You get no depth and no object positions. The task may require
 remembering what happened earlier in the video.""",
     "K": """Memory: instead of the image history you get the robot's memory, rebuilt every turn from everything seen so
@@ -59,6 +61,17 @@ images, the TCP pose, the finger positions (0.04 m each = fully open, 0 = closed
 tracked object's 3D centre (world frame, m; from depth) or "hidden". Nothing else is inferred for you. Then the
 current front and wrist images, the TCP pose, the finger positions and the elapsed control steps.""",
 }
+MEMORY["K2"] = """Memory: instead of the image history you get the robot's memory in three parts. (1) Initial state:
+every object as first seen, with its 3D centre (world frame, m; from depth). (2) Log, oldest first, only ever appended:
+what changed at each time (moves with their displacement and end point, objects seen or no longer seen, covers, close
+passes, grasps and releases with the hand's position and the highest it rose while holding, a cube seen under a lifted
+container, your own earlier decisions, and beliefs about hidden objects, each with its own id; a later belief names
+the one it replaces). (3) Now, rewritten every turn and authoritative where it differs from anything above: the hand
+and what it holds, the goal's items with what has been done to each, every object (position and when it was seen, or
+which container probably hides it, as probabilities), relative positions, and the main events so far. Ids are in
+brackets; cite the ids you rely on. A probability below 1 means the memory is unsure: decide whether to act on the most
+likely answer or to look first. Then the current front and wrist images, the TCP pose, the finger positions (0.04 m
+each = fully open, 0 = closed) and the elapsed control steps."""
 MEMORY["K-L3"] = MEMORY["K"].replace(", and an event log with times and where-from / where-to", "")
 MEMORY["K0"] = """Memory: none. You get a table of the objects visible in the current frame with their 3D centres (world
 frame, m; from depth), then the current front and wrist images, the TCP pose, the finger positions (0.04 m each
@@ -69,10 +82,24 @@ control steps. You get no depth and no object positions."""
 
 ENDING = """Objects can be hidden: an object covered by a container moves with that container until it is seen again.
 Positions recorded earlier are where things were at that time, not necessarily where they are now.
-Notes: time passes only while the robot executes a motion; everything else in the scene keeps moving during a
-motion. The gripper opens or closes only when you command it (-1 or 1). The episode ends automatically when the
-environment judges success or failure, or after 1300 control steps. If you believe the task is complete,
-answer with "waypoint": null."""
+The robot state includes the camera calibration: pinhole intrinsics K and world-to-camera extrinsics [R|t] (OpenCV
+convention: camera x right, y down, z forward; pixel = K (R X_world + t), dividing by depth).
+
+Notes on the robot and this interface:
+- Time: the simulation runs at 20 control steps per second, and time passes only while the robot executes a motion.
+  A motion takes longer the farther it goes: about 0.15-0.3 s for a few millimetres, 0.4-1.1 s for 1-5 cm and
+  1-2.5 s for 10-30 cm. Everything else in the scene keeps moving during a motion, so to act at a particular moment,
+  start the motion that much earlier. A small motion (a few millimetres) is a short way to let a little time pass.
+- Gripper: it opens or closes only when you command it (-1 or 1); with 0 it keeps its current state, also after
+  touching, pushing or pressing something.
+- If an action executes no steps, the next message says so explicitly: then the robot did not move, no time passed
+  and the scene is unchanged.
+- Left and right: in task instructions, left and right are from the robot's point of view: the robot's left is +y and its right is -y. The front camera faces the robot (the robot is at the top of the front image), so the robot's right appears on the LEFT side of the front image.
+
+The episode ends automatically when the environment judges success or failure, or after 1300 control steps.
+If you believe the task is complete, answer with "waypoint": null."""
+# The notes, the left/right note and the last two sentences are 2610.17350's MODEL_NOTES, LR_NOTE (their --prompt-variant
+# lr_note, the 92.1% run) and SYSTEM ending, verbatim (harness/astra_waypoint_eval_v3.py, commit 79dcc7f, MIT).
 
 
 def system_prompt(arm: str) -> str:
@@ -93,11 +120,13 @@ def text_part(text: str) -> dict:
     return {"type": "text", "text": text}
 
 
-def raw_tracker_log(frames: list, stride: int = 10) -> str:
-    """Arm R: per sampled frame, each object's observed centre or 'hidden'; no events, no beliefs."""
+def raw_tracker_log(frames: list, stride: int = 10, keep: set[str] | None = None) -> str:
+    """Arm R: per sampled frame, each object's observed centre or 'hidden'; no events, no beliefs. `keep`: only these
+    objects (the closed loop leaves out tracker slots that never found their object, as K's view does)."""
     lines = []
     for f in frames[::stride] + ([frames[-1]] if (len(frames) - 1) % stride else []):
-        objs = [f"{k} " + (", ".join(f"{v:.3f}" for v in o.xyz) if o.visible else "hidden") for k, o in f.objects.items()]
+        objs = [f"{k} " + (", ".join(f"{v:.3f}" for v in o.xyz) if o.visible else "hidden") for k, o in f.objects.items()
+                if keep is None or k in keep]
         lines.append(f"t={f.t}: " + "; ".join(objs))
     return "\n".join(lines)
 
@@ -113,24 +142,47 @@ def one_sentence(inside: dict) -> str:
     return " ".join(f"{c} is under {b}." for c, b in inside.items() if b) or "No object is hidden."
 
 
-def user_content(arm: str, goal: str, memory_text: str, current: list, state: dict) -> list:
-    """One turn's content for K / K-L3 / R (H builds its frame list in the harness, as the paper does)."""
+FIXED_STATE = ("wrist_camera_K", "front_camera_K", "front_camera_extrinsic_world_to_camera")  # the same every call
+LAYOUTS = ("v1", "fixed_first")
+
+
+def user_content(arm: str, goal: str, memory_text: str, current: list, state: dict, layout: str = "v1",
+                 breakpoint: bool = False) -> list:
+    """One turn's content for K / K-L3 / R (H builds its frame list in the harness, as the paper does).
+    v1: [goal, unless the view starts with it], memory, current frames, the whole state.
+    fixed_first (NOTES "K's request layout and the provider's prompt cache"): what is the same at every call of an
+    episode first (the goal, then the state's camera calibration), then memory, frames and the rest of the state, so
+    that the system prompt and that block form a prefix the provider can cache (OpenAI caches >= 1,024 tokens; the
+    system prompt alone is 865). The same keys and values as v1; the goal is also given at the first call.
+    `breakpoint`: mark the end of the fixed block for OpenAI's explicit cache mode (sent only in that mode)."""
+    imgs = [p for rgb, label in current for p in (text_part(label + ":"), image_part(rgb))]
+    if layout == "fixed_first":
+        fixed = text_part("Robot state, fixed part (camera calibration): "
+                          + json.dumps({k: state[k] for k in FIXED_STATE if k in state}))
+        if breakpoint:
+            fixed["prompt_cache_breakpoint"] = {"mode": "explicit"}
+        mem = [text_part(memory_text)] if memory_text else []
+        rest = {k: v for k, v in state.items() if k not in FIXED_STATE}
+        return [text_part(f"Task goal: {goal}"), fixed] + mem + imgs + [text_part("Robot state: " + json.dumps(rest))]
+    assert layout == "v1", layout
     head = [] if memory_text.startswith("Goal:") else [text_part(f"Task goal: {goal}")]  # the KB view has it
     head += [text_part(memory_text)] if memory_text else []
-    imgs = [p for rgb, label in current for p in (text_part(label + ":"), image_part(rgb))]
     return head + imgs + [text_part("Robot state: " + json.dumps(state))]
 
 
 def parse_answer(text: str) -> dict | None:
-    """The JSON object asked for, with or without ```json fences; None if there is none (theirs)."""
-    text = text.strip()
-    if "```" in text:
-        text = text.split("```")[1].removeprefix("json").strip()
-    start, end = text.find("{"), text.rfind("}")
-    try:
-        return json.loads(text[start:end + 1])
-    except (ValueError, json.JSONDecodeError):
-        return None
+    """The LAST top-level JSON object in the text, fenced or not; None if there is none. Reasoning models sometimes
+    write a draft object before the answer, which a first-brace-to-last-brace read cannot parse (NOTES "Goal parse
+    v2"); objects nested inside a top-level one are skipped."""
+    dec, i, last = json.JSONDecoder(), 0, None
+    while (i := text.find("{", i)) != -1:
+        try:
+            obj, end = dec.raw_decode(text, i)
+        except json.JSONDecodeError:
+            i += 1
+            continue
+        last, i = (obj if isinstance(obj, dict) else last), end
+    return last
 
 
 def to_action(answer) -> tuple[np.ndarray | None, str | None]:
@@ -156,11 +208,21 @@ def check(action: np.ndarray, answer: dict, known: set[str]) -> list[str]:
             if not lo <= action[i] <= hi]
     if (d := float(np.linalg.norm(action[:3] - SHOULDER))) > REACH:
         errs.append(f"waypoint {d:.3f} m from the shoulder > reach {REACH} m")
-    tgt, cites = answer.get("target"), answer.get("cites") or []
+    tgt, cites = answer.get("target"), _cite_list(answer.get("cites"))
     if tgt is not None and tgt not in known:
         errs.append(f"unknown target {tgt!r}")
     errs += [f"unknown cite {c!r}" for c in cites if not (isinstance(c, str) and c in known)]
     return errs
+
+
+def _cite_list(cites) -> list:
+    """Cites as the model writes them: a list, or ids joined by commas, possibly in brackets ("e32,e37,o49:bin_2",
+    "[o74:bin_2]"; closed-loop smoke run)."""
+    items = cites if isinstance(cites, list) else [cites] if isinstance(cites, str) else []
+    out = []
+    for c in items:  # split like shown_ids: "On(a, b)" keeps its comma-space; a non-string stays (and is unknown)
+        out += [x.strip(" []") for x in re.split(r",(?! )", c) if x.strip(" []")] if isinstance(c, str) else [c]
+    return out
 
 
 def shown_ids(text: str, objects) -> set[str]:

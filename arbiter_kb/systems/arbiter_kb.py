@@ -23,13 +23,15 @@ def _ev_line(e) -> str:
 
 
 class ArbiterKBSystem:
-    def __init__(self, params: Params | None = None, backend=None, name: str = "arbiterkb"):
-        self.name, self.params = name, params or Params()
+    def __init__(self, params: Params | None = None, backend=None, name: str = "arbiterkb", skip: tuple = ()):
+        self.name, self.params, self.skip = name, params or Params(), set(skip)
         self.backend = backend or RuleOnlyBackend()
 
-    def reset(self, meta: EpisodeMeta) -> None:
+    def reset(self, meta: EpisodeMeta, counter: dict | None = None) -> None:
+        """counter: the goal parsed once by the harness (goal_counter.parse_goal), or None; the view's progress line."""
         self.kb = KB(meta.objects)
         self.kb.task["goal"] = meta.task_goal  # L4
+        self.kb.task["counter"] = counter
         self.kb.task["items"] = parse_task_items(meta.task_goal)  # phrases the task names (task_items.py)
         self.det = Detectors(self.params.detect)
         self.trigger = Trigger(self.params.arbiter)
@@ -43,7 +45,8 @@ class ArbiterKBSystem:
         kb.apply(self.det.step(frame), "detect")
         new_ev = kb.evidence[n0:]
         for name, rule in RULES:
-            kb.apply(rule(kb, new_ev, frame, rp), name)
+            if name not in self.skip:  # ablations only (NOTES "Claim 3 attribution")
+                kb.apply(rule(kb, new_ev, frame, rp), name)
         arb = None
         reason = self.trigger.fires(kb, new_ev, frame.t)
         if reason:

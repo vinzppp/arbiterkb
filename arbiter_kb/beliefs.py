@@ -10,7 +10,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
-SOURCES = ("observed", "inferred", "prior", "verified", "arbiter", "vlm")  # enforced by KB.check(); vlm: the annotator (v1.6)
+SOURCES = ("observed", "inferred", "prior", "verified", "arbiter", "vlm")  # enforced by KB.check(); vlm: the keyframe call (v1.9; the annotator from v1.6)
 
 
 @dataclass
@@ -104,6 +104,15 @@ class Distribution:
             flat.support = [i for i in self.support if i != ident]
             return flat
         return self
+
+    def without(self, key: str, t: int, ev_id: str) -> "Distribution":
+        """Evidence that `key` is not the answer (R4: that container was seen to hide another cube): its mass goes,
+        the rest is renormalised; nothing left -> {None: 1}."""
+        probs = {k: p for k, p in self.probs.items() if k != key}
+        if sum(probs.values()) <= 0:
+            return Distribution.point(None, t, sorted(set(self.support) | {ev_id}))
+        hs = {k: list(v) for k, v in self.hyp_support.items() if k != key}
+        return Distribution(probs, t, sorted(set(self.support) | {ev_id}), hs)
 
     # ---- reads --------------------------------------------------------------------------
     def argmax(self) -> tuple[str | None, float]:

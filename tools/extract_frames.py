@@ -2,6 +2,8 @@
 (data/robomme_lerobot/videos/image, AV1 in MP4; decoded with PyAV, which the system Python has and the project does
 not depend on, hence tools/). Per episode: every frame where the gripper closes (what was grasped), the first frame
 (the scene before anything moved) and the first execution frame (the decision point).
+With --windows FILE (JSON {"<task>_<episode>": [frame indices]}, written by scripts/review_test.py --plan), exactly
+those frames go to data/robomme_lerobot/review_frames/ instead.
 
   /Library/Frameworks/Python.framework/Versions/3.12/bin/python3 -I tools/extract_frames.py --tasks VideoRepick,VideoPlaceOrder
 
@@ -52,21 +54,27 @@ def decode(path: str, t0: float, idx: list[int]) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tasks", default="VideoRepick,VideoPlaceOrder")
+    ap.add_argument("--windows", default="")
+    ap.add_argument("--out", default="review_frames", help="folder under data/robomme_lerobot for --windows")
     a = ap.parse_args()
-    meta, out = episodes_meta(), os.path.join(ROOT, "frames")
+    windows = json.load(open(a.windows)) if a.windows else None
+    meta, out = episodes_meta(), os.path.join(ROOT, a.out if windows else "frames")
     os.makedirs(out, exist_ok=True)
     for task in a.tasks.split(","):
         n = 0
         for npz in sorted(glob.glob(os.path.join(ROOT, "npz", f"{task}_*.npz"))):
             ep = json.loads(str(np.load(npz)["meta"]))["episode"]
+            key = f"{task}_{ep:04d}"
+            if windows is not None and key not in windows:
+                continue
             m = meta[ep]
             vid = os.path.join(ROOT, f"videos/image/chunk-{m['videos/image/chunk_index']:03d}/"
                                      f"file-{m['videos/image/file_index']:03d}.mp4")
             if not os.path.exists(vid):
                 continue
-            got = decode(vid, float(m["videos/image/from_timestamp"]), wanted(npz))
+            got = decode(vid, float(m["videos/image/from_timestamp"]), windows[key] if windows else wanted(npz))
             idx = sorted(got)
-            np.savez_compressed(os.path.join(out, f"{task}_{ep:04d}.npz"), idx=np.array(idx),
+            np.savez_compressed(os.path.join(out, f"{key}.npz"), idx=np.array(idx),
                                 rgb=np.stack([got[i] for i in idx]))
             n += 1
         print(task, n, "episodes ->", out, flush=True)

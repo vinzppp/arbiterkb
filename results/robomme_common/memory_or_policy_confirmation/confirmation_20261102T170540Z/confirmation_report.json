@@ -1,0 +1,576 @@
+{
+  "integrity": {
+    "infrastructure_failed_attempts": 0,
+    "issues": [],
+    "pair_drop_records": 0,
+    "pairs": 250,
+    "passed": true,
+    "rows": 2250
+  },
+  "manifest_sha": "67df681ec8d4ee4d",
+  "primary": {
+    "P1_policy_main_effect": {
+      "estimate_ci95": [
+        0.196,
+        0.161,
+        0.231
+      ],
+      "p_holm": 0.00019998000199980003,
+      "p_raw": 9.999000099990002e-05,
+      "reading": "supported"
+    },
+    "P3_portability": {
+      "by_task": {
+        "RouteStick": {
+          "estimate_ci95": [
+            -0.38,
+            -0.45,
+            -0.3
+          ],
+          "n_pairs": 50
+        },
+        "StopCube": {
+          "estimate_ci95": [
+            0.16,
+            0.04,
+            0.27
+          ],
+          "n_pairs": 50
+        },
+        "SwingXtimes": {
+          "estimate_ci95": [
+            0.11,
+            -0.02,
+            0.24
+          ],
+          "n_pairs": 50
+        },
+        "VideoRepick": {
+          "estimate_ci95": [
+            -0.19,
+            -0.31,
+            -0.07
+          ],
+          "n_pairs": 50
+        },
+        "VideoUnmaskSwap": {
+          "estimate_ci95": [
+            -0.13,
+            -0.22,
+            -0.04
+          ],
+          "n_pairs": 50
+        }
+      },
+      "estimate_ci95": [
+        -0.086,
+        -0.134,
+        -0.038
+      ],
+      "fh_matched_minus_generic_ci95": [
+        0.18800000000000003,
+        0.132,
+        0.24400000000000005
+      ],
+      "memi_minus_fh_generic_ci95": [
+        0.5479999999999999,
+        0.484,
+        0.608
+      ],
+      "p_holm": 0.0030996900309969004,
+      "p_raw": 0.0030996900309969004,
+      "reading": "falsified",
+      "recovery_ratio_if_denominator_ci_excludes_zero": 0.343065693430657
+    }
+  },
+  "provenance": {
+    "arbiter_commit": "797894d86cd7559d494b9535fccb5623302b27be",
+    "effort": "low",
+    "execution_host": "RunPod dev pod 3ics2knpm77sov (NVIDIA RTX PRO 4500 Blackwell 32 GB, Ubuntu 24.04.5); 6 shards run in parallel with --shard K/6 (K = 0..5; (task, episode) pairs by index mod 6; shard 0 starts first and alone writes run.json and the READ ledger line); SAPIEN_RENDER_DEVICE=cuda; --memi-root /workspace/memi; width measured model-free: 2 -> 56, 4 -> 147, 6 -> 207 episodes/h, no errors (results/robomme_common/pod_width)",
+    "execution_image": "none (no registry image): RunPod dev pod 3ics2knpm77sov, venv /workspace/mop, Python 3.11.17, MEMI bb6c37c at /workspace/memi (RoboMME fae9f73 under third_party), ManiSkill 07be6fb; provenance results/robomme_common/pod_env (pip freeze, pip check, system, Vulkan, source commits, keys UNSET). The Mac G1 image arbiterkb-robomme-cpu:bb6c37c is the reference: the pod's mop_probe prompts for the five G1 val probe episodes are byte-identical to it (results/robomme_common/pod_equiv/_comparison_vs_mac_g1_probe.json)",
+    "model": "openai/gpt-6-luna",
+    "params_sha": "fe4e94112a74",
+    "prompt_sha": "307eaf7ff479aeae",
+    "raw_result_and_event_count": 4500,
+    "raw_result_and_event_tree_sha256": "10a06c16444cc8f23ff2b56b1a4d6fa5dae6d7299d62cd17492733a9b6b37cd3",
+    "sources": {
+      "maniskill": "07be6fbc66350ddca200abfb0a11b692f078f7fd",
+      "memi": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+      "robomme": "fae9f7300347f1146c2ae4844faa4eef7e38098e"
+    }
+  },
+  "resources": {
+    "calls_by_arm": {
+      "fh_g": 1024,
+      "fh_m": 1241,
+      "kb_g": 3386,
+      "kb_m": 3502,
+      "ld_g": 1747,
+      "ld_m": 3198,
+      "memi": 1131,
+      "mm_g": 1347,
+      "mm_m": 1084
+    },
+    "cost_by_arm": {
+      "fh_g": 0.20084539,
+      "fh_m": 0.20762061,
+      "kb_g": 0.52838864,
+      "kb_m": 0.56542029,
+      "ld_g": 0.34315723,
+      "ld_m": 0.56939024,
+      "memi": 0.45518754,
+      "mm_g": 0.39651957,
+      "mm_m": 0.29344731
+    },
+    "cost_usd": 3.55997682,
+    "episode_seconds_sum": 92514.4,
+    "last_result_mtime_epoch": 1793730916.0,
+    "run_created_utc": "2026-11-02T17:05:49.394374Z"
+  },
+  "run_id": "confirmation_20261102T170540Z",
+  "schema": 1,
+  "secondary": {
+    "H2_equivalence_claimed": false,
+    "P2_intervals_only": {
+      "P2a_mm_m_minus_ld_m": {
+        "discordant": 114,
+        "estimate_ci95": [
+          0.32799999999999996,
+          0.268,
+          0.384
+        ],
+        "left_only": 98,
+        "n_pairs": 250,
+        "right_only": 16
+      },
+      "P2b_kb_m_minus_ld_m": {
+        "discordant": 59,
+        "estimate_ci95": [
+          -0.132,
+          -0.188,
+          -0.076
+        ],
+        "left_only": 13,
+        "n_pairs": 250,
+        "right_only": 46
+      },
+      "P2c_fh_m_minus_ld_m": {
+        "discordant": 117,
+        "estimate_ci95": [
+          0.020000000000000007,
+          -0.040000000000000015,
+          0.08
+        ],
+        "left_only": 61,
+        "n_pairs": 250,
+        "right_only": 56
+      }
+    },
+    "detectable_P2_difference_at_n250": 0.165,
+    "split_fidelity_mm_m_minus_stock_memi": {
+      "beyond_preregistered_10pp_margin": false,
+      "discordant": 51,
+      "estimate_ci95": [
+        -0.052000000000000005,
+        -0.10400000000000001,
+        5.551115123125783e-18
+      ],
+      "left_only": 19,
+      "n_pairs": 250,
+      "right_only": 32
+    }
+  },
+  "success_by_arm": {
+    "fh_g": [
+      0.304,
+      0.2503016200503418,
+      0.3636308480715105,
+      76,
+      250
+    ],
+    "fh_m": [
+      0.492,
+      0.4306189740306896,
+      0.5536231675253044,
+      123,
+      250
+    ],
+    "kb_g": [
+      0.224,
+      0.17671751406074326,
+      0.2796363696210489,
+      56,
+      250
+    ],
+    "kb_m": [
+      0.34,
+      0.2840956187275826,
+      0.40074721239229694,
+      85,
+      250
+    ],
+    "ld_g": [
+      0.416,
+      0.3566223071073427,
+      0.477920179230594,
+      104,
+      250
+    ],
+    "ld_m": [
+      0.472,
+      0.4110089576615158,
+      0.5338385377844631,
+      118,
+      250
+    ],
+    "memi": [
+      0.852,
+      0.8026649802416493,
+      0.8906807912946159,
+      213,
+      250
+    ],
+    "mm_g": [
+      0.376,
+      0.31825876924195456,
+      0.4374944248759521,
+      94,
+      250
+    ],
+    "mm_m": [
+      0.8,
+      0.7460429604530917,
+      0.8448767311971342,
+      200,
+      250
+    ]
+  },
+  "success_by_task_arm": {
+    "RouteStick/fh_g": [
+      0.02,
+      0.0035391680889764604,
+      0.10495686471836953,
+      1,
+      50
+    ],
+    "RouteStick/fh_m": [
+      0.08,
+      0.031549003255790686,
+      0.18838502545063704,
+      4,
+      50
+    ],
+    "RouteStick/kb_g": [
+      0.02,
+      0.0035391680889764604,
+      0.10495686471836953,
+      1,
+      50
+    ],
+    "RouteStick/kb_m": [
+      0.04,
+      0.011038652660826577,
+      0.13460337877954667,
+      2,
+      50
+    ],
+    "RouteStick/ld_g": [
+      0.04,
+      0.011038652660826577,
+      0.13460337877954667,
+      2,
+      50
+    ],
+    "RouteStick/ld_m": [
+      0.06,
+      0.020614596364630478,
+      0.16217343370877002,
+      3,
+      50
+    ],
+    "RouteStick/memi": [
+      0.9,
+      0.7863950966521162,
+      0.956524876008429,
+      45,
+      50
+    ],
+    "RouteStick/mm_g": [
+      0.56,
+      0.4230578680014353,
+      0.6883801278976466,
+      28,
+      50
+    ],
+    "RouteStick/mm_m": [
+      0.62,
+      0.4815019502239357,
+      0.7413740415742278,
+      31,
+      50
+    ],
+    "StopCube/fh_g": [
+      0.58,
+      0.4423319668777783,
+      0.7062520276543307,
+      29,
+      50
+    ],
+    "StopCube/fh_m": [
+      0.92,
+      0.8116149745493629,
+      0.9684509967442093,
+      46,
+      50
+    ],
+    "StopCube/kb_g": [
+      0.0,
+      0.0,
+      0.07135003417431873,
+      0,
+      50
+    ],
+    "StopCube/kb_m": [
+      0.04,
+      0.011038652660826577,
+      0.13460337877954667,
+      2,
+      50
+    ],
+    "StopCube/ld_g": [
+      0.5,
+      0.36644286412332855,
+      0.6335571358766714,
+      25,
+      50
+    ],
+    "StopCube/ld_m": [
+      0.04,
+      0.011038652660826577,
+      0.13460337877954667,
+      2,
+      50
+    ],
+    "StopCube/memi": [
+      0.94,
+      0.8378265662912299,
+      0.9793854036353695,
+      47,
+      50
+    ],
+    "StopCube/mm_g": [
+      0.04,
+      0.011038652660826577,
+      0.13460337877954667,
+      2,
+      50
+    ],
+    "StopCube/mm_m": [
+      0.9,
+      0.7863950966521162,
+      0.956524876008429,
+      45,
+      50
+    ],
+    "SwingXtimes/fh_g": [
+      0.24,
+      0.14297252401872207,
+      0.3741294937519236,
+      12,
+      50
+    ],
+    "SwingXtimes/fh_m": [
+      0.7,
+      0.562493877226366,
+      0.8089661091039063,
+      35,
+      50
+    ],
+    "SwingXtimes/kb_g": [
+      0.0,
+      0.0,
+      0.07135003417431873,
+      0,
+      50
+    ],
+    "SwingXtimes/kb_m": [
+      0.44,
+      0.3116198721023534,
+      0.5769421319985648,
+      22,
+      50
+    ],
+    "SwingXtimes/ld_g": [
+      0.16,
+      0.08337321362087696,
+      0.2851448096176598,
+      8,
+      50
+    ],
+    "SwingXtimes/ld_m": [
+      0.68,
+      0.5418944286372394,
+      0.792419559060006,
+      34,
+      50
+    ],
+    "SwingXtimes/memi": [
+      0.94,
+      0.8378265662912299,
+      0.9793854036353695,
+      47,
+      50
+    ],
+    "SwingXtimes/mm_g": [
+      0.26,
+      0.15871379651367384,
+      0.3955342198899992,
+      13,
+      50
+    ],
+    "SwingXtimes/mm_m": [
+      0.98,
+      0.8950431352816304,
+      0.9964608319110235,
+      49,
+      50
+    ],
+    "VideoRepick/fh_g": [
+      0.36,
+      0.24138562967182875,
+      0.49859237989698046,
+      18,
+      50
+    ],
+    "VideoRepick/fh_m": [
+      0.4,
+      0.2760818978624575,
+      0.5381881089724063,
+      20,
+      50
+    ],
+    "VideoRepick/kb_g": [
+      0.38,
+      0.2586259584257722,
+      0.5184980497760643,
+      19,
+      50
+    ],
+    "VideoRepick/kb_m": [
+      0.48,
+      0.3479691239550571,
+      0.6148848774119157,
+      24,
+      50
+    ],
+    "VideoRepick/ld_g": [
+      0.56,
+      0.4230578680014353,
+      0.6883801278976466,
+      28,
+      50
+    ],
+    "VideoRepick/ld_m": [
+      0.8,
+      0.6696262789551477,
+      0.8875637005402612,
+      40,
+      50
+    ],
+    "VideoRepick/memi": [
+      0.82,
+      0.6920368054529739,
+      0.902299172675462,
+      41,
+      50
+    ],
+    "VideoRepick/mm_g": [
+      0.38,
+      0.2586259584257722,
+      0.5184980497760643,
+      19,
+      50
+    ],
+    "VideoRepick/mm_m": [
+      0.74,
+      0.6044657801100008,
+      0.8412862034863262,
+      37,
+      50
+    ],
+    "VideoUnmaskSwap/fh_g": [
+      0.32,
+      0.20758044093999403,
+      0.45810557136276076,
+      16,
+      50
+    ],
+    "VideoUnmaskSwap/fh_m": [
+      0.36,
+      0.24138562967182875,
+      0.49859237989698046,
+      18,
+      50
+    ],
+    "VideoUnmaskSwap/kb_g": [
+      0.72,
+      0.5833461285401034,
+      0.8252598564231963,
+      36,
+      50
+    ],
+    "VideoUnmaskSwap/kb_m": [
+      0.7,
+      0.562493877226366,
+      0.8089661091039063,
+      35,
+      50
+    ],
+    "VideoUnmaskSwap/ld_g": [
+      0.82,
+      0.6920368054529739,
+      0.902299172675462,
+      41,
+      50
+    ],
+    "VideoUnmaskSwap/ld_m": [
+      0.78,
+      0.6475818431054045,
+      0.8724621377569771,
+      39,
+      50
+    ],
+    "VideoUnmaskSwap/memi": [
+      0.66,
+      0.5215356854148285,
+      0.7756323036493895,
+      33,
+      50
+    ],
+    "VideoUnmaskSwap/mm_g": [
+      0.64,
+      0.5014076201030195,
+      0.7586143703281711,
+      32,
+      50
+    ],
+    "VideoUnmaskSwap/mm_m": [
+      0.76,
+      0.6258705062480763,
+      0.8570274759812779,
+      38,
+      50
+    ]
+  },
+  "terminal_reason": {
+    "environment_success": 1069,
+    "fail": 1018,
+    "high_level_action_budget": 138,
+    "planner_error": 25
+  },
+  "terminal_status": {
+    "success": 1069,
+    "task_failure": 1043,
+    "timeout": 138
+  }
+}

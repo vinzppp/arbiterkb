@@ -1,9 +1,9 @@
 """Views of the KB: predicate facts with course-style unify / ask, the text view the arbiter reads,
 and (M3) the event log and the controller view (DEVELOPMENT §3.8).
 
-Predicates are generated on demand from the typed tables (DEVELOPMENT.md §3.2); they are never stored.
-Geometric relations (Near, LeftOf, On) come from the pose beliefs, with probability = the poses' confidence.
-ask() returns answers WITH probabilities instead of True / False.
+Predicates are generated on demand from the typed tables (DEVELOPMENT.md §3.2); they are never stored. Geometric
+relations (Near, LeftOf, On) come from the pose beliefs, with probability = the poses' confidence; ask() returns
+answers WITH probabilities instead of True / False.
 """
 from __future__ import annotations
 
@@ -12,7 +12,10 @@ from itertools import permutations
 import numpy as np
 
 from .action_view import KINDS as ACTION_KINDS, action_rows, progress
+from .goal_counter import progress_line
 from .kb import KB
+from .motion import reported
+from .narrative import merged_view, revealed, seen_again
 from .params import RuleParams
 from .rules import held
 from .task_items import is_task_item
@@ -121,6 +124,13 @@ def _ev_line(e) -> str | None:
         return f"t={e.t} hand stopped at {_xyz(d['ee'])}, gripper {'closed' if d['closed'] else 'open'}"
     if e.kind in ("grip_close", "grip_open"):
         return f"t={e.t} gripper {'closed' if e.kind == 'grip_close' else 'opened'} at {_xy(d['ee'])}"
+    return _vlm_line(e)
+
+
+def _vlm_line(e) -> str | None:
+    """The ask call's occluder answers (ask.py); descriptions show on the object lines instead."""
+    if e.kind == "vlm_occluder" and e.data["answer"] != "cannot_tell":
+        return f"t={e.t} the image shows {e.args[0]} hidden by {e.data['answer'].replace('_', ' ')} (vlm)"
     return None
 
 
@@ -131,11 +141,10 @@ LOW_LEVEL = ("grip_close", "grip_open", "hand_pause")  # explained by the semant
 
 
 def event_log(kb: KB, last: int = 30, low_level: bool = True, coords: bool = True) -> list[str]:
-    """Evidence and events in time order, with ids so the controller can cite them. A move_stop is joined
-    with its move_start, so each motion reads 'from -> to'. Over `last` lines, the oldest others are dropped
-    (cover / grasp / place events are always kept) and a first line says how many were omitted."""
+    """Evidence and events in time order, with ids the controller can cite; a move_stop joins its move_start ('from ->
+    to'). Over `last` lines the oldest others are dropped (cover / grasp / place kept), with a count line."""
     start: dict[str, tuple] = {}
-    rows = []
+    rows: list = []
     covered = {s for v in kb.events if v.type == "cover" for s in v.support}  # shown in the cover line instead
     for e in kb.evidence:
         if (e.kind == "disappear" and e.id in covered) or (not low_level and e.kind in LOW_LEVEL) \
@@ -146,6 +155,8 @@ def event_log(kb: KB, last: int = 30, low_level: bool = True, coords: bool = Tru
             continue
         if e.kind == "move_stop" and e.args[0] in start and start[e.args[0]][1] is not None:
             t0, xyz0 = start.pop(e.args[0])
+            if not reported(xyz0, e.data.get("xyz")):  # perception noise on a still container (motion.reported)
+                continue
             e = type(e)(e.id, e.t, e.kind, e.args, {**e.data, "from": xyz0, "t_from": t0})
         if (line := _ev_line(e)) is not None:
             rows.append((e.t, 0, int(e.id[1:]), f"[{e.id}] {line}"))
@@ -170,12 +181,26 @@ def _event_text(v, kb: KB) -> str:
                 f"from then on it moves with {v.args[0]}")
     if v.type == "swap":
         return f"{v.args[0]} and {v.args[1]} passed close (identity may be confused: see Inside)"
+    if v.type == "reveal":  # R4
+        return f"{v.args[1]} seen where {v.args[0]} was grasped: {v.args[0]} hid it"
     return f"event {v.type}({', '.join(v.args)}) conf {v.conf:.2f}"
 
 
-def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
-    """What the LLM controller reads (DEVELOPMENT §3.8): goal and progress, objects with 3D centres,
-    relations with probabilities, then the event log. Every line names the ids it can cite."""
+VIEW_VERSION = "v4"  # part of the frozen prompt hash (run.py --freeze)
+
+
+def controller_view(kb: KB, p: RuleParams = RuleParams(), version: str = VIEW_VERSION) -> str:
+    """What the LLM controller reads (§3.8). v3: goal, progress, objects, relations, event log, with citable ids.
+    v4 (default) adds the goal counter's line (kb.task["counter"]) and the joined facts (narrative.py)."""
+    view = _view_v3(kb, p)
+    if version == "v3":
+        return view
+    if kb.task.get("counter"):
+        view = view.replace("\nProgress:", f"\n{progress_line(kb, kb.task['counter'])}\nProgress:", 1)
+    return merged_view(view, kb)
+
+
+def _view_v3(kb: KB, p: RuleParams) -> str:
     lines = [f"Goal: {kb.task.get('goal', '?')}"]
     names = {"grasp": "grasps", "place": "places", "cover": "covers", "swap": "close passes"}
     done = [f"{names[t]} {n}" for t in names if (n := sum(e.type == t for e in kb.events))]
@@ -188,6 +213,8 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
                          + ["  " + x for x in event_log(kb, low_level=False, coords=False)])
     lines.append("Objects (world frame, m):")
     for o in kb.objects.values():
+        if o.visibility.value == "unknown" and o.t_last_seen < 0 and ("description", o.id) not in kb.facts:  # a slot
+            continue  # that never found its object (the open word list has spare slots; closed-loop smoke run)
         vis = "held" if o.id in held(kb) else o.visibility.value
         if vis == "hidden":  # its pose is a probability-weighted mean, possibly between two containers
             pos = ": see Inside below"
@@ -200,9 +227,11 @@ def controller_view(kb: KB, p: RuleParams = RuleParams()) -> str:
         tag = " (task item)" if is_task_item(o.attributes, o.cls, items) else ""
         lines.append(f"  [{o.id}] {o.description}{tag}, {vis}{pos}, last seen t={o.t_last_seen}{sup}{look}")
     lines.append("Relations:")
-    for (pred, subj), d in kb.relations.items():
+    rev = revealed(kb)
+    for (pred, subj), d in kb.relations.items():  # a cube seen again: a fact, not an open belief (narrative)
         hyps = " | ".join(f"{k or 'elsewhere'} {p:.2f}" for k, p in sorted(d.probs.items(), key=lambda kv: -kv[1]))
-        lines.append(f"  [{pred}({subj})] {hyps}  [{','.join(d.support[-3:])}]")
+        lines.append(seen_again(kb, subj, d, rev.get(subj)) if pred == "Inside" and kb.objects[subj].visibility.value
+                     != "hidden" else f"  [{pred}({subj})] {hyps}  [{','.join(d.support[-3:])}]")
     lines += [f"  [{rel_id(f)}] from positions [{','.join(sup)}]" for f, _, sup in geometric(kb, p) if f[0] != "LeftOf"]
     lines += [f"  [{rel_id(k)}] {b.conf:.2f} ({b.source}) [{','.join(b.support[-3:])}]"
               for k, b in kb.facts.items() if k[0] != "description"]
@@ -216,7 +245,6 @@ def rel_id(fact: tuple) -> str:
 
 
 def citable_ids(kb: KB, p: RuleParams = RuleParams()) -> set[str]:
-    """Every id the controller view prints: evidence, events, objects, relation lines (observation ids
-    o<t>:<object> are accepted separately by controller.check)."""
+    """Ids the controller view prints: evidence, events, objects, relations (o<t>:<object> ids: controller.check)."""
     rels = {rel_id((pred, subj)) for pred, subj in kb.relations} | {rel_id(k) for k in kb.facts}
     return kb.known_ids() | set(kb.objects) | rels | {rel_id(f) for f, _, _ in geometric(kb, p)}

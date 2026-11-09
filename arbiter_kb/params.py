@@ -18,6 +18,8 @@ class RuleParams:
     sigma_cover: float = 0.02  # m: width of the distance kernel over cover candidates (R1)
     w_max: float = 0.5  # R6 (M1): w = w_max·exp(-d/d0), d = closest 3D centre distance of the pass
     d0: float = 0.02  # m
+    r6_feature: str = "min_3d"  # R6's pass feature: "min_3d" (scale d0, m) or "min_q" (scale q0; claim 3 on G, NOTES)
+    q0: float = 0.2  # R6 with min_q: w = w_max·exp(-min_q/q0), min_q = the pass's lowest track_q (0..1)
     eps_none: float = 0.01  # floor for the "elsewhere" hypothesis in R1
     r_grasp: float = 0.05  # m: R3, an object within this 3D distance of the end effector when the gripper closes is held
     r_on: float = 0.04  # m: On(x, y) / place target: xy distance at most this, and x above y
@@ -41,8 +43,24 @@ class DetectParams:
     z_drop: float = 0.12  # m: a release above this is a drop from above (dataset: into the bin at 0.20)
     z_hold: float = 0.07  # m: a pause while holding above this = holding something up (dataset: 0.10)
     press_rise: float = 0.03  # m: a press is complete when the hand rises this far above its lowest point
+    w_empty: float = 0.005  # m: a close that settles with the fingers apart by more holds something (closed = 0.000)
+    w_settle: float = 0.001  # m: the finger opening has settled when it changes less than this between frames
     y_side: float = 0.10  # m: |y| beyond this = the robot's left (+y) / right (-y) side (dataset: 0.21)
     merge_xy: float = 0.05  # m: a hold followed by a release within this xy distance is shown as one step (v3 view)
+    # container motion v2 (motion.py; NOTES "Motion detector v2"): chosen on G training episodes (F1 0.65 -> 0.80)
+    m_win: int = 1  # frames: median filter on the position (1 = none; smoothing blurred the valleys)
+    k_lag: int = 1  # frames: speed = smoothed displacement over k_lag frames / k_lag
+    v_start: float = 0.003  # m/frame: a move starts after n_on frames above this
+    v_stop: float = 0.0015  # m/frame: and stops after n_off frames below this
+    n_on: int = 2
+    n_off: int = 2
+    valley: float = 0.35  # split a move at a speed valley below this x its peak (0: never; motion.py)
+    rev_cos: float = -0.5  # split a move when its velocity turns this far from the move so far (-2: never)
+    rev_min: float = 0.02  # m: only once the move is this long
+    # m: a move whose start-to-stop xy displacement is below this is not reported (K's log, narrative, K2's log); the
+    # 99th percentile of still containers' perceived displacement on G train (scripts/still_noise.py; NOTES "Move
+    # threshold from real perception noise"). The evidence stays in the KB.
+    move_min: float = 0.0416
 
 
 @dataclass(frozen=True)
@@ -55,10 +73,10 @@ class MonitorParams:
 class ArbiterParams:
     every_k: int = 50  # frames between periodic triggers while something is hidden
     max_calls: int = 6  # per episode
-    p_clear: float = 0.9  # annotator verdict -> belief probability (fixed table, measured against truth in M4)
+    p_clear: float = 0.9  # keyframe call verdict -> belief probability (fixed table, measured against truth in M4)
     p_ambiguous: float = 0.5
     p_unlikely: float = 0.1
-    vlm_model: str = "qwen/qwen3.5-9b"  # clue-object lister and annotator (NOTES "VLM choice": 4/4 frames, 6 providers)
+    vlm_model: str = "qwen/qwen3.5-9b"  # keyframe and review calls (NOTES "VLM choice": 4/4 frames, 6 providers)
     vlm_provider: str = "Parasail,DeepInfra"  # only these, in order; both bf16 (DeepInfra was rate-limited, 34-65 s)
     vlm_thinking: bool = False  # the 9B is a thinking model; off for these labelling calls
 

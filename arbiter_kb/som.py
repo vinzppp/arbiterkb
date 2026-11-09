@@ -1,6 +1,6 @@
 """Annotated current frame (Set-of-Mark, DEVELOPMENT §2.2 step 7): the current RGB with each visible object's id
 drawn at its pixel position, and on each container the hidden cubes the KB places there with their
-probability ("red? 0.55"). It ties the ids in the KB text to the objects in the picture, for the annotator and
+probability ("red? 0.55"). It ties the ids in the KB text to the objects in the picture, for the keyframe call and
 the controller. Pixel positions come from the current observation table (FrameObs.uv); the drawing uses
 matplotlib's Agg backend (no window). Each label goes above its object if that spot is free, else below,
 right or left (greedy, `place`), so labels neither cover the object nor each other.

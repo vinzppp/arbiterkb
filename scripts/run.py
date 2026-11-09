@@ -60,10 +60,28 @@ def git_state() -> tuple[str, bool | None]:
         return "no-git", None
 
 
+PROMPT_FILES = ("controller", "views", "action_view", "narrative", "goal_counter", "keyframe", "ask", "epistemic", "memtool", "self_memory", "closed_loop",
+                "task_items", "sources/online", "view_k2")
+
+
+def prompts_hash() -> str:
+    """sha256 over the code that writes what a model reads (prompts, views, the goal parse): any edit to these
+    modules changes it, so a run can only read the prompts that were frozen (E5c, NOTES "Before the full rerun")."""
+    h = hashlib.sha256()
+    for name in PROMPT_FILES:
+        h.update((ROOT / "arbiter_kb" / f"{name}.py").read_bytes())
+    return h.hexdigest()[:12]
+
+
 def load_params() -> Params:
-    """The one parameter set evaluations may use; the test split requires it to be frozen (E5c)."""
+    """The one parameter set evaluations may use; the test split requires it to be frozen (E5c), and so do the
+    prompts and views (prompts_hash)."""
     if not PARAMS_FILE.exists():
         sys.exit(f"{PARAMS_FILE.name} missing: run `python scripts/run.py --freeze`")
+    stored = json.loads(PARAMS_FILE.read_text()).get("prompts_hash")
+    if stored != prompts_hash():
+        sys.exit(f"prompts / views changed since the freeze ({stored} != {prompts_hash()}): "
+                 f"run `python scripts/run.py --freeze --force`")
     return Params.load(PARAMS_FILE)
 
 
@@ -73,8 +91,10 @@ def freeze(force: bool = False) -> None:
         sys.exit(f"{PARAMS_FILE.name} exists; refusing to overwrite without --force")
     p = Params(frozen=True, note=FREEZE_NOTE)
     p.save(PARAMS_FILE)
-    ledger.record("FREEZE", p.hash(), f"{PARAMS_FILE.name} via run.py --freeze")
-    print("wrote", PARAMS_FILE, "hash", p.hash())
+    PARAMS_FILE.write_text(json.dumps({**json.loads(PARAMS_FILE.read_text()), "prompts_hash": prompts_hash()},
+                                      indent=2, sort_keys=True))
+    ledger.record("FREEZE", p.hash(), f"{PARAMS_FILE.name} via run.py --freeze; prompts {prompts_hash()}")
+    print("wrote", PARAMS_FILE, "hash", p.hash(), "prompts", prompts_hash())
 
 
 def _num_or_mix(v):

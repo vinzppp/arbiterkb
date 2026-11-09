@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-02",
+  "scope": "Free, no-LLM comparison of StopCube remain-static execution semantics",
+  "official_source": {
+    "image": "arbiterkb-robomme-cpu:bb6c37c",
+    "image_id": "sha256:07424f3b53e08c0bfd27db3a97d89210de92679b040aed3a5aa49e580e059fd1",
+    "memi_commit": "bb6c37ce6c14bd1a204c86a91cc0cb36f565a1f0",
+    "path": "memi/plan/rollout/episode.py",
+    "lines": "196-234",
+    "behavior": "When an on-menu choice returns batch == 0, MEMI records result=no_op. Its comment names StopCube remain static after the last checkpoint and states that no simulator step ran; because no rows are appended, the next policy call renders the same decision step."
+  },
+  "arbiter_source": {
+    "path": "stress/common_episode.py",
+    "lines": "77-93,107-152",
+    "behavior": "The harness uses the same rule: an on-menu zero-batch command is no_op; zero captured rows are appended to the timeline, so the next request reuses the last step."
+  },
+  "released_log_evidence": {
+    "paths": [
+      "results/luna/fullhist/episodes.jsonl.gz",
+      "results/luna/init/episodes.jsonl.gz",
+      "results/luna/memi/episodes.jsonl.gz"
+    ],
+    "inspection": "Field-only inspection (task/action/time/result/batch/captured; no goal or observation text) found published StopCube remain-static decisions recorded as result=no_op, batch=0, captured=0, followed by an empty timeline range rather than advancing simulator time.",
+    "restriction": "No local held-out episode was run or read. The released logs were not copied into this repository."
+  },
+  "conclusion": "official_no_op_matches_harness",
+  "action": "No executor change. G1's repeated remain-static loop is consistent with MEMI's official executor semantics; describe it as an official no-op/task-policy interaction, not as proof from the G1 symptom alone."
+}

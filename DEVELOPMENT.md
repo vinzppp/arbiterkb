@@ -1,6 +1,6 @@
 # ArbiterKB — Development Spec
 
-Version 1.8 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.8 (user discussion):** four roles (rules, annotator, **reviewer**, controller). The reviewer replaces trigger-only checking: every ~3 s it reads the last few seconds of frames and the KB's events for that window, confirms / contradicts each, adds missing events and writes a one-line summary, plus one check before each action on a target. Semantic actions from robot state (actions.py) and the counting-test results are in §2.1. **v1.7:** §2.5 perception design (VLM clue objects, one multi-object Cutie, keyframes with matching and `id_margin`, async); §2.6 time budget; the M4 batch of view fixes. **v1.6:** M2 becomes conditional on G (only what G's result needs; claim 3 compares Bound, SoftHaircut and ArbiterKB); R7 deleted, R5 frozen; arms K0 and S added (§3.8). **v1.5:** §2 rewritten as the target loop with the reasoning behind it: observation table, observe / detectors / rules, VLM annotator (arbiter merged), annotated frame, controller; task-agnostic recording; open relation table; real-time notes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
+Version 1.12 · 2026-10-29 · supersedes `INSTRUCTIONS.md` (kept in `archive/docs/INSTRUCTIONS_v1.0.md`). **v1.12 (tests of 2026-10-29, NOTES "Is the counting win ArbiterKB's", "Does the KB-in-words gain survive real perception?", "Fixing the tracker's swaps"):** **counting is closed as a test of the KB**: a rule with no per-decision LLM (RULE) scores 0.98–1.00 and never loses a decision to K, so the win is robot-state events + the counter, and claims 1–2 move to tasks that need reasoning over memory (VideoPlaceOrder, permanence after swaps), which need perception; **`PerceivedSource`** reads G's perceived episodes, with an **occlusion step** (the tracker's cube mask climbs onto the covering container instead of vanishing; a cube track over a container and above its own height counts as covered; recall 0.907 on G train); on real perception **K beats the raw log** (Q1 0.77–0.78 vs 0.49–0.61), the worded view adds nothing over v4, and on tracker-swapped cubes every arm fails with uninformative confidence (claim 3 not supported); **`relink.py`** re-links container tracks by motion (id consistency 0.64 → 0.73; K's Q1 → 0.84–0.85); the rest is lost container tracks, which needs the tracker (one multi-object Cutie, pod). **Overnight (NOTES "Corrected tables after the code review"):** the KB's own top answer equals K on Q1 (0.846), so the LLM adds nothing there; **A** (provenance + alternatives in words, `epistemic.py`) and **A2** (numbers removed) do not improve the stated confidence, which stays at or below the KB's p (AUROC 0.69); **B** (`self_memory.py`: decisions, outcomes, changes since the last decision, shown first; `harness.py` skeleton with `ReplayEnv`) works offline and waits for the closed loop; **C** (`memtool.py`, memory as a tool) is stopped. **Claim 3 on G (no LLM; NOTES "Claim 3, corrected read and attribution"):** the registered main test (margin feature) is not supported; with distance, the KB's p beats SoftHaircut (AURC −0.034 [−0.069, −0.004]), but the lead is R6 on a cover-time distribution (the cover kernel), not the belief layer, and p stays overconfident on swapped cubes (median 0.92). G test is spent for claim 3. **Next: the closed loop** (claims 1–2); claim 3 again only on fresh episodes, against a SoftHaircut with the cover kernel. **Closed loop (NOTES "Closed loop"):** 2610.17350's loop is ported (`closed_loop.py`; their endings, frame stride, notes verbatim), perception reaches the KB frame by frame (`sources/online.py`, equal to the batch source on G), and the pod runner and runbook exist (`stress/closed_loop_pod.py`, `stress/POD_CLOSED_LOOP.md`); the smoke test on an A40 fixed a double reset, the image limit (all arms on Parasail) and the token cap (16,000). **v1.11 (user decisions after the 2026-10-28 tests, NOTES):** robot actions come only from robot state; **the periodic review call is removed** (a small VLM confirmed 68% of planted false events; neither qwen3.5-9b nor Sonnet 5.5 told a pick-up from a put-down in the front video, ≤ 0.52); the VLM's runtime job is **one closed question about one marked frame, with no memory text** (`ask.py`: what hides an object, what it looks like); relations come from geometry and rules, as in ECoMEM and Ledger; **L4 goal counter** (`goal_counter.py`: the goal parsed once per episode, the KB counts its own actions; counting 0.85 → 0.97 without thinking); **view v4** = v3 + the counter line + joined facts in words (`narrative.py`), no "now" sentences; **motion detector v2** (`motion.py`: hysteresis and a speed-valley split; G test F1 0.68 → 0.81); prompts and views are frozen with `prompts_hash` in `params.json`. **v1.10 (user decision, after a check):** the v1.9 merged keyframe prompt listed worse (2 / 4 and 0 / 4 real frames against 4 / 4; it copied objects from the memory text), so the **keyframe call lists from the image alone**, and the **review call takes over the annotator's work** (relations and descriptions, judged over a window of frames). **v1.9 (user decision):** two VLM calls, not three roles: the clue-object lister and the annotator become one **keyframe call** (one marked frame → objects, descriptions, relations), and the **review call** stays (every ~3 s + before acting). Roles are now rules, keyframe call, review call, controller. v1.1: after the M0 reviews, M1 is rewritten, phase G (the gate) is pulled forward, M2/M6 are adjusted. v1.2: after the M0.1 reviews, M1 shrinks to plumbing (no tuning before G), OverlapHaircut is added, and E5c is enforced through a test-read ledger. v1.3: after the M1 / M1.1 reviews: M2 (c) is against SoftHaircut, M4 adds an LLM-without-KB arm (C vs D tests the KB), G's gate uses rules with ≤ 2 features, R5 combines only same-frame covers; silent failure is always reported with coverage and AURC, M2 (c) compares at matched coverage and adds MarginHaircut, G records every pass (swapped or not) for an ROC, R5 skips mixed cubes. **v1.8 (user discussion):** four roles (rules, annotator, **reviewer**, controller). The reviewer replaces trigger-only checking: every ~3 s it reads the last few seconds of frames and the KB's events for that window, confirms / contradicts each, adds missing events and writes a one-line summary, plus one check before each action on a target. Semantic actions from robot state (actions.py) and the counting-test results are in §2.1. **v1.7:** §2.5 perception design (VLM clue objects, one multi-object Cutie, keyframes with matching and `id_margin`, async); §2.6 time budget; the M4 batch of view fixes. **v1.6:** M2 becomes conditional on G (only what G's result needs; claim 3 compares Bound, SoftHaircut and ArbiterKB); R7 deleted, R5 frozen; arms K0 and S added (§3.8). **v1.5:** §2 rewritten as the target loop with the reasoning behind it: observation table, observe / detectors / rules, VLM annotator (arbiter merged), annotated frame, controller; task-agnostic recording; open relation table; real-time notes. **v1.4 (direction v2, user decision; NOTES "Direction v2"):** the KB becomes the memory module of an **LLM controller that outputs the waypoints itself**, in the action format and harness of arXiv 2610.17350. Claims 1–2 (`docs/GOALS.md`): a smaller model, or far fewer tokens, at matched success. The old claim becomes claim 3. M3–M6 are rewritten (§3.8, §6); the rule planner stays as a baseline. G and M2 are unchanged.
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
@@ -15,7 +15,7 @@ To build a phase, tell the coding agent: *"Build phase Mx of `arbiter-kb/DEVELOP
 3. **Never fake an output.** If something cannot run, print exactly what is missing (`SKIPPED: <reason>; to enable: <command>`) and continue.
 4. **Don't modify `~/Code/active/scene-graph-robot/`. Copy, don't import.** The few functions ArbiterKB needs from `notebooks/pilot/sg_pilot.py` are copied verbatim into one file, `arbiter_kb/sg_compat.py`. Each copied function carries `# copied from sg_pilot.py:<line> @ e2e06f9`. The set is `Replay`, `load_replay`, `target_cube_nodes`, `ActiveTarget`, `decision_frame`, `cam_to_world`, `project_points`, `backproject_mask`, `oracle_graph`, `RuleParams`, `GraphTracker`, `wilson`, plus the `F_*` constants. This keeps arbiter-kb self-contained: its results cannot change because the other repo or branch changed. `tests/test_sg_compat.py` imports the original `sg_pilot` when it is present and asserts identical outputs on a synthetic input; otherwise it is skipped. Nothing else from scene-graph-robot is used.
 5. **Compute.** M0–M4 run on the Mac CPU. GPU appears only in G, M5 and M6 (simulator rendering, perception and closed-loop control), and only after the user says go. The LLM is reached through OpenRouter from M4 onward.
-6. **The user is learning.** Docstrings say *what, why and units*. Every phase adds a short walkthrough notebook (≤ 15 cells) that calls the package and shows intermediate results.
+6. **The user is learning.** Docstrings say *what, why and units*. M0 and M1 had walkthrough notebooks (now in `archive/notebooks/`); since then each test is explained in NOTES (the rule before the run, then the results and readings), and the user gets a plain-language summary.
 
 ---
 
@@ -80,8 +80,9 @@ flowchart TB
   R --> KB
   GOAL["Task goal<br/>any instruction"] --> KB
   KB["Knowledge base: every item is a belief with support ids<br/>L0 geometry · L1 objects · L2 relations · L3 evidence log + events · L4 task"]
-  KB <-->|"keyframes, only when the rules cannot decide"| ANN["VLM annotator (small VLM)<br/>one marked frame → descriptions, relations"]
-  KB <-->|"every ~3 s, and before acting on a target"| REV["VLM reviewer (small VLM)<br/>last seconds of frames + the KB's events → confirm / contradict, missing events, one-line summary"]
+  ANN -->|"keyframes (first frame, appear / disappear, grasp / place, …)"| PER
+  KB -.-> ANN["VLM keyframe call (small VLM)<br/>the frame alone + the instruction → the movable objects (detector phrases)"]
+  KB <-->|"only when the rules cannot decide"| ASK["VLM ask call (same small VLM)<br/>one marked frame + one closed question, no memory text → what hides an object / what it looks like"]
   KB --> V1["KB text view + event log<br/>ids, probabilities, from → to"]
   KB --> V2["Annotated current frame (Set-of-Mark)<br/>ids and top hypotheses drawn on objects"]
   V1 --> C["LLM controller (small or frontier)<br/>one waypoint per call + target + cites"]
@@ -90,18 +91,18 @@ flowchart TB
   MP -->|"new frames"| CAM
 ```
 
-Status (2026-10-28):
+Status (2026-10-29):
 
 | Part | Built | Not yet |
 |---|---|---|
-| Perception | GroundingDINO → SAM → Cutie → centroid, offline on the pod (G, word list from the simulator scene: **privileged**); `--vocab open`: generic words + the task's phrases (written, not yet run); VLM object-listing benchmark (4 frames) | §2.5: VLM clue objects as the word list; one multi-object Cutie; no DINOv2; keyframes with matching; size / confidence in the table |
-| Observation table (`FrameObs`) | id, class, visible, centroid, pixel, track_q, hand, gripper | size / box, visible fraction, detector confidence, last-clear-frame id, timestamp (contract change, `CONTRACT_VERSION` 2) |
-| observe / detectors / rules | R1 R2 R3 R5 R6; appear, disappear, move from→to, near-pass, grip; hand pause; **semantic actions from robot state** (`actions.py`: pick up, release placed / set down / dropped, press, hold left / right; recall 0.97–1.0 against the dataset's subgoal labels, `results/latest/actions_vs_labels`) | motion smoothing under real noise (M2 item 1); press, reveal (R4); time-based thresholds |
-| KB L0–L4 | centroid; objects; Inside (stored) + Near / On / LeftOf / Held (computed); evidence log + events; goal + counts | open relation table (§2.3); size; L4 progress against a parsed goal |
-| VLM annotator | `annotate.py` (checks, beliefs in the fact table; tested with a fake model, never called on the real one); clue-object lister (`clue_objects.py`, qwen3.5-9b: 4/4 real frames) | real calls with images; truth check |
-| VLM reviewer | — | all of it (§3.7, M4 item 10) |
-| Views | KB text + event log (`views.controller_view`); annotated frame (`som.py`; labels can overlap) | the batch of view fixes (§6 M4) |
-| LLM controller | prompt, parsing, checks; arms H / K / K-L3 / R / K0 / S; Batch A (permanence, synthetic: K = R = 0.96 with thinking); **counting tasks on RoboMME robot state: K with semantic actions 0.85 vs raw log 0.60 without thinking, 0.91 vs 0.79 with** (`results/latest/count_robot_state_v2`; to confirm on unseen episodes) | thinking effort vs accuracy; image arms (H, S); closed loop on the pod (M5) |
+| Perception | GroundingDINO → SAM → Cutie → centroid, offline on the pod (G, word list from the simulator scene: **privileged**); **Mac-side fixes on G's outputs:** occlusion step for covered cubes (`sources/perceived.py`, recall 0.907) and motion re-linking of container tracks (`relink.py`, id consistency 0.64 → 0.73); `--vocab open`: generic words + the task's phrases (written, not yet run); VLM object-listing benchmark (4 frames) | §2.5: VLM clue objects as the word list; one multi-object Cutie (container tracks are lost in 28% of G train frames after t = 40); no DINOv2; keyframes with matching; size / confidence in the table |
+| Observation table (`FrameObs`) | id, class, visible, centroid, pixel, track_q, hand, gripper; `PerceivedSource` fills it from G's npz files (train = episodes 0–9 per setting) | size / box, visible fraction, detector confidence, last-clear-frame id, timestamp (contract change, `CONTRACT_VERSION` 2) |
+| observe / detectors / rules | R1 R2 R3 R5 R6; appear, disappear, move from→to, near-pass, grip; hand pause; **semantic actions from robot state** (`actions.py`: pick up, release placed / set down / dropped, press, hold left / right; recall 0.97–1.0 against the dataset's subgoal labels, `results/latest/actions_vs_labels`); **motion v2** (`motion.py`, G test F1 0.68 → 0.81, `results/latest/motion_v2`) | near-pass detection under iid position noise (motion v2 fragments moves at 15 mm); spurious moves on the real tracker (stock containers "move" 11–14 times per episode); **swap evidence that R6 can use on real passes** (`id_margin` from the re-linking cost; on G the KB printed 0.98 for swapped containers); press, reveal (R4); time-based thresholds |
+| KB L0–L4 | centroid; objects; Inside (stored) + Near / On / LeftOf / Held (computed); evidence log + events; goal + counts; **L4 goal counter** (`goal_counter.py`; parse accuracy 99 / 100 / 86 on PickXtimes / BinFill / SwingXtimes, `results/latest/goal_parse_v3`) | open relation table (§2.3); size; relation accuracy against truth (pod) |
+| VLM keyframe call (listing, v1.10) | `keyframe.py`: the frame alone + the instruction → clue objects → detector phrases; checks per entry; qwen3.5-9b 4 / 4 real frames (`results/latest/keyframe_check_v110`) | the re-benchmark on G's replays with truth (M4 item 8) |
+| VLM ask call (v1.11) | `ask.py`: occluder and appearance questions, checked answers, evidence / descriptions in the KB; tested with a fake model. (The v1.8–v1.10 review call was measured and removed: `results/latest/review_video*`, `describe_*`.) | real calls with truth on G's replays (M4 item 10) |
+| Views | **v4** (`views.controller_view`): v3 + the goal-counter line + joined facts in words (`narrative.py`); v3 on request; annotated frame (`som.py`) | |
+| LLM controller | prompt, parsing (the last top-level JSON object), checks; arms H / K / K-L3 / R / K0 / S; Batch A (permanence, synthetic: K = R = 0.96 with thinking); **counting on RoboMME robot state: v3 view 0.83 / 0.94 (off / default) = Sonnet 5.5 with the raw log (0.94) at a fifth of the cost; v4 with the goal counter 0.97 / 0.96 on episodes 31–60** (`results/latest/count_robot_state_v3`, `count_robot_state_counter_v3`); **controls: RULE 0.996 / 0.981, PC (raw log + counter) = K with thinking, worse without** (`results/latest/count_controls`); **G perceived QA: K 0.77–0.85 vs raw log 0.49–0.68 on Q1; confidence AUROC ≈ 0.5 on swapped cubes** (`results/latest/perceived_qa`, `perceived_qa_relinked`) **Closed loop:** `closed_loop.py` (2610.17350's loop, arms H / R / K), smoke test on the pod (H solved VideoUnmaskSwap val ep 0 in 3 calls) | the val pilot and then M5 / M6 on memory-reasoning tasks; arm S; a K + raw-positions arm |
 
 ### 2.2 One step, in order
 
@@ -132,20 +133,12 @@ Status (2026-10-28):
    - R3: the gripper closed near an object → `grasp`; it opened → `place`, onto the object below.
    - R2: hidden or held objects move with their container or the hand.
    - R5: one cube per container, among the cubes covered in the same frame.
-6. **VLM annotator (at keyframes, only when the rules cannot decide)** is a small VLM that sees one keyframe with ids drawn on it, plus the KB. It adds what geometry cannot decide:
-   - object descriptions (new objects);
-   - relations: it confirms or rejects the rules' candidates, then may add others, marked as its own.
-
-   At most one VLM call per keyframe, with that moment's questions batched, and a per-episode cap. Most keyframes need no call: a pick-up or press is already certain from robot state (`actions.py`), and an "on the target" follows from geometry when the target is detected.
-
-   Its output is checked (schema, ids exist, cites exist) and enters the KB like any other belief: with a source (`vlm`), support (the keyframe and the evidence it cites) and a probability from a fixed strength table. So it can be retracted and measured against truth.
-6b. **VLM reviewer (every ~3 s, and once before each action on a target)** keeps the KB honest. Triggers alone only catch the risks we foresaw; a fixed-period review also catches unforeseen ones, such as an object knocked over or a track that quietly follows the wrong thing (user, 2026-10-28).
-   - **Input:** the last ~3 s of frames (5–10 frames, or a short clip; ids drawn on each), with consecutive windows overlapping slightly, and the KB's events for that window.
-   - **Output:** for each event, confirm / contradict / cannot tell; events the KB missed; a one-line summary of the window. The summary is anchored to the KB's events and every item cites frames.
-   - **Identity:** for objects that passed close, "the object marked A in the first frame: which mark is it in the last?"
-   - **Written as evidence** (`source: vlm`), never overwriting the rules. A contradiction lowers or retracts what depended on the claim, through the support chain.
-   - **Skipped** when nothing moved in the window.
-   - **Cost:** about 20–30 calls per 60–100 s episode, about 1–2 s each, run asynchronously, about half a cent with the 9B. The v1.3 arbiter's swap verdict (§3.7) is now part of the reviewer.
+6. **VLM keyframe call (v1.10: listing only)** is a small VLM, thinking off, that sees only the current front frame and the instruction, and lists the movable objects on the table, up to 10, with `task_item` marks (§2.5). The list becomes the detector's phrases. It sees no memory text: in v1.9 the call also annotated, with the KB in its prompt, and it then listed objects from the text instead of the image (NOTES "Keyframe call check": 2 / 4 and 0 / 4 real frames, against 4 / 4 for the image-only prompt).
+6b. **VLM ask call (v1.11, only when the rules cannot decide)** asks ONE closed question about ONE object in ONE marked frame (ids drawn; optionally a crop), with **no memory text** (`ask.py`):
+   - **occluder:** an object has just disappeared; is it hidden by the robot arm, a container, or out of view? (Ledger's occlusion query.)
+   - **appearance:** what the object looks like and its colour (the view's "looks like").
+   - The answer is one of fixed options or "cannot tell", checked, and written as evidence or a description with `source: vlm`, supported by the frame. It never overwrites the rules.
+   - **Why not a periodic review (v1.8–v1.10):** with the KB's text in the prompt a small VLM agreed with the text (it confirmed 68% of planted false events, against 58% of true ones), and from the front video neither qwen3.5-9b nor Sonnet 5.5 could tell a pick-up from a put-down (≤ 0.52). Robot actions come from robot state, identity from the tracker (Hungarian matching, `id_margin`), relations from geometry, and the window summary from the KB's own event log (code, not a VLM).
 7. **Views** turn the KB into what the controller reads:
    - the **KB text + event log** (`views.controller_view`): goal and progress; objects with 3D centres and their observation ids; relations with probabilities and support; the event log in time order with ids, where-from and where-to. A hidden object's position is not printed as a coordinate: its Inside distribution is.
    - the **annotated current frame** (Set-of-Mark): the current image with each object's id and, for containers, the top hidden-cube hypotheses ("red? 55%") drawn on it. It ties the ids in the text to the objects in the picture, so the controller can aim at the right one and check the KB with its own eyes.
@@ -158,17 +151,17 @@ Status (2026-10-28):
 
 - **Record task-agnostically, retrieve task-specifically; mark what the task names.** Task items are parsed from the instruction text (`task_items.py`) and tagged in the KB and the view, never used to filter what is recorded. Perception's word list must not come from the simulator scene: G's run did that (privileged), and `perceive.py --vocab open` does not. Every detectable object and every change is recorded, whatever the current goal. The next task may ask about something the current one ignored, and memory not recorded cannot be recovered. The goal is used only when building views (what to show first).
   - Cheap things are kept for all objects every frame: id, position, visibility, events.
-  - Expensive things are computed on demand: descriptions and semantic relations, by the annotator from the "last clear frame".
+  - Expensive things are computed only when needed: descriptions and the occluder of a vanished object, by the ask call on one frame.
   - The opposite choice, keeping only what the current tasks need, is Clio's (arXiv 2404.13696). It can serve as a contrast arm.
   - Two parts are still task-bound today: perception's word list (an object outside it is never seen) and the evaluation, which scores only the target cube. Fix them by moving to class-agnostic segmentation, and by scoring every cube's Inside belief.
-- **Four roles, each with one job:**
+- **Four roles, each with one job; two of them are VLM calls (v1.9):**
   - **rules** (every frame, exact, cheap) decide what geometry and robot state can decide;
-  - the **annotator** adds what one frame shows and the rules cannot (descriptions, relations);
-  - the **reviewer** checks the KB against the last seconds of video on a fixed period, and writes the running summary;
+  - the **keyframe call** lists the objects from the image alone;
+  - the **ask call** answers one closed question about one marked frame when the rules cannot decide (what hides an object, what it looks like);
   - the **controller** reads the KB and acts.
 
-  Splitting the VLM work into narrow questions keeps each answer checkable against truth, and a mistake in one does not spoil the others. One small model asked everything at once would be worse at each part (user discussion, 2026-10-28).
-- **Periodic review rather than only triggers:** see §2.2 step 6b.
+  Splitting the VLM work keeps each answer checkable against truth, and a mistake in one does not spoil the others. The split follows what the VLM must look at: listing must read the image alone (with memory text in the prompt it copied objects from the text, v1.9 check), while checking and annotating need the memory next to a window of frames (v1.10). Within each call, every item is checked against truth on its own (user discussion, 2026-10-28).
+- **No periodic VLM review (v1.11):** measured and removed; see §2.2 step 6b.
 - **Code every frame, language models only at moments that need them.** Geometry, time and change are cheap and exact in code (0.1 ms per frame). Meaning, appearance and unclear cases need a VLM, but calling it every frame would cost what the frontier baseline costs (claim 2).
 - **Every item is a belief with support**, whoever wrote it (observe, a rule or the VLM). That makes the memory inspectable (`debug explain --item <id>` walks any id back to observations), lets it retract what turns out wrong, and lets it be measured for calibration against ground truth (claim 3).
 - **Open relation table (L2).**
@@ -207,7 +200,7 @@ The memory can only know what perception reports (§2.2 step 2). The target desi
 - keyframes, not every frame, pay for the expensive steps.
 
 1. **Clue objects from a VLM, not from the simulator.**
-   - At the first frame and at keyframes, a small VLM with **thinking off** reads the current front frame and the instruction. It lists every movable object on the table (not the table, not the robot), up to 10, as `{name, color, count, task_item}`.
+   - At the first frame and at keyframes, the keyframe call (a small VLM with **thinking off**, §2.2 step 6) reads the current front frame and the instruction. It lists every movable object on the table (not the table, not the robot), up to 10, as `{name, color, count, task_item}`.
    - The list becomes the detector's phrases: one tracker slot per object, and identical objects get one slot per count.
    - Objects the instruction names are marked `task_item` (`task_items.py`). They are tagged, never used as a filter.
    - The prompt asks for all movable objects, not only the task's, so the memory stays task-agnostic (§2.3).
@@ -233,10 +226,10 @@ The memory can only know what perception reports (§2.2 step 2). The target desi
      - a periodic check every 2–3 s;
      - just before the controller acts on a target.
    - **Work:**
-     1. VLM: are there new objects? (new slots);
+     1. the keyframe call (one VLM call, the image alone): new objects (new slots);
      2. GroundingDINO + SAM on the phrases;
      3. match the new masks to the existing tracks (Hungarian on mask IoU + 3D distance): matched → re-seed Cutie; new → new slot + `appear` evidence; unmatched old → not visible;
-     4. the annotator (§3.7) only if the rules cannot decide something at this keyframe (one call, questions batched); the reviewer's next window checks the rest;
+     4. a new object's description comes from one ask call (appearance) on this keyframe, now that its id is drawn;
      5. record the last clear frame per object.
    - **Never re-match during a close pass.** When the matching is ambiguous (the best and second-best costs are close), write `id_margin` evidence instead of silently picking one. That margin is the signal R6 and Inside need, so the Hungarian step returns here, as part of perception.
    - **Keyframes run asynchronously.** Tracking and the controller do not wait for them, except for the check before an action on a target.
@@ -254,7 +247,7 @@ All numbers are per closed-loop episode. A footnote gives the source of each est
 | Tracking per frame | 0.4 s ¹ (7 slots, 7 image encodings + DINOv2) | 0.5–0.6 s ³ (6–10 slots) | well under 0.4 s ³ (one Cutie, no DINOv2) | — |
 | Frames tracked | every frame | every frame | every 3rd control step (the paper's 0.15 s) | every 3rd step |
 | Keyframes | none (detection only at first sight) | VLM about 1 s ² + re-detection 2–5 s ³ | same, asynchronous | — |
-| Reviewer (every ~3 s, async) | — | about 1–2 s per call, about 20–30 calls / episode, about $0.005 (estimate) | same | — |
+| Ask calls (only when the rules cannot decide) | — | about 1–2 s per call, a few per episode (estimate) | same | — |
 | Controller call | about 40 s ⁴ (default thinking, about 2,100 tokens) | about 40 s | about 1–3 s ³, if lower thinking keeps accuracy (to be measured) | 18.3 s ⁵ |
 | Controller calls per episode | — | about 10 ⁵ | about 10 | 9.5 ⁵ |
 | Images per controller call | 0 (text dry run) | 2 + KB text (about 1,500 tokens) | same | median 148 in the final request ⁵ |
@@ -280,10 +273,15 @@ Start-up and keyframes do not matter as long as keyframes stay asynchronous (use
 | Rules R1–R8 | `rules.py` |
 | KB L0–L4, beliefs, support, retract | `kb.py`, `beliefs.py`, `ops.py` |
 | Views: facts / ask, KB text, event log, controller view, annotated frame | `views.py`, `som.py` |
-| VLM annotator | `annotate.py`, `llm.py`; clue-object lister `clue_objects.py`; VLM client `llm.vlm_client` |
-| VLM reviewer | `review.py` (planned) |
+| VLM keyframe call (listing) | `keyframe.py` (`list_objects`), `llm.py`, VLM client `llm.vlm_client` |
+| VLM ask call (one closed question) | `ask.py` (`ask`); its lines in the event log: `views._vlm_line` |
+| L4 goal counter; the view in words | `goal_counter.py`; `narrative.py` (joined facts, the worded test views) |
+| Container motion | `motion.py` (v2); re-linking container tracks by motion `relink.py` |
+| How a belief is known, alternatives; memory as a tool | `epistemic.py` (arms KA / KN); `memtool.py` (arm KT, stopped) |
+| The controller's own record; the loop | `self_memory.py` (decisions, outcomes, changes since); `closed_loop.py` (2610.17350's loop); `harness.py` (`ReplayEnv`, offline checks of the self memory) |
+| Perception → FrameObs, frame by frame | `sources/online.py` (`OnlineObs`, `Occluder`; `relink.Relinker`); pod side `stress/perceive.slot_row`, `stress/closed_loop_pod.py` |
 | Semantic actions from robot state | `actions.py`; RoboMME dataset source `sources/lerobot.py`; forward kinematics `fk.py` |
-| LLM controller | `controller.py`, `llm.py`; the closed-loop harness `stress/` or `harness.py` (M5) |
+| LLM controller | `controller.py`, `llm.py`; the closed loop `closed_loop.py` (runner on the pod: `stress/closed_loop_pod.py`) |
 | Rule planner + skills (baseline) | `planner.py`, `skills.py`, `reach.py` |
 | Baselines | `systems/baselines.py`, `systems/soft_haircut.py` |
 | Evaluation, metrics, comparisons | `evaluate.py`, `metrics.py`, `compare.py` |
@@ -364,46 +362,26 @@ Pose beliefs: `conf ← conf · λ_pose^Δt` while unconfirmed.
 
 `decide(dist) → act | act_on_argmax | verify`, with thresholds `τ_hi`, `τ_lo` (M3 tunes them on train). They maximise expected utility U = +1 (act, correct), −`c_wrong` (act, wrong), −`c_verify` (verify), with defaults c_wrong = 1, c_verify = 0.3. On stock RoboMME, "verify" cannot execute (a wrong lift is an immediate failure), so it is scored as an outcome only.
 
-### 3.7 VLM annotator, VLM reviewer, and the arbiter protocol
+### 3.7 VLM keyframe call, VLM ask call, and the arbiter protocol
 
-**v1.5:** the arbiter is merged into the **VLM annotator** (§2.2 step 6, `annotate.py`, planned).
-- **When:** at keyframes, only when the rules cannot decide (v1.8); at most one call per keyframe, questions batched.
-- **Input:**
-  - one keyframe with ids drawn on it (Set-of-Mark);
-  - the KB object table;
-  - the recent event log;
-  - the rule-computed candidate relations, to confirm, add to or correct (as ConceptGraphs refines proximity edges with an LLM).
-- **Output (strict JSON):**
-  ```json
-  {"relations": [{"subject": "id", "predicate": "inside|on|...|<new>", "object": "id",
-                  "strength": "clear|ambiguous|unlikely", "cites": ["e.."]}],
-   "objects": [{"id": "id", "description": "<= 80 chars"}], "events": [...]}
-  ```
-  `events` takes the arbiter schema below.
-- **Checks:** every id exists, every cite exists, and there is no coordinate anywhere.
-- **Written as beliefs:** `source: vlm`, support = the keyframe plus the cites, p from the fixed strength table.
-- **Measured** against simulator truth wherever a relation is checkable (M4 item 5).
+**v1.5:** the arbiter is merged into the VLM annotator. **v1.9:** the annotator and the lister were one keyframe call. **v1.10:** the keyframe call only lists, from the image alone; the annotator's work (relations, descriptions) moves to the review call. **v1.11:** the review call is removed; the ask call answers one closed question per marked frame.
 
-**VLM reviewer (v1.8; `review.py`, planned).**
-- **When:** every ~3 s over the last window, with slightly overlapping windows, skipped when nothing moved; plus once right before the controller acts on a target.
-- **Input:**
-  - 5–10 frames from the window, or a short clip (qwen3.5-9b accepts video), with tracker ids drawn on;
-  - the KB's event lines in that window, with ids;
-  - for objects that passed close, the identity question.
-- **Output (strict JSON):**
-  ```json
-  {"checks": [{"id": "e..|v..", "verdict": "confirm|contradict|cannot_tell", "frames": [..]}],
-   "missing": [{"what": "<= 12 words", "objects": ["id"], "frames": [..]}],
-   "identity": [{"mark": "A", "now": "A|B|...|cannot_tell", "frames": [..]}],
-   "summary": "<= 25 words"}
-  ```
-- **Checks:** every id, mark and frame exists; no coordinates or probabilities.
-- **Written as evidence** (`source: vlm`). `contradict` and identity changes feed R6-style mixing or retraction through the support chain; `missing` events are tagged as the VLM's; the summary goes into the event log, marked as such.
-- **Measured** (M4 item 10):
-  - on the RoboMME dataset videos against the subgoal labels: summary right, confirmations right, missing events found, events invented;
-  - on G's close passes against per-pass truth: identity verdicts against SoftHaircut's distance score.
+**VLM keyframe call (`keyframe.py`).**
+- **When:** at every keyframe (§2.5 item 4).
+- **Input:** the current front frame and the instruction; no memory text.
+- **Output (strict JSON):** `{"objects": [{"name": "cube", "color": "red", "count": 1, "task_item": true}]}`.
+- **Checks:** per entry (names of 1–2 words, one-word colour, counts, cap of 10); task items also from the instruction text.
 
-The arbiter protocol below (v1.3) is kept as a reference; its swap verdict is now the reviewer's identity check.
+**VLM ask call (v1.11; `ask.py`).**
+- **When:** only when the rules cannot decide: a cube disappears with no container close enough (occluder), or a new object gets its id (appearance). Budget per episode in M5.
+- **Input:** one front frame with the ids drawn (`som.py`), optionally a crop around the object, and one question naming the object's id. **No KB text, no goal.**
+- **Output (strict JSON):** occluder `{"answer": "robot_arm|container|out_of_view|cannot_tell"}`; appearance `{"description": "<= 12 words or cannot_tell", "color": "<one word or cannot_tell>"}`.
+- **Checks:** a fixed option; a description of at most 12 words with no numbers.
+- **Written as:** occluder → evidence `vlm_occluder` (shown in the event log); appearance → the `description` fact (shown as "looks like"); support = the frame.
+- **Measured** (M4 item 10): on G's replays against simulator truth, per question type: accuracy, the "cannot tell" rate, and a text-only control (the question without the image) for guessing.
+- **History (v1.8–v1.10):** the periodic review call (checks, missing events, relations, identity, summary over a window) was measured on 60 RoboMME video windows and removed (NOTES "Review call on real video", "What can a small VLM see in a window").
+
+The arbiter protocol below (v1.3) is kept as a reference; identity is now the tracker's job (Hungarian matching, `id_margin`).
 
 
 - **Triggers:** a `near_pass` closes; a cube disappears with ≥ 2 candidate containers; `track_drop`; a risk evidence; and every `K` frames while something is hidden. Budget: ≤ 6 calls per episode, at least 20 frames apart.
@@ -494,16 +472,16 @@ arbiter-kb/
     ledger.py            append-only test-read ledger results/test_reads.log (E5c)
     params.py            RuleParams, DetectParams, MonitorParams, ArbiterParams, load/save/hash/freeze
     trace.py  debug.py
-    sources/  __init__.py synthetic.py replay.py corrupt.py perceived.py(M6)
+    sources/  __init__.py synthetic.py replay.py corrupt.py perceived.py online.py lerobot.py
     systems/  __init__.py baselines.py arbiter_kb.py
     observe.py  detectors.py  identity.py(M2)  rules.py  monitor.py(M3)
     arbiter.py(optional)  llm.py(M4)  controller.py(M4)  harness.py(M4)  planner.py  skills.py  reach.py(M4)
     evaluate.py  metrics.py  plots.py
-  scripts/  run.py  selftest.py  quality.py  make_notebook.py  measure_synthetic.py  copy_replays.sh(G)  measure_swaps.py(G)  tune.py(M2)
-  stress/   stress_env.py  render.py  perceive.py  POD_RUN.md   (G; runs on the pod, outside the package)
+  scripts/  run.py  selftest.py  quality.py  measure_*.py  count_test.py  perceived_qa.py  claim3_g.py  … (one per test; NOTES names each)
+  stress/   stress_env.py  render.py  perceive.py  closed_loop_pod.py  POD_RUN.md  POD_CLOSED_LOOP.md   (runs on the pod, outside the package)
   results/  test_reads.log (ledger)  latest/<run>/{summary.csv, meta.json} (committed, --keep only)  runs/ (git-ignored)
   tests/    one file per module + test_contracts.py test_causality.py test_repro.py
-  notebooks/ m0_walkthrough.ipynb … (one per phase)   executed/
+  archive/  superseded docs, the M0 / M1 notebooks, superseded results (archive/README.md)
   results/  runs/<run_id>/{rows.csv, summary.csv, params.json, meta.json, traces/}  llm_cache/
   figures/
 ```
@@ -557,7 +535,6 @@ python scripts/run.py --systems all --corrupt none,id_swap_overlap,pos_noise --l
 python scripts/run.py --keep[-as NAME] ...  # also copy summary/meta to results/latest and figures to figures/, from a clean tree
 python scripts/run.py --systems m2 --split test --first 60 --n 300 ...   # M2: bound, overlap/soft haircut, ArbiterKB on fresh seeds 1060-1359
 python scripts/compare.py --calib results/runs/<train run> --eval results/runs/<run> --keep-as NAME   # AURC CIs, paired diff, matched coverage
-make notebook   # regenerate + execute the phase walkthrough
 ```
 
 ### 5.2 OpenRouter (M4)
@@ -592,7 +569,7 @@ numpy, scipy, matplotlib, pytest, nbformat, nbconvert, ipykernel. Nothing else w
 
 Time estimates are for a coding agent with review. Each phase lists: **Goal · Build (how) · Params · Done when · Not in scope**.
 
-**Order (v1.2):** M0 → M1 (plumbing) → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code is written right after M1, or alongside it. Tuning starts only after G (M2), against `id_swap_measured`. **v1.4:** M2 serves claim 3; M3–M5 serve claims 1–2 and do not depend on M2. So after G, M3 / M4 may go before M2 (the user's call). **v1.6:** M2 is conditional on G's branch and small. The main line is M3 → M4 → M5.
+**Order (v1.2):** M0 → M1 (plumbing) → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code is written right after M1, or alongside it. Tuning starts only after G (M2), against `id_swap_measured`. **v1.4:** M2 serves claim 3; M3–M5 serve claims 1–2 and do not depend on M2. So after G, M3 / M4 may go before M2 (the user's call). **v1.6:** M2 is conditional on G's branch and small. The main line is M3 → M4 → M5. **v1.12:** counting is closed; next (1) swap evidence into R6 against SoftHaircut with the same feature, on G (claim 3), (2) `harness.py` on the Mac, (3) one pod session: multi-object Cutie, `--vocab open`, perception of VideoPlaceOrder / VideoRepick, fresh RoboMME episodes, a closed-loop pilot with arms H / R / K, (4) M6 on the fresh episodes.
 
 ### M0 — Walking skeleton (1–2 days, Mac CPU)
 
@@ -714,8 +691,8 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 1. **L3 events from proprioception and geometry** (rules): `grasp` / `release` from gripper closure with an object at the fingers; `place` (where it was released); `press` (the end effector at a button, moving down); `reveal` (a container lifted and the cube seen again: R4). Counts, order and timing are derived from the log by `count()` / `order()` / `t_since()`, never stored.
 2. **L2 relations:** `Held` (R3), `On` (resting, xy overlap, height difference ≈ the lower object's height), `Near`, `LeftOf` (robot frame, RoboMME's convention). `Inside` stays as it is.
 3. **L0 / L1:** extent from the mask (replays) or the generator (synthetic); stationary intervals; visibility `held` and `occluded_by_arm`; container yaw (mask PCA on replays).
-4. **L4:** goal parsed from the task template; progress from L3 against the goal (for example 2 of 3 picks).
-5. **Event log view** (§3.8): the controller's text, deterministic, one line per event with where-from and where-to and the evidence ids. VLM descriptions and relations come from the annotator (§3.7), as beliefs with cites. They are measured, not assumed (M4 item 5).
+4. **L4:** goal parsed from the task template; progress from L3 against the goal (for example 2 of 3 picks). **Done (v1.11):** `goal_counter.py` parses the goal once per episode with the controller's model and the view carries "Goal progress: … n of N".
+5. **Event log view** (§3.8): the controller's text, deterministic, one line per event with where-from and where-to and the evidence ids. VLM descriptions come from the ask call (§3.7), as beliefs with cites; relations come from geometry and rules. They are measured, not assumed (M4 item 5).
 6. R8 consistency checks → risk evidence (a cube Inside two containers, Held and Inside at once, …).
 7. **(v1.5) Wider observation table** (`FrameObs`, `CONTRACT_VERSION` 2, NOTES entry): per object, size / box, visible fraction, detector confidence and the last-clear-frame id; per frame, a timestamp. Detector thresholds become per second.
 8. **(v1.5) Open relation table** (§2.3): `(predicate, subject, object) → belief`. Exclusive relations keep distributions. The first predicates: hand offset, Reachable, Inside / On, WasAt, Held.
@@ -735,10 +712,10 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 2. `harness.py`: port the 2610.17350 loop (prompt skeleton, feedback, completion and failure rules) from its released code. Record what was changed and why, line by line, in NOTES.
 3. `controller.py`: the memory arms of §3.8 (H, R, K, K−L3, K+A), the prompt builder, the action schema, the validator and the reach check.
 4. A **replay-driven dry run** on the Mac: the controller answers on recorded frames without moving the arm, so prompt, parsing and validation can be debugged without a GPU. Prompt iteration happens only on train episodes. The prompt text is frozen, with its hash in `params.json`, before any test read.
-5. **Who should fill L2–L4** (cheap, before M5): the VLM annotator (§3.7) on G's train episodes at keyframes. Compare its labels with the rules' and with simulator truth, per type, as accuracy and confidence calibration. The result decides which layers the VLM may write.
-6. **Annotated current frame** (Set-of-Mark, `views.py`): ids and top hypotheses drawn on the current RGB at each object's pixel position. The annotator and the controller use it.
+5. **Who should fill L2–L4** (cheap, before M5): first the rules' relations against simulator truth on G's replays (Inside, On, Held, Near), per type, with calibration; then the ask call on the cases the rules cannot decide. The result decides which layers the VLM may write.
+6. **Annotated current frame** (Set-of-Mark, `views.py`): ids and top hypotheses drawn on the current RGB at each object's pixel position. The keyframe call, the ask call and the controller use it.
 7. **(v1.7) Controller thinking effort:** in the dry run, compare off / low / default on the same train episodes: right container, waypoint error, tokens and seconds per call. It decides most of the episode time (§2.6).
-8. **(v1.7) Clue-object lister** (§2.5): the VLM prompt and its checks (names, counts, task items) on the Mac; re-benchmark the small VLMs on G's replays against simulator truth (misses and inventions separately) before choosing one.
+8. **(v1.7, v1.10) Keyframe call** (§2.2 step 6, §2.5): `keyframe.py`, listing from the image alone (4 / 4 real frames); re-benchmark it and the small VLMs on G's replays against simulator truth (misses and inventions separately) before choosing one.
 9. **(v1.7) The batch of KB / view fixes**, applied and tested together, not one by one (user, 2026-10-28):
    - one log line per cover ("cube_red covered by bin_2 at …; moves with bin_2") instead of separate disappear and cover lines. In ep 9 the disappearance spot overrode Inside;
    - state the containment rule in the controller prompt: a covered object moves with its container, and logged positions are history;
@@ -746,9 +723,8 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
    - Set-of-Mark labels must not overlap;
    - then re-run all arms, with n ≥ 50 train episodes and a fixed margin for "matches".
 
-10. **(v1.8) VLM reviewer** (§2.2 step 6b, §3.7): `review.py` with prompt, checks, writing to the KB, and tests with a fake model. Then measure it, cheapest first:
-    - (a) on the downloaded RoboMME videos (VideoRepick, VideoPlaceOrder; counting tasks next) against the subgoal labels;
-    - (b) on G's close passes against per-pass truth, which needs the pass windows' frames exported from the pod replays; compare with SoftHaircut. This is claim 3's real test: can looking at the video catch what a distance score cannot?
+10. **(v1.11) VLM ask call** (§2.2 step 6b, §3.7): `ask.py` with the occluder and appearance questions, checks, writing to the KB, and tests with a fake model (done). Measure it on G's replays against simulator truth, with a text-only control. (The v1.8–v1.10 review call: measured on RoboMME video and removed; NOTES.)
+11. **(v1.11) Goal counter and view v4:** `goal_counter.py`, `narrative.joined_facts`, `views.controller_view` v4 (done). The full rerun on the final sets (NOTES "Before the full rerun") decides them; prompts are frozen with `prompts_hash`.
 
 **Done when.**
 - (a) `make check`: validator tests, including a waypoint outside the workspace, an unreachable one, an invented cite, a missing field and a cache replay that reproduces the run exactly.
@@ -760,7 +736,7 @@ Time estimates are for a coding agent with review. Each phase lists: **Goal · B
 **Goal.** Claims 1 and 2, first on the permanence suite (where the KB is most complete), then on counting and imitation when M3's layers cover them.
 
 **Build.**
-1. On a GPU + Vulkan pod: `make_env(..., action_space="waypoint")` and the M4 harness. Arms H, R, K0, S, K, K−L3 with the small model on the same train-tuned prompt; K+A (with the VLM annotator) as an ablation.
+1. On a GPU + Vulkan pod: `make_env(..., action_space="waypoint")` and the M4 harness. Arms H, R, K0, S, K, K−L3 with the small model on the same train-tuned prompt; K+A (with the VLM keyframe and ask calls) as an ablation.
 2. The KB is filled from **perception** (G's pipeline). The oracle KB is an upper-bound row.
 3. Report success per task and suite (Wilson), calls, input tokens, images and $ per episode, and wall time. Failure categories use the paper's list: premature completion, unintended contact, late press, out of reach, motion planning, unusable answer.
 4. A larger model in arms H and K, if the budget allows: this tests claim 2 for a model that already succeeds with the full history.

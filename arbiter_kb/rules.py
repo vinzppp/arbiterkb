@@ -2,6 +2,7 @@
 KB.apply mutates (DEVELOPMENT.md §1, §3.5). M0: R1, R2, R6. M1: R5 (frozen since v1.6: it never fires on
 stock layouts), R6 with 3D distance. R7 (decay) was removed in v1.6: it was never switched on.
 M3: R3 grasp / place (gripper evidence), and R2 also moves a held object with the end effector.
+R4 reveal (2026-10-30, NOTES "K2 fixes"): a cube seen under a lifted container rules that container out for the others.
 """
 from __future__ import annotations
 
@@ -71,6 +72,29 @@ def r3_grasp(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     return ops
 
 
+def r4_reveal(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
+    """A cube that was covered (it has an Inside belief) is seen again while a container is held, within r_cover (xy)
+    of where that container was grasped: the container hid it (event `reveal`). At most one cube per container (R5's
+    assumption), so every other hidden cube loses its mass on that container (Distribution.without). A lifted
+    container that shows no cube changes nothing: an unseen spot is not evidence of an empty one."""
+    ops, ev_by_id = [], None
+    for ev in new_ev:
+        cube = ev.args[0] if ev.kind == "appear" else None
+        if cube is None or kb.objects[cube].cls != "cube" or ("Inside", cube) not in kb.relations:
+            continue
+        ev_by_id = ev_by_id or {e.id: e for e in kb.evidence}
+        for box in held(kb):
+            grasp = next(v for v in reversed(kb.events) if v.type == "grasp" and v.args[0] == box)
+            at = next((ev_by_id[i].data.get("ee") for i in grasp.support if i in ev_by_id), None)
+            xyz = frame.objects[cube].xyz
+            if at is None or xyz is None or np.linalg.norm(np.subtract(xyz[:2], at[:2])) >= p.r_cover:
+                continue
+            ops.append(AddEvent(frame.t, "reveal", (box, cube), 1.0, [ev.id]))
+            ops += [SetDist("Inside", c, d.without(box, frame.t, ev.id)) for (pred, c), d in kb.relations.items()
+                    if pred == "Inside" and c != cube and box in d.probs and kb.objects[c].visibility.value == "hidden"]
+    return ops
+
+
 def held(kb: KB) -> list[str]:
     """Objects grasped and not placed since (from the event log; observe() may mark them visible)."""
     out: dict[str, bool] = {}
@@ -85,7 +109,8 @@ def below(kb: KB, obj: str, xyz: np.ndarray, p: RuleParams) -> str | None:
     a hidden cube's pose is its container's (R2), so a container put back would land "on" its own cube."""
     cands = [(float(np.linalg.norm(o.pose.value[:2] - xyz[:2])), o.id) for o in kb.objects.values()
              if o.id != obj and o.pose.value is not None and o.pose.value[2] < xyz[2]
-             and o.visibility.value in ("visible", "held")]
+             and (o.visibility.value in ("visible", "held") or o.cls == "target")]  # a flat target does not move; the
+    # cube being put on it can hide it from the front camera
     cands = [c for c in cands if c[0] < p.r_on]
     return min(cands)[1] if cands else None
 
@@ -93,13 +118,15 @@ def below(kb: KB, obj: str, xyz: np.ndarray, p: RuleParams) -> str | None:
 def r6_swap(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     """Two containers passed close to each other: with probability w their tracks may have exchanged
     identity, so every HIDDEN cube with mass on either gets w of its mass moved across.
-    M1: w = w_max·exp(-d/d0), d = the pass's closest 3D centre distance (the detector always records it)."""
+    M1: w = w_max·exp(-d/d0), d = the pass's closest 3D centre distance (the detector always records it).
+    With r6_feature = "min_q": the pass's lowest track_q (the re-linking's margin), scale q0."""
     ops = []
     for ev in new_ev:
         if ev.kind != "near_pass":
             continue
         a, b = ev.args
-        w = p.w_max * float(np.exp(-ev.data["min_3d"] / p.d0))
+        scale = p.q0 if p.r6_feature == "min_q" else p.d0
+        w = p.w_max * float(np.exp(-ev.data[p.r6_feature] / scale))
         if w > 0:  # the motion is certain; the event marks a pass that may have exchanged identities
             ops.append(AddEvent(frame.t, "swap", (a, b), 1.0, [ev.id]))
         for (pred, cube), d in kb.relations.items():
@@ -146,4 +173,4 @@ def r2_follow(kb: KB, new_ev: list, frame: FrameObs, p: RuleParams) -> list:
     return ops
 
 
-RULES = [("R3", r3_grasp), ("R1", r1_cover), ("R6", r6_swap), ("R5", r5_exclusive), ("R2", r2_follow)]
+RULES = [("R3", r3_grasp), ("R4", r4_reveal), ("R1", r1_cover), ("R6", r6_swap), ("R5", r5_exclusive), ("R2", r2_follow)]

@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "name": "robomme-common-harness-v2.1-watchdog-openrouter",
+  "frozen": true,
+  "extends": "robomme_common_v2_watchdog_openrouter.json",
+  "parent_manifest_sha": "06f1636d5e387243",
+  "overrides": {
+    "watchdog": {
+      "reset_wall_s": 360
+    },
+    "threshold_basis": {
+      "v1_reset_proxy_max_s": 205.5,
+      "rationale": "Arm-independent conservative ceilings. Episode is about 3x the longest completed API episode. Executor is about 3x the longest completed v1 decision. LLM is about 9.7x the longest completed v1 call. Reset is 1.75x the 205.5s proxy from VideoRepick preflight total minus its only decision. The 20-action budget is above every completed v1 API episode (max 4) and captures diagnostic soft A/B oscillation without using arm identity."
+    }
+  },
+  "supersedes": "06f1636d5e387243",
+  "supersession_reason": "Pre-run audit found that v2 reset_wall_s=180 was below the 205.5s VideoRepick v1 preflight reset proxy; no v2 cells were run."
+}

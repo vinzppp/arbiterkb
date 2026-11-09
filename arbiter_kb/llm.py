@@ -28,7 +28,10 @@ DEFAULT_MODEL = "qwen/qwen3.6-35b-a3b"
 PROVIDER = {"order": ["DeepInfra"], "allow_fallbacks": False, "require_parameters": True}
 
 
-USAGE = ("calls", "hits", "misses", "prompt_tokens", "completion_tokens", "reasoning_tokens", "images", "empty")
+USAGE = ("calls", "hits", "misses", "prompt_tokens", "completion_tokens", "reasoning_tokens", "images", "empty",
+         "cached_tokens", "cache_write_tokens")
+# cached_tokens / cache_write_tokens: the PROVIDER's prompt cache (usage.prompt_tokens_details), read at a lower price;
+# not our disk cache (hits). Astra pilot: ~77% of H's prompt tokens were cache reads, K's and R's none (NOTES).
 
 
 class BudgetExceeded(RuntimeError):
@@ -48,22 +51,26 @@ def load_env(path: Path = ROOT / ".env") -> dict:
 
 
 def post(body: dict, key: str, timeout: float = 60.0) -> dict:
-    """One HTTPS request; 2 retries with backoff on 429 / 5xx / network errors."""
+    """One HTTPS request; up to 6 retries with backoff 5 * 2^n s on 429 / 5xx (as 2610.17350's harness; upstream rate
+    limits last minutes, smoke run), 2 retries with backoff 2 * 2^n s on network errors."""
     data = json.dumps(body).encode()
-    for attempt in range(3):
+    http_retries = net_retries = 0
+    while True:
         req = urllib.request.Request(URL, data=data, headers={"Authorization": f"Bearer {key}",
                                                               "Content-Type": "application/json"})
         try:
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return json.loads(r.read())
         except urllib.error.HTTPError as e:
-            if e.code != 429 and e.code < 500 or attempt == 2:
+            if e.code != 429 and e.code < 500 or http_retries == 6:
                 raise RuntimeError(f"OpenRouter HTTP {e.code}: {e.read()[:300]!r}") from None
+            time.sleep(5 * 2 ** http_retries)
+            http_retries += 1
         except (urllib.error.URLError, TimeoutError):
-            if attempt == 2:
+            if net_retries == 2:
                 raise
-        time.sleep(2 * 2 ** attempt)
-    raise AssertionError("unreachable")
+            time.sleep(2 * 2 ** net_retries)
+            net_retries += 1
 
 
 class LLM:
@@ -78,10 +85,14 @@ class LLM:
         self.usage = dict.fromkeys(USAGE, 0) | {"usd": 0.0, "cached_usd": 0.0, "seconds": 0.0}
         self._lock, self._inflight, self._price = threading.Lock(), 0, 0.0
 
-    def body(self, messages: list, schema: dict | None, temperature: float, seed: int, max_tokens: int,
-             reasoning: dict | None = None) -> dict:
+    def body(self, messages: list, schema: dict | None, temperature: float | None, seed: int | None, max_tokens: int,
+             reasoning: dict | None = None, sampling: dict | None = None) -> dict:
+        """temperature None: left out, the model's API default (2610.17350 ran GPT-6-Astra on its defaults)."""
         b = {"model": self.model, "messages": messages, "temperature": temperature, "seed": seed,
-             "max_tokens": max_tokens, "usage": {"include": True}}
+             "max_tokens": max_tokens, "usage": {"include": True}, **(sampling or {})}
+        for k in ("temperature", "seed"):  # None: left out (Anthropic's endpoints take no seed)
+            if b[k] is None:
+                del b[k]
         if self.provider:
             b["provider"] = self.provider
         if reasoning or self.reasoning:
@@ -95,10 +106,11 @@ class LLM:
         """The assistant's text. Cached; counted; refuses a call the budget cannot cover."""
         return self.call(messages, schema, temperature, seed, max_tokens, reasoning)[0]
 
-    def call(self, messages: list, schema: dict | None = None, temperature: float = 0.0, seed: int = 0,
-             max_tokens: int = 600, reasoning: dict | None = None) -> tuple[str, dict]:
-        """(text, this call's usage). Thread-safe; `reasoning` overrides the client's for this call."""
-        body = self.body(messages, schema, temperature, seed, max_tokens, reasoning)
+    def call(self, messages: list, schema: dict | None = None, temperature: float | None = 0.0, seed: int | None = 0,
+             max_tokens: int = 600, reasoning: dict | None = None, sampling: dict | None = None) -> tuple[str, dict]:
+        """(text, this call's usage). Thread-safe; `reasoning` overrides the client's for this call; `sampling` adds
+        e.g. top_p / top_k (none by default, so earlier cache keys are unchanged)."""
+        body = self.body(messages, schema, temperature, seed, max_tokens, reasoning, sampling)
         key = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
         path = self.cache_dir / f"{key}.json"
         if path.exists():
@@ -132,6 +144,8 @@ class LLM:
         return {"calls": 1, "hits": int(hit), "misses": int(not hit), "images": images,
                 "prompt_tokens": int(u.get("prompt_tokens", 0)), "completion_tokens": int(u.get("completion_tokens", 0)),
                 "reasoning_tokens": int((u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0),
+                "cached_tokens": int((u.get("prompt_tokens_details") or {}).get("cached_tokens") or 0),
+                "cache_write_tokens": int((u.get("prompt_tokens_details") or {}).get("cache_write_tokens") or 0),
                 "usd": 0.0 if hit else cost, "cached_usd": cost if hit else 0.0, "seconds": float(seconds),
                 "empty": int(not resp["choices"][0]["message"].get("content"))}
 
@@ -145,7 +159,7 @@ class LLM:
 
 
 def vlm_client(ap, max_usd: float | None = None, **kw) -> "LLM":
-    """The small VLM for the clue-object lister and the annotator, from ArbiterParams: model, an ordered list of
+    """The small VLM for the keyframe and review calls, from ArbiterParams: model, an ordered list of
     allowed providers (no others), thinking as configured. The provider used is in each cached response."""
     return LLM(model=ap.vlm_model, max_usd=max_usd, reasoning=None if ap.vlm_thinking else {"enabled": False},
                provider={"order": ap.vlm_provider.split(","), "allow_fallbacks": False, "require_parameters": True},

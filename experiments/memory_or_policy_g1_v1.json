@@ -1,0 +1,175 @@
+{
+ "schema_version": 3,
+ "name": "memory-or-policy-g1-pilot-v1",
+ "frozen": true,
+ "extends": "robomme_common_v2_1_watchdog_openrouter.json",
+ "parent_manifest_sha": "a839ccc592f8aa55",
+ "research_branch": "research/perception-belief-robomme",
+ "preregistration": "main NOTES 'Memory or policy? Preregistration of the main study' (7327cf1); G1 gate",
+ "execution_image": "arbiterkb-robomme-cpu:bb6c37c",
+ "execution_host": "Mac (orchestrator, 2026-11-01); serial; Docker linux/amd64, CPU rendering",
+ "arms": [
+  "fh_g",
+  "fh_m",
+  "ld_g",
+  "ld_m",
+  "mm_g",
+  "mm_m",
+  "kb_g",
+  "kb_m",
+  "memi"
+ ],
+ "tasks": [
+  "RouteStick",
+  "SwingXtimes",
+  "VideoUnmaskSwap",
+  "StopCube",
+  "VideoRepick"
+ ],
+ "optional_tasks": [],
+ "pairwise_contrasts": [
+  [
+   "mm_m",
+   "ld_m"
+  ],
+  [
+   "kb_m",
+   "ld_m"
+  ],
+  [
+   "fh_m",
+   "ld_m"
+  ],
+  [
+   "mm_m",
+   "memi"
+  ]
+ ],
+ "overrides": {
+  "watchdog": {
+   "episode_wall_s": 1800,
+   "executor_command_wall_s": 300,
+   "reset_wall_s": 600,
+   "max_high_level_actions": 50
+  },
+  "threshold_basis": {
+   "rationale": "Preregistration: 50 policy calls (MEMI MAX_DECISIONS), executor call 300 s, episode backstop 30 min. Reset is not preregistered: 600 s, about 4x the longest G0 Mac serial reset (RouteStick val 49, 147.1 s)."
+  }
+ },
+ "memory_policy": {
+  "policy_text": {
+   "g": "stress/mop_policy.py GENERIC_POLICY = factorial P0 with 'the memory snapshot' -> 'the memory given to you' (orchestrator ruling 2026-11-01), sha256 64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+   "m": "results/memory_or_policy/g0/memi_split/<Task>/policy_matched.txt (split rules 1-2, G0)"
+  },
+  "matched_policy_sha256": {
+   "RouteStick": "b12e3f0bbbc6f304b9ecadd097fc90161095bef146a5713b19b03e944010f1f9",
+   "SwingXtimes": "b40218d1e18cb2b4ebf261fa022716c0609fbcd5bbca85a2a922d7836f6472a2",
+   "VideoUnmaskSwap": "6cb71d9e59a3a4deb645003574060ee431d08ed796f85c854f74e0298aafe3e5",
+   "StopCube": "db0724eddb6cd9f55a481abd2b832ae3abbdffb629762afe6b1dea1594141907",
+   "VideoRepick": "b784d92a15e352173effd02eb9a3500a53567a399880a0f097f7afbb61923771"
+  },
+  "memories": {
+   "fh": "MEMI FullObservationHistoryPolicy conversation (stress/mop_policy.py)",
+   "ld": "arbiter_kb/mop_memory.py PreregLedger",
+   "mm": "MEMI fields of optimized_luna.json, carried by the model (stress/mop_policy.py MEMIFieldsMemory)",
+   "kb": "arbiter_kb/mop_memory.py KBMemory (frozen ArbiterKB, phase-safe view)"
+  },
+  "reference": "memi = stock MEMI, optimized_luna.json unchanged",
+  "fairness_audit": "scripts/mop_fairness.py on stress/mop_probe.py outputs; must pass before the pilot; recommendation words fail fh / ld / kb and are only counted for mm (ruling 2026-11-01)",
+  "memi_prompts_sha256": "307eaf7ff479aeae6bc5704dce5dccb0524b139aa22fe39216f0bb2a426fda54",
+  "generic_policy_sha256": "64e4a1f3fd5b4b1255023495410adc1388e6693f47fc068210df672a19a5bdd4",
+  "mm_caveat": "H2 MM-m - LD-m: by MEMI's design MM's memory may encode actions (its fields map observations to menu options)."
+ },
+ "stages": {
+  "executor_preflight": {
+   "split": "val",
+   "episodes": [],
+   "episodes_by_task": {
+    "RouteStick": [
+     49
+    ],
+    "SwingXtimes": [
+     49
+    ],
+    "VideoUnmaskSwap": [
+     0
+    ],
+    "StopCube": [
+     49
+    ],
+    "VideoRepick": [
+     0
+    ]
+   },
+   "backend": "scripted",
+   "observations": [
+    {
+     "mode": "clean",
+     "seed": 73301,
+     "dropout": 0.0,
+     "jitter_px": 0.0,
+     "bridge": "memi_named"
+    }
+   ]
+  },
+  "pilot": {
+   "split": "val",
+   "episodes": [],
+   "episodes_by_task": {
+    "RouteStick": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "SwingXtimes": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "VideoUnmaskSwap": [
+     10,
+     12,
+     13,
+     14,
+     18
+    ],
+    "StopCube": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "VideoRepick": [
+     10,
+     11,
+     12,
+     13,
+     14
+    ]
+   },
+   "episode_note": "Lowest unused val indices (G0 episode_supply.json). VideoUnmaskSwap 10/12/13/14/18 had their goal text read in main (two-pick screening) and were never run; they are single-pick goals, easier than the screened-out two-pick ones, so G1's discordance may be low for this task (orchestrator, 2026-11-01).",
+   "backend": "api",
+   "requires_gate": "g1_preflight_and_fairness_pass",
+   "observations": [
+    {
+     "mode": "clean",
+     "seed": 73301,
+     "dropout": 0.0,
+     "jitter_px": 0.0,
+     "bridge": "memi_named"
+    }
+   ]
+  }
+ },
+ "validation_analysis_plan": {
+  "purpose": "G1: measure discordance d per P2 contrast, check prompt fairness and every termination path; not scored for any hypothesis; n fixed afterwards in a dated NOTES subsection",
+  "cells": 225,
+  "api_cost_stop_usd": 2.0,
+  "reruns": "none within the run; the runner stops the stage on the first infrastructure_error or incomplete cell (the preregistered 2 re-runs are for the confirmation run)"
+ }
+}
