@@ -1,44 +1,66 @@
 # ArbiterKB
 
-A robot memory module for an LLM controller. A knowledge base (KB) whose facts carry beliefs (probability, time,
-evidence) is built from perception and robot state, and a controller LLM reads it to output end-effector waypoints for
-RoboMME's motion planner, in the harness of arXiv 2610.17350. The question: can a structured memory let a **smaller
-model**, or the same model with **far fewer tokens and images**, match a VLM that reads the whole image history; and
-are the KB's beliefs **calibrated** (`docs/GOALS.md`).
+ArbiterKB is a structured memory module for robot manipulation. It builds a knowledge base from perception and robot state, records the evidence behind its beliefs, and renders a view for a language-model controller. The completed **Memory or policy?** study asks how much task-specific instructions help when the executor stays fixed and the controller is given different forms of memory.
 
-## Where things stand (2026-10-29)
-- **Offline (done):** on every question-answering set the KB beats the raw log for a cheap model (G perceived episodes,
-  Q1 0.85 vs 0.55–0.69), but the KB's own top answer is as good as the LLM reading it, and a rule with no LLM matches it
-  on counting. Claims 1–2 can only move in the closed loop.
-- **Claim 3 (no LLM, G test):** the registered main test is not supported; with the distance feature the KB's p ranks
-  its errors better than SoftHaircut, and the lead comes from R6 on a cover-time distribution, not the belief layer.
-- **Closed loop (in progress):** the 2610.17350 loop runs on a RunPod A40. Qwen as the controller hit a floor (1 / 25); GPT-6-Astra solved 2 / 2 probes; its H / R / K pilot on VideoUnmaskSwap is running.
+This research branch contains the experiment history. The [study publication branch](https://github.com/vinzppp/arbiterkb/tree/codex/research-publication) is the maintained starting point for readers.
 
-## Read in this order
-| File | What it is |
-|---|---|
-| `docs/GOALS.md` | claims, falsifiers, what is ours and what is not |
-| `DEVELOPMENT.md` | the build spec (v1.12): the loop (§2), how it works (§3), contracts (§4), phases (§6) |
-| `stress/POD_CLOSED_LOOP.md`, `stress/POD_RUN.md` | the pod runbooks (closed-loop pilot; G) |
-| `archive/` | superseded docs, notebooks and results (`archive/README.md`) |
+## Start here
 
-## Layout
-```
-arbiter_kb/   the package: KB, beliefs, observe / detectors / rules, views, controller, closed_loop, sources/, systems/
-scripts/      experiments and reports (each test's script; run.py, selftest.py, quality.py)
-stress/       pod-side code and runbooks (rendering, perception, the closed-loop runner)
-tests/        pytest, one file per module
-results/      latest/<test>/ (committed results), test_reads.log (the E5c ledger); runs/ and llm_cache/ git-ignored
-data/         git-ignored: G's perceived episodes, the RoboMME LeRobot dataset tables
-figures/      committed figures   tools/   dataset conversion and frame extraction
+| If you want to… | Open |
+| --- | --- |
+| Read the completed experiment and its limitations | [Confirmation report](paper/CONFIRMATION_MEMORY_OR_POLICY_REPORT_ZH.md) |
+| Inspect the results or the frozen protocol | [Evidence index](https://github.com/vinzppp/arbiterkb/blob/codex/research-publication/docs/RESEARCH_INDEX.md), [aggregate JSON](results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation_report.json), [frozen manifest](experiments/memory_or_policy_confirmation_v1.json) |
+| See the memory module work on saved examples | [Executed midpoint notebook](https://github.com/vinzppp/arbiterkb/blob/codex/research-publication/paper/notebook/arbiterkb_midpoint.ipynb) |
+| Understand the environment and which files are needed to reproduce the analysis | [Reproducibility guide](https://github.com/vinzppp/arbiterkb/blob/codex/research-publication/docs/REPRODUCIBILITY.md) |
+
+The midpoint notebook covers the earlier offline prototype. The confirmation report covers the later closed-loop RoboMME comparison.
+
+## How ArbiterKB works
+
+1. **Observe.** The observation bridge converts simulator or perception records into named objects and events.
+2. **Update memory.** The KB records object state and relations, including containment hypotheses when an object is hidden. Beliefs carry supporting evidence, and later observations can revise them.
+3. **Present context.** The controller view turns relevant facts, uncertainty, and event history into text that the model can use to choose its next action.
+4. **Execute and score.** In the confirmation study, the shared RoboMME `multi_choice` executor carries out the selected action. The study harness records the outcome, timeouts, and infrastructure retries.
+
+| Component | Where to look |
+| --- | --- |
+| Beliefs, evidence, and memory updates | [KB](arbiter_kb/kb.py) and [belief types](arbiter_kb/beliefs.py) |
+| How memory reaches the model | [Views](arbiter_kb/views.py) and [controller](arbiter_kb/controller.py) |
+| Memory variants used in the completed study | [Memory implementations](arbiter_kb/mop_memory.py) |
+| Execution, pairing, and retries | [Common harness](stress/common_harness_pod.py) |
+| Analysis and report generation | [Confirmation analysis](scripts/confirmation_report.py) |
+
+## What the completed study found
+
+The experiment compared four memory variants with generic and matched task instructions, plus stock MEMI. It used GPT-6 Luna and a common executor across 250 paired task–episode blocks, for **2,250 scored attempts**. The five tasks were RouteStick, SwingXtimes, VideoUnmaskSwap, StopCube, and VideoRepick.
+
+| Memory | Generic instructions | Matched task instructions |
+| --- | ---: | ---: |
+| Full History | 30.4% | 49.2% |
+| Event Ledger | 41.6% | 47.2% |
+| Learned Memory Fields | 37.6% | 80.0% |
+| Relational KB | 22.4% | 34.0% |
+
+Stock MEMI achieved **85.2%**. Across the four memories, matched instructions improved success by **19.6 percentage points** on average (95% CI **16.1–23.1**). Transferring those instructions to Full History recovered about **34%** of the stock MEMI advantage over generic Full History, below the preregistered half-gain threshold. The evidence does not establish equivalence among the memory variants. MEMI's learned fields can also carry action guidance, which limits attribution to memory structure alone. See the [confirmation report](paper/CONFIRMATION_MEMORY_OR_POLICY_REPORT_ZH.md) for task-level counts and uncertainty.
+
+## Run the offline checks
+
+Use Python 3.10 or newer. To start from the branch with the completed study:
+
+```sh
+git clone --branch codex/research-publication https://github.com/vinzppp/arbiterkb.git
+cd arbiterkb
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pytest -q -rs tests
+python scripts/quality.py
 ```
 
-## Quick start (Mac, CPU)
-```
-python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
-make check           # pytest + quality.py + the self-test (PASS / FAIL lines)
-make eval ARGS="--corrupt none,id_swap --p 1.0"
-python -m arbiter_kb.debug explain --run results/runs/<run> --trace <trace> --cube cube_green
-```
-LLM tests need `OPENROUTER_API_KEY` in the git-ignored `.env`. Test-split reads need a frozen `params.json`
-(`python scripts/run.py --freeze --force`) and are logged in `results/test_reads.log`.
+The standard tests run on a CPU without model calls. The MEMI integration tests require the pinned external MEMI environment. The G perception test requires the saved perception files under `data/g_perceived/`. See the [reproducibility guide](https://github.com/vinzppp/arbiterkb/blob/codex/research-publication/docs/REPRODUCIBILITY.md) for those dependencies.
+
+## Inspect or reproduce the experiment
+
+- **Inspect the results.** Use the saved [aggregate JSON](results/robomme_common/memory_or_policy_confirmation/confirmation_20261102T170540Z/confirmation_report.json) and [confirmation report](paper/CONFIRMATION_MEMORY_OR_POLICY_REPORT_ZH.md).
+- **Recompute the paired statistics.** Use the frozen manifest, the analysis script, and the original per-attempt records. Contact the maintainer for those records. The published aggregate cannot reconstruct the paired intervals by itself.
+- **Rerun the closed loop.** Use the [recorded environment and source revisions](https://github.com/vinzppp/arbiterkb/blob/codex/research-publication/docs/RESEARCH_INDEX.md), including the pinned MEMI and RoboMME/ManiSkill code, simulator data, and access to the recorded model. The manifest records the original run configuration and provenance.
