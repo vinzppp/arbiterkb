@@ -4,7 +4,6 @@ Version 1.8 · 2026-10-28 · supersedes `INSTRUCTIONS.md` (kept for history). v1
 
 This is the single source of truth for building ArbiterKB. Design rationale lives in the plan report ("ArbiterKB 项目规划报告") and in `scene-graph-robot/docs/` (`system-design-kb-2026-10-27.md`, `evidence-gaps-2026-10-28.md`). This file says **how**.
 
-To build a phase, tell the coding agent: *"Build phase Mx of `arbiter-kb/DEVELOPMENT.md`. Read §0–§5 first, then §6.Mx. Stop when every check in Mx's 'Done when' list passes; then the user runs `/review-phase Mx` (§1.1)."*
 
 ---
 
@@ -35,31 +34,6 @@ Each eval is a concrete check that `make check` runs. A phase is not done until 
 | E8 | **Cost-bounded** | LLM spend cannot surprise you | Every call is cached on disk; the hard cap is `ARBITER_MAX_USD` (default 2.00) per run, after which the backend raises. Closed-loop arms (M5) need a higher cap: the user sets it per experiment after seeing the estimate. Calls, tokens, seconds and dollars are counted per episode |
 | E9 | **Stable interfaces** | Later phases don't rewrite earlier ones | `tests/test_contracts.py` snapshots the field names of every contract dataclass. A change fails the test until `CONTRACT_VERSION` is bumped and NOTES updated |
 | E10 | **Measured, not claimed** | Every claim in a README or NOTES points to a results file | Review item: each number in README/NOTES is followed by `(results/<file>)` |
-
-### 1.1 Two independent reviewers: the phase gate
-
-`make check` proves the code does what it says. It does not prove the code is right, or worth building. So every phase ends with two reviews by agents that did not build it. They are Claude Code subagents in `.claude/agents/`, with read-only tools, and each starts from a fresh context:
-
-| Agent | Question | Anchor | Report | Blocking verdict |
-|---|---|---|---|---|
-| `code-reviewer` | Is the code correct, honest and minimal? | DEVELOPMENT.md §1–§3 | `reviews/<phase>_code.md` | BLOCK: wrong math, failing check, leakage or causality violation, faked or hard-coded result, non-reproducible |
-| `goal-reviewer` | Does this phase move a claim, from first principles, without self-deception? | `docs/GOALS.md` | `reviews/<phase>_goal.md` | OFF-TRACK: moves no claim, headline result true by construction, test leakage |
-
-**Procedure** (run in Claude Code inside `arbiter-kb/`):
-0. One-time setup on the Mac (the agent files ship in `setup/claude/` because `.claude/` cannot be written remotely): `cd ~/Code/active/arbiter-kb && mkdir -p .claude && cp -R setup/claude/agents setup/claude/commands .claude/`
-1. The builder finishes the phase: `make check` passes and NOTES is updated.
-2. Run `/review-phase <phase>`. Both agents run in parallel. The builder must not pass them its own summary of the work.
-3. The user reads both verdicts. Each BLOCK / OFF-TRACK finding is either fixed (then re-review) or explicitly overruled by the user, with the reason written in `NOTES.md`. MAJOR findings get a fix or a NOTES entry. MINOR findings are optional.
-4. Tag `phase-<M>-done`. The next phase starts only after the tag.
-
-The goal reviewer also answers "is the next phase still the best next step?". If it proposes a cheaper experiment that decides more, the user decides, and DEVELOPMENT.md §6 is updated before building.
-
-Design patterns that make E1–E3 cheap (mandatory):
-- **Rules are pure functions that return operations.** `rule(view, frame, params) -> list[Op]`. Only `KB.apply(ops)` mutates state, and `apply` logs every op to the trace. Rules are then trivially unit-testable, and the trace is complete.
-- **One source of parameters.** All tunables live in one frozen dataclass per component, serialised together into `params.json`. No magic numbers in rule bodies.
-- **Plain data over objects.** Contracts are dataclasses with numpy arrays and dicts; no hidden state outside `KB`.
-
----
 
 ## 2. Architecture (v1.5: the target system and why it is built this way)
 
@@ -482,7 +456,6 @@ A corruption must look like a real tracker error, otherwise results are true by 
 
 ```
 arbiter-kb/
-  .claude/agents/{code-reviewer,goal-reviewer}.md  .claude/commands/review-phase.md
   docs/GOALS.md   reviews/
   DEVELOPMENT.md  README.md  NOTES.md  Makefile  requirements.txt  .env (git-ignored)  .gitignore
   arbiter_kb/
@@ -550,7 +523,6 @@ make test       # pytest -q
 make quality    # python scripts/quality.py   (E1, E9)
 make selftest   # python scripts/run.py --selftest   (phase "Done when" checks, PASS/FAIL lines)
 make check      # test + quality + selftest   ← first gate for every phase
-/review-phase M # (in Claude Code) code-reviewer + goal-reviewer   ← second gate (§1.1)
 make eval ARGS="--source synthetic --corrupt none,id_swap --p 0.5 --split test --n 30"
 python scripts/run.py --freeze [--force]   # untuned phases (M0, M1): params.json from defaults + FREEZE ledger line
 python scripts/run.py --systems all --corrupt none,id_swap_overlap,pos_noise --lane mix --steps mix --n 60 --keep-as m1_table
@@ -590,7 +562,6 @@ numpy, scipy, matplotlib, pytest, nbformat, nbconvert, ipykernel. Nothing else w
 
 ## 6. Phases
 
-Time estimates are for a coding agent with review. Each phase lists: **Goal · Build (how) · Params · Done when · Not in scope**.
 
 **Order (v1.2):** M0 → M1 (plumbing) → **G** → M2 → M3 → M4 → M5 → M6. G needs a GPU pod and the user's go; its Mac-side code is written right after M1, or alongside it. Tuning starts only after G (M2), against `id_swap_measured`. **v1.4:** M2 serves claim 3; M3–M5 serve claims 1–2 and do not depend on M2. So after G, M3 / M4 may go before M2 (the user's call). **v1.6:** M2 is conditional on G's branch and small. The main line is M3 → M4 → M5.
 

@@ -80,7 +80,7 @@ def main() -> None:
     args = ap.parse_args()
     files = sorted(Path(args.dir).glob("*.npz"))
     if not files:
-        sys.exit(f"no perception outputs in {args.dir} (copy them from the pod: stress/POD_RUN.md step 6)")
+        sys.exit(f"no perception outputs in {args.dir} (provide the saved perception outputs with --dir)")
     rows, summaries = [], []
     for f in files:
         ep = load(f)
