@@ -6,7 +6,7 @@ This project studies whether robot-task performance comes from memory structure 
 
 The confirmation study completed on 2026-11-03: **250 paired task/episode blocks, 2,250 attempts**, with no infrastructure errors or dropped pairs. The aggregate report supports the instruction main effect (+19.6 percentage points, 95% CI [16.1, 23.1]); the preregistered half-gain portability claim was falsified. Memory equivalence is **not established**. MEMI fields can encode action advice, so their advantage is not a pure representation effect.
 
-This publication branch consolidates the prototype and completed study code, frozen manifests and aggregate evidence. Start with [the confirmation report](paper/CONFIRMATION_MEMORY_OR_POLICY_REPORT_ZH.md) and [evidence index](docs/RESEARCH_INDEX.md). Raw episode logs and external datasets are intentionally not distributed here; full statistical recomputation requires those retained research artifacts. Older handoffs describe historical plans, not current run instructions.
+This publication branch consolidates the prototype and completed study code, frozen manifests and aggregate evidence. Start with [the confirmation report](paper/CONFIRMATION_MEMORY_OR_POLICY_REPORT_ZH.md) and [evidence index](docs/RESEARCH_INDEX.md). Raw episode logs and external datasets are intentionally not distributed here; full statistical recomputation requires those retained research artifacts.
 
 ## Start here
 
@@ -24,7 +24,7 @@ This publication branch consolidates the prototype and completed study code, fro
 | `results/latest/`, `figures/` | Earlier aggregate results and figures |
 | `data/`, `results/runs/`, `results/llm_cache/` | Local ignored datasets, runs and cached responses; not supplied by a clone |
 | `paper/` | Confirmation report and earlier executed midpoint notebook |
-| `docs/`, `reviews/` | Goals, historical handoffs and review provenance |
+| `docs/` | Research goals, evidence and reproduction notes |
 | `notebooks/`, `executed/` | Earlier M0/M1 walkthroughs retained from the GitHub base |
 
 ## Minimal local setup and smoke check
@@ -47,4 +47,4 @@ These checks require no API key or simulator. Dependencies are lower-bounded, no
 
 ## History and preservation
 
-[DEVELOPMENT.md](DEVELOPMENT.md) is the prototype specification; [NOTES.md](NOTES.md) preserves dated decisions and preregistration amendments. [HANDOFF.md](HANDOFF.md) is historical. [Cleanup manifest](docs/CLEANUP_2026-11-09.md) records the reversible housekeeping and verification results.
+[DEVELOPMENT.md](DEVELOPMENT.md) describes the prototype. The [evidence index](docs/RESEARCH_INDEX.md) links to the frozen protocol and reported results.
