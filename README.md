@@ -15,6 +15,26 @@ This research branch contains the experiment history. The [study publication bra
 
 The midpoint notebook covers the earlier offline prototype. The confirmation report covers the later closed-loop RoboMME comparison.
 
+## How to navigate the repository
+
+The reading order is **confirmation report → executed notebook → implementation**. Start with the report to see the question, comparison, and results. Open the midpoint notebook to inspect saved examples of the earlier memory prototype. Then follow the code links below to see how the observations, memory, and controller fit together.
+
+| Folder | What you will find |
+| --- | --- |
+| [`paper/`](https://github.com/vinzppp/arbiterkb/tree/codex/research-publication/paper) | The completed study report and the executed midpoint notebook |
+| [`arbiter_kb/`](arbiter_kb/) | The memory implementation, belief updates, and the views sent to the controller |
+| [`experiments/`](experiments/) | Frozen run configurations, including the model, tasks, and comparison conditions |
+| [`results/robomme_common/`](results/robomme_common/) | Saved aggregate results and recorded environment for the closed-loop study |
+| [`results/latest/`](results/latest/) | Earlier prototype and perception results |
+| [`stress/`](stress/) and [`scripts/`](scripts/) | Experiment execution and analysis |
+| [`tests/`](tests/) | Small examples and regression checks for the implementation |
+
+### Reading the labels
+
+- **`M0`, `M1`, …** are early development milestones. The milestone walkthroughs document prototype behavior.
+- **`G`** is the earlier perception study that measured when the tracker mixed up container identities. The midpoint notebook uses its saved observations.
+- **`_g` and `_m`** identify generic and matched task instructions in the confirmation results. For example, `fh_g` and `fh_m` use the same Full History memory with different instructions.
+
 ## How ArbiterKB works
 
 1. **Observe.** The observation bridge converts simulator or perception records into named objects and events.
